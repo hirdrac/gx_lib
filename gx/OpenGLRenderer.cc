@@ -13,6 +13,7 @@
 #include "OpenGL.hh"
 #include "print.hh"
 #include <GLFW/glfw3.h>
+#include <cstdlib>
 
 namespace {
   // **** Helper Functions ****
@@ -125,7 +126,6 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
   if (!init_done) {
     init_done = true;
     std::atexit(CleanUpOpenGL);
-    std::at_quick_exit(CleanUpOpenGL);
   }
 
   _window = win;
