@@ -8,7 +8,12 @@
 #include "types.hh"
 #include <algorithm>
 #include <cstdint>
+
+#if __has_include(<endian.h>)
 #include <endian.h>
+// pack/unpack functions assume Intel byte order
+static_assert(__BYTE_ORDER == __LITTLE_ENDIAN);
+#endif
 
 namespace gx {
   // types
@@ -22,8 +27,6 @@ namespace gx {
   constexpr Color GRAY75 {0.75f, 0.75f, 0.75f, 1.0f};
 
   // functions
-  static_assert(__BYTE_ORDER == __LITTLE_ENDIAN);
-
   constexpr uint32_t packRGBA8(float r, float g, float b, float a)
   {
     return uint32_t(std::clamp(r, 0.0f, 1.0f) * 255.0f)
