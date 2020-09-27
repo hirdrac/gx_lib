@@ -33,8 +33,9 @@ struct MathVal
   static constexpr fltType PI_4 = M_PI_4;  // pi/4
 #endif
 
-  static constexpr fltType DEG_TO_RAD = M_PI / 180.0;
-  static constexpr fltType RAD_TO_DEG = 180.0 / M_PI;
+  static constexpr fltType DEG_TO_RAD = PI / 180.0;
+  static constexpr fltType RAD_TO_DEG = 180.0 / PI;
+
   static constexpr fltType VERY_SMALL = static_cast<fltType>(1.0e-7);
 };
 
