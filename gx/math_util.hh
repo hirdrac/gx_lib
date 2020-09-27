@@ -15,9 +15,24 @@
 template<typename fltType>
 struct MathVal
 {
+#ifndef M_PI
+  static constexpr fltType PI = 3.14159265358979323846;
+#else
   static constexpr fltType PI = M_PI;
+#endif
+
+#ifndef M_PI_2
+  static constexpr fltType PI_2 = 1.57079632679489661923;
+#else
   static constexpr fltType PI_2 = M_PI_2;  // pi/2
+#endif
+
+#ifndef M_PI_4
+  static constexpr fltType PI_4 = 0.78539816339744830962;
+#else
   static constexpr fltType PI_4 = M_PI_4;  // pi/4
+#endif
+
   static constexpr fltType DEG_TO_RAD = M_PI / 180.0;
   static constexpr fltType RAD_TO_DEG = 180.0 / M_PI;
   static constexpr fltType VERY_SMALL = static_cast<fltType>(1.0e-7);
