@@ -10,41 +10,46 @@
 #include <fstream>
 #include <cstdio>
 #include <ctime>
+#include <unistd.h>
+#include <sys/types.h>
+#if __has_include(<sys/syscall.h>)
+#include <sys/syscall.h>
+#endif
 
 
 // **** Helper Functions ****
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/syscall.h>
+#ifdef SYS_gettid
+// Linux specific thread id
+// NOTE: 'gettid()' is available in glibc 2.30
+//   for earlier versions, this function is needed
+static inline pid_t get_threadid() { return syscall(SYS_gettid); }
+#else
+// thread ID logging disabled
+static inline pid_t get_threadid() { return 0; }
+#endif
 
 namespace {
-  // Linux specific thread id
-  // NOTE: 'gettid()' is available in glibc 2.30
-  //   for earlier versions, this function is needed:
-  inline pid_t get_threadid() { return syscall(SYS_gettid); }
   const pid_t mainThreadID = get_threadid();
 
   void logTime(std::ostream& os)
   {
     std::time_t t = std::time(nullptr);
-    std::tm tdata;
-    localtime_r(&t, &tdata);
+    std::tm* td = std::localtime(&t);
     char str[32];
     int len = snprintf(str, sizeof(str), "%d-%02d-%02d %02d:%02d:%02d ",
-		       tdata.tm_year + 1900, tdata.tm_mon + 1, tdata.tm_mday,
-		       tdata.tm_hour, tdata.tm_min, tdata.tm_sec);
+		       td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
+		       td->tm_hour, td->tm_min, td->tm_sec);
     os.write(str, len);
   }
 
   std::string fileTime()
   {
     std::time_t t = std::time(nullptr);
-    std::tm tdata;
-    localtime_r(&t, &tdata);
+    std::tm* td = std::localtime(&t);
     char str[32];
     int len = snprintf(str, sizeof(str), "-%d%02d%02d_%02d%02d%02d",
-		       tdata.tm_year + 1900, tdata.tm_mon + 1, tdata.tm_mday,
-		       tdata.tm_hour, tdata.tm_min, tdata.tm_sec);
+		       td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
+		       td->tm_hour, td->tm_min, td->tm_sec);
     return std::string(str, len);
   }
 }
