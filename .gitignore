@@ -1,0 +1,4 @@
+build/
+libgx.a
+demo_gui
+image_viewer
