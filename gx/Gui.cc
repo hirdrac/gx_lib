@@ -23,22 +23,15 @@ namespace {
 gx::Gui::Gui(const GuiElem& rootElem) : _rootElem(rootElem) { }
 gx::Gui::Gui(GuiElem&& rootElem) : _rootElem(std::move(rootElem)) { }
 
-void gx::Gui::layout(float x, float y, AlignEnum align, int border)
+void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
 {
-  if (_x != x || _y != y || _align != align) {
-    _x = x;
-    _y = y;
-    _align = align;
-    _needPos = true;
-    _needRender = true;
-  }
-
-  if (border != _border) {
-    _border = border;
-    _needSize = true;
-    _needPos = true;
-    _needRender = true;
-  }
+  _theme = theme;
+  _pt.set(x, y);
+  _align = align;
+  _needSize = true;
+  _needPos = true;
+  _needRender = true;
+  _needRedraw = true;
 }
 
 void gx::Gui::update(Window& win)
@@ -50,7 +43,7 @@ void gx::Gui::update(Window& win)
 
   if (_needPos) {
     // FIXME - adjust _x/_y based on alignment?
-    calcPos(_rootElem, _x, _y);
+    calcPos(_rootElem, _pt.x, _pt.y);
     _needPos = false;
   }
 
@@ -94,7 +87,7 @@ void gx::Gui::update(Window& win)
   // redraw GUI if needed
   if (_needRender) {
     _dl.clear();
-    drawGfx(GFX_FLAT_BG, _rootElem);
+    drawRec(_rootElem, _theme.colorBackground);
     drawElem(_rootElem, BSTATE_NONE);
     _needRender = false;
     _needRedraw = true;
@@ -110,51 +103,50 @@ void gx::Gui::calcSize(GuiElem& def)
       float total_w = 0, max_h = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
-        total_w += e._w + _border;
+        total_w += e._w + _theme.border;
         max_h = std::max(max_h, e._h);
       }
-      def._w = total_w + _border;
-      def._h = max_h + (_border * 2);
+      def._w = total_w + _theme.border;
+      def._h = max_h + (_theme.border * 2);
       break;
     }
     case GUI_VFRAME: {
       float total_h = 0, max_w = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
-        total_h += e._h + _border;
+        total_h += e._h + _theme.border;
         max_w = std::max(max_w, e._w);
       }
-      def._w = max_w + (_border * 2);
-      def._h = total_h + _border;
+      def._w = max_w + (_theme.border * 2);
+      def._h = total_h + _theme.border;
       break;
     }
     case GUI_LABEL: {
-      assert(def.pFont != nullptr);
-      const Font& fnt = *def.pFont;
+      assert(_theme.baseFont != nullptr);
+      const Font& fnt = *_theme.baseFont;
       def._w = fnt.calcWidth(def.text);
       int lines = fnt.calcLines(def.text);
-      def._h = (fnt.size() - 1) * lines + (_spacing * std::max(lines - 1, 0));
+      def._h = (fnt.size() - 1) * lines
+        + (_theme.spacing * std::max(lines - 1, 0));
       // FIXME - improve line height calc (based on font ymax/ymin?)
       break;
     }
     case GUI_HLINE:
-      def._w = 32 + _border*2;
-      def._h = 1 + _border*2;
+      def._w = 32 + _theme.border*2;
+      def._h = 1 + _theme.border*2;
       break;
     case GUI_VLINE:
-      def._w = 1 + _border*2;
-      def._h = 32 + _border*2;
+      def._w = 1 + _theme.border*2;
+      def._h = 32 + _theme.border*2;
       break;
     case GUI_BUTTON: {
+      assert(def.elems.size() == 1);
       GuiElem& e = def.elems[0];
       calcSize(e);
-      def._w = e._w + (_border * 2);
-      def._h = e._h + (_border * 2);
+      def._w = e._w + (_theme.border * 2);
+      def._h = e._h + (_theme.border * 2);
       break;
     }
-    case GUI_TOGGLE:
-      // FIXME - finish
-      break;
     default:
       LOG_ERROR("unknown type");
       break;
@@ -169,14 +161,14 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
   switch (def.type) {
     case GUI_HFRAME:
       for (GuiElem& e : def.elems) {
-        base_x += _border;
+        base_x += _theme.border;
         float yy = 0;
         if ((e.align & ALIGN_VCENTER) == ALIGN_VCENTER) {
           yy = (def._h - e._h) / 2.0f;
         } else if (e.align & ALIGN_BOTTOM) {
-          yy = (def._h - e._h) - _border;
+          yy = (def._h - e._h) - _theme.border;
         } else {
-          yy = _border;
+          yy = _theme.border;
         }
         calcPos(e, base_x, base_y + yy);
         base_x += e._w;
@@ -184,24 +176,21 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
       break;
     case GUI_VFRAME:
       for (GuiElem& e : def.elems) {
-        base_y += _border;
+        base_y += _theme.border;
         float xx = 0;
         if ((e.align & ALIGN_HCENTER) == ALIGN_HCENTER) {
           xx = (def._w - e._w) / 2.0f;
         } else if (e.align & ALIGN_RIGHT) {
-          xx = (def._w - e._w) - _border;
+          xx = (def._w - e._w) - _theme.border;
         } else {
-          xx = _border;
+          xx = _theme.border;
         }
         calcPos(e, base_x + xx, base_y);
         base_y += e._h;
       }
       break;
     case GUI_BUTTON:
-      calcPos(def.elems[0], base_x + _border, base_y + _border);
-      break;
-    case GUI_TOGGLE:
-      // FIXME - finish
+      calcPos(def.elems[0], base_x + _theme.border, base_y + _theme.border);
       break;
     default:
       break;
@@ -214,43 +203,37 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
 
   switch (def.type) {
     case GUI_HFRAME:
-      //_dl.color(.1,.1,.2);
-      //_dl.rectangle(def._x, def._y, def._w, def._h);
+      //drawRec(def, packRGBA8(.1,.1,.2,1));
       break;
     case GUI_VFRAME:
-      //_dl.color(.1,.2,.1);
-      //_dl.rectangle(def._x, def._y, def._w, def._h);
+      //drawRec(def, packRGBA8(.1,.2,.1,1));
       break;
     case GUI_LABEL:
-      _dl.color(_colorText);
-      _dl.text(
-        *def.pFont, def._x, def._y, gx::ALIGN_TOP_LEFT, _spacing, def.text);
+      _dl.color(_theme.colorText);
+      _dl.text(*_theme.baseFont, def._x, def._y, gx::ALIGN_TOP_LEFT,
+               _theme.spacing, def.text);
       break;
     case GUI_HLINE:
     case GUI_VLINE:
-      _dl.color(_colorText);
-      _dl.rectangle(def._x + _border, def._y + _border, def._w - (_border*2), def._h - (_border*2));
+      _dl.color(_theme.colorText);
+      _dl.rectangle(def._x + _theme.border, def._y + _theme.border, def._w - (_theme.border*2), def._h - (_theme.border*2));
       break;
     case GUI_BUTTON:
       if (def.eventID == _buttonHeldID) {
         if (def.eventID == _buttonHoverID) {
-          _dl.color(_colorButtonPressed);
+          drawRec(def, _theme.colorButtonPressed);
           bstate = BSTATE_PRESSED;
         } else {
-          _dl.color(_colorButtonHeldOnly);
+          drawRec(def, _theme.colorButtonHeldOnly);
           bstate = BSTATE_HELD_ONLY;
         }
       } else if (def.eventID == _buttonHoverID && !_buttonHeldID) {
-        _dl.color(_colorButtonHover);
+        drawRec(def, _theme.colorButtonHover);
         bstate = BSTATE_HOVER;
       } else {
-        _dl.color(_colorButtonNormal);
+        drawRec(def, _theme.colorButtonNormal);
         bstate = BSTATE_NORMAL;
       }
-      _dl.rectangle(def._x, def._y, def._w, def._h);
-      break;
-    case GUI_TOGGLE:
-      // FIXME - finish
       break;
     default:
       LOG_ERROR("unknown type");
@@ -302,24 +285,15 @@ gx::GuiElem* gx::Gui::findElem(int eventID)
   return nullptr;
 }
 
-void gx::Gui::drawGfx(GfxEnum gfx, float x, float y, float w, float h)
+void gx::Gui::drawRec(const GuiElem& def, uint32_t col)
 {
-  switch (gfx) {
-    case GFX_FLAT_BG:
-      _dl.color(_colorBackground);
-      _dl.rectangle(x, y, w, h);
-      break;
-    case GFX_RAISED_BG:
-      _dl.color(_colorBackground);
-      _dl.rectangle(x, y, w, h);
-      _dl.color(.8,.8,.8);
-      _dl.line(x+.5, y+.5, x+w-.5, y+.5);
-      _dl.line(x+.5, y+.5, x+.5, y+h-.5);
-      _dl.color(0,0,0);
-      _dl.line(x+w-.5, y+h-.5, x+.5, y+h-.5);
-      _dl.line(x+w-.5, y+h-.5, x+w-.5, y+.5);
-      break;
-    default:
-      break;
+  _dl.color(col);
+  _dl.rectangle(def._x, def._y, def._w, def._h);
+  if (_theme.colorFrame != 0) {
+    _dl.color(_theme.colorFrame);
+    _dl.rectangle(def._x, def._y, def._w, 1);
+    _dl.rectangle(def._x, def._y + def._h - 1, def._w, 1);
+    _dl.rectangle(def._x, def._y, 1, def._h);
+    _dl.rectangle(def._x + def._w - 1, def._y, 1, def._h);
   }
 }

@@ -15,19 +15,23 @@ int main(int argc, char* argv[])
     return -1;
   }
 
+  gx::GuiTheme theme;
+  theme.baseFont = &fnt;
+
   gx::Gui gui(
     gx::guiVFrame(
-      gx::guiLabel(gx::ALIGN_HCENTER, fnt, "BUTTON LIST"),
+      gx::guiLabel(gx::ALIGN_HCENTER, "BUTTON LIST"),
       gx::guiHLine(),
       gx::guiHFrame(
-        gx::guiButton(fnt, "B1\nline 2", 1),
-        gx::guiButton(gx::ALIGN_BOTTOM, fnt, "B2", 2),
-        gx::guiButton(gx::ALIGN_VCENTER, fnt, "B3", 3),
-        gx::guiButton(fnt, "B4", 4),
+        gx::guiButton("B1\nline 2", 1),
+        gx::guiButton(gx::ALIGN_BOTTOM, "B2", 2),
+        gx::guiButton(gx::ALIGN_VCENTER, "B3", 3),
+        gx::guiButton("B4", 4),
         gx::guiVLine(),
-        gx::guiButton(fnt, "B5", 5)),
-      gx::guiButton(gx::ALIGN_RIGHT, fnt, "[QUIT]", 99)));
-  gui.layout(100, 100, gx::ALIGN_TOP_LEFT, 4);
+        gx::guiButton("B5", 5)),
+      gx::guiButton(gx::ALIGN_RIGHT, "[QUIT]", 99)));
+
+  gui.layout(theme, 100, 100, gx::ALIGN_TOP_LEFT);
 
   gx::Window win;
   win.setTitle("GUI demo");
