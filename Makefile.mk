@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 38 (2020/9/6)
+# Makefile.mk - revision 38 (2020/10/11)
 # Copyright (C) 2020 Richard Bradley
 #
 # Additional contributions from:
@@ -35,7 +35,7 @@
 #  debug           builds debug versions of all binaries/libraries/tests
 #  profile         builds gprof versions of all binaries/libraries/tests
 #  clean           deletes build directory & test binaries
-#  clobber         deletes build directory & built binaries/libraries
+#  clobber         deletes build directory & built binaries/libraries/files
 #  tests           run all tests for DEFAULT_ENV
 #  info            prints summary of defined build targets
 #  help            prints command summary
@@ -95,6 +95,7 @@
 #    modern_c++    enable warnings for some old-style C++ syntax (pre C++11)
 #    no_rtti       disable C++ RTTI
 #    no_except     disable C++ exceptions
+#    pedantic      enforces strict ISO C/C++ compliance
 #    static_rtlib  staticly link with runtime library (libgcc usually)
 #    static_stdlib staticly link with C++ standard library (libstdc++ usually)
 #  FLAGS           additional compiler flags not otherwise specified
@@ -337,10 +338,7 @@ endef
 
 
 #### OPTIONS handling ####
-# full option list
-override _op_list := warn_error pthread lto modern_c++ no_rtti no_except static_rtlib static_stdlib
-# options that require isolated build (no link-only options)
-override _op_list2 := warn_error pthread lto modern_c++ no_rtti no_except
+override _op_list := warn_error pthread lto modern_c++ no_rtti no_except pedantic static_rtlib static_stdlib
 
 override define _check_options  # <1:options var> <2:set prefix>
 ifneq ($$(filter-out $$(_op_list),$$($1)),)
@@ -357,6 +355,10 @@ ifneq ($$(filter pthread,$$($1)),)
 endif
 ifneq ($$(filter lto,$$($1)),)
   override $2_op_flags += -flto
+endif
+ifneq ($$(filter pedantic,$$($1)),)
+  override $2_op_warn += -Wpedantic
+  override $2_op_flags += -pedantic-errors
 endif
 ifneq ($$(filter static_rtlib,$$($1)),)
   override $2_op_link += -static-libgcc
@@ -403,7 +405,7 @@ endef
 $(foreach x,$(_template_labels),$(eval $(call _check_template_entry,$x)))
 
 ifneq ($(words $(foreach t,$(_template_labels),$($t_labels))),$(words $(sort $(foreach t,$(_template_labels),$($t_labels)))))
-  $(error $(_msgErr)multiple templates contain the same FILE entry$(_end))
+  $(error $(_msgErr)Multiple templates contain the same FILE entry$(_end))
 endif
 
 # create file entries from templates
@@ -867,10 +869,10 @@ else ifneq ($(_build_env),)
   # file entry command evaluation
   $(foreach x,$(_file_labels),\
     $(eval override OUT := $($x))\
-    $(eval override DEPS := $($x.DEPS))\
+    $(eval override DEPS := $(or $($x.DEPS),$$(error $$(_msgErr)Cannot use DEPS if $x.DEPS is not set$$(_end))))\
     $(foreach n,$(wordlist 1,$(words $($x.DEPS)),$(_1-99)),\
       $(eval override DEP$n := $(word $n,$($x.DEPS))))\
-    $(eval override _$x_command := $($x.CMD)))
+    $(eval override _$x_command := $(value $x.CMD)))
 
   # binaries depend on lib goals to make sure libs are built first
   override _lib_goals :=\
@@ -930,13 +932,13 @@ $(foreach e,$(_env_names),$(eval $(call _setup_env_targets,$e)))
 clean:
 	@$(RM) "$(BUILD_DIR)/.compiler_ver" "$(BUILD_DIR)/.packages_ver"* $(foreach x,$(_symlinks),"$x")
 	@([ -d "$(BUILD_DIR)" ] && rmdir -p -- "$(BUILD_DIR)") || true
-	@for X in $(CLEAN_EXTRA) $(foreach e,$(_env_names),$(_$e_file_targets)); do\
+	@for X in $(CLEAN_EXTRA); do\
 	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
 
 clobber: clean
-	@for X in $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_links)) core gmon.out $(CLOBBER_EXTRA); do\
+	@for X in $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_file_targets) $(_$e_links)) core gmon.out $(CLOBBER_EXTRA); do\
 	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
-	@for X in $(foreach y,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_libbin_targets),$(dir $x))))),"$y"); do\
+	@for X in $(foreach y,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_libbin_targets) $(_$e_file_targets),$(dir $x))))),"$y"); do\
 	  ([ -d "$$X" ] && rmdir -p --ignore-fail-on-non-empty -- "$$X") || true; done
 
 install: ; $(error $(_msgErr)Target 'install' not implemented$(_end))
@@ -961,12 +963,17 @@ endif
 
 #### Build Macros ####
 override define _rebuild_check  # <1:trigger file> <2:trigger text>
-ifneq ($$(file <$1),$2)
-  $$(shell $$(RM) "$1")
+ifneq ($$(strip $$(file <$1)),$$(strip $2))
+  $$(if $$(strip $$(filter-out ./,$$(dir $1))),$$(shell mkdir -p "$$(dir $1)"))
+  $$(file >$1,$2)
 endif
-$1:
-	@mkdir -p "$$(@D)"
-	@echo -n "$2" >$1
+endef
+
+override define _rebuild_check_var # <1:trigger file> <2:trigger text var>
+ifneq ($$(strip $$(file <$1)),$$(strip $$($2)))
+  $$(if $$(strip $$(filter-out ./,$$(dir $1))),$$(shell mkdir -p "$$(dir $1)"))
+  $$(file >$1,$$(value $2))
+endif
 endef
 
 # make path of input file - <1:file w/ path>
@@ -980,7 +987,7 @@ override define _make_static_lib  # <1:label>
 override _$1_all_objs := $$(addprefix $$(BUILD_DIR)/$$(_$1_build)/,$$(_$1_src_objs))
 override _$1_link_cmd := $$(AR) rc '$$(_$1_name)' $$(strip $$(_$1_all_objs) $$(_$1_other_objs))
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1-static
-$$(eval $$(call _rebuild_check,$$$$(_$1_trigger),$$$$(_$1_link_cmd)))
+$$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
 ifneq ($$(_$1_deps),)
 $$(_$1_all_objs): | $$(_$1_deps)
@@ -1001,7 +1008,7 @@ override define _make_shared_lib  # <1:label>
 override _$1_shared_objs := $$(addprefix $$(BUILD_DIR)/$$(_$1_build)$$(if $$(_pic_flag),-pic)/,$$(_$1_src_objs))
 override _$1_shared_link_cmd := $$(strip $$(call _do_link,$1) $$(_pic_flag) -shared $$(_$1_shared_objs) $$(_$1_other_objs) $$(_$1_xlibs)) -o '$$(_$1_shared_name)'
 override _$1_shared_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1-shared
-$$(eval $$(call _rebuild_check,$$$$(_$1_shared_trigger),$$$$(_$1_shared_link_cmd)))
+$$(eval $$(call _rebuild_check_var,$$$$(_$1_shared_trigger),_$1_shared_link_cmd))
 
 ifneq ($$(_$1_deps),)
 $$(_$1_shared_objs): | $$(_$1_deps)
@@ -1022,7 +1029,7 @@ override define _make_bin  # <1:label>
 override _$1_all_objs := $$(addprefix $$(BUILD_DIR)/$$(_$1_build)/,$$(_$1_src_objs))
 override _$1_link_cmd := $$(strip $$(call _do_link,$1) $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_xlibs)) -o '$$(_$1_name)'
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1
-$$(eval $$(call _rebuild_check,$$$$(_$1_trigger),$$$$(_$1_link_cmd)))
+$$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
 ifneq ($$(_$1_deps),)
 $$(_$1_all_objs): | $$(_$1_deps)
@@ -1039,13 +1046,13 @@ endef
 # generic file build
 override define _make_file  # <1:label>
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1
-$$(eval $$(call _rebuild_check,$$$$(_$1_trigger),$$$$($1.CMD)))
+$$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_command))
 
 .PHONY: $1$$(SFX)
 $1$$(SFX): $$($1)
 $$($1): $$(_$1_trigger) $$(_$1_deps)
 	$$(call _make_path,$$@)
-	$$(_$1_command)
+	$$(value _$1_command)
 	@echo "$$(_msgInfo)File '$$@' created$$(_end)"
 endef
 
@@ -1058,7 +1065,7 @@ override define _make_test  # <1:label>
 override _$1_all_objs := $$(addprefix $$(BUILD_DIR)/$$(_$1_build)/,$$(_$1_src_objs))
 override _$1_link_cmd := $$(strip $$(call _do_link,$1) $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_xlibs)) -o '$$(_$1_run)'
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1
-$$(eval $$(call _rebuild_check,$$$$(_$1_trigger),$$$$(_$1_link_cmd)))
+$$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
 ifneq ($$(_$1_deps),)
 $$(_$1_all_objs): | $$(_$1_deps)
@@ -1090,19 +1097,19 @@ override define _make_obj  # <1:path> <2:build> <3:flags> <4:src list>
 ifneq ($4,)
 $1/%.mk: ; @$$(RM) "$$(@:.mk=.o)"
 
-$$(eval $$(call _rebuild_check,$1/.compile_cmd_c,$$(strip $$(CC) $$(_cflags_$2) $3)))
+$$(eval $$(call _rebuild_check,$1/.compile_cmd_c,$$(CC) $$(_cflags_$2) $3))
 $(addprefix $1/,$(addsuffix .o,$(call _src_bname,$(filter $(_c_ptrn),$4)))):
 	$$(strip $$(CC) $$(_cflags_$2) $3) -MMD -MP -MT '$$@' -MF '$$(@:.o=.mk)' -c -o '$$@' $$<
 $(foreach x,$(filter $(_c_ptrn),$4),\
   $$(eval $$(call _make_dep,$1,$2,$x,.compile_cmd_c)))
 
-$$(eval $$(call _rebuild_check,$1/.compile_cmd_s,$$(strip $$(AS) $$(_asflags_$2) $3)))
+$$(eval $$(call _rebuild_check,$1/.compile_cmd_s,$$(AS) $$(_asflags_$2) $3))
 $(addprefix $1/,$(addsuffix .o,$(call _src_bname,$(filter $(_asm_ptrn),$4)))):
 	$$(strip $$(AS) $$(_asflags_$2) $3) -MMD -MP -MT '$$@' -MF '$$(@:.o=.mk)' -c -o '$$@' $$<
 $(foreach x,$(filter $(_asm_ptrn),$4),\
   $$(eval $$(call _make_dep,$1,$2,$x,.compile_cmd_s)))
 
-$$(eval $$(call _rebuild_check,$1/.compile_cmd,$$(strip $$(CXX) $$(_cxxflags_$2) $3)))
+$$(eval $$(call _rebuild_check,$1/.compile_cmd,$$(CXX) $$(_cxxflags_$2) $3))
 $1/%.o: ; $$(strip $$(CXX) $$(_cxxflags_$2) $3) -MMD -MP -MT '$$@' -MF '$$(@:.o=.mk)' -c -o '$$@' $$<
 $(foreach x,$(filter $(_cxx_ptrn),$4),\
   $$(eval $$(call _make_dep,$1,$2,$x,.compile_cmd)))
