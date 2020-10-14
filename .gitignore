@@ -1,4 +1,6 @@
 build/
 libgx.a
 demo_gui
+demo_gui.exe
 image_viewer
+image_viewer.exe
