@@ -141,9 +141,15 @@ bool gx::Window::open()
   int height = _height;
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+  // make sure video mode doesn't change for fullscreen
+  glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+  glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+  glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+  glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
   int fsWidth = mode->width;
   int fsHeight = mode->height;
-
   if (_fullScreen && (width <= 0 || height <= 0)) {
     width = fsWidth;
     height = fsHeight;
