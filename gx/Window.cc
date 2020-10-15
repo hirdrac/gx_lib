@@ -78,7 +78,7 @@ void gx::Window::setSize(int width, int height, bool fullScreen)
       monitor = nullptr;
     }
 
-    glfwSetWindowMonitor(win, monitor, wx, wy, width, height, GLFW_DONT_CARE);
+    glfwSetWindowMonitor(win, monitor, wx, wy, width, height, mode->refreshRate);
     glfwGetFramebufferSize(win, &_width, &_height);
     _fullScreen = fullScreen;
   } else {
