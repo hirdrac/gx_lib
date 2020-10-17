@@ -287,8 +287,11 @@ gx::GuiElem* gx::Gui::findElem(int eventID)
 
 void gx::Gui::drawRec(const GuiElem& def, uint32_t col)
 {
-  _dl.color(col);
-  _dl.rectangle(def._x, def._y, def._w, def._h);
+  if (col != 0) {
+    _dl.color(col);
+    _dl.rectangle(def._x, def._y, def._w, def._h);
+  }
+
   if (_theme.colorFrame != 0) {
     _dl.color(_theme.colorFrame);
     _dl.rectangle(def._x, def._y, def._w, 1);
