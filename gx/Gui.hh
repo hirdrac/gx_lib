@@ -37,7 +37,7 @@ namespace gx {
     BSTATE_HELD_ONLY  // previously pressed & mouse left button still held
                       //   but pointer not over button
   };
-};
+}
 
 
 struct gx::GuiElem
@@ -73,7 +73,6 @@ struct gx::GuiTheme
 class gx::Gui
 {
  public:
-  Gui() = default;
   Gui(const GuiElem& rootElem);
   Gui(GuiElem&& rootElem);
 
@@ -179,7 +178,7 @@ namespace gx {
   {
     GuiElem e(GUI_HLINE);
     e.align = ALIGN_HCENTER;
-    return e; 
+    return e;
   }
 
   // VLine
