@@ -8,8 +8,9 @@
 // TODO - continuous lines [lineX <vertex count> <v1> <v2> ...]
 
 #pragma once
-#include "types.hh"
+#include "Texture.hh"
 #include "Color.hh"
+#include "types.hh"
 #include <vector>
 #include <cstdint>
 #include <string_view>
@@ -107,6 +108,9 @@ class gx::DrawList
   void image(int32_t tex, float x, float y, float w, float h,
 	     float tx0, float ty0, float tx1, float ty1) {
     add(CMD_image, tex, x, y, x+w, y+h, tx0, ty0, tx1, ty1); }
+  void image(const Texture& tex, float x, float y, float w, float h,
+	     float tx0, float ty0, float tx1, float ty1) {
+    image(tex.id(), x, y, w, h, tx0, ty0, tx1, ty1); }
 
   // High-level data entry
   void text(const Font& f, float x, float y, AlignEnum align, int spacing,

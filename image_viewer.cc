@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
       int ix = (float(win.width()) - iw) / 2.0f;
       int iy = (float(win.height()) - ih) / 2.0f;
       dl.clear();
-      dl.image(e.tex.id(), ix, iy, iw, ih, 0,0,1,1);
+      dl.image(e.tex, ix, iy, iw, ih, 0,0,1,1);
 
       // multi-image horizontal display in fullscreen
       constexpr int border = 8;
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
           int ix0 = prev_x - (iw0 + border); prev_x = ix0;
           if ((ix0+iw0) < 0) { break; }
           int iy0 = (float(win.height()) - ih0) / 2.0f;
-          dl.image(e0.tex.id(), ix0, iy0, iw0, ih0, 0,0,1,1);
+          dl.image(e0.tex, ix0, iy0, iw0, ih0, 0,0,1,1);
         }
 
         // display next image(s)
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
           int ix1 = prev_x; prev_x += iw1 + border;
           if (ix1 > win.width()) { break; }
           int iy1 = (float(win.height()) - ih1) / 2.0f;
-          dl.image(e1.tex.id(), ix1, iy1, iw1, ih1, 0,0,1,1);
+          dl.image(e1.tex, ix1, iy1, iw1, ih1, 0,0,1,1);
         }
       }
 
