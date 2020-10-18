@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 38 (2020/10/11)
+# Makefile.mk - revision 38 (2020/10/16)
 # Copyright (C) 2020 Richard Bradley
 #
 # Additional contributions from:
@@ -171,7 +171,7 @@ OPT_LEVEL ?= 3
 OPT_LEVEL_DEBUG ?= g
 ifndef WARN
   WARN = all extra no-unused-parameter non-virtual-dtor overloaded-virtual $(_$(COMPILER)_warn)
-  WARN_C ?= all extra no-unused-parameter $(_$(COMPILER)_warn)
+  WARN_C ?= all extra no-unused-parameter write-strings $(_$(COMPILER)_warn)
 else
   WARN_C ?= $(WARN)
 endif
