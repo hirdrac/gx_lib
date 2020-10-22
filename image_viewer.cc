@@ -99,7 +99,9 @@ int main(int argc, char* argv[])
       int ix = (float(win.width()) - iw) / 2.0f;
       int iy = (float(win.height()) - ih) / 2.0f;
       dl.clear();
+      dl.color(gx::WHITE);
       dl.image(e.tex, ix, iy, iw, ih, 0,0,1,1);
+      dl.color(gx::GRAY50);
 
       // multi-image horizontal display in fullscreen
       constexpr int border = 8;
