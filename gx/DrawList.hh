@@ -12,9 +12,9 @@
 #include "Color.hh"
 #include "types.hh"
 #include <vector>
-#include <cstdint>
 #include <string_view>
 #include <initializer_list>
+#include <cstdint>
 
 
 namespace gx {
@@ -83,8 +83,9 @@ class gx::DrawList
 {
  public:
   // Low-level data entry
-  void reserve(std::size_t n) { _data.reserve(n); }
   void clear() { _data.clear(); }
+  void reserve(std::size_t n) { _data.reserve(n); }
+  [[nodiscard]] std::size_t size() const { return _data.size(); }
 
   void color(float r, float g, float b, float a = 1.0f) {
     add(CMD_color, packRGBA8(r, g, b, a)); }
@@ -123,8 +124,8 @@ class gx::DrawList
   std::vector<DrawEntry> _data;
 
   template<typename... Args>
-  void add(const Args&... args) {
-    std::initializer_list<DrawEntry> x = {args...};
+  void add(DrawCmd cmd, const Args&... args) {
+    std::initializer_list<DrawEntry> x = {cmd, args...};
     _data.insert(_data.end(), x.begin(), x.end());
   }
 };
