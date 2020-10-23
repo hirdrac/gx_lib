@@ -249,15 +249,16 @@ void gx::OpenGLRenderer::draw(const DrawList& dl, const Color& modColor)
 
   int size = 0; // vertices needed
   for (auto itr = entries.cbegin(), end = entries.cend(); itr != end; ) {
-    DrawCmd cmd = (itr++)->cmd;
+    DrawCmd cmd = itr->cmd;
     switch (cmd) {
-      case CMD_color:     itr += 1; break;
-      case CMD_lineWidth: itr += 1; break;
-      case CMD_line:      itr += 4; size += 2; break;
-      case CMD_triangle:  itr += 6; size += 3; break;
-      case CMD_rectangle: itr += 4; size += 6; break;
-      case CMD_image:     itr += 9; size += 6; break;
+      case CMD_color:     itr += 2; break;
+      case CMD_lineWidth: itr += 2; break;
+      case CMD_line:      itr += 5;  size += 2; break;
+      case CMD_triangle:  itr += 7;  size += 3; break;
+      case CMD_rectangle: itr += 5;  size += 6; break;
+      case CMD_image:     itr += 10; size += 6; break;
       default:
+        itr = end; // stop reading at first invalid cmd
         LOG_ERROR("unknown DrawCmd value: ", int(cmd));
 	break;
     }
@@ -329,6 +330,7 @@ void gx::OpenGLRenderer::draw(const DrawList& dl, const Color& modColor)
 	break;
       }
       default:
+        itr = end; // stop processing at first invalid cmd
 	break;
     }
   }
