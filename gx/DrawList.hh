@@ -29,10 +29,10 @@ namespace gx {
     ALIGN_VJUSTIFY = 1<<2,
 
     // horizontal alignments
-    ALIGN_LEFT = 1<<2,
-    ALIGN_RIGHT = 1<<3,
+    ALIGN_LEFT = 1<<3,
+    ALIGN_RIGHT = 1<<4,
     ALIGN_HCENTER = ALIGN_LEFT | ALIGN_RIGHT,
-    ALIGN_HJUSTIFY = 1<<4,
+    ALIGN_HJUSTIFY = 1<<5,
 
     // combined vertical & horizontal alignments
     ALIGN_TOP_LEFT = ALIGN_TOP | ALIGN_LEFT,
@@ -47,6 +47,12 @@ namespace gx {
     ALIGN_CENTER = ALIGN_VCENTER | ALIGN_HCENTER,
     ALIGN_JUSTIFY = ALIGN_VJUSTIFY | ALIGN_HJUSTIFY
   };
+
+  constexpr AlignEnum VAlign(AlignEnum a) {
+    return AlignEnum(a & (ALIGN_TOP | ALIGN_BOTTOM | ALIGN_VJUSTIFY)); }
+
+  constexpr AlignEnum HAlign(AlignEnum a) {
+    return AlignEnum(a & (ALIGN_LEFT | ALIGN_RIGHT | ALIGN_HJUSTIFY)); }
 
   enum DrawCmd : uint32_t {
     // control/state commands
