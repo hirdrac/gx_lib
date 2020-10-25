@@ -20,7 +20,8 @@ namespace gx {
   struct GuiTheme;
 
   enum GuiElemType {
-    GUI_HFRAME, GUI_VFRAME, GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_BUTTON
+    GUI_HFRAME, GUI_VFRAME, GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_BUTTON,
+    GUI_MENU, GUI_MENU_HFRAME, GUI_MENU_VFRAME, GUI_MENU_ITEM
   };
 
   enum {
@@ -44,13 +45,13 @@ struct gx::GuiElem
 {
   std::vector<GuiElem> elems;  // child elements
   std::string text;  // label text
-  AlignEnum align = ALIGN_UNSPECIFIED;
-  int flags = 0;
+  AlignEnum align = ALIGN_TOP_LEFT;
   int eventID = 0;
   GuiElemType type;
 
   // layout result
-  float _x, _y, _w, _h;
+  float _x = 0, _y = 0, _w = 0, _h = 0;
+  bool _active = false;
 
   GuiElem(GuiElemType t) : type(t) { }
 };
@@ -58,13 +59,18 @@ struct gx::GuiElem
 struct gx::GuiTheme
 {
   const Font* baseFont = nullptr;
+  uint32_t colorBackground = packRGBA8(.2,.2,.2,1);
+  uint32_t colorText = packRGBA8(1,1,1,1);
+  uint32_t colorEdge = 0; //packRGBA8(1,1,1,1);
   uint32_t colorButtonNormal = packRGBA8(.4,.4,.4,1);
   uint32_t colorButtonHover = packRGBA8(.8,.4,.4,1);
   uint32_t colorButtonPressed = packRGBA8(.8,.8,.8,1);
   uint32_t colorButtonHeldOnly = packRGBA8(.6,.6,.6,1);
-  uint32_t colorBackground = packRGBA8(.2,.2,.2,1);
-  uint32_t colorText = packRGBA8(1,1,1,1);
-  uint32_t colorFrame = 0; //packRGBA8(1,1,1,1);
+  uint32_t colorMenuNormal = 0;
+  uint32_t colorMenuHover = packRGBA8(.8,.4,.4,1);
+  uint32_t colorMenuSelect = packRGBA8(.6,.6,.6,1);
+  uint32_t colorMenuItem = packRGBA8(0,0,0,1);
+  uint32_t colorMenuItemSelect = packRGBA8(.8,.8,.8,1);
   int16_t spacing = 2;
   int16_t border = 4;
 };
@@ -81,13 +87,13 @@ class gx::Gui
 
   [[nodiscard]] const DrawList& drawList() const { return _dl; }
 
-  [[nodiscard]] int buttonHover() const { return _buttonHoverID; }
+  [[nodiscard]] int hoverID() const { return _hoverID; }
     // id of button mouse is over
-  [[nodiscard]] int buttonHeld() const { return _buttonHeldID; }
+  [[nodiscard]] int heldID() const { return _heldID; }
     // id of button last pressed, set until button is released
-  [[nodiscard]] int buttonPressed() const { return _buttonPressedID; }
+  [[nodiscard]] int pressedID() const { return _pressedID; }
     // id of button pressed, cleared on next update call
-  [[nodiscard]] int buttonReleased() const { return _buttonReleasedID; }
+  [[nodiscard]] int releasedID() const { return _releasedID; }
     // id of button released, cleared on next update call
     // (was previously pressed, button released while still over same button)
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
@@ -98,19 +104,21 @@ class gx::Gui
   GuiTheme _theme;
   DrawList _dl;
   Vec2 _pt = {};
-  AlignEnum _align = ALIGN_TOP_LEFT;
-  int _buttonHoverID = 0;
-  int _buttonHeldID = 0;
-  int _buttonPressedID = 0;
+  int _hoverID = 0;
+  int _heldID = 0;
+  int _pressedID = 0;
   int _lastPressedID = 0;
-  int _buttonReleasedID = 0;
+  int _releasedID = 0;
   bool _needSize = true;
   bool _needPos = true;
   bool _needRender = true;
   bool _needRedraw = true;
+  int _uniqueID = -1;
 
+  void init(GuiElem& def);
   void calcSize(GuiElem& def);
   void calcPos(GuiElem& def, float base_x, float base_y);
+  void deactivate(GuiElem& def);
   void drawElem(GuiElem& def, ButtonState bstate);
   GuiElem* findEventElem(float x, float y);
   GuiElem* findElem(int eventID);
@@ -220,6 +228,26 @@ namespace gx {
     GuiElem e(GUI_BUTTON);
     e.elems.push_back(gx::guiLabel(text));
     e.align = align;
+    e.eventID = eventID;
+    return e;
+  }
+
+  // Menu
+  template<typename... Elems>
+  inline GuiElem guiMenu(std::string_view text, const Elems&... items)
+  {
+    GuiElem e(GUI_MENU);
+    e.elems.push_back(gx::guiLabel(text));
+    GuiElem frame(GUI_MENU_VFRAME);
+    frame.elems = {items...};
+    e.elems.push_back(std::move(frame));
+    return e;
+  }
+
+  inline GuiElem guiMenuItem(std::string_view text, int eventID)
+  {
+    GuiElem e(GUI_MENU_ITEM);
+    e.elems.push_back(gx::guiLabel(text));
     e.eventID = eventID;
     return e;
   }

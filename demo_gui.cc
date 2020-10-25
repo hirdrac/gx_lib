@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
   gx::GuiTheme theme;
   theme.baseFont = &fnt;
 
-  gx::Gui gui(
+  gx::Gui gui1(
     gx::guiVFrame(
       gx::guiLabel(gx::ALIGN_HCENTER, "BUTTON LIST"),
       gx::guiHLine(),
@@ -30,8 +30,21 @@ int main(int argc, char* argv[])
         gx::guiVLine(),
         gx::guiButton("B5", 5)),
       gx::guiButton(gx::ALIGN_RIGHT, "[QUIT]", 99)));
+  gui1.layout(theme, 100, 100, gx::ALIGN_TOP_LEFT);
 
-  gui.layout(theme, 100, 100, gx::ALIGN_TOP_LEFT);
+  gx::Gui gui2(
+    gx::guiHFrame(
+      gx::guiMenu(
+        "File",
+        gx::guiMenuItem("Open...", 1),
+        gx::guiMenuItem("Save...", 2),
+        gx::guiHLine(),
+        gx::guiMenuItem("Quit", 99)),
+      gx::guiMenu(
+        "Help",
+        gx::guiMenuItem("Manual", 3),
+        gx::guiMenuItem("About", 4))));
+  gui2.layout(theme, 0, 0, gx::ALIGN_TOP_LEFT);
 
   gx::Window win;
   win.setTitle("GUI demo");
@@ -51,7 +64,8 @@ int main(int argc, char* argv[])
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
       win.clearFrame();
-      win.draw(gui);
+      win.draw(gui1);
+      win.draw(gui2);
       needRedraw = false;
     }
     win.renderFrame();
@@ -67,14 +81,19 @@ int main(int argc, char* argv[])
       }
     }
 
-    // update gui
-    gui.update(win);
-    needRedraw |= gui.needRedraw();
-    //if (gui.buttonPressed()) { gx::println("pressed:", gui.buttonPressed()); }
-    //if (gui.buttonHeld()) { gx::println("held:", gui.buttonHeld()); }
-    if (gui.buttonReleased()) { gx::println("released:", gui.buttonReleased()); }
-    if (gui.buttonReleased() == 99) {
-      running = false;
+    // update gui(s)
+    gui1.update(win);
+    needRedraw |= gui1.needRedraw();
+    if (gui1.releasedID() > 0) {
+      gx::println("GUI1 released:", gui1.releasedID());
+      if (gui1.releasedID() == 99) { running = false; }
+    }
+
+    gui2.update(win);
+    needRedraw |= gui2.needRedraw();
+    if (gui2.releasedID() > 0) {
+      gx::println("GUI2 released:", gui2.releasedID());
+      if (gui2.releasedID() == 99) { running = false; }
     }
   }
 
