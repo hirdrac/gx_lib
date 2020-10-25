@@ -10,3 +10,6 @@
 ## Platforms
 * Linux
 * Cygwin/MinGW/Msys2 on Windows
+
+## Usage
+run 'make' to build static library & demo programs
