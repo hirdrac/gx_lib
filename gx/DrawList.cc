@@ -16,10 +16,9 @@ void gx::DrawList::text(const Font& f, float x, float y, AlignEnum align,
   int lines = 1;
   for (char ch : text) { if (ch == '\n') { ++lines; } }
 
-  int h_align = align & ALIGN_HCENTER;
   float fs = float(f.size()) + spacing;
   float cursorY;
-  switch (align & ALIGN_VCENTER) {
+  switch (VAlign(align)) {
     case ALIGN_TOP:
       cursorY = y + f.ymax();
       break;
@@ -31,7 +30,7 @@ void gx::DrawList::text(const Font& f, float x, float y, AlignEnum align,
       break;
   }
 
-  int tid = f.tex().id();
+  AlignEnum h_align = HAlign(align);
   std::size_t lineStart = 0;
   for (;;) {
     std::size_t pos = text.find('\n', lineStart);
@@ -58,7 +57,7 @@ void gx::DrawList::text(const Font& f, float x, float y, AlignEnum align,
           float yy = cursorY - g->top;
 
 	  // convert x,y to int to make sure text is pixel aligned
-	  image(tid, int(xx), int(yy), g->width, g->height,
+	  image(f.tex(), int(xx), int(yy), g->width, g->height,
 		g->tx0, g->ty0, g->tx1, g->ty1);
         }
         cursorX += g->advX;

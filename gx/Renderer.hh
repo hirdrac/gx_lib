@@ -3,6 +3,8 @@
 // Copyright (C) 2020 Richard Bradley
 //
 
+// TODO - texture wrap/filter settings
+
 #pragma once
 #include "Color.hh"
 

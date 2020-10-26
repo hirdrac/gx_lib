@@ -76,7 +76,7 @@ void gx::Gui::update(Window& win)
   GuiElem* ptr = nullptr;
   int id = 0;
   GuiElemType type = GUI_NULL;
-  if (win.mouseIn()) {
+  if (win.mouseIn() && win.focused()) {
     ptr = findEventElem(win.mouseX(), win.mouseY());
     if (ptr) {
       id = ptr->eventID;
@@ -124,7 +124,7 @@ void gx::Gui::update(Window& win)
 
   // clear button event if used by GUI
   if (buttonEvent && (_pressedID != 0 || _releasedID != 0)) {
-    win.consumeEvent(gx::EVENT_MOUSE_BUTTON);
+    win.removeEvent(gx::EVENT_MOUSE_BUTTON);
   }
 
   // redraw GUI if needed

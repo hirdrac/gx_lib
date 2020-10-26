@@ -5,6 +5,9 @@
 // Graphical user interface rendering & event handling
 //
 
+// TODO - sub menus
+// TODO - menu item key short-cuts
+
 #pragma once
 #include "DrawList.hh"
 #include "Color.hh"

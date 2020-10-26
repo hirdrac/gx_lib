@@ -7,6 +7,7 @@
 // TODO - settings for resizable,decorated,fixedAspectRatio
 // TODO - setting for min/max width/height on resizable windows
 // TODO - frame stats (draw calls, buffer size)
+// TODO - split EVENT_MOUSE_BUTTON into multiple events
 //
 
 #pragma once
@@ -162,15 +163,17 @@ class gx::Window
 
   //// Event Handling ////
   int pollEvents();
-    // returns current event mask
+    // updates event state, returns current event mask
 
   [[nodiscard]] int64_t pollTime() const { return _pollTime; }
     // time of last pollEvents()
     // (in microseconds since first window open)
 
   [[nodiscard]] int events() const { return _events; }
-  [[nodiscard]] int guiEvents() const { return _guiEvents; }
     // current event mask
+  
+  void removeEvent(int event_mask) { _events &= ~(_events & event_mask); }
+    // remove event(s) from current event mask
 
   // window state
   [[nodiscard]] bool resized() const { return _events & EVENT_SIZE; }
@@ -199,15 +202,7 @@ class gx::Window
 
  protected:
   friend class gx::Texture;
-  friend class gx::Gui;
-
   std::shared_ptr<Renderer> _renderer;
-
-  void consumeEvent(int event_mask) {
-    int e = _events & event_mask;
-    _events &= ~e;
-    _guiEvents |= e;
-  }
 
  private:
   int _width = 0, _height = 0;
@@ -225,7 +220,6 @@ class gx::Window
   // event state
   int64_t _pollTime = 0;
   int _events = 0;
-  int _guiEvents = 0;
   std::vector<KeyState> _keyStates;
   std::vector<CharInfo> _chars;
   float _mouseX = 0, _mouseY = 0;

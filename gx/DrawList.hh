@@ -6,6 +6,9 @@
 // TODO - vertical/horizontal color gradiant
 // TODO - clipping region
 // TODO - continuous lines [lineX <vertex count> <v1> <v2> ...]
+// TODO - text vertical/horizontal scaling
+// TODO - text rotation
+// TODO - textured triangle/quad
 
 #pragma once
 #include "Texture.hh"
