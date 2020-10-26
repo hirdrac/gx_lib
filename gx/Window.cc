@@ -208,13 +208,17 @@ bool gx::Window::open()
 
   // set initial mouse event state
   // (initial button state not supported by GLFW)
+  updateMouseState(win);
+  return true;
+}
+
+void gx::Window::updateMouseState(GLFWwindow* w)
+{
   double mx = 0, my = 0;
-  glfwGetCursorPos(win, &mx, &my);
+  glfwGetCursorPos(w, &mx, &my);
   _mouseX = mx;
   _mouseY = my;
-  _mouseIn = (glfwGetWindowAttrib(win, GLFW_HOVERED) != 0);
-
-  return true;
+  _mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
 }
 
 void gx::Window::setBGColor(float r, float g, float b)
@@ -326,6 +330,7 @@ void gx::Window::sizeCB(GLFWwindow* win, int width, int height)
   e._events |= EVENT_SIZE;
   e._width = width;
   e._height = height;
+  e.updateMouseState(win);
 }
 
 void gx::Window::keyCB(

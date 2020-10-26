@@ -233,6 +233,8 @@ class gx::Window
   int _buttons = 0, _mods = 0;
   bool _mouseIn = false, _iconified = false, _focused = true;
 
+  void updateMouseState(GLFWwindow*);
+
   // GLFW event callbacks
   static void closeCB(GLFWwindow*);
   static void sizeCB(GLFWwindow*, int width, int height);
