@@ -73,8 +73,16 @@ void gx::Gui::update(Window& win)
   // button event & state update
   const bool buttonDown = win.buttons() & BUTTON1;
   const bool buttonEvent = win.events() & EVENT_MOUSE_BUTTON;
-  GuiElem* ptr = findEventElem(win.mouseX(), win.mouseY());
-  int id = ptr ? ptr->eventID : 0;
+  GuiElem* ptr = nullptr;
+  int id = 0;
+  GuiElemType type = GUI_NULL;
+  if (win.mouseIn()) {
+    ptr = findEventElem(win.mouseX(), win.mouseY());
+    if (ptr) {
+      id = ptr->eventID;
+      type = ptr->type;
+    }
+  }
 
   // update hoverID
   if (_hoverID != id && (!buttonDown || _lastPressedID != 0)) {
@@ -83,10 +91,18 @@ void gx::Gui::update(Window& win)
   }
 
   // update pressedID
-  if (buttonDown && buttonEvent) {
+  if (buttonDown
+      && (buttonEvent
+          // treat moving between menus with button held as a press event
+          || (type == GUI_MENU && _lastPressedID != id && _lastType == GUI_MENU)))
+  {
     _pressedID = id;
     _lastPressedID = id;
-    if (ptr && ptr->type == GUI_MENU) { ptr->_active = true; }
+    _lastType = type;
+    if (type == GUI_MENU) {
+      deactivate(_rootElem); // close open menus
+      ptr->_active = true;
+    }
     _needRender = true;
   } else {
     _pressedID = 0;
@@ -94,9 +110,9 @@ void gx::Gui::update(Window& win)
 
   // update releasedID
   if (!buttonDown && buttonEvent) {
-    if ((_lastPressedID == id)
-        || (ptr && ptr->type == GUI_MENU_ITEM)) { _releasedID = id; }
+    if ((_lastPressedID == id) || (type == GUI_MENU_ITEM)) { _releasedID = id; }
     _lastPressedID = 0;
+    _lastType = GUI_NULL;
     deactivate(_rootElem); // close open menus
     _needRender = true;
   } else {

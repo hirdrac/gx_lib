@@ -20,6 +20,7 @@ namespace gx {
   struct GuiTheme;
 
   enum GuiElemType {
+    GUI_NULL = 0,
     GUI_HFRAME, GUI_VFRAME, GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_BUTTON,
     GUI_MENU, GUI_MENU_HFRAME, GUI_MENU_VFRAME, GUI_MENU_ITEM
   };
@@ -107,8 +108,9 @@ class gx::Gui
   int _hoverID = 0;
   int _heldID = 0;
   int _pressedID = 0;
-  int _lastPressedID = 0;
   int _releasedID = 0;
+  int _lastPressedID = 0;
+  GuiElemType _lastType = GUI_NULL;
   bool _needSize = true;
   bool _needPos = true;
   bool _needRender = true;
