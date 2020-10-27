@@ -126,7 +126,6 @@ class gx::Gui
   void deactivate(GuiElem& def);
   void drawElem(GuiElem& def, ButtonState bstate);
   GuiElem* findEventElem(float x, float y);
-  GuiElem* findElem(int eventID);
   void drawRec(const GuiElem& def, uint32_t col);
 };
 

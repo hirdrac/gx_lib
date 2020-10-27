@@ -359,34 +359,19 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
 gx::GuiElem* gx::Gui::findEventElem(float x, float y)
 {
   // full search through all elems needed because of popup elements
-  std::vector stack = { &_rootElem };
-  while (!stack.empty()) {
-    GuiElem* e = stack.back();
-    stack.pop_back();
-
-    if (contains(*e, x, y) && e->eventID != 0) { return e; }
-
+  std::vector<GuiElem*> stack;
+  GuiElem* e = &_rootElem;
+  while (e->eventID == 0 || !contains(*e, x, y)) {
     if (e->type != GUI_MENU || e->_active) {
+      stack.reserve(stack.size() + e->elems.size());
       for (GuiElem& c : e->elems) { stack.push_back(&c); }
     }
-  }
 
-  return nullptr;
-}
-
-gx::GuiElem* gx::Gui::findElem(int eventID)
-{
-  std::vector stack = { &_rootElem };
-  while (!stack.empty()) {
-    GuiElem* e = stack.back();
+    if (stack.empty()) { return nullptr; }
+    e = stack.back();
     stack.pop_back();
-
-    if (e->eventID == eventID) { return e; }
-
-    for (GuiElem& x : e->elems) { stack.push_back(&x); }
   }
-
-  return nullptr;
+  return e;
 }
 
 void gx::Gui::drawRec(const GuiElem& def, uint32_t col)
