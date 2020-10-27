@@ -417,32 +417,37 @@ void gx::Window::mouseButtonCB(GLFWwindow* win, int button, int action, int mods
     return;
   }
 
+  auto& e = *static_cast<Window*>(ePtr);
   //println("mouse button event: ", button, ' ', action, ' ', mods);
   int b = 0; // bitfield value for button
   switch (button) {
-    case GLFW_MOUSE_BUTTON_1: b = BUTTON1; break;
-    case GLFW_MOUSE_BUTTON_2: b = BUTTON2; break;
-    case GLFW_MOUSE_BUTTON_3: b = BUTTON3; break;
-    case GLFW_MOUSE_BUTTON_4: b = BUTTON4; break;
-    case GLFW_MOUSE_BUTTON_5: b = BUTTON5; break;
-    case GLFW_MOUSE_BUTTON_6: b = BUTTON6; break;
-    case GLFW_MOUSE_BUTTON_7: b = BUTTON7; break;
-    case GLFW_MOUSE_BUTTON_8: b = BUTTON8; break;
+    case GLFW_MOUSE_BUTTON_1:
+      b = BUTTON1; e._events |= EVENT_MOUSE_BUTTON1; break;
+    case GLFW_MOUSE_BUTTON_2:
+      b = BUTTON2; e._events |= EVENT_MOUSE_BUTTON2; break;
+    case GLFW_MOUSE_BUTTON_3:
+      b = BUTTON3; e._events |= EVENT_MOUSE_BUTTON3; break;
+    case GLFW_MOUSE_BUTTON_4:
+      b = BUTTON4; e._events |= EVENT_MOUSE_BUTTON4; break;
+    case GLFW_MOUSE_BUTTON_5:
+      b = BUTTON5; e._events |= EVENT_MOUSE_BUTTON5; break;
+    case GLFW_MOUSE_BUTTON_6:
+      b = BUTTON6; e._events |= EVENT_MOUSE_BUTTON6; break;
+    case GLFW_MOUSE_BUTTON_7:
+      b = BUTTON7; e._events |= EVENT_MOUSE_BUTTON7; break;
+    case GLFW_MOUSE_BUTTON_8:
+      b = BUTTON8; e._events |= EVENT_MOUSE_BUTTON8; break;
     default:
       LOG_ERROR("unknown mouse button ", button);
       return;
   }
 
-  auto& e = *static_cast<Window*>(ePtr);
-  e._events |= EVENT_MOUSE_BUTTON;
   e._mods = mods;
   if (action == GLFW_PRESS) {
     e._buttons |= b;
   } else if (action == GLFW_RELEASE) {
     e._buttons &= ~b;
   }
-
-  // TODO - capture individual button events
 }
 
 void gx::Window::scrollCB(GLFWwindow* win, double xoffset, double yoffset)

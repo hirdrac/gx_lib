@@ -4,11 +4,10 @@
 //
 // encapsulation of core graphics output & user input
 //
+
 // TODO - settings for resizable,decorated,fixedAspectRatio
 // TODO - setting for min/max width/height on resizable windows
 // TODO - frame stats (draw calls, buffer size)
-// TODO - split EVENT_MOUSE_BUTTON into multiple events
-//
 
 #pragma once
 #include "Color.hh"
@@ -36,8 +35,17 @@ namespace gx {
     // mouse events
     EVENT_MOUSE_ENTER  = 1<<6,
     EVENT_MOUSE_MOVE   = 1<<7,
-    EVENT_MOUSE_BUTTON = 1<<8,
-    EVENT_MOUSE_SCROLL = 1<<9,
+    EVENT_MOUSE_SCROLL = 1<<8,
+
+    EVENT_MOUSE_BUTTON1 = 1<<11, // Left
+    EVENT_MOUSE_BUTTON2 = 1<<12, // Right
+    EVENT_MOUSE_BUTTON3 = 1<<13, // Middle
+    EVENT_MOUSE_BUTTON4 = 1<<14,
+    EVENT_MOUSE_BUTTON5 = 1<<15,
+    EVENT_MOUSE_BUTTON6 = 1<<16,
+    EVENT_MOUSE_BUTTON7 = 1<<17,
+    EVENT_MOUSE_BUTTON8 = 1<<18,
+    EVENT_MOUSE_ANY_BUTTON = (0b11111111<<11),
   };
 
   // event values
@@ -201,7 +209,7 @@ class gx::Window
     return _chars; }
 
  protected:
-  friend class gx::Texture;
+  friend class Texture;
   std::shared_ptr<Renderer> _renderer;
 
  private:

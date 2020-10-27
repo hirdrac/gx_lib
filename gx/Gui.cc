@@ -72,7 +72,7 @@ void gx::Gui::update(Window& win)
 
   // button event & state update
   const bool buttonDown = win.buttons() & BUTTON1;
-  const bool buttonEvent = win.events() & EVENT_MOUSE_BUTTON;
+  const bool buttonEvent = win.events() & EVENT_MOUSE_BUTTON1;
   GuiElem* ptr = nullptr;
   int id = 0;
   GuiElemType type = GUI_NULL;
@@ -124,7 +124,7 @@ void gx::Gui::update(Window& win)
 
   // clear button event if used by GUI
   if (buttonEvent && (_pressedID != 0 || _releasedID != 0)) {
-    win.removeEvent(gx::EVENT_MOUSE_BUTTON);
+    win.removeEvent(gx::EVENT_MOUSE_BUTTON1);
   }
 
   // redraw GUI if needed
