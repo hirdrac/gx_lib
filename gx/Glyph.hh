@@ -4,6 +4,7 @@
 //
 
 #pragma once
+#include "types.hh"
 #include <cstdint>
 #include <memory>
 
@@ -22,5 +23,5 @@ struct gx::Glyph
   std::unique_ptr<uint8_t[]> bitmap_copy;
 
   // texture atlas coords
-  float tx0, ty0, tx1, ty1;
+  Vec2 t0, t1;
 };

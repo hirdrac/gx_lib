@@ -141,7 +141,8 @@ bool gx::Font::makeAtlas(Window& win)
   for (auto& itr : _glyphs) {
     Glyph& g = itr.second;
     if (g.width == 0 || g.height == 0) {
-      g.tx0 = g.ty0 = g.tx1 = g.ty1 = 0;
+      g.t0 = {};
+      g.t1 = {};
       continue;
     }
 
@@ -149,10 +150,10 @@ bool gx::Font::makeAtlas(Window& win)
 
     // texture coords not normalized with TEXTURE_RECTANGLE
     // (y coord flipped to match GL coords)
-    g.tx0 = float(x) / float(texW);
-    g.ty0 = float(y) / float(texH);
-    g.tx1 = float(x + g.width) / float(texW);
-    g.ty1 = float(y + g.height) / float(texH);
+    g.t0.x = float(x) / float(texW);
+    g.t0.y = float(y) / float(texH);
+    g.t1.x = float(x + g.width) / float(texW);
+    g.t1.y = float(y + g.height) / float(texH);
 
     atlas.stamp(x, y, g);
     x += g.width + 1;

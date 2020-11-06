@@ -58,7 +58,7 @@ void gx::DrawList::text(const Font& f, float x, float y, AlignEnum align,
 
 	  // convert x,y to int to make sure text is pixel aligned
 	  image(f.tex(), int(xx), int(yy), g->width, g->height,
-		g->tx0, g->ty0, g->tx1, g->ty1);
+		g->t0.x, g->t0.y, g->t1.x, g->t1.y);
         }
         cursorX += g->advX;
       }
