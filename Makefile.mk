@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 39 (2020/10/29)
+# Makefile.mk - revision 39 (2020/11/3)
 # Copyright (C) 2020 Richard Bradley
 #
 # Additional contributions from:
@@ -106,6 +106,9 @@
 #  LINK_FLAGS      additional linking flags not otherwise specified
 #  *_EXTRA         available for most settings to provide additional values
 #
+#  <OS>.<VAR>      set OS specific value for any setting - overrides non-OS
+#                    specific value.  WINDOWS,LINUX supported
+#
 #  CXXFLAGS/CFLAGS/ASFLAGS/LDFLAGS
 #    can be used to override settings generated compile/link flags
 #    (globally or for specific targets)
@@ -211,6 +214,22 @@ $(foreach x,WARN WARN_C PACKAGES PACKAGES_TEST INCLUDE LIBS LIBS_TEST DEFINE OPT
   $(if $($x_EXTRA),$(eval override $x += $($x_EXTRA))))
 
 
+#### OS Specific Values ####
+override _uname := $(shell uname -s | tr A-Z a-z)
+override _windows := $(filter cygwin% mingw% msys%,$(_uname))
+override _linux := $(filter linux%,$(_uname))
+override _pic_flag := $(if $(_windows),,-fPIC)
+override _libprefix := $(if $(filter cygwin%,$(_uname)),cyg,$(if $(filter msys%,$(_uname)),msys-,lib))
+override _libext := .$(if $(_windows),dll,so)
+ifneq ($(_windows),)
+  $(foreach x,$(filter WINDOWS.%,$(.VARIABLES)),\
+    $(eval override $(patsubst WINDOWS.%,%,$x) = $(value $x)))
+else ifneq ($(_linux),)
+  $(foreach x,$(filter LINUX.%,$(.VARIABLES)),\
+    $(eval override $(patsubst LINUX.%,%,$x) = $(value $x)))
+endif
+
+
 #### Environment Details ####
 override _env_names := release debug profile
 override _opt_lvl = $(or $(strip $($1.OPT_LEVEL)),$(strip $(OPT_LEVEL)))
@@ -225,14 +244,6 @@ override _debug_op = -g $(if $(_debug_opt_lvl),-O$(_debug_opt_lvl))
 override _profile_uc := PROFILE
 override _profile_sfx := -pg
 override _profile_op = -pg $(if $(_opt_lvl),-O$(_opt_lvl))
-
-
-#### OS Specific Values ####
-override _uname := $(shell uname -s | tr A-Z a-z)
-override _windows := $(filter cygwin% mingw% msys%,$(_uname))
-override _pic_flag := $(if $(_windows),,-fPIC)
-override _libprefix := $(if $(filter cygwin%,$(_uname)),cyg,$(if $(filter msys%,$(_uname)),msys-,lib))
-override _libext := .$(if $(_windows),dll,so)
 
 
 #### Compiler Details ####
