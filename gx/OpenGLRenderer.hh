@@ -16,7 +16,6 @@
 
 
 namespace gx {
-  class Image;
   class OpenGLRenderer;
 }
 
@@ -29,11 +28,11 @@ class gx::OpenGLRenderer final : public gx::Renderer
   void setWindowHints(bool debug) override;
   bool init(GLFWwindow* win) override;
 
-  inline int maxTextureSize() override;
+  int maxTextureSize() override { return GLTexture2D::maxSize(); }
   int addTexture(const Image& img) override;
   bool updateTexture(int id, const Image& img) override;
   void freeTexture(int id) override { _textures.erase(id); }
-  inline void setBGColor(float r, float g, float b) override;
+  void setBGColor(float r, float g, float b) override { _bgColor.set(r,g,b); }
 
   void clearFrame(int width, int height) override;
   void draw(const DrawList& dl, const Color& modColor) override;
@@ -100,15 +99,3 @@ class gx::OpenGLRenderer final : public gx::Renderer
   OpenGLRenderer(const OpenGLRenderer&) = delete;
   OpenGLRenderer& operator=(const OpenGLRenderer&) = delete;
 };
-
-
-// **** Inline Implementations ****
-int gx::OpenGLRenderer::maxTextureSize()
-{
-  return GLTexture2D::maxSize();
-}
-
-void gx::OpenGLRenderer::setBGColor(float r, float g, float b)
-{
-  _bgColor.set(r,g,b);
-}
