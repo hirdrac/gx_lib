@@ -80,8 +80,10 @@ class gx::OpenGLRenderer final : public gx::Renderer
   int lastTexID = 0;
   bool _changed = true;
 
-  void addVertex(float x, float y, float s, float t, uint32_t c) {
-    _vertices.push_back({x,y,s,t,c}); }
+  void addVertex(Vec2 pt, uint32_t c) {
+    _vertices.push_back({pt.x,pt.y, 0.0f,0.0f, c}); }
+  void addVertex(Vec2 pt, Vec2 tx, uint32_t c) {
+    _vertices.push_back({pt.x,pt.y, tx.x,tx.y, c}); }
 
   void addDrawCall(GLenum mode, GLsizei count, const Color& modColor,
                    int texID, float lineWidth) {

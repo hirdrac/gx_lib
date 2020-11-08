@@ -102,6 +102,19 @@ namespace {
     return true;
   }
 
+  // DrawEntry iterator reading helper functions
+  template <typename T>
+  int32_t ival(T& itr) { return (itr++)->ival; }
+
+  template <typename T>
+  int32_t uval(T& itr) { return (itr++)->uval; }
+
+  template <typename T>
+  float fval(T& itr) { return (itr++)->fval; }
+
+  template <typename T>
+  gx::Vec2 fval2(T& itr) { return {(itr++)->fval, (itr++)->fval}; }
+
   // **** Callbacks ****
   void CleanUpOpenGL()
   {
@@ -251,12 +264,20 @@ void gx::OpenGLRenderer::draw(const DrawList& dl, const Color& modColor)
   for (auto itr = entries.cbegin(), end = entries.cend(); itr != end; ) {
     DrawCmd cmd = itr->cmd;
     switch (cmd) {
-      case CMD_color:     itr += 2; break;
-      case CMD_lineWidth: itr += 2; break;
-      case CMD_line:      itr += 5;  size += 2; break;
-      case CMD_triangle:  itr += 7;  size += 3; break;
-      case CMD_rectangle: itr += 5;  size += 6; break;
-      case CMD_image:     itr += 10; size += 6; break;
+      case CMD_color:      itr += 2; break;
+      case CMD_lineWidth:  itr += 2; break;
+      case CMD_texture:    itr += 2; break;
+      case CMD_line:       itr += 5;  size += 2; break;
+      case CMD_triangle:   itr += 7;  size += 3; break;
+      case CMD_triangleT:  itr += 13; size += 3; break;
+      case CMD_triangleC:  itr += 10; size += 3; break;
+      case CMD_triangleTC: itr += 16; size += 3; break;
+      case CMD_quad:       itr += 9;  size += 6; break;
+      case CMD_quadT:      itr += 17; size += 6; break;
+      case CMD_quadC:      itr += 13; size += 6; break;
+      case CMD_quadTC:     itr += 21; size += 6; break;
+      case CMD_rectangle:  itr += 5;  size += 6; break;
+      case CMD_rectangleT: itr += 9;  size += 6; break;
       default:
         itr = end; // stop reading at first invalid cmd
         LOG_ERROR("unknown DrawCmd value: ", int(cmd));
@@ -265,68 +286,144 @@ void gx::OpenGLRenderer::draw(const DrawList& dl, const Color& modColor)
   }
 
   // general triangle layout
-  //  2--3
-  //  |\ |
-  //  | \|
   //  0--1
+  //  | /|
+  //  |/ |
+  //  2--3
 
   _vertices.reserve(_vertices.size() + size);
   uint32_t color = 0xffffffff;
-  float lineWidth = 1.0f;
+  float lw = 1.0f;
+  int tid = 0;
+
   for (auto itr = entries.cbegin(), end = entries.cend(); itr != end; ) {
     DrawCmd cmd = (itr++)->cmd;
     switch (cmd) {
-      case CMD_color: {
-	color = (itr++)->uval;
-	break;
-      }
-      case CMD_lineWidth: {
-	lineWidth = (itr++)->fval;
-	break;
-      }
+      case CMD_color:     color = uval(itr); break;
+      case CMD_lineWidth: lw    = fval(itr); break;
+      case CMD_texture:   tid   = ival(itr); break;
+
       case CMD_line: {
-	addDrawCall(GL_LINES, 2, modColor, 0, lineWidth);
-	float x0 = (itr++)->fval, y0 = (itr++)->fval;
-	float x1 = (itr++)->fval, y1 = (itr++)->fval;
-	addVertex(x0,y0, 0.0f,0.0f, color);
-	addVertex(x1,y1, 0.0f,0.0f, color);
+	addVertex(fval2(itr), color);
+	addVertex(fval2(itr), color);
+	addDrawCall(GL_LINES, 2, modColor, 0, lw);
 	break;
       }
       case CMD_triangle: {
-	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lineWidth);
-	float x0 = (itr++)->fval, y0 = (itr++)->fval;
-	float x1 = (itr++)->fval, y1 = (itr++)->fval;
-	float x2 = (itr++)->fval, y2 = (itr++)->fval;
-	addVertex(x0,y0, 0.0f,0.0f, color);
-	addVertex(x1,y1, 0.0f,0.0f, color);
-	addVertex(x2,y2, 0.0f,0.0f, color);
+	addVertex(fval2(itr), color);
+	addVertex(fval2(itr), color);
+	addVertex(fval2(itr), color);
+	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
 	break;
+      }
+      case CMD_triangleT: {
+        Vec2 p0 = fval2(itr), t0 = fval2(itr);
+        Vec2 p1 = fval2(itr), t1 = fval2(itr);
+        Vec2 p2 = fval2(itr), t2 = fval2(itr);
+        addVertex(p0, t0, color);
+	addVertex(p1, t1, color);
+	addVertex(p2, t2, color);
+	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
+        break;
+      }
+      case CMD_triangleC: {
+        Vec2 p0 = fval2(itr); uint32_t c0 = uval(itr);
+        Vec2 p1 = fval2(itr); uint32_t c1 = uval(itr);
+        Vec2 p2 = fval2(itr); uint32_t c2 = uval(itr);
+        addVertex(p0, c0);
+	addVertex(p1, c1);
+	addVertex(p2, c2);
+	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
+        break;
+      }
+      case CMD_triangleTC: {
+        Vec2 p0 = fval2(itr), t0 = fval2(itr); uint32_t c0 = uval(itr);
+        Vec2 p1 = fval2(itr), t1 = fval2(itr); uint32_t c1 = uval(itr);
+        Vec2 p2 = fval2(itr), t2 = fval2(itr); uint32_t c2 = uval(itr);
+        addVertex(p0, t0, c0);
+	addVertex(p1, t1, c1);
+	addVertex(p2, t2, c2);
+	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
+        break;
+      }
+      case CMD_quad: {
+        Vec2 p0 = fval2(itr), p1 = fval2(itr);
+        Vec2 p2 = fval2(itr), p3 = fval2(itr);
+	addVertex(p0, color);
+	addVertex(p1, color);
+	addVertex(p2, color);
+        addVertex(p1, color);
+        addVertex(p3, color);
+        addVertex(p2, color);
+	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
+        break;
+      }
+      case CMD_quadT: {
+        Vec2 p0 = fval2(itr), t0 = fval2(itr);
+        Vec2 p1 = fval2(itr), t1 = fval2(itr);
+        Vec2 p2 = fval2(itr), t2 = fval2(itr);
+        Vec2 p3 = fval2(itr), t3 = fval2(itr);
+	addVertex(p0, t0, color);
+	addVertex(p1, t1, color);
+	addVertex(p2, t2, color);
+        addVertex(p1, t1, color);
+        addVertex(p3, t3, color);
+        addVertex(p2, t2, color);
+	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
+        break;
+      }
+      case CMD_quadC: {
+        Vec2 p0 = fval2(itr); uint32_t c0 = uval(itr);
+        Vec2 p1 = fval2(itr); uint32_t c1 = uval(itr);
+        Vec2 p2 = fval2(itr); uint32_t c2 = uval(itr);
+        Vec2 p3 = fval2(itr); uint32_t c3 = uval(itr);
+        addVertex(p0, c0);
+	addVertex(p1, c1);
+	addVertex(p2, c2);
+	addVertex(p1, c1);
+	addVertex(p3, c3);
+	addVertex(p2, c2);
+	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
+        break;
+      }
+      case CMD_quadTC: {
+        Vec2 p0 = fval2(itr), t0 = fval2(itr); uint32_t c0 = uval(itr);
+        Vec2 p1 = fval2(itr), t1 = fval2(itr); uint32_t c1 = uval(itr);
+        Vec2 p2 = fval2(itr), t2 = fval2(itr); uint32_t c2 = uval(itr);
+        Vec2 p3 = fval2(itr), t3 = fval2(itr); uint32_t c3 = uval(itr);
+	addVertex(p0, t0, c0);
+	addVertex(p1, t1, c1);
+	addVertex(p2, t2, c2);
+	addVertex(p1, t1, c1);
+	addVertex(p3, t3, c3);
+	addVertex(p2, t2, c2);
+	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
+        break;
       }
       case CMD_rectangle: {
-	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lineWidth);
-	float x0 = (itr++)->fval, y0 = (itr++)->fval;
-	float x1 = (itr++)->fval, y1 = (itr++)->fval;
-	addVertex(x0,y0, 0.0f,0.0f, color);
-	addVertex(x1,y0, 0.0f,0.0f, color);
-	addVertex(x0,y1, 0.0f,0.0f, color);
-	addVertex(x1,y0, 0.0f,0.0f, color);
-	addVertex(x1,y1, 0.0f,0.0f, color);
-	addVertex(x0,y1, 0.0f,0.0f, color);
+        Vec2 p0 = fval2(itr), p3 = fval2(itr);
+        Vec2 p1 = {p3.x,p0.y}, p2 = {p0.x,p3.y};
+	addVertex(p0, color);
+	addVertex(p1, color);
+	addVertex(p2, color);
+	addVertex(p1, color);
+	addVertex(p3, color);
+	addVertex(p2, color);
+	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
 	break;
       }
-      case CMD_image: {
-	int tid = (itr++)->ival;
-	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lineWidth);
-	float x0 = (itr++)->fval, y0 = (itr++)->fval;
-	float x1 = (itr++)->fval, y1 = (itr++)->fval;
-	float tx0 = (itr++)->fval, ty0 = (itr++)->fval;
-	float tx1 = (itr++)->fval, ty1 = (itr++)->fval;
-	addVertex(x0,y0, tx0,ty0, color);
-	addVertex(x1,y0, tx1,ty0, color);
-	addVertex(x0,y1, tx0,ty1, color);
-	addVertex(x1,y0, tx1,ty0, color);
-	addVertex(x1,y1, tx1,ty1, color);
-	addVertex(x0,y1, tx0,ty1, color);
+      case CMD_rectangleT: {
+        Vec2 p0 = fval2(itr), t0 = fval2(itr);
+        Vec2 p3 = fval2(itr), t3 = fval2(itr);
+        Vec2 p1 = {p3.x,p0.y}, t1 = {t3.x,t0.y};
+        Vec2 p2 = {p0.x,p3.y}, t2 = {t0.x,t3.y};
+	addVertex(p0, t0, color);
+	addVertex(p1, t1, color);
+	addVertex(p2, t2, color);
+	addVertex(p1, t1, color);
+	addVertex(p3, t3, color);
+	addVertex(p2, t2, color);
+	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
 	break;
       }
       default:

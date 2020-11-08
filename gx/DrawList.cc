@@ -30,6 +30,7 @@ void gx::DrawList::text(const Font& f, float x, float y, AlignEnum align,
       break;
   }
 
+  texture(f.tex());
   AlignEnum h_align = HAlign(align);
   std::size_t lineStart = 0;
   for (;;) {
@@ -57,8 +58,7 @@ void gx::DrawList::text(const Font& f, float x, float y, AlignEnum align,
           float yy = cursorY - g->top;
 
 	  // convert x,y to int to make sure text is pixel aligned
-	  image(f.tex(), int(xx), int(yy), g->width, g->height,
-		g->t0.x, g->t0.y, g->t1.x, g->t1.y);
+	  rectangle(int(xx), int(yy), g->width, g->height, g->t0, g->t1);
         }
         cursorX += g->advX;
       }
