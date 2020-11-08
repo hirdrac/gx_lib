@@ -13,7 +13,6 @@ BIN2.SRC = image_viewer.cc
 BIN2.LIBS = LIB_gx
 
 
-#SYMLINKS = gx
 STANDARD = c++17
 OPTIONS = lto modern_c++
 DEFINE = DEBUG_GL

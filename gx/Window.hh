@@ -179,7 +179,7 @@ class gx::Window
 
   [[nodiscard]] int events() const { return _events; }
     // current event mask
-  
+
   void removeEvent(int event_mask) { _events &= ~(_events & event_mask); }
     // remove event(s) from current event mask
 
