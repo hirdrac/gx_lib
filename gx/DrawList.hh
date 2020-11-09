@@ -103,20 +103,19 @@ namespace gx {
 class gx::DrawList
 {
  public:
+  DrawList() { init(); }
+
   // Low-level data entry
-  void clear() { _data.clear(); }
+  void clear() { init(); _data.clear(); }
   void reserve(std::size_t n) { _data.reserve(n); }
   [[nodiscard]] std::size_t size() const { return _data.size(); }
 
   // control/state change
-  void color(float r, float g, float b, float a = 1.0f) {
-    add(CMD_color, packRGBA8(r, g, b, a)); }
-  void color(const Color& c) {
-    add(CMD_color, packRGBA8(c.r, c.g, c.b, c.a)); }
-  void color(uint32_t c) {
-    add(CMD_color, c); }
-  void lineWidth(float w) { add(CMD_lineWidth, w); }
-  void texture(const Texture& t) { add(CMD_texture, t.id()); }
+  inline void color(float r, float g, float b, float a = 1.0f);
+  inline void color(const Color& c);
+  inline void color(uint32_t c);
+  inline void lineWidth(float w);
+  inline void texture(const Texture& t);
 
   // line drawing
   void line(Vec2 p0, Vec2 p1) { add(CMD_line, p0.x, p0.y, p1.x, p1.y); }
@@ -175,6 +174,15 @@ class gx::DrawList
 
  private:
   std::vector<DrawEntry> _data;
+  uint32_t _lastColor;
+  float _lastLineWidth;
+  int _lastTexID;
+
+  void init() {
+    _lastColor = 0xffffffff;
+    _lastLineWidth = 1.0f;
+    _lastTexID = 0;
+  }
 
   template<typename... Args>
   void add(DrawCmd cmd, const Args&... args) {
@@ -182,3 +190,48 @@ class gx::DrawList
     _data.insert(_data.end(), x.begin(), x.end());
   }
 };
+
+
+// **** Inline Implementations ****
+void gx::DrawList::color(float r, float g, float b, float a)
+{
+  uint32_t val = packRGBA8(r, g, b, a);
+  if (val != _lastColor) {
+    _lastColor = val;
+    add(CMD_color, val);
+  }
+}
+
+void gx::DrawList::color(const Color& c)
+{
+  uint32_t val = packRGBA8(c.r, c.g, c.b, c.a);
+  if (val != _lastColor) {
+    _lastColor = val;
+    add(CMD_color, val);
+  }
+}
+
+void gx::DrawList::color(uint32_t c)
+{
+  if (c != _lastColor) {
+    _lastColor = c;
+    add(CMD_color, c);
+  }
+}
+
+void gx::DrawList::lineWidth(float w)
+{
+  if (w != _lastLineWidth) {
+    _lastLineWidth = w;
+    add(CMD_lineWidth, w);
+  }
+}
+
+void gx::DrawList::texture(const Texture& t)
+{
+  int tid = t.id();
+  if (tid != _lastTexID) {
+    _lastTexID = tid;
+    add(CMD_texture, tid);
+  }
+}
