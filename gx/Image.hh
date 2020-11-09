@@ -6,7 +6,7 @@
 // TODO - load from static data
 
 #pragma once
-#include "Glyph.hh"
+#include "types.hh"
 #include <string>
 #include <memory>
 #include <cstdint>
@@ -15,6 +15,7 @@
 
 namespace gx {
   class Image;
+  class Glyph;
 }
 
 class gx::Image

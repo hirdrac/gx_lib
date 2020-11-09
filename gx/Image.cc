@@ -4,6 +4,7 @@
 //
 
 #include "Image.hh"
+#include "Glyph.hh"
 #include "Logger.hh"
 #include <cassert>
 #include "stb_image.h"

@@ -11,6 +11,7 @@
 #pragma once
 #include "DrawList.hh"
 #include "Color.hh"
+#include "types.hh"
 #include <string_view>
 #include <vector>
 
