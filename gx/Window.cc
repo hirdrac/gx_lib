@@ -356,13 +356,16 @@ void gx::Window::keyCB(
     ++ks.pressCount;
     ks.pressed = true;
     if (key > 255) {
+      e._events |= EVENT_CHAR;
       e._chars.push_back({0, int16_t(key), uint8_t(mods), false}); }
   } else if (action == GLFW_RELEASE) {
     ks.pressed = false;
   } else if (action == GLFW_REPEAT) {
     ++ks.repeatCount;
     if (key > 255) {
-      e._chars.push_back({0, int16_t(key), uint8_t(mods), true}); }
+      e._events |= EVENT_CHAR;
+      e._chars.push_back({0, int16_t(key), uint8_t(mods), true});
+    }
   }
 }
 
