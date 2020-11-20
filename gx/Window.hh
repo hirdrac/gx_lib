@@ -178,9 +178,11 @@ class gx::Window
     // (in microseconds since first window open)
 
   [[nodiscard]] int events() const { return _events; }
+  [[nodiscard]] int removedEvents() const { return _removedEvents; }
     // current event mask
 
-  void removeEvent(int event_mask) { _events &= ~(_events & event_mask); }
+  void removeEvent(int event_mask) {
+    int e = _events & event_mask; _removedEvents |= e; _events &= ~e; }
     // remove event(s) from current event mask
 
   // window state
@@ -227,7 +229,7 @@ class gx::Window
 
   // event state
   int64_t _pollTime = 0;
-  int _events = 0;
+  int _events = 0, _removedEvents = 0;
   std::vector<KeyState> _keyStates;
   std::vector<CharInfo> _chars;
   float _mouseX = 0, _mouseY = 0;

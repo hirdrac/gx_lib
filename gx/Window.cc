@@ -181,6 +181,7 @@ bool gx::Window::open()
   }
 
   _events = EVENT_SIZE; // always generate a resize event initially
+  _removedEvents = 0;
   glfwSetWindowCloseCallback(win, closeCB);
   glfwSetFramebufferSizeCallback(win, sizeCB);
   glfwSetKeyCallback(win, keyCB);
@@ -254,6 +255,7 @@ int gx::Window::pollEvents()
 {
   // reset event state
   _events = 0;
+  _removedEvents = 0;
   _scrollX = 0;
   _scrollY = 0;
   _chars.clear();
