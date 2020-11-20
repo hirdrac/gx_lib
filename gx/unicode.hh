@@ -1,5 +1,5 @@
 //
-// gx/Unicode.hh
+// gx/unicode.hh
 // Copyright (C) 2020 Richard Bradley
 //
 // Unicode/UTF-8 utilities
@@ -8,6 +8,7 @@
 
 #pragma once
 #include <string>
+#include <string_view>
 
 
 namespace gx
@@ -15,6 +16,12 @@ namespace gx
   // functions
   std::string toUTF8(int code);
     // returns UTF-8 encoded value (1-4 characters) of a unicode character
+
+  int lengthUTF8(std::string_view str);
+    // returns UTF8 string length
+
+  void popbackUTF8(std::string& str);
+    // removes last trailing UTF-8 character
 
   class UTF8Iterator;
 }

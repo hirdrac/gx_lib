@@ -1,9 +1,19 @@
 //
-// gx/Unicode.cc
+// gx/unicode.cc
 // Copyright (C) 2020 Richard Bradley
 //
 
 #include "unicode.hh"
+
+
+// ** NOTES **
+// starting UTF-8 char:
+//   0b0xxxxxxx  1 char encoding
+//   0b110xxxxx  2 char encoding
+//   0b1110xxxx  3 char encoding
+//   0b11110xxx  4 char encoding
+// additional char in multi-char encoding:
+//   0b10xxxxxx
 
 
 // functions
@@ -33,6 +43,24 @@ std::string gx::toUTF8(int num)
     *ptr++ = char(0b10000000);
   }
   return std::string(str, ptr);
+}
+
+int gx::lengthUTF8(std::string_view sv)
+{
+  int len = 0;
+  for (UTF8Iterator itr(sv); !itr.done(); itr.next()) { ++len; }
+  return len;
+}
+
+void gx::popbackUTF8(std::string& str)
+{
+  while (!str.empty()) {
+    int c = str.back();
+    str.pop_back();
+
+    // stop pop back if char isn't the 2/3/4 char in a multi-char encoding
+    if ((c & 0b11000000) != 0b10000000) { break; }
+  }
 }
 
 
