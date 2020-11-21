@@ -1,5 +1,5 @@
 //
-// gx/print.hh
+// gx/Print.hh
 // Copyright (C) 2020 Richard Bradley
 //
 // simplified stdout/stderr output

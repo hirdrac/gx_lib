@@ -1,5 +1,5 @@
 //
-// gx/string_util.hh
+// gx/StringUtil.hh
 // Copyright (C) 2020 Richard Bradley
 //
 

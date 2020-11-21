@@ -1,5 +1,5 @@
 //
-// math_util.hh
+// gx/MathUtil.hh
 // Copyright (C) 2020 Richard Bradley
 //
 // fun and useful numeric constants and

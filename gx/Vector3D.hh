@@ -1,5 +1,5 @@
 //
-// Vector3D.hh
+// gx/Vector3D.hh
 // Copyright (C) 2020 Richard Bradley
 //
 // vector template types/functions for 3D calculations
