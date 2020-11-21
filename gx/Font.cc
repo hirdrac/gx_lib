@@ -8,7 +8,6 @@
 #include "Image.hh"
 #include "Window.hh"
 #include "Logger.hh"
-#include "print.hh"
 #include <string>
 #include <cstdlib>
 

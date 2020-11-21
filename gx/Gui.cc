@@ -6,7 +6,6 @@
 #include "Gui.hh"
 #include "Window.hh"
 #include "Font.hh"
-#include "print.hh"
 #include "Logger.hh"
 #include <algorithm>
 #include <cassert>

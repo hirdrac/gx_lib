@@ -6,7 +6,7 @@
 //
 
 #pragma once
-#include "math_util.hh"
+#include "MathUtil.hh"
 #include <ostream>
 
 

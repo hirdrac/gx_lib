@@ -8,8 +8,8 @@
 #include "gx/Window.hh"
 #include "gx/DrawList.hh"
 #include "gx/Texture.hh"
-#include "gx/print.hh"
-#include "gx/string_util.hh"
+#include "gx/Print.hh"
+#include "gx/StringUtil.hh"
 #include <vector>
 
 

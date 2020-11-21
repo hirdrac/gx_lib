@@ -1,5 +1,5 @@
 //
-// gx/unicode.hh
+// gx/Unicode.hh
 // Copyright (C) 2020 Richard Bradley
 //
 // Unicode/UTF-8 utilities

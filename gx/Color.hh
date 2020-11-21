@@ -5,7 +5,7 @@
 // Color types & utility functions
 
 #pragma once
-#include "types.hh"
+#include "Types.hh"
 #include <algorithm>
 #include <cstdint>
 

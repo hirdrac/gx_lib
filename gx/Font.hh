@@ -6,7 +6,7 @@
 #pragma once
 #include "Glyph.hh"
 #include "Texture.hh"
-#include "types.hh"
+#include "Types.hh"
 #include <string>
 #include <string_view>
 #include <map>

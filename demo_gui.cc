@@ -1,7 +1,7 @@
 #include "gx/Window.hh"
 #include "gx/Font.hh"
 #include "gx/Gui.hh"
-#include "gx/print.hh"
+#include "gx/Print.hh"
 
 
 constexpr int DEFAULT_WIDTH = 1280;

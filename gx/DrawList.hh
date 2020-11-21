@@ -13,7 +13,7 @@
 #pragma once
 #include "Texture.hh"
 #include "Color.hh"
-#include "types.hh"
+#include "Types.hh"
 #include <vector>
 #include <string_view>
 #include <initializer_list>

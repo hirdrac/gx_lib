@@ -11,7 +11,7 @@
 #include "Color.hh"
 #include "Logger.hh"
 #include "OpenGL.hh"
-#include "print.hh"
+//#include "Print.hh"
 #include <GLFW/glfw3.h>
 #include <cstdlib>
 

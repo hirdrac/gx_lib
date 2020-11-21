@@ -7,7 +7,7 @@
 
 #pragma once
 #include "Color.hh"
-#include "types.hh"
+#include "Types.hh"
 
 
 struct GLFWwindow;

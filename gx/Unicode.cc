@@ -1,9 +1,9 @@
 //
-// gx/unicode.cc
+// gx/Unicode.cc
 // Copyright (C) 2020 Richard Bradley
 //
 
-#include "unicode.hh"
+#include "Unicode.hh"
 
 
 // ** NOTES **

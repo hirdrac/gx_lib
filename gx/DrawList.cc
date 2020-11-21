@@ -5,7 +5,7 @@
 
 #include "DrawList.hh"
 #include "Font.hh"
-#include "unicode.hh"
+#include "Unicode.hh"
 
 
 void gx::DrawList::text(const Font& f, float x, float y, AlignEnum align,

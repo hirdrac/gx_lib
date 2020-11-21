@@ -6,7 +6,7 @@
 #include "Window.hh"
 #include "OpenGLRenderer.hh"
 #include "Logger.hh"
-#include "print.hh"
+//#include "Print.hh"
 #include <algorithm>
 #include <chrono>
 #include <cassert>
