@@ -6,6 +6,7 @@
 #include "Window.hh"
 #include "OpenGLRenderer.hh"
 #include "Logger.hh"
+#include "System.hh"
 //#include "Print.hh"
 #include <algorithm>
 #include <chrono>
@@ -15,8 +16,24 @@
 
 
 namespace {
-  // **** General Globals ****
+  // **** Time global & support functions ****
   std::chrono::high_resolution_clock::time_point startTime;
+
+  inline void initStartTime()
+  {
+    int64_t t = std::chrono::duration_cast<std::chrono::microseconds>(
+      startTime.time_since_epoch()).count();
+    if (t == 0) {
+      startTime = std::chrono::high_resolution_clock::now();
+    }
+  }
+
+  inline int64_t timeSinceStart()
+  {
+    auto now = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+      now - startTime).count();
+  }
 
   // **** Helper Functions ****
   constexpr int glfwBool(bool val) { return val ? GLFW_TRUE : GLFW_FALSE; }
@@ -29,17 +46,6 @@ namespace {
       case gx::MOUSE_DISABLE: return GLFW_CURSOR_DISABLED;
       default:                return -1;
     }
-  }
-
-  // **** Callbacks ****
-  void CleanUpGLFW()
-  {
-    glfwTerminate();
-  }
-
-  void ErrorCB(int error, const char* text)
-  {
-    LOG_ERROR("GLFW ERROR(", error, "): ", text);
   }
 }
 
@@ -111,19 +117,11 @@ void gx::Window::setMousePos(float x, float y)
 
 bool gx::Window::open()
 {
-  static bool initGLFW = false;
-  if (!initGLFW) {
-    glfwSetErrorCallback(ErrorCB);
-    if (!glfwInit()) {
-      LOG_ERROR("glfwInit() failed");
-      return 0;
-    }
-
-    startTime = std::chrono::high_resolution_clock::now();
-    std::atexit(CleanUpGLFW);
-    initGLFW = true;
+  if (!initGLFW()) {
+    return false;
   }
 
+  initStartTime();
   auto ren = std::make_shared<OpenGLRenderer>();
   // TODO - replace with factory constructor when multiple renderers
   //   are supported
@@ -277,10 +275,7 @@ int gx::Window::pollEvents()
   glfwPollEvents();
     // callbacks will set event values
 
-  auto now = std::chrono::high_resolution_clock::now();
-  _pollTime = std::chrono::duration_cast<std::chrono::microseconds>(
-    now - startTime).count();
-
+  _pollTime = timeSinceStart();
   return _events;
 }
 
