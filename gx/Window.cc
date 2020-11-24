@@ -350,17 +350,24 @@ void gx::Window::keyCB(
   if (action == GLFW_PRESS) {
     ++ks.pressCount;
     ks.pressed = true;
-    if (key > 255) {
-      e._events |= EVENT_CHAR;
-      e._chars.push_back({0, int16_t(key), uint8_t(mods), false}); }
   } else if (action == GLFW_RELEASE) {
     ks.pressed = false;
   } else if (action == GLFW_REPEAT) {
     ++ks.repeatCount;
-    if (key > 255) {
-      e._events |= EVENT_CHAR;
-      e._chars.push_back({0, int16_t(key), uint8_t(mods), true});
-    }
+  }
+
+  if ((action == GLFW_PRESS || action == GLFW_REPEAT)
+      && (key > 255 || mods & (MOD_CONTROL | MOD_ALT)))
+  {
+    // generate fake char events so control keys can be processed inline
+    //   with actual char events
+    //
+    // ISSUES
+    // - MOD_SUPER+key produces real char event so it's excluded here
+
+    //println("gen char event: ", key, ' ', mods);
+    e._events |= EVENT_CHAR;
+    e._chars.push_back({0, int16_t(key), uint8_t(mods), action == GLFW_REPEAT});
   }
 }
 
