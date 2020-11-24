@@ -17,28 +17,26 @@
 
 namespace {
   // **** Time global & support functions ****
-  std::chrono::high_resolution_clock::time_point startTime;
+  using clock = std::chrono::steady_clock;
+  clock::time_point startTime;
 
   inline void initStartTime()
   {
-    int64_t t = std::chrono::duration_cast<std::chrono::microseconds>(
-      startTime.time_since_epoch()).count();
-    if (t == 0) {
-      startTime = std::chrono::high_resolution_clock::now();
+    if (startTime.time_since_epoch().count() == 0) {
+      startTime = clock::now();
     }
   }
 
-  inline int64_t timeSinceStart()
+  inline int64_t usecSinceStart()
   {
-    auto now = std::chrono::high_resolution_clock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(
-      now - startTime).count();
+      clock::now() - startTime).count();
   }
 
   // **** Helper Functions ****
   constexpr int glfwBool(bool val) { return val ? GLFW_TRUE : GLFW_FALSE; }
 
-  int glfwCursorInputModeVal(gx::MouseModeEnum mode)
+  constexpr int glfwCursorInputModeVal(gx::MouseModeEnum mode)
   {
     switch (mode) {
       case gx::MOUSE_NORMAL:  return GLFW_CURSOR_NORMAL;
@@ -201,7 +199,7 @@ bool gx::Window::open()
   _renderer = std::move(ren);
   _maxTextureSize = _renderer->maxTextureSize();
 
-  glfwSetInputMode(win, GLFW_CURSOR, glfwCursorInputModeVal( _mouseMode));
+  glfwSetInputMode(win, GLFW_CURSOR, glfwCursorInputModeVal(_mouseMode));
   glfwShowWindow(win);
 
   // set initial mouse event state
@@ -275,7 +273,7 @@ int gx::Window::pollEvents()
   glfwPollEvents();
     // callbacks will set event values
 
-  _pollTime = timeSinceStart();
+  _pollTime = usecSinceStart();
   return _events;
 }
 
