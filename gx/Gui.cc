@@ -76,7 +76,7 @@ void gx::Gui::update(Window& win)
   int id = 0;
   GuiElemType type = GUI_NULL;
   if (win.mouseIn() && win.focused()) {
-    ptr = findEventElem(win.mouseX(), win.mouseY());
+    ptr = findElem(win.mouseX(), win.mouseY());
     if (ptr) {
       id = ptr->id;
       type = ptr->type;
@@ -136,6 +136,18 @@ void gx::Gui::update(Window& win)
   } else {
     _needRedraw = false;
   }
+}
+
+bool gx::Gui::setText(int id, std::string_view text)
+{
+  GuiElem* e = findElem(id);
+  if (!e) { return false; }
+
+  e->text = text;
+  _needRender = true;
+  _needSize = true;
+  _needPos = true;
+  return true;
 }
 
 void gx::Gui::init(GuiElem& def)
@@ -355,9 +367,10 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
   }
 }
 
-gx::GuiElem* gx::Gui::findEventElem(float x, float y)
+gx::GuiElem* gx::Gui::findElem(float x, float y)
 {
-  // full search through all elems needed because of popup elements
+  // - full search through all elems needed because of popup elements
+  // - only GuiElem with an id can be found
   std::vector<GuiElem*> stack;
   GuiElem* e = &_rootElem;
   while (e->id == 0 || !contains(*e, x, y)) {
@@ -371,6 +384,37 @@ gx::GuiElem* gx::Gui::findEventElem(float x, float y)
     stack.pop_back();
   }
   return e;
+}
+
+namespace {
+  template<class T>
+  inline T* findElemT(T* root, int id)
+  {
+    assert(id != 0);
+    std::vector<T*> stack;
+    T* e = root;
+    while (e->id != id) {
+      if (!e->elems.empty()) {
+        stack.reserve(stack.size() + e->elems.size());
+        for (T& c : e->elems) { stack.push_back(&c); }
+      }
+
+      if (stack.empty()) { return nullptr; }
+      e = stack.back();
+      stack.pop_back();
+    }
+    return e;
+  }
+}
+
+gx::GuiElem* gx::Gui::findElem(int id)
+{
+  return findElemT(&_rootElem, id);
+}
+
+const gx::GuiElem* gx::Gui::findElem(int id) const
+{
+  return findElemT(&_rootElem, id);
 }
 
 void gx::Gui::drawRec(const GuiElem& def, uint32_t col)

@@ -104,6 +104,13 @@ class gx::Gui
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // true if GUI needs to be redrawn
 
+  [[nodiscard]] std::string getText(int id) const {
+    const GuiElem* e = findElem(id);
+    return (e == nullptr) ? std::string() : e->text;
+  }
+
+  bool setText(int id, std::string_view text);
+
  private:
   GuiElem _rootElem;
   GuiTheme _theme;
@@ -126,7 +133,9 @@ class gx::Gui
   void calcPos(GuiElem& def, float base_x, float base_y);
   void deactivate(GuiElem& def);
   void drawElem(GuiElem& def, ButtonState bstate);
-  GuiElem* findEventElem(float x, float y);
+  GuiElem* findElem(float x, float y);
+  GuiElem* findElem(int id);
+  const GuiElem* findElem(int id) const;
   void drawRec(const GuiElem& def, uint32_t col);
 };
 
