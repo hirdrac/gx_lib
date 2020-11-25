@@ -51,7 +51,7 @@ struct gx::GuiElem
   std::vector<GuiElem> elems;  // child elements
   std::string text;  // label text
   AlignEnum align = ALIGN_TOP_LEFT;
-  int eventID = 0;
+  int id = 0;
   GuiElemType type;
 
   // layout result
@@ -207,7 +207,7 @@ namespace gx {
   {
     GuiElem e(GUI_BUTTON);
     e.elems.push_back(elem);
-    e.eventID = eventID;
+    e.id = eventID;
     return e;
   }
 
@@ -216,7 +216,7 @@ namespace gx {
     GuiElem e(GUI_BUTTON);
     e.elems.push_back(elem);
     e.align = align;
-    e.eventID = eventID;
+    e.id = eventID;
     return e;
   }
 
@@ -224,7 +224,7 @@ namespace gx {
   {
     GuiElem e(GUI_BUTTON);
     e.elems.push_back(gx::guiLabel(text));
-    e.eventID = eventID;
+    e.id = eventID;
     return e;
   }
 
@@ -233,7 +233,7 @@ namespace gx {
     GuiElem e(GUI_BUTTON);
     e.elems.push_back(gx::guiLabel(text));
     e.align = align;
-    e.eventID = eventID;
+    e.id = eventID;
     return e;
   }
 
@@ -253,7 +253,7 @@ namespace gx {
   {
     GuiElem e(GUI_MENU_ITEM);
     e.elems.push_back(gx::guiLabel(text));
-    e.eventID = eventID;
+    e.id = eventID;
     return e;
   }
 }

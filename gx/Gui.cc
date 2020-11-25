@@ -78,7 +78,7 @@ void gx::Gui::update(Window& win)
   if (win.mouseIn() && win.focused()) {
     ptr = findEventElem(win.mouseX(), win.mouseY());
     if (ptr) {
-      id = ptr->eventID;
+      id = ptr->id;
       type = ptr->type;
     }
   }
@@ -141,7 +141,7 @@ void gx::Gui::update(Window& win)
 void gx::Gui::init(GuiElem& def)
 {
   if (def.type == GUI_MENU) {
-    def.eventID = _uniqueID--;
+    def.id = _uniqueID--;
   }
   for (GuiElem& e : def.elems) { init(e); }
 }
@@ -312,15 +312,15 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
       _dl.rectangle(def._x + _theme.border, def._y + _theme.border, def._w - (_theme.border*2), def._h - (_theme.border*2));
       break;
     case GUI_BUTTON:
-      if (def.eventID == _heldID) {
-        if (def.eventID == _hoverID) {
+      if (def.id == _heldID) {
+        if (def.id == _hoverID) {
           drawRec(def, _theme.colorButtonPressed);
           bstate = BSTATE_PRESSED;
         } else {
           drawRec(def, _theme.colorButtonHeldOnly);
           bstate = BSTATE_HELD_ONLY;
         }
-      } else if (def.eventID == _hoverID && !_heldID) {
+      } else if (def.id == _hoverID && !_heldID) {
         drawRec(def, _theme.colorButtonHover);
         bstate = BSTATE_HOVER;
       } else {
@@ -330,10 +330,10 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
       drawElem(def.elems[0], bstate);
       break;
     case GUI_MENU:
-      if (def.eventID == _heldID) {
+      if (def.id == _heldID) {
         drawRec(def, _theme.colorMenuSelect);
         bstate = BSTATE_HELD_ONLY;
-      } else if (def.eventID == _hoverID && !_heldID) {
+      } else if (def.id == _hoverID && !_heldID) {
         drawRec(def, _theme.colorMenuHover);
         bstate = BSTATE_HOVER;
       } else {
@@ -344,7 +344,7 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
       if (def._active) { drawElem(def.elems[1], bstate); }
       break;
     case GUI_MENU_ITEM:
-      if (def.eventID == _hoverID) {
+      if (def.id == _hoverID) {
         drawRec(def, _theme.colorMenuItemSelect);
       }
       drawElem(def.elems[0], bstate);
@@ -360,7 +360,7 @@ gx::GuiElem* gx::Gui::findEventElem(float x, float y)
   // full search through all elems needed because of popup elements
   std::vector<GuiElem*> stack;
   GuiElem* e = &_rootElem;
-  while (e->eventID == 0 || !contains(*e, x, y)) {
+  while (e->id == 0 || !contains(*e, x, y)) {
     if (e->type != GUI_MENU || e->_active) {
       stack.reserve(stack.size() + e->elems.size());
       for (GuiElem& c : e->elems) { stack.push_back(&c); }
