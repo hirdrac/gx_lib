@@ -223,7 +223,7 @@ float gx::Font::calcWidth(std::string_view text) const
   const Glyph* g = nullptr;
   for (auto ch : text) {
     if (ch == '\n') {
-      if (g) { width += -g->advX + (float(g->width) + g->left); }
+      //if (g) { width += -g->advX + (float(g->width) + g->left); }
       max_width = std::max(max_width, width);
       width = 0;
     }
@@ -231,7 +231,7 @@ float gx::Font::calcWidth(std::string_view text) const
     if (g) { width += g->advX; }
   }
 
-  if (g) { width += -g->advX + (float(g->width) + g->left); }
+  //if (g) { width += -g->advX + (float(g->width) + g->left); }
   return std::max(max_width, width);
 }
 
