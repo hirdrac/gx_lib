@@ -8,8 +8,50 @@
 #include "Unicode.hh"
 
 
-void gx::DrawList::text(const Font& f, float x, float y, AlignEnum align,
-			int spacing, std::string_view text)
+void gx::DrawList::rectangle(
+  float x, float y, float w, float h, Vec2 t0, Vec2 t1, const Rect& clip)
+{
+  float x0 = x;
+  float y0 = y;
+  float x1 = x + w;
+  float y1 = y + h;
+  const float cx0 = clip.x;
+  const float cy0 = clip.y;
+  const float cx1 = clip.x + clip.w;
+  const float cy1 = clip.y + clip.h;
+
+  if (x0 >= cx1 || y0 >= cy1 || x1 <= cx0 || y1 <= cy0) {
+    return; // completely outside of clip region
+  }
+
+  float tx0 = t0.x;
+  float ty0 = t0.y;
+  float tx1 = t1.x;
+  float ty1 = t1.y;
+
+  if (x0 < cx0) { // left edge clipped
+    tx0 = tx1 - ((tx1 - tx0) * ((x1 - cx0) / (x1 - x0)));
+    x0 = cx0;
+  }
+  if (y0 < cy0) { // top clipped
+    ty0 = ty1 - ((ty1 - ty0) * ((y1 - cy0) / (y1 - y0)));
+    y0 = cy0;
+  }
+  if (x1 > cx1) { // right edge clipped
+    tx1 = tx0 + ((tx1 - tx0) * ((cx1 - x0) / (x1 - x0)));
+    x1 = cx1;
+  }
+  if (y1 > cy1) { // bottom clipped
+    ty1 = ty0 + ((ty1 - ty0) * ((cy1 - y0) / (y1 - y0)));
+    y1 = cy1;
+  }
+
+  add(CMD_rectangleT, x0, y0, tx0, ty0, x1, y1, tx1, ty1);
+}
+
+void gx::DrawList::_text(
+  const Font& f, float x, float y, AlignEnum align, int spacing,
+  std::string_view text, const Rect* clipPtr)
 {
   if (text.empty()) { return; }
 
@@ -54,11 +96,15 @@ void gx::DrawList::text(const Font& f, float x, float y, AlignEnum align,
         if (!g) { continue; }
 
         if (g->width > 0 && g->height > 0) {
-          float xx = cursorX + g->left;
-          float yy = cursorY - g->top;
+          // convert x,y to int to make sure text is pixel aligned
+          float gx = int(cursorX + g->left);
+          float gy = int(cursorY - g->top);
 
-	  // convert x,y to int to make sure text is pixel aligned
-	  rectangle(int(xx), int(yy), g->width, g->height, g->t0, g->t1);
+          if (clipPtr) {
+            rectangle(gx, gy, g->width, g->height, g->t0, g->t1, *clipPtr);
+          } else {
+            rectangle(gx, gy, g->width, g->height, g->t0, g->t1);
+          }
         }
         cursorX += g->advX;
       }

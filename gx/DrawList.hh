@@ -4,7 +4,6 @@
 //
 
 // TODO - vertical/horizontal color gradiant
-// TODO - clipping region
 // TODO - continuous lines [lineX <vertex count> <v1> <v2> ...]
 // TODO - text vertical/horizontal scaling
 // TODO - text rotation
@@ -162,12 +161,23 @@ class gx::DrawList
 
   void rectangle(float x, float y, float w, float h) {
     add(CMD_rectangle, x, y, x+w, y+h); }
+  void rectangle(const Rect& r) {
+    add(CMD_rectangle, r.x, r.y, r.x+r.w, r.y+r.h); }
   void rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1) {
     add(CMD_rectangleT, x, y, t0.x, t0.y, x+w, y+h, t1.x, t1.y); }
+  void rectangle(const Rect& r, Vec2 t0, Vec2 t1) {
+    add(CMD_rectangleT, r.x, r.y, t0.x, t0.y, r.x+r.w, r.y+r.h, t1.x, t1.y); }
+
+  void rectangle(
+    float x, float y, float w, float h, Vec2 t0, Vec2 t1, const Rect& clip);
 
   // High-level data entry
   void text(const Font& f, float x, float y, AlignEnum align, int spacing,
-	    std::string_view text);
+	    std::string_view text) {
+    _text(f, x, y, align, spacing, text, nullptr); }
+  void text(const Font& f, float x, float y, AlignEnum align, int spacing,
+            std::string_view text, const Rect& clip) {
+    _text(f, x, y, align, spacing, text, &clip); }
 
   // Data extraction
   [[nodiscard]] const std::vector<DrawEntry>& entries() const { return _data; }
@@ -189,6 +199,9 @@ class gx::DrawList
     std::initializer_list<DrawEntry> x = {cmd, args...};
     _data.insert(_data.end(), x.begin(), x.end());
   }
+
+  void _text(const Font& f, float x, float y, AlignEnum align, int spacing,
+             std::string_view text, const Rect* clipPtr);
 };
 
 
