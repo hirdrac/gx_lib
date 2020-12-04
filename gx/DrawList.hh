@@ -3,11 +3,10 @@
 // Copyright (C) 2020 Richard Bradley
 //
 
-// TODO - vertical/horizontal color gradiant
 // TODO - continuous lines [lineX <vertex count> <v1> <v2> ...]
 // TODO - text vertical/horizontal scaling
 // TODO - text rotation
-// TODO - textured triangle/quad
+// TODO - support color gradiant for primitives other than rectangle
 
 #pragma once
 #include "Texture.hh"
@@ -113,6 +112,9 @@ class gx::DrawList
   inline void color(float r, float g, float b, float a = 1.0f);
   inline void color(const Color& c);
   inline void color(uint32_t c);
+  inline void hgradiant(float x0, uint32_t c0, float x1, uint32_t c1);
+  inline void vgradiant(float y0, uint32_t c0, float y1, uint32_t c1);
+
   inline void lineWidth(float w);
   inline void texture(const Texture& t);
 
@@ -159,17 +161,10 @@ class gx::DrawList
         v2.pt.x, v2.pt.y, v2.tx.x, v2.tx.y, v2.c,
         v3.pt.x, v3.pt.y, v3.tx.x, v3.tx.y, v3.c); }
 
-  void rectangle(float x, float y, float w, float h) {
-    add(CMD_rectangle, x, y, x+w, y+h); }
-  void rectangle(const Rect& r) {
-    add(CMD_rectangle, r.x, r.y, r.x+r.w, r.y+r.h); }
-  void rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1) {
-    add(CMD_rectangleT, x, y, t0.x, t0.y, x+w, y+h, t1.x, t1.y); }
-  void rectangle(const Rect& r, Vec2 t0, Vec2 t1) {
-    add(CMD_rectangleT, r.x, r.y, t0.x, t0.y, r.x+r.w, r.y+r.h, t1.x, t1.y); }
-
-  void rectangle(
-    float x, float y, float w, float h, Vec2 t0, Vec2 t1, const Rect& clip);
+  void rectangle(float x, float y, float w, float h);
+  void rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1);
+  void rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1,
+                 const Rect& clip);
 
   // High-level data entry
   void text(const Font& f, float x, float y, AlignEnum align, int spacing,
@@ -188,10 +183,18 @@ class gx::DrawList
   float _lastLineWidth;
   int _lastTexID;
 
+  float _g0, _g1;         // x or y gradiant coords
+  uint32_t _c0, _c1;      // gradiant colors (packed)
+  Color _color0, _color1; // gradiant colors (full)
+
+  enum ColorMode { CM_SOLID, CM_HGRADIANT, CM_VGRADIANT };
+  ColorMode _colorMode;
+
   void init() {
     _lastColor = 0xffffffff;
     _lastLineWidth = 1.0f;
     _lastTexID = 0;
+    _colorMode = CM_SOLID;
   }
 
   template<typename... Args>
@@ -202,33 +205,58 @@ class gx::DrawList
 
   void _text(const Font& f, float x, float y, AlignEnum align, int spacing,
              std::string_view text, const Rect* clipPtr);
+
+  [[nodiscard]] inline uint32_t gradiantColor(float g) const;
 };
 
 
 // **** Inline Implementations ****
 void gx::DrawList::color(float r, float g, float b, float a)
 {
-  uint32_t val = packRGBA8(r, g, b, a);
-  if (val != _lastColor) {
-    _lastColor = val;
-    add(CMD_color, val);
-  }
+  color(packRGBA8(r, g, b, a));
 }
 
 void gx::DrawList::color(const Color& c)
 {
-  uint32_t val = packRGBA8(c.r, c.g, c.b, c.a);
-  if (val != _lastColor) {
-    _lastColor = val;
-    add(CMD_color, val);
-  }
+  color(packRGBA8(c));
 }
 
 void gx::DrawList::color(uint32_t c)
 {
+  _colorMode = CM_SOLID;
   if (c != _lastColor) {
     _lastColor = c;
     add(CMD_color, c);
+  }
+}
+
+void gx::DrawList::hgradiant(float x0, uint32_t c0, float x1, uint32_t c1)
+{
+  if (c0 == c1) {
+    color(c0);
+  } else {
+    _colorMode = CM_HGRADIANT;
+    _g0 = x0;
+    _c0 = c0;
+    _color0 = unpackRGBA8(c0);
+    _g1 = x1;
+    _c1 = c1;
+    _color1 = unpackRGBA8(c1);
+  }
+}
+
+void gx::DrawList::vgradiant(float y0, uint32_t c0, float y1, uint32_t c1)
+{
+  if (c0 == c1) {
+    color(c0);
+  } else {
+    _colorMode = CM_HGRADIANT;
+    _g0 = y0;
+    _c0 = c0;
+    _color0 = unpackRGBA8(c0);
+    _g1 = y1;
+    _c1 = c1;
+    _color1 = unpackRGBA8(c1);
   }
 }
 
@@ -247,4 +275,13 @@ void gx::DrawList::texture(const Texture& t)
     _lastTexID = tid;
     add(CMD_texture, tid);
   }
+}
+
+uint32_t gx::DrawList::gradiantColor(float g) const
+{
+  if (g <= _g0) { return _c0; }
+  else if (g >= _g1) { return _c1; }
+
+  float t = (g - _g0) / (_g1 - _g0);
+  return packRGBA8((_color0 * (1.0f-t)) + (_color1 * t));
 }

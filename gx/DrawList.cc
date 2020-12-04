@@ -8,6 +8,61 @@
 #include "Unicode.hh"
 
 
+void gx::DrawList::rectangle(float x, float y, float w, float h)
+{
+  const float x0 = x;
+  const float y0 = y;
+  const float x1 = x + w;
+  const float y1 = y + h;
+  if (_colorMode == CM_HGRADIANT) {
+    uint32_t c0 = gradiantColor(x0);
+    uint32_t c1 = gradiantColor(x1);
+    add(CMD_quadC,
+        x0, y0, c0,
+        x1, y0, c1,
+        x0, y1, c0,
+        x1, y1, c1);
+  } else if (_colorMode == CM_VGRADIANT) {
+    uint32_t c0 = gradiantColor(y0);
+    uint32_t c1 = gradiantColor(y1);
+    add(CMD_quadC,
+        x0, y0, c0,
+        x1, y0, c0,
+        x0, y1, c1,
+        x1, y1, c1);
+  } else {
+    add(CMD_rectangle, x0, y0, x1, y1);
+  }
+}
+
+void gx::DrawList::rectangle(
+  float x, float y, float w, float h, Vec2 t0, Vec2 t1)
+{
+  const float x0 = x;
+  const float y0 = y;
+  const float x1 = x + w;
+  const float y1 = y + h;
+  if (_colorMode == CM_HGRADIANT) {
+    uint32_t c0 = gradiantColor(x0);
+    uint32_t c1 = gradiantColor(x1);
+    add(CMD_quadTC,
+        x0, y0, t0.x, t0.y, c0,
+        x1, y0, t1.x, t0.y, c1,
+        x0, y1, t0.x, t1.y, c0,
+        x1, y1, t1.x, t1.y, c1);
+  } else if (_colorMode == CM_VGRADIANT) {
+    uint32_t c0 = gradiantColor(y0);
+    uint32_t c1 = gradiantColor(y1);
+    add(CMD_quadTC,
+        x0, y0, t0.x, t0.y, c0,
+        x1, y0, t1.x, t0.y, c0,
+        x0, y1, t0.x, t1.y, c1,
+        x1, y1, t1.x, t1.y, c1);
+  } else {
+    add(CMD_rectangleT, x0, y0, t0.x, t0.y, x1, y1, t1.x, t1.y);
+  }
+}
+
 void gx::DrawList::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1, const Rect& clip)
 {
@@ -46,7 +101,25 @@ void gx::DrawList::rectangle(
     y1 = cy1;
   }
 
-  add(CMD_rectangleT, x0, y0, tx0, ty0, x1, y1, tx1, ty1);
+  if (_colorMode == CM_HGRADIANT) {
+    uint32_t c0 = gradiantColor(x0);
+    uint32_t c1 = gradiantColor(x1);
+    add(CMD_quadTC,
+        x0, y0, tx0, ty0, c0,
+        x1, y0, tx1, ty0, c1,
+        x0, y1, tx0, ty1, c0,
+        x1, y1, tx1, ty1, c1);
+  } else if (_colorMode == CM_VGRADIANT) {
+    uint32_t c0 = gradiantColor(y0);
+    uint32_t c1 = gradiantColor(y1);
+    add(CMD_quadTC,
+        x0, y0, tx0, ty0, c0,
+        x1, y0, tx1, ty0, c0,
+        x0, y1, tx0, ty1, c1,
+        x1, y1, tx1, ty1, c1);
+  } else {
+    add(CMD_rectangleT, x0, y0, tx0, ty0, x1, y1, tx1, ty1);
+  }
 }
 
 void gx::DrawList::_text(
