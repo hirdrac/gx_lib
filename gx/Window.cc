@@ -36,7 +36,7 @@ namespace {
   // **** Helper Functions ****
   constexpr int glfwBool(bool val) { return val ? GLFW_TRUE : GLFW_FALSE; }
 
-  constexpr int glfwCursorInputModeVal(gx::MouseModeEnum mode)
+  constexpr int cursorInputModeVal(gx::MouseModeEnum mode)
   {
     switch (mode) {
       case gx::MOUSE_NORMAL:  return GLFW_CURSOR_NORMAL;
@@ -51,6 +51,7 @@ namespace {
 gx::Window::~Window()
 {
   if (_renderer) {
+    assert(isMainThread());
     glfwHideWindow(_renderer->window());
     // window destroyed in Renderer destructor
   }
@@ -60,6 +61,7 @@ void gx::Window::setTitle(std::string_view title)
 {
   _title = title;
   if (_renderer) {
+    assert(isMainThread());
     glfwSetWindowTitle(_renderer->window(), _title.c_str());
   }
 }
@@ -67,6 +69,7 @@ void gx::Window::setTitle(std::string_view title)
 void gx::Window::setSize(int width, int height, bool fullScreen)
 {
   if (_renderer) {
+    assert(isMainThread());
     GLFWwindow* win = _renderer->window();
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -94,7 +97,7 @@ void gx::Window::setSize(int width, int height, bool fullScreen)
 
 void gx::Window::setMouseMode(MouseModeEnum mode)
 {
-  int val = glfwCursorInputModeVal(mode);
+  int val = cursorInputModeVal(mode);
   if (val < 0) {
     LOG_ERROR("setMouseMode(): invalid mode ", mode);
     return;
@@ -102,6 +105,7 @@ void gx::Window::setMouseMode(MouseModeEnum mode)
 
   _mouseMode = mode;
   if (_renderer) {
+    assert(isMainThread());
     glfwSetInputMode(_renderer->window(), GLFW_CURSOR, val);
   }
 }
@@ -109,12 +113,14 @@ void gx::Window::setMouseMode(MouseModeEnum mode)
 void gx::Window::setMousePos(float x, float y)
 {
   if (_renderer) {
+    assert(isMainThread());
     glfwSetCursorPos(_renderer->window(), double(x), double(y));
   }
 }
 
 bool gx::Window::open()
 {
+  assert(isMainThread());
   if (!initGLFW()) {
     return false;
   }
@@ -199,7 +205,7 @@ bool gx::Window::open()
   _renderer = std::move(ren);
   _maxTextureSize = _renderer->maxTextureSize();
 
-  glfwSetInputMode(win, GLFW_CURSOR, glfwCursorInputModeVal(_mouseMode));
+  glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
   glfwShowWindow(win);
 
   // set initial mouse event state
@@ -249,6 +255,8 @@ void gx::Window::renderFrame()
 
 int gx::Window::pollEvents()
 {
+  assert(isMainThread());
+
   // reset event state
   _events = 0;
   _removedEvents = 0;
