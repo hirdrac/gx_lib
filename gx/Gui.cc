@@ -6,7 +6,10 @@
 #include "Gui.hh"
 #include "Window.hh"
 #include "Font.hh"
+#include "Unicode.hh"
+#include "System.hh"
 #include "Logger.hh"
+#include "Print.hh"
 #include <algorithm>
 #include <cassert>
 
@@ -90,11 +93,20 @@ void gx::Gui::update(Window& win)
   }
 
   // update pressedID
+  if (buttonDown && (win.removedEvents() & EVENT_MOUSE_BUTTON1) && _focusID) {
+    // clear focus if button clicked in another GUI
+    _focusID = 0;
+    _needRender = true;
+  }
+
   if (buttonDown
       && (buttonEvent
           // treat moving between menus with button held as a press event
           || (type == GUI_MENU && _lastPressedID != id && _lastType == GUI_MENU)))
   {
+    _focusID = (type == GUI_ENTRY) ?  id : 0;
+    _lastCursorUpdate = win.pollTime();
+    _cursorState = true;
     _pressedID = id;
     _lastPressedID = id;
     _lastType = type;
@@ -124,6 +136,65 @@ void gx::Gui::update(Window& win)
   // clear button event if used by GUI
   if (buttonEvent && (_pressedID != 0 || _releasedID != 0)) {
     win.removeEvent(gx::EVENT_MOUSE_BUTTON1);
+  }
+
+  // char input
+  const bool charEvent = win.events() & EVENT_CHAR;
+  if (_focusID && charEvent) {
+    GuiElem* e = findElem(_focusID);
+    if (e) {
+      bool usedEvent = false;
+      int len = lengthUTF8(e->text);
+      for (const CharInfo& c : win.charData()) {
+        if (c.codepoint) {
+          usedEvent = true;
+          if (e->maxLength == 0 || len < e->maxLength) {
+            e->text += toUTF8(c.codepoint);
+            ++len;
+            _needRender = true;            
+            //println("char: ", c.codepoint);
+          }
+        } else if (c.key == gx::KEY_BACKSPACE) {
+          usedEvent = true;
+          if (!e->text.empty()) {
+            popbackUTF8(e->text);
+            --len;
+            _needRender = true;
+            //println("backspace");
+          }
+        } else if (c.key == gx::KEY_V && c.mods == gx::MOD_CONTROL) {
+          // (CTRL-V) paste first line of clipboard
+          usedEvent = true;
+          std::string cb = gx::getClipboard();
+          std::string_view line(cb.data(), cb.find('\n'));
+          for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
+            int code = itr.get();
+            if (code >= 32 && (e->maxLength == 0 || len < e->maxLength)) {
+              e->text += toUTF8(code);
+              ++len;
+              _needRender = true;
+            }
+          }
+        }
+      }
+
+      if (usedEvent) {
+        _lastCursorUpdate = win.pollTime();
+        _cursorState = true;
+        win.removeEvent(EVENT_CHAR);
+      }
+    }
+  }
+
+  // cursor blink update
+  if (_focusID && _theme.cursorBlinkTime > 0) {
+    int64_t blinks =
+      (win.pollTime() - _lastCursorUpdate) / int64_t(_theme.cursorBlinkTime);
+    if (blinks > 0) {
+      _lastCursorUpdate += blinks * _theme.cursorBlinkTime;
+      if (blinks & 1) { _cursorState = !_cursorState; }
+      _needRender = true;
+    }
   }
 
   // redraw GUI if needed
@@ -229,6 +300,14 @@ void gx::Gui::calcSize(GuiElem& def)
       calcSize(def.elems[1]);
       break;
     }
+    case GUI_ENTRY: {
+      assert(_theme.baseFont != nullptr);
+      const Font& fnt = *_theme.baseFont;
+      def._w = def.size * fnt.calcWidth("A");
+      def._h = fnt.size();
+      // FIXME - use better width value than capital A * size
+      break;
+    }
     default:
       LOG_ERROR("unknown type ", def.type);
       break;
@@ -285,6 +364,7 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
     case GUI_LABEL:
     case GUI_HLINE:
     case GUI_VLINE:
+    case GUI_ENTRY:
       // noting extra to do
       break;
     default:
@@ -301,8 +381,6 @@ void gx::Gui::deactivate(GuiElem& def)
 
 void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
 {
-  // FIXME - add style option to HFRAME,VFRAME,BUTTON
-
   switch (def.type) {
     case GUI_HFRAME:
     case GUI_VFRAME:
@@ -361,6 +439,37 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
       }
       drawElem(def.elems[0], bstate);
       break;
+    case GUI_ENTRY: {
+      const Font& fnt = *_theme.baseFont;
+      float tw = fnt.calcWidth(def.text);
+      if (def.id == _focusID) {
+        drawRec(def, _theme.colorEntryFocus);
+        tw += 1 + _theme.cursorWidth;
+      } else {
+        drawRec(def, _theme.colorEntry);
+      }
+      float tx = def._x;
+      if (tw > def._w) {
+        // text doesn't fit in entry
+        tx -= tw - def._w;
+        _dl.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
+                      def._x + float(fnt.size() / 2), _theme.colorText);
+        _dl.text(fnt, tx, def._y, gx::ALIGN_TOP_LEFT,
+                 _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
+      } else {
+        _dl.color(_theme.colorText);
+        _dl.text(fnt, tx, def._y, gx::ALIGN_TOP_LEFT, _theme.spacing, def.text);
+      }
+      _dl.text(fnt, tx, def._y, gx::ALIGN_TOP_LEFT,
+               _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
+      if (def.id == _focusID && _cursorState) {
+        // draw cursor
+        _dl.color(_theme.colorCursor);
+        _dl.rectangle(tx + tw - _theme.cursorWidth, def._y+1,
+                      _theme.cursorWidth, fnt.size()-2);
+      }
+      break;
+    }
     default:
       LOG_ERROR("unknown type ", def.type);
       break;

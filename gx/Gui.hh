@@ -26,7 +26,8 @@ namespace gx {
   enum GuiElemType {
     GUI_NULL = 0,
     GUI_HFRAME, GUI_VFRAME, GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_BUTTON,
-    GUI_MENU, GUI_MENU_HFRAME, GUI_MENU_VFRAME, GUI_MENU_ITEM
+    GUI_MENU, GUI_MENU_HFRAME, GUI_MENU_VFRAME, GUI_MENU_ITEM,
+    GUI_ENTRY
   };
 
   enum {
@@ -53,10 +54,11 @@ struct gx::GuiElem
   AlignEnum align = ALIGN_TOP_LEFT;
   int id = 0;
   GuiElemType type;
+  float size = 0;
+  int maxLength = 0;
 
-  // layout result
-  float _x = 0, _y = 0, _w = 0, _h = 0;
-  bool _active = false;
+  float _x = 0, _y = 0, _w = 0, _h = 0; // layout position/size
+  bool _active = false;                 // popup/menu enabled
 
   GuiElem(GuiElemType t) : type(t) { }
 };
@@ -76,6 +78,11 @@ struct gx::GuiTheme
   uint32_t colorMenuSelect = packRGBA8(.6,.6,.6,1);
   uint32_t colorMenuItem = packRGBA8(0,0,0,1);
   uint32_t colorMenuItemSelect = packRGBA8(.8,.8,.8,1);
+  uint32_t colorEntry = packRGBA8(0,0,.2,1);
+  uint32_t colorEntryFocus = packRGBA8(.1,.1,.3,1);
+  uint32_t colorCursor = packRGBA8(1,1,.6,1);
+  uint32_t cursorBlinkTime = 400000; // 1 sec
+  uint32_t cursorWidth = 3;
   int16_t spacing = 2;
   int16_t border = 4;
 };
@@ -101,6 +108,7 @@ class gx::Gui
   [[nodiscard]] int releasedID() const { return _releasedID; }
     // id of button released, cleared on next update call
     // (was previously pressed, button released while still over same button)
+  [[nodiscard]] int focusID() const { return _focusID; }
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // true if GUI needs to be redrawn
 
@@ -121,7 +129,10 @@ class gx::Gui
   int _pressedID = 0;
   int _releasedID = 0;
   int _lastPressedID = 0;
+  int _focusID = 0;
   GuiElemType _lastType = GUI_NULL;
+  int64_t _lastCursorUpdate = 0;
+  bool _cursorState = false;
   bool _needSize = true;
   bool _needPos = true;
   bool _needRender = true;
@@ -262,6 +273,16 @@ namespace gx {
   {
     GuiElem e(GUI_MENU_ITEM);
     e.elems.push_back(gx::guiLabel(text));
+    e.id = eventID;
+    return e;
+  }
+
+  // Entry
+  inline GuiElem guiEntry(float size, int maxLength, int eventID)
+  {
+    GuiElem e(GUI_ENTRY);
+    e.size = size;
+    e.maxLength = maxLength;
     e.id = eventID;
     return e;
   }

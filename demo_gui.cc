@@ -46,6 +46,16 @@ int main(int argc, char* argv[])
         gx::guiMenuItem("About", 4))));
   gui2.layout(theme, 0, 0, gx::ALIGN_TOP_LEFT);
 
+  gx::Gui gui3(
+    gx::guiVFrame(
+      gx::guiHFrame(
+        gx::guiLabel("R"), gx::guiEntry(3.5f,3,1),
+        gx::guiLabel(" G"), gx::guiEntry(3.5f,3,2),
+        gx::guiLabel(" B"), gx::guiEntry(3.5f,3,3)),
+      gx::guiHLine(),
+      gx::guiEntry(16.0f,100,10)));
+  gui3.layout(theme, 100, 300, gx::ALIGN_TOP_LEFT);
+
   gx::Window win;
   win.setTitle("GUI demo");
   win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
@@ -66,6 +76,7 @@ int main(int argc, char* argv[])
       win.clearFrame();
       win.draw(gui1);
       win.draw(gui2);
+      win.draw(gui3);
       needRedraw = false;
     }
     win.renderFrame();
@@ -95,6 +106,11 @@ int main(int argc, char* argv[])
       gx::println("GUI2 released:", gui2.releasedID());
       if (gui2.releasedID() == 99) { running = false; }
     }
+
+    gui3.update(win);
+    needRedraw |= gui3.needRedraw();
+    // FINISH - gui3 event handling
+    //gx::println("time ", win.pollTime());
   }
 
   return 0;
