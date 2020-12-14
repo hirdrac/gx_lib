@@ -98,6 +98,8 @@ class gx::Gui
   void update(Window& win);
 
   [[nodiscard]] const DrawList& drawList() const { return _dl; }
+  [[nodiscard]] float width() const { return _rootElem._w; }
+  [[nodiscard]] float height() const { return _rootElem._h; }
 
   [[nodiscard]] int hoverID() const { return _hoverID; }
     // id of button mouse is over
