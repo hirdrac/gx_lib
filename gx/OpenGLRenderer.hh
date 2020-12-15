@@ -29,8 +29,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool init(GLFWwindow* win) override;
 
   int maxTextureSize() override { return GLTexture2D::maxSize(); }
-  int addTexture(const Image& img) override;
-  bool updateTexture(int id, const Image& img) override;
+  int setTexture(int id, const Image& img, FilterType minFilter, FilterType magFilter) override;
   void freeTexture(int id) override { _textures.erase(id); }
   void setBGColor(float r, float g, float b) override { _bgColor.set(r,g,b); }
 
@@ -61,13 +60,13 @@ class gx::OpenGLRenderer final : public gx::Renderer
   struct Vertex { float x,y,s,t; uint32_t c; };
   std::vector<Vertex> _vertices;
 
-  struct Texture {
+  struct TextureEntry {
     GLTexture2D tex;
     int flags = 0;
     int unit = -1;
     int shader = 0; // 1-mono, 2-color
   };
-  std::unordered_map<int,Texture> _textures;
+  std::unordered_map<int,TextureEntry> _textures;
 
   struct DrawCall {
     GLenum mode; // GL_LINES, GL_TRIANGLES

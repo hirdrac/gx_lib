@@ -19,17 +19,21 @@ gx::Texture& gx::Texture::operator=(Texture&& t) noexcept
   return *this;
 }
 
-bool gx::Texture::init(Window& win, const Image& img)
+bool gx::Texture::init(Window& win, const Image& img,
+                       FilterType minFilter, FilterType magFilter)
 {
   _renderer = win._renderer;
-  _texID = _renderer->addTexture(img);
+  _texID = _renderer->setTexture(0, img, minFilter, magFilter);
+  _minFilter = minFilter;
+  _magFilter = magFilter;
   return (_texID != -1);
 }
 
 bool gx::Texture::update(const Image& img)
 {
-  if (!_renderer) { return false; }
-  return _renderer->updateTexture(_texID, img);
+  if (!_renderer || _texID <= 0) { return false; }
+  int id = _renderer->setTexture(_texID, img, _minFilter, _magFilter);
+  return (id > 0);
 }
 
 void gx::Texture::cleanup()

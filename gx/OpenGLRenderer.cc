@@ -62,46 +62,6 @@ namespace {
     return loc;
   }
 
-  bool initTexture(GLFWwindow* win, GLTexture2D& tex, const gx::Image& img)
-  {
-    GLenum texformat, imgformat;
-    switch (img.channels()) {
-      case 1:
-	texformat = GL_R8;
-	imgformat = GL_RED;
-	break;
-      case 3:
-	texformat = GL_RGB8;
-	imgformat = GL_RGB;
-	break;
-      case 4:
-	texformat = GL_RGBA8;
-	imgformat = GL_RGBA;
-	break;
-      default:
-	return false;
-    }
-
-    setCurrentContext(win);
-    if (!tex || tex.width() != img.width() || tex.height() != img.height()
-	|| tex.internalFormat() != texformat) {
-      tex.init(1, texformat, img.width(), img.height());
-
-      // TODO - make these configurable
-      tex.setParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      tex.setParameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      //tex.setParameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      //tex.setParameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      tex.setParameter(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-      tex.setParameter(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-      // see https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glTexParameter.xhtml for other values
-    }
-
-    tex.setSubImage2D(
-      0, 0, 0, img.width(), img.height(), imgformat, img.data());
-    return true;
-  }
-
   // DrawEntry iterator reading helper functions
   template <typename T>
   int32_t ival(T& itr) { return (itr++)->ival; }
@@ -224,26 +184,65 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
   return _sp0 && _sp1 && _sp2;
 }
 
-int gx::OpenGLRenderer::addTexture(const Image& img)
+int gx::OpenGLRenderer::setTexture(
+  int id, const Image& img, FilterType minFilter, FilterType magFilter)
 {
-  GLTexture2D tex;
-  if (!initTexture(_window, tex, img)) { return 0; }
+  GLenum texformat, imgformat;
+  switch (img.channels()) {
+    case 1: texformat = GL_R8;    imgformat = GL_RED;  break;
+    case 3: texformat = GL_RGB8;  imgformat = GL_RGB;  break;
+    case 4: texformat = GL_RGBA8; imgformat = GL_RGBA; break;
+    default: return 0;
+  }
 
-  Texture& t = _textures[++lastTexID];
-  t.tex = std::move(tex);
-  t.shader = (img.channels() == 1) ? 1 : 2;
-  return lastTexID;
-}
+  TextureEntry* ePtr;
+  if (id <= 0) {
+    // new texture entry
+    ePtr = &_textures[++lastTexID];
+    id = lastTexID;
+  } else {
+    // update existing entry
+    auto itr = _textures.find(id);
+    if (itr == _textures.end()) { return 0; }
+    ePtr = &(itr->second);
+  }
 
-bool gx::OpenGLRenderer::updateTexture(int id, const Image& img)
-{
-  auto itr = _textures.find(id);
-  if (itr == _textures.end()) { return false; }
+  GLTexture2D& t = ePtr->tex;
+  setCurrentContext(_window);
+  if (!t || t.width() != img.width() || t.height() != img.height()
+      || t.internalFormat() != texformat) {
+    t.init(1, texformat, img.width(), img.height());
+    ePtr->shader = (img.channels() == 1) ? 1 : 2;
+  }
 
-  Texture& t = itr->second;
-  if (!initTexture(_window, t.tex, img)) { return false; }
-  t.shader = (img.channels() == 1) ? 1 : 2;
-  return true;
+  t.setSubImage2D(
+    0, 0, 0, img.width(), img.height(), imgformat, img.data());
+
+  // TODO - make these configurable
+  t.setParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  t.setParameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // GL_CLAMP_TO_EDGE
+    // GL_CLAMP_TO_BORDER
+    // GL_MIRRORED_REPEAT
+    // GL_REPEAT
+    // GL_MIRROR_CLAMP_TO_EDGE
+
+  if (minFilter != FILTER_UNSPECIFIED) {
+    t.setParameter(GL_TEXTURE_MIN_FILTER,
+                   (minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
+    // other values:
+    // GL_NEAREST_MIPMAP_NEAREST
+    // GL_LINEAR_MIPMAP_NEAREST
+    // GL_NEAREST_MIPMAP_LINEAR
+    // GL_LINEAR_MIPMAP_LINEAR
+  }
+
+  if (magFilter != FILTER_UNSPECIFIED) {
+    t.setParameter(GL_TEXTURE_MAG_FILTER,
+                   (magFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
+  }
+
+  return id;
 }
 
 void gx::OpenGLRenderer::clearFrame(int width, int height)

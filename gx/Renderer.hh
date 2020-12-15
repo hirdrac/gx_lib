@@ -30,8 +30,8 @@ class gx::Renderer
   virtual bool init(GLFWwindow* win) = 0;
 
   virtual int maxTextureSize() = 0;
-  virtual int addTexture(const Image& img) = 0;
-  virtual bool updateTexture(int id, const Image& img) = 0;
+  virtual int setTexture(
+    int id, const Image& img, FilterType minFilter, FilterType magFilter) = 0;
   virtual void freeTexture(int id) = 0;
   virtual void setBGColor(float r, float g, float b) = 0;
 

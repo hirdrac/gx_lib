@@ -21,6 +21,14 @@ namespace gx {
   constexpr Mat4 Mat4Identity = Matrix4x4Identity<float,ROW_MAJOR>;
 
 
+  // enumerations
+  enum FilterType {
+    FILTER_UNSPECIFIED = 0,
+    FILTER_LINEAR,
+    FILTER_NEAREST
+  };
+
+
   // basic types
   struct Rect { float x, y, w, h; };
 }
