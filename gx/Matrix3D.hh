@@ -51,7 +51,7 @@ class Matrix4x4
   constexpr T& operator[](size_type i) { return _val[i]; }
   constexpr const T& operator[](size_type i) const { return _val[i]; }
 
-  template <unsigned int N>
+  template<unsigned int N>
   constexpr self_type& operator=(const T (&vals)[N]) {
     // NOTE: required by clang for 'Matrix m = {...}'
     static_assert(N == size());
@@ -615,7 +615,7 @@ int InvertMatrix(const Matrix4x4<T,MOT>& m, Matrix4x4<T,MOT>& dst)
   const T c3 = (t5*m[1] + t8*m[5] + t11*m[9]) - (t4*m[1] + t9*m[5] + t10*m[9]);
 
   // calculate determinant
-  T det = m[0]*c0 + m[4]*c1 + m[8]*c2 + m[12]*c3;
+  const T det = m[0]*c0 + m[4]*c1 + m[8]*c2 + m[12]*c3;
   if (IsZero(det)) {
     return -1; // error - singular matrix
   }
