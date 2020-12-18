@@ -46,7 +46,7 @@ class gx::Texture
 
  private:
   std::shared_ptr<Renderer> _renderer;
-  int _texID = 0;
+  TextureID _texID = 0;
   FilterType _minFilter = FILTER_NEAREST;
   FilterType _magFilter = FILTER_NEAREST;
 

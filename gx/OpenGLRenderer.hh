@@ -29,8 +29,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool init(GLFWwindow* win) override;
 
   int maxTextureSize() override { return GLTexture2D::maxSize(); }
-  int setTexture(int id, const Image& img, FilterType minFilter, FilterType magFilter) override;
-  void freeTexture(int id) override { _textures.erase(id); }
+  TextureID setTexture(TextureID id, const Image& img, FilterType minFilter, FilterType magFilter) override;
+  void freeTexture(TextureID id) override { _textures.erase(id); }
   void setBGColor(float r, float g, float b) override { _bgColor.set(r,g,b); }
 
   void clearFrame(int width, int height) override;
@@ -66,17 +66,17 @@ class gx::OpenGLRenderer final : public gx::Renderer
     int unit = -1;
     int shader = 0; // 1-mono, 2-color
   };
-  std::unordered_map<int,TextureEntry> _textures;
+  std::unordered_map<TextureID,TextureEntry> _textures;
 
   struct DrawCall {
     GLenum mode; // GL_LINES, GL_TRIANGLES
     GLsizei count;
     Color modColor;
-    int texID;
+    TextureID texID;
     float lineWidth;
   };
   std::vector<DrawCall> _drawCalls;
-  int lastTexID = 0;
+  TextureID _lastTexID = 0;
   bool _changed = true;
 
   void addVertex(Vec2 pt, uint32_t c) {
@@ -85,7 +85,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     _vertices.push_back({pt.x,pt.y, tx.x,tx.y, c}); }
 
   void addDrawCall(GLenum mode, GLsizei count, const Color& modColor,
-                   int texID, float lineWidth) {
+                   TextureID texID, float lineWidth) {
     if (!_drawCalls.empty()) {
       DrawCall& dc = _drawCalls.back();
       if (mode == dc.mode && texID == dc.texID && lineWidth == dc.lineWidth) {

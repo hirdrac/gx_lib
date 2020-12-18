@@ -181,7 +181,7 @@ class gx::DrawList
   std::vector<DrawEntry> _data;
   uint32_t _lastColor;
   float _lastLineWidth;
-  int _lastTexID;
+  TextureID _lastTexID;
 
   float _g0, _g1;         // x or y gradiant coords
   uint32_t _c0, _c1;      // gradiant colors (packed)
@@ -270,7 +270,7 @@ void gx::DrawList::lineWidth(float w)
 
 void gx::DrawList::texture(const Texture& t)
 {
-  int tid = t.id();
+  TextureID tid = t.id();
   if (tid != _lastTexID) {
     _lastTexID = tid;
     add(CMD_texture, tid);

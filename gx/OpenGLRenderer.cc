@@ -64,16 +64,13 @@ namespace {
 
   // DrawEntry iterator reading helper functions
   template <typename T>
-  int32_t ival(T& itr) { return (itr++)->ival; }
-
-  template <typename T>
-  int32_t uval(T& itr) { return (itr++)->uval; }
+  uint32_t uval(T& itr) { return (itr++)->uval; }
 
   template <typename T>
   float fval(T& itr) { return (itr++)->fval; }
 
   template <typename T>
-  gx::Vec2 fval2(T& itr) { return {(itr++)->fval, (itr++)->fval}; }
+  gx::Vec2 fval2(T& itr) { return {fval(itr), fval(itr)}; }
 
   // **** Callbacks ****
   void CleanUpOpenGL()
@@ -184,8 +181,8 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
   return _sp0 && _sp1 && _sp2;
 }
 
-int gx::OpenGLRenderer::setTexture(
-  int id, const Image& img, FilterType minFilter, FilterType magFilter)
+gx::TextureID gx::OpenGLRenderer::setTexture(
+  TextureID id, const Image& img, FilterType minFilter, FilterType magFilter)
 {
   GLenum texformat, imgformat;
   switch (img.channels()) {
@@ -198,8 +195,8 @@ int gx::OpenGLRenderer::setTexture(
   TextureEntry* ePtr;
   if (id <= 0) {
     // new texture entry
-    ePtr = &_textures[++lastTexID];
-    id = lastTexID;
+    ePtr = &_textures[++_lastTexID];
+    id = _lastTexID;
   } else {
     // update existing entry
     auto itr = _textures.find(id);
@@ -293,14 +290,14 @@ void gx::OpenGLRenderer::draw(const DrawList& dl, const Color& modColor)
   _vertices.reserve(_vertices.size() + size);
   uint32_t color = 0xffffffff;
   float lw = 1.0f;
-  int tid = 0;
+  TextureID tid = 0;
 
   for (auto itr = entries.cbegin(), end = entries.cend(); itr != end; ) {
     DrawCmd cmd = (itr++)->cmd;
     switch (cmd) {
       case CMD_color:     color = uval(itr); break;
       case CMD_lineWidth: lw    = fval(itr); break;
-      case CMD_texture:   tid   = ival(itr); break;
+      case CMD_texture:   tid   = uval(itr); break;
 
       case CMD_line: {
 	addVertex(fval2(itr), color);

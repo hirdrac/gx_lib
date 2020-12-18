@@ -26,14 +26,14 @@ bool gx::Texture::init(Window& win, const Image& img,
   _texID = _renderer->setTexture(0, img, minFilter, magFilter);
   _minFilter = minFilter;
   _magFilter = magFilter;
-  return (_texID != -1);
+  return (_texID != 0);
 }
 
 bool gx::Texture::update(const Image& img)
 {
-  if (!_renderer || _texID <= 0) { return false; }
-  int id = _renderer->setTexture(_texID, img, _minFilter, _magFilter);
-  return (id > 0);
+  if (!_renderer || _texID == 0) { return false; }
+  TextureID id = _renderer->setTexture(_texID, img, _minFilter, _magFilter);
+  return (id != 0);
 }
 
 void gx::Texture::cleanup()

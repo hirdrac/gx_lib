@@ -14,6 +14,7 @@ namespace gx {
   using Vec3 = Vector3<float>;
   using Vec4 = Vector4<float>;
   using Mat4 = Matrix4x4<float,ROW_MAJOR>;
+  using TextureID = uint32_t;
 
 
   // constants
