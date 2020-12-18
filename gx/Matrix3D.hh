@@ -36,6 +36,7 @@ class Matrix4x4
  public:
   using self_type = Matrix4x4<T,MOT>;
   using value_type = T;
+  using size_type = unsigned int;
 
 
   // Constructors
@@ -47,8 +48,8 @@ class Matrix4x4
 
 
   // Operators
-  constexpr T& operator[](int i) { return _val[i]; }
-  constexpr const T& operator[](int i) const { return _val[i]; }
+  constexpr T& operator[](size_type i) { return _val[i]; }
+  constexpr const T& operator[](size_type i) const { return _val[i]; }
 
   template <unsigned int N>
   constexpr self_type& operator=(const T (&vals)[N]) {
@@ -79,7 +80,7 @@ class Matrix4x4
 
 
   // Member Functions
-  static constexpr unsigned int size() noexcept { return 16; }
+  static constexpr size_type size() noexcept { return 16; }
   constexpr T* data() noexcept { return _val; }
   constexpr const T* data() const noexcept { return _val; }
 
@@ -160,7 +161,7 @@ constexpr Matrix4x4<T,ROW_MAJOR> operator*(
   //}
 
   for (int i = 0; i != 16; ++i) {
-    int aa = i & ~3, bb = i & 3;
+    const int aa = i & ~3, bb = i & 3;
     m[i] = (a[aa]*b[bb]) + (a[aa+1]*b[bb+4])
       + (a[aa+2]*b[bb+8]) + (a[aa+3]*b[bb+12]);
   }
@@ -181,7 +182,7 @@ constexpr Matrix4x4<T,COLUMN_MAJOR> operator*(
   //}
 
   for (int i = 0; i != 16; ++i) {
-    int aa = i & 3, bb = i & ~3;
+    const int aa = i & 3, bb = i & ~3;
     m[i] = (a[aa]*b[bb]) + (a[aa+4]*b[bb+1])
       + (a[aa+8]*b[bb+2]) + (a[aa+12]*b[bb+3]);
   }
@@ -277,7 +278,7 @@ constexpr void Matrix4x4<T,MOT>::translate(T tx, T ty, T tz)
   //_14 += _15 * tz;
 
   for (int i = 0; i != 16; i += 4) {
-    T v = _val[(i & ~3) + 3];
+    const T v = _val[(i & ~3) + 3];
     _val[i]   += v * tx;
     _val[i+1] += v * ty;
     _val[i+2] += v * tz;
@@ -325,7 +326,7 @@ constexpr void Matrix4x4<T,MOT>::rotateX_sc(T sinVal, T cosVal)
   // [d0 d1 d2 d3] [0  0  0  1] [d0  (d1)(c)-(d2)(s)  (d1)(s)+(d2)(c)  d3]
 
   for (int i = 0; i != 16; i += 4) {
-    T t1 = _val[i+1], t2 = _val[i+2];
+    const T t1 = _val[i+1], t2 = _val[i+2];
     _val[i+1] = (t1*cosVal) - (t2*sinVal);
     _val[i+2] = (t1*sinVal) + (t2*cosVal);
   }
@@ -357,7 +358,7 @@ constexpr void Matrix4x4<T,MOT>::rotateY_sc(T sinVal, T cosVal)
   // [d0 d1 d2 d3] [0  0  0  1] [(d0)(c)+(d2)(s)  d1  -(d0)(s)+(d2)(c)  d3]
 
   for (int i = 0; i != 16; i += 4) {
-    T t0 = _val[i], t2 = _val[i+2];
+    const T t0 = _val[i], t2 = _val[i+2];
     _val[i]   = (t0*cosVal) + (t2*sinVal);
     _val[i+2] = (t2*cosVal) - (t0*sinVal);
   }
@@ -389,7 +390,7 @@ constexpr void Matrix4x4<T,MOT>::rotateZ_sc(T sinVal, T cosVal)
   // [d0 d1 d2 d3] [ 0  0  0  1] [(d0)(c)-(d1)(s)  (d0)(s)+(d1)(c)  d2  d3]
 
   for (int i = 0; i != 16; i += 4) {
-    T t0 = _val[i], t1 = _val[i+1];
+    const T t0 = _val[i], t1 = _val[i+1];
     _val[i]   = (t0*cosVal) - (t1*sinVal);
     _val[i+1] = (t0*sinVal) + (t1*cosVal);
   }
@@ -399,13 +400,13 @@ template<typename T, MatrixOrderType MOT>
 constexpr void Matrix4x4<T,MOT>::setRotation_sc(
   const Vector3<T>& axis, T sinVal, T cosVal)
 {
-  T cinv = static_cast<T>(1) - cosVal;
-  T xyc = axis.x * axis.y * cinv;
-  T xzc = axis.x * axis.z * cinv;
-  T yzc = axis.y * axis.z * cinv;
-  T xs = axis.x * sinVal;
-  T ys = axis.y * sinVal;
-  T zs = axis.z * sinVal;
+  const T cinv = static_cast<T>(1) - cosVal;
+  const T xyc = axis.x * axis.y * cinv;
+  const T xzc = axis.x * axis.z * cinv;
+  const T yzc = axis.y * axis.z * cinv;
+  const T xs = axis.x * sinVal;
+  const T ys = axis.y * sinVal;
+  const T zs = axis.z * sinVal;
 
   _0  = (Sqr(axis.x) * cinv) + cosVal;
   _1  = xyc + zs;
@@ -439,21 +440,21 @@ constexpr void Matrix4x4<T,MOT>::rotate_sc(
   // [(xz)(1-c)+ys  (yz)(1-c)-xs  (z^2)(1-c)+c  0]
   // [      0             0             0       1]
 
-  T cinv = static_cast<T>(1) - cosVal;
-  T xxc = (Sqr(axis.x) * cinv) + cosVal;
-  T yyc = (Sqr(axis.y) * cinv) + cosVal;
-  T zzc = (Sqr(axis.z) * cinv) + cosVal;
-  T xy = axis.x * axis.y * cinv;
-  T xz = axis.x * axis.z * cinv;
-  T yz = axis.y * axis.z * cinv;
-  T xs = axis.x * sinVal;
-  T ys = axis.y * sinVal;
-  T zs = axis.z * sinVal;
+  const T cinv = static_cast<T>(1) - cosVal;
+  const T xxc = (Sqr(axis.x) * cinv) + cosVal;
+  const T yyc = (Sqr(axis.y) * cinv) + cosVal;
+  const T zzc = (Sqr(axis.z) * cinv) + cosVal;
+  const T xy = axis.x * axis.y * cinv;
+  const T xz = axis.x * axis.z * cinv;
+  const T yz = axis.y * axis.z * cinv;
+  const T xs = axis.x * sinVal;
+  const T ys = axis.y * sinVal;
+  const T zs = axis.z * sinVal;
 
   for (int i = 0; i != 16; i += 4) {
-    T t0 = _val[i];
-    T t1 = _val[i+1];
-    T t2 = _val[i+2];
+    const T t0 = _val[i];
+    const T t1 = _val[i+1];
+    const T t2 = _val[i+2];
 
     _val[i]   = t0*xxc       + t1*(xy - zs) + t2*(xz + ys);
     _val[i+1] = t0*(xy + zs) + t1*yyc       + t2*(yz - xs);
@@ -608,10 +609,10 @@ int InvertMatrix(const Matrix4x4<T,MOT>& m, Matrix4x4<T,MOT>& dst)
   T t11 = m[6]  * m[3];
 
   // calculate elements 0-3 (cofactors)
-  T c0 = (t0*m[5] + t3*m[9] + t4*m[13]) - (t1*m[5] + t2*m[9] + t5*m[13]);
-  T c1 = (t1*m[1] + t6*m[9] + t9*m[13]) - (t0*m[1] + t7*m[9] + t8*m[13]);
-  T c2 = (t2*m[1] + t7*m[5] + t10*m[13]) - (t3*m[1] + t6*m[5] + t11*m[13]);
-  T c3 = (t5*m[1] + t8*m[5] + t11*m[9]) - (t4*m[1] + t9*m[5] + t10*m[9]);
+  const T c0 = (t0*m[5] + t3*m[9] + t4*m[13]) - (t1*m[5] + t2*m[9] + t5*m[13]);
+  const T c1 = (t1*m[1] + t6*m[9] + t9*m[13]) - (t0*m[1] + t7*m[9] + t8*m[13]);
+  const T c2 = (t2*m[1] + t7*m[5] + t10*m[13]) - (t3*m[1] + t6*m[5] + t11*m[13]);
+  const T c3 = (t5*m[1] + t8*m[5] + t11*m[9]) - (t4*m[1] + t9*m[5] + t10*m[9]);
 
   // calculate determinant
   T det = m[0]*c0 + m[4]*c1 + m[8]*c2 + m[12]*c3;
@@ -655,7 +656,7 @@ int InvertMatrix(const Matrix4x4<T,MOT>& m, Matrix4x4<T,MOT>& dst)
   dst[15] = (t10*m[10] + t4*m[2] + t9*m[6]) - (t8*m[6] + t11*m[10] + t5*m[2]);
 
   // calculate inverse matrix
-  T inv = static_cast<T>(1) / det;
+  const T inv = static_cast<T>(1) / det;
   for (auto& v : dst) { v *= inv; }
 
   // no errors
