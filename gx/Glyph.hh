@@ -15,7 +15,7 @@ namespace gx {
 
 struct gx::Glyph
 {
-  int16_t width, height;  // image size
+  uint16_t width, height; // image size
   float left;             // # pixels at left of image
   float top;              // # pixels above baseline for image top
   float advX, advY;       // x/y cursor advancement

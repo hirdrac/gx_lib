@@ -15,8 +15,8 @@
 
 namespace gx {
   struct GlyphStaticData {
-    uint32_t code;
-    int16_t width, height;
+    int32_t code;
+    uint16_t width, height;
     float left, top, advX, advY;
     const uint8_t* bitmap;
   };
