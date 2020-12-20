@@ -4,6 +4,7 @@
 //
 
 #include "Texture.hh"
+#include "Image.hh"
 #include "Window.hh"
 #include "Renderer.hh"
 
@@ -24,6 +25,8 @@ bool gx::Texture::init(Window& win, const Image& img,
 {
   _renderer = win._renderer;
   _texID = _renderer->setTexture(0, img, minFilter, magFilter);
+  _width = img.width();
+  _height = img.height();
   _minFilter = minFilter;
   _magFilter = magFilter;
   return (_texID != 0);

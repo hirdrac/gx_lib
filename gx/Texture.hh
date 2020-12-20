@@ -40,13 +40,16 @@ class gx::Texture
             FilterType magFilter = FILTER_NEAREST);
   bool update(const Image& img);
 
-  [[nodiscard]] int id() const { return _texID; }
+  [[nodiscard]] TextureID id() const { return _texID; }
+  [[nodiscard]] int width() const { return _width; }
+  [[nodiscard]] int height() const { return _height; }
   [[nodiscard]] FilterType minFilter() const { return _minFilter; }
   [[nodiscard]] FilterType magFilter() const { return _magFilter; }
 
  private:
   std::shared_ptr<Renderer> _renderer;
   TextureID _texID = 0;
+  int _width = 0, _height = 0;
   FilterType _minFilter = FILTER_NEAREST;
   FilterType _magFilter = FILTER_NEAREST;
 
