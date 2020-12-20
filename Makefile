@@ -12,6 +12,10 @@ BIN2 = image_viewer
 BIN2.SRC = image_viewer.cc
 BIN2.LIBS = LIB_gx
 
+BIN3 = show_font
+BIN3.SRC = show_font.cc
+BIN3.LIBS = LIB_gx
+
 
 STANDARD = c++17
 OPTIONS = lto modern_c++
