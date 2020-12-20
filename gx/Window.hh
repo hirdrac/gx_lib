@@ -112,6 +112,12 @@ namespace gx {
   };
 
   // Setting values
+  enum {
+    WINDOW_DECORATED = 1, // ignored for fullscreen
+    WINDOW_RESIZABLE = 2, // decorated implied
+    WINDOW_DEBUG     = 4, // enable OpenGL debug context
+  };
+
   enum MouseModeEnum {
     MOUSE_NORMAL, // mouse cursor visible and behaves normally
     MOUSE_HIDE,   // hides mouse cursor when it is over display window
@@ -144,7 +150,7 @@ class gx::Window
   void setSize(int width, int height, bool fullScreen);
   void setMouseMode(MouseModeEnum mode);
   void setMousePos(float x, float y);
-  bool open();
+  bool open(int flags = WINDOW_RESIZABLE | WINDOW_DECORATED);
 
   [[nodiscard]] int width() const { return _width; }
   [[nodiscard]] int height() const { return _height; }
@@ -216,15 +222,13 @@ class gx::Window
 
  private:
   int _width = 0, _height = 0;
+  int _fsWidth = 0, _fsHeight = 0;
   int _minWidth = -1, _minHeight = -1;
   int _maxWidth = -1, _maxHeight = -1;
   std::string _title;
   MouseModeEnum _mouseMode = MOUSE_NORMAL;
-  bool _decorated = true;
-  bool _resizable = true;
-  bool _doubleBuffer = true;
+  bool _sizeSet = false;
   bool _fullScreen = false;
-  bool _fixedAspectRatio = false;
   int _maxTextureSize = 0;
 
   // event state
@@ -237,6 +241,7 @@ class gx::Window
   int _buttons = 0, _mods = 0;
   bool _mouseIn = false, _iconified = false, _focused = true;
 
+  void showWindow(GLFWwindow*);
   void updateMouseState(GLFWwindow*);
 
   // GLFW event callbacks

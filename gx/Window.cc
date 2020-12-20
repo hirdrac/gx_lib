@@ -86,13 +86,16 @@ void gx::Window::setSize(int width, int height, bool fullScreen)
     }
 
     glfwSetWindowMonitor(win, monitor, wx, wy, width, height, mode->refreshRate);
-    glfwGetFramebufferSize(win, &_width, &_height);
-    _fullScreen = fullScreen;
+    _width = width;
+    _height = height;
+    if (!_sizeSet) { showWindow(win); }
   } else {
     _width = width;
     _height = height;
-    _fullScreen = fullScreen;
   }
+
+  _sizeSet = true;
+  _fullScreen = fullScreen;
 }
 
 void gx::Window::setMouseMode(MouseModeEnum mode)
@@ -118,12 +121,18 @@ void gx::Window::setMousePos(float x, float y)
   }
 }
 
-bool gx::Window::open()
+bool gx::Window::open(int flags)
 {
   assert(isMainThread());
   if (!initGLFW()) {
     return false;
   }
+
+  const bool decorated = flags & (WINDOW_DECORATED | WINDOW_RESIZABLE);
+  const bool resizable = flags & WINDOW_RESIZABLE;
+  const bool doubleBuffer = true;
+  const bool fixedAspectRatio = false;
+  const bool debug = flags & WINDOW_DEBUG;
 
   initStartTime();
   auto ren = std::make_shared<OpenGLRenderer>();
@@ -131,13 +140,13 @@ bool gx::Window::open()
   //   are supported
 
   glfwDefaultWindowHints();
-  glfwWindowHint(GLFW_DECORATED, glfwBool(_decorated));
-  glfwWindowHint(GLFW_RESIZABLE, glfwBool(_resizable));
-  glfwWindowHint(GLFW_DOUBLEBUFFER, glfwBool(_doubleBuffer));
+  glfwWindowHint(GLFW_DECORATED, glfwBool(decorated));
+  glfwWindowHint(GLFW_RESIZABLE, glfwBool(resizable));
+  glfwWindowHint(GLFW_DOUBLEBUFFER, glfwBool(doubleBuffer));
   glfwWindowHint(GLFW_VISIBLE, glfwBool(false));
   //glfwWindowHint(GLFW_FOCUSED, glfwBool(false));
   //glfwWindowHint(GLFW_FOCUS_ON_SHOW, glfwBool(false));
-  ren->setWindowHints(false); // no debug
+  ren->setWindowHints(debug);
 
   int width = _width;
   int height = _height;
@@ -150,11 +159,14 @@ bool gx::Window::open()
   glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
   glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
-  int fsWidth = mode->width;
-  int fsHeight = mode->height;
+  _fsWidth = mode->width;
+  _fsHeight = mode->height;
   if (_fullScreen && (width <= 0 || height <= 0)) {
-    width = fsWidth;
-    height = fsHeight;
+    width = _fsWidth;
+    height = _fsHeight;
+  } else if (!_sizeSet) {
+    width = 256;
+    height = 256;
   }
 
   GLFWwindow* win = glfwCreateWindow(
@@ -164,22 +176,26 @@ bool gx::Window::open()
     return false;
   }
 
+  glfwGetFramebufferSize(win, &_width, &_height);
+  //println("new window size: ", _width, " x ", _height);
+  bool status = ren->init(win);
+  if (!status) {
+    return false;
+  }
+
+  _renderer = std::move(ren);
+  _maxTextureSize = _renderer->maxTextureSize();
+
   glfwSetWindowUserPointer(win, this);
-  if (_fixedAspectRatio) {
+  if (fixedAspectRatio) {
     glfwSetWindowAspectRatio(win, width, height);
   } else {
     glfwSetWindowAspectRatio(win, GLFW_DONT_CARE, GLFW_DONT_CARE);
   }
 
-  if (_resizable) {
+  glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
+  if (resizable) {
     glfwSetWindowSizeLimits(win, _minWidth, _minHeight, _maxWidth, _maxHeight);
-  }
-
-  if (!_fullScreen) {
-    // center window initially
-    int sw = 0, sh = 0;
-    glfwGetWindowSize(win, &sw, &sh);
-    glfwSetWindowPos(win, (fsWidth - sw) / 2, (fsHeight - sh) / 2);
   }
 
   _events = EVENT_SIZE; // always generate a resize event initially
@@ -195,23 +211,22 @@ bool gx::Window::open()
   glfwSetWindowIconifyCallback(win, iconifyCB);
   glfwSetWindowFocusCallback(win, focusCB);
 
-  glfwGetFramebufferSize(win, &_width, &_height);
-  //println("new window size: ", _width, " x ", _height);
-  bool status = ren->init(win);
-  if (!status) {
-    return false;
+  if (_sizeSet) { showWindow(win); }
+  return true;
+}
+
+void gx::Window::showWindow(GLFWwindow* w)
+{
+  if (!_fullScreen) {
+    // center window initially
+    // FIXME - doesn't account for decoration size
+    glfwSetWindowPos(w, (_fsWidth - _width) / 2, (_fsHeight - _height) / 2);
   }
 
-  _renderer = std::move(ren);
-  _maxTextureSize = _renderer->maxTextureSize();
-
-  glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
-  glfwShowWindow(win);
-
+  glfwShowWindow(w);
   // set initial mouse event state
   // (initial button state not supported by GLFW)
-  updateMouseState(win);
-  return true;
+  updateMouseState(w);
 }
 
 void gx::Window::updateMouseState(GLFWwindow* w)
