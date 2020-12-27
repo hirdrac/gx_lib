@@ -30,12 +30,6 @@ namespace gx {
     GUI_ENTRY
   };
 
-  enum {
-    GUIFLAG_DISABLE      = 1<<0,
-    GUIFLAG_EQUAL_WIDTH  = 1<<1,
-    GUIFLAG_EQUAL_HEIGHT = 1<<2,
-  };
-
   enum ButtonState {
     BSTATE_NONE = 0,  // no button
     BSTATE_NORMAL,    // normal button
