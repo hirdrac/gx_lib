@@ -15,7 +15,7 @@
 
 namespace gx {
   class Image;
-  class Glyph;
+  struct Glyph;
 }
 
 class gx::Image
