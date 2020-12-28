@@ -18,14 +18,16 @@
 #endif
 
 
-// **** Template Types ****
-template<typename T> class Vector2;
-template<typename T> class Vector3;
-template<typename T> class Vector4;
+namespace gx {
+  // **** Template Types ****
+  template<typename T> class Vector2;
+  template<typename T> class Vector3;
+  template<typename T> class Vector4;
+}
 
 
 template<typename T>
-class Vector2
+class gx::Vector2
 {
  public:
   union {
@@ -92,7 +94,7 @@ class Vector2
 
 
 template<typename T>
-class Vector3
+class gx::Vector3
 {
  public:
   union {
@@ -171,7 +173,7 @@ class Vector3
 
 
 template<typename T>
-class Vector4
+class gx::Vector4
 {
  public:
   union {
@@ -269,124 +271,126 @@ class Vector4
 };
 
 
-// **** Unary Operators ****
-template<typename T>
-constexpr Vector2<T> operator-(const Vector2<T>& v) {
-  return Vector2<T>(-v.x, -v.y); }
+namespace gx {
+  // **** Unary Operators ****
+  template<typename T>
+  constexpr Vector2<T> operator-(const Vector2<T>& v) {
+    return Vector2<T>(-v.x, -v.y); }
 
-template<typename T>
-constexpr Vector3<T> operator-(const Vector3<T>& v) {
-  return Vector3<T>(-v.x, -v.y, -v.z); }
+  template<typename T>
+  constexpr Vector3<T> operator-(const Vector3<T>& v) {
+    return Vector3<T>(-v.x, -v.y, -v.z); }
 
-template<typename T>
-constexpr Vector4<T> operator-(const Vector4<T>& v) {
-  return Vector4<T>(-v.x, -v.y, -v.z, -v.w); }
-
-
-// **** Binary Operators ****
-template<typename T>
-constexpr Vector2<T> operator+(const Vector2<T>& a, const Vector2<T>& b) {
-  return Vector2<T>(a.x + b.x, a.y + b.y); }
-
-template<typename T>
-constexpr Vector3<T> operator+(const Vector3<T>& a, const Vector3<T>& b) {
-  return Vector3<T>(a.x + b.x, a.y + b.y, a.z + b.z); }
-
-template<typename T>
-constexpr Vector4<T> operator+(const Vector4<T>& a, const Vector4<T>& b) {
-  return Vector4<T>(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
+  template<typename T>
+  constexpr Vector4<T> operator-(const Vector4<T>& v) {
+    return Vector4<T>(-v.x, -v.y, -v.z, -v.w); }
 
 
-template<typename T>
-constexpr Vector2<T> operator-(const Vector2<T>& a, const Vector2<T>& b) {
-  return Vector2<T>(a.x - b.x, a.y - b.y); }
+  // **** Binary Operators ****
+  template<typename T>
+  constexpr Vector2<T> operator+(const Vector2<T>& a, const Vector2<T>& b) {
+    return Vector2<T>(a.x + b.x, a.y + b.y); }
 
-template<typename T>
-constexpr Vector3<T> operator-(const Vector3<T>& a, const Vector3<T>& b) {
-  return Vector3<T>(a.x - b.x, a.y - b.y, a.z - b.z); }
+  template<typename T>
+  constexpr Vector3<T> operator+(const Vector3<T>& a, const Vector3<T>& b) {
+    return Vector3<T>(a.x + b.x, a.y + b.y, a.z + b.z); }
 
-template<typename T>
-constexpr Vector4<T> operator-(const Vector4<T>& a, const Vector4<T>& b) {
-  return Vector4<T>(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w); }
-
-
-template<typename T>
-constexpr Vector2<T> operator*(const Vector2<T>& a, T b) {
-  return Vector2<T>(a.x * b, a.y * b); }
-
-template<typename T>
-constexpr Vector3<T> operator*(const Vector3<T>& a, T b) {
-  return Vector3<T>(a.x * b, a.y * b, a.z * b); }
-
-template<typename T>
-constexpr Vector4<T> operator*(const Vector4<T>& a, T b) {
-  return Vector4<T>(a.x * b, a.y * b, a.z * b, a.w * b); }
+  template<typename T>
+  constexpr Vector4<T> operator+(const Vector4<T>& a, const Vector4<T>& b) {
+    return Vector4<T>(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
 
 
-template<typename T>
-constexpr Vector2<T> operator/(const Vector2<T>& a, T b) {
-  return Vector2<T>(a.x / b, a.y / b); }
+  template<typename T>
+  constexpr Vector2<T> operator-(const Vector2<T>& a, const Vector2<T>& b) {
+    return Vector2<T>(a.x - b.x, a.y - b.y); }
 
-template<typename T>
-constexpr Vector3<T> operator/(const Vector3<T>& a, T b) {
-  return Vector3<T>(a.x / b, a.y / b, a.z / b); }
+  template<typename T>
+  constexpr Vector3<T> operator-(const Vector3<T>& a, const Vector3<T>& b) {
+    return Vector3<T>(a.x - b.x, a.y - b.y, a.z - b.z); }
 
-template<typename T>
-constexpr Vector4<T> operator/(const Vector4<T>& a, T b) {
-  return Vector4<T>(a.x / b, a.y / b, a.z / b, a.w / b); }
-
-
-// **** Template Stream Operators ****
-template<typename T>
-inline std::ostream& operator<<(std::ostream& out, const Vector2<T>& v) {
-  return out << '[' << v.x << ' ' << v.y << ']'; }
-
-template<typename T>
-inline std::ostream& operator<<(std::ostream& out, const Vector3<T>& v) {
-  return out << '[' << v.x << ' ' << v.y << ' ' << v.z << ']'; }
-
-template<typename T>
-inline std::ostream& operator<<(std::ostream& out, const Vector4<T>& v) {
-  return out << '[' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ']'; }
+  template<typename T>
+  constexpr Vector4<T> operator-(const Vector4<T>& a, const Vector4<T>& b) {
+    return Vector4<T>(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w); }
 
 
-// **** Template Functions ****
-template<typename T>
-constexpr T PointDistanceSqr(const Vector2<T>& a, const Vector2<T>& b) {
-  return Sqr(a.x - b.x) + Sqr(a.y - b.y); }
+  template<typename T>
+  constexpr Vector2<T> operator*(const Vector2<T>& a, T b) {
+    return Vector2<T>(a.x * b, a.y * b); }
 
-template<typename T>
-constexpr T PointDistanceSqr(const Vector3<T>& a, const Vector3<T>& b) {
-  return Sqr(a.x - b.x) + Sqr(a.y - b.y) + Sqr(a.z - b.z); }
+  template<typename T>
+  constexpr Vector3<T> operator*(const Vector3<T>& a, T b) {
+    return Vector3<T>(a.x * b, a.y * b, a.z * b); }
 
-template<typename T>
-constexpr T PointDistance(const Vector2<T>& a, const Vector2<T>& b) {
-  return __builtin_sqrt(PointDistanceSqr(a, b)); }
+  template<typename T>
+  constexpr Vector4<T> operator*(const Vector4<T>& a, T b) {
+    return Vector4<T>(a.x * b, a.y * b, a.z * b, a.w * b); }
 
-template<typename T>
-constexpr T PointDistance(const Vector3<T>& a, const Vector3<T>& b) {
-  return __builtin_sqrt(PointDistanceSqr(a, b)); }
 
-template<typename T>
-constexpr T DotProduct(const Vector2<T>& a, const Vector2<T>& b) {
-  return (a.x * b.x) + (a.y * b.y); }
+  template<typename T>
+  constexpr Vector2<T> operator/(const Vector2<T>& a, T b) {
+    return Vector2<T>(a.x / b, a.y / b); }
 
-template<typename T>
-constexpr T DotProduct(const Vector3<T>& a, const Vector3<T>& b) {
-  return (a.x * b.x) + (a.y * b.y) + (a.z * b.z); }
+  template<typename T>
+  constexpr Vector3<T> operator/(const Vector3<T>& a, T b) {
+    return Vector3<T>(a.x / b, a.y / b, a.z / b); }
 
-template<typename T>
-constexpr Vector3<T> CrossProduct(const Vector3<T>& a, const Vector3<T>& b)
-{
-  return Vector3<T>((a.y * b.z) - (a.z * b.y),
-		    (a.z * b.x) - (a.x * b.z),
-		    (a.x * b.y) - (a.y * b.x));
+  template<typename T>
+  constexpr Vector4<T> operator/(const Vector4<T>& a, T b) {
+    return Vector4<T>(a.x / b, a.y / b, a.z / b, a.w / b); }
+
+
+  // **** Template Stream Operators ****
+  template<typename T>
+  inline std::ostream& operator<<(std::ostream& out, const Vector2<T>& v) {
+    return out << '[' << v.x << ' ' << v.y << ']'; }
+
+  template<typename T>
+  inline std::ostream& operator<<(std::ostream& out, const Vector3<T>& v) {
+    return out << '[' << v.x << ' ' << v.y << ' ' << v.z << ']'; }
+
+  template<typename T>
+  inline std::ostream& operator<<(std::ostream& out, const Vector4<T>& v) {
+    return out << '[' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ']'; }
+
+
+  // **** Template Functions ****
+  template<typename T>
+  constexpr T PointDistanceSqr(const Vector2<T>& a, const Vector2<T>& b) {
+    return Sqr(a.x - b.x) + Sqr(a.y - b.y); }
+
+  template<typename T>
+  constexpr T PointDistanceSqr(const Vector3<T>& a, const Vector3<T>& b) {
+    return Sqr(a.x - b.x) + Sqr(a.y - b.y) + Sqr(a.z - b.z); }
+
+  template<typename T>
+  constexpr T PointDistance(const Vector2<T>& a, const Vector2<T>& b) {
+    return __builtin_sqrt(PointDistanceSqr(a, b)); }
+
+  template<typename T>
+  constexpr T PointDistance(const Vector3<T>& a, const Vector3<T>& b) {
+    return __builtin_sqrt(PointDistanceSqr(a, b)); }
+
+  template<typename T>
+  constexpr T DotProduct(const Vector2<T>& a, const Vector2<T>& b) {
+    return (a.x * b.x) + (a.y * b.y); }
+
+  template<typename T>
+  constexpr T DotProduct(const Vector3<T>& a, const Vector3<T>& b) {
+    return (a.x * b.x) + (a.y * b.y) + (a.z * b.z); }
+
+  template<typename T>
+  constexpr Vector3<T> CrossProduct(const Vector3<T>& a, const Vector3<T>& b)
+  {
+    return Vector3<T>((a.y * b.z) - (a.z * b.y),
+                      (a.z * b.x) - (a.x * b.z),
+                      (a.x * b.y) - (a.y * b.x));
+  }
+
+  template<typename T>
+  constexpr Vector2<T> UnitVec(const Vector2<T>& v) {
+    return v * (static_cast<T>(1) / v.length()); }
+
+  template<typename T>
+  constexpr Vector3<T> UnitVec(const Vector3<T>& v) {
+    return v * (static_cast<T>(1) / v.length()); }
 }
-
-template<typename T>
-constexpr Vector2<T> UnitVec(const Vector2<T>& v) {
-  return v * (static_cast<T>(1) / v.length()); }
-
-template<typename T>
-constexpr Vector3<T> UnitVec(const Vector3<T>& v) {
-  return v * (static_cast<T>(1) / v.length()); }

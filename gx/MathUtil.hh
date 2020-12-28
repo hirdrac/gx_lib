@@ -11,185 +11,144 @@
 #include <cmath>
 
 
-// **** Constants ****
-template<typename fltType>
-struct MathVal
-{
+namespace gx {
+  // **** Constants ****
+  template<class T>
 #ifndef M_PI
-  static constexpr fltType PI = 3.14159265358979323846;
+  constexpr T PI = static_cast<T>(3.14159265358979323846);
 #else
-  static constexpr fltType PI = M_PI;
+  constexpr T PI = static_cast<T>(M_PI);
 #endif
 
+  template<class T>
 #ifndef M_PI_2
-  static constexpr fltType PI_2 = 1.57079632679489661923;
+  constexpr T PI_2 = static_cast<T>(1.57079632679489661923);
 #else
-  static constexpr fltType PI_2 = M_PI_2;  // pi/2
+  constexpr T PI_2 = static_cast<T>(M_PI_2);  // pi/2
 #endif
 
+  template<class T>
 #ifndef M_PI_4
-  static constexpr fltType PI_4 = 0.78539816339744830962;
+  constexpr T PI_4 = static_cast<T>(0.78539816339744830962);
 #else
-  static constexpr fltType PI_4 = M_PI_4;  // pi/4
+  constexpr T PI_4 = static_cast<T>(M_PI_4);  // pi/4
 #endif
 
-  static constexpr fltType DEG_TO_RAD = PI / 180.0;
-  static constexpr fltType RAD_TO_DEG = 180.0 / PI;
+  template<class T>
+  constexpr T DEG_TO_RAD = PI<T> / static_cast<T>(180);
 
-  static constexpr fltType VERY_SMALL = static_cast<fltType>(1.0e-7);
-};
+  template<class T>
+  constexpr T RAD_TO_DEG = static_cast<T>(180) / PI<T>;
+
+  template<class T>
+  constexpr T VERY_SMALL = static_cast<T>(1.0e-7);
 
 
-// **** Functions ****
-template<typename fltType>
-constexpr fltType DegToRad(const fltType& deg)
-{
-  return deg * MathVal<fltType>::DEG_TO_RAD;
-}
-
-template<typename fltType>
-constexpr fltType RadToDeg(const fltType& rad)
-{
-  return rad * MathVal<fltType>::RAD_TO_DEG;
-}
-
-template<typename fltType>
-constexpr bool IsZero(const fltType& x)
-{
-  return (x > -MathVal<fltType>::VERY_SMALL)
-    && (x < MathVal<fltType>::VERY_SMALL);
-}
-
-template<typename fltType>
-constexpr bool IsOne(const fltType& x)
-{
-  return (x > (static_cast<fltType>(1.0) - MathVal<fltType>::VERY_SMALL))
-    && (x < (static_cast<fltType>(1.0) + MathVal<fltType>::VERY_SMALL));
-}
-
-template<typename fltType>
-constexpr bool IsPositive(const fltType& x)
-{
-  return (x >= MathVal<fltType>::VERY_SMALL);
-}
-
-template<typename fltType>
-constexpr bool IsNegative(const fltType& x)
-{
-  return (x <= -MathVal<fltType>::VERY_SMALL);
-}
-
-template<typename fltType>
-constexpr bool IsEqual(const fltType& x, const fltType& y)
-{
-  return IsZero(x-y);
-}
-
-template<typename fltType>
-constexpr bool IsLess(const fltType& x, const fltType& y)
-{
-  return IsNegative(x-y);
-}
-
-template<typename fltType>
-constexpr bool IsGreater(const fltType& x, const fltType& y)
-{
-  return IsPositive(x-y);
-}
-
-template<typename intType>
-constexpr bool IsPowerOf2(const intType& x)
-{
-  static_assert(std::is_integral_v<intType>);
-  return (x & (x - 1)) == 0;
-}
-
-template<typename fltType>
-constexpr fltType Lerp(const fltType& a, const fltType& b, const fltType& s)
-{
-  // use std::lerp() for C++20
-  if (s <= 0) {
-    return a;
-  } else if (s >= static_cast<fltType>(1.0)) {
-    return b;
-  } else {
-    return a + ((b - a) * s);
-  }
-}
-
-template<typename numType>
-constexpr numType Sqr(const numType& x)
-{
-  return x * x;
-}
-
-template<typename numType>
-constexpr numType Pow3(const numType& x)
-{
-  return x * x * x;
-}
-
-template<typename numType>
-constexpr numType Pow4(const numType& x)
-{
-  numType x2 = x * x; return x2 * x2;
-}
-
-template<typename numType>
-constexpr numType Pow5(const numType& x)
-{
-  numType x2 = x * x; return x2 * x2 * x;
-}
-
-template<typename numType>
-constexpr numType Pow6(const numType& x)
-{
-  numType x2 = x * x; return x2 * x2 * x2;
-}
-
-template<typename numType>
-constexpr numType Pow7(const numType& x)
-{
-  numType x2 = x * x; return x2 * x2 * x2 * x;
-}
-
-template<typename numType>
-constexpr numType Pow8(const numType& x)
-{
-  numType x2 = x * x, x4 = x2 * x2; return x4 * x4;
-}
-
-template<typename numType>
-constexpr numType Pow9(const numType& x)
-{
-  numType x2 = x * x, x4 = x2 * x2; return x4 * x4 * x;
-}
-
-template<typename numType>
-constexpr numType iPow(numType x, int y)
-{
-  if (y < 0) { return 0; }
-
-  numType val = 1;
-  while (y) {
-    if (y & 1) { val *= x; }
-    y >>= 1;
-    x *= x;
+  // **** Functions ****
+  template<typename fltType>
+  constexpr fltType DegToRad(const fltType& deg)
+  {
+    return deg * DEG_TO_RAD<fltType>;
   }
 
-  return val;
-}
+  template<typename fltType>
+  constexpr fltType RadToDeg(const fltType& rad)
+  {
+    return rad * RAD_TO_DEG<fltType>;
+  }
 
-template <typename numType>
-constexpr int Sgn(const numType& x)
-{
-  return (x < 0) ? -1 : ((x > 0) ? 1 : 0);
-}
+  template<typename fltType>
+  constexpr bool IsZero(const fltType& x)
+  {
+    return (x > -VERY_SMALL<fltType>) && (x < VERY_SMALL<fltType>);
+  }
 
-template <typename numType>
-constexpr numType Abs(const numType& x)
-{
-  // constexpr version of std::abs
-  // NOTE: Abs(-MAX_INT) is undefined
-  return (x < 0) ? -x : x;
+  template<typename fltType>
+  constexpr bool IsOne(const fltType& x)
+  {
+    return (x > (static_cast<fltType>(1) - VERY_SMALL<fltType>))
+      && (x < (static_cast<fltType>(1) + VERY_SMALL<fltType>));
+  }
+
+  template<typename fltType>
+  constexpr bool IsPositive(const fltType& x)
+  {
+    return (x >= VERY_SMALL<fltType>);
+  }
+
+  template<typename fltType>
+  constexpr bool IsNegative(const fltType& x)
+  {
+    return (x <= -VERY_SMALL<fltType>);
+  }
+
+  template<typename fltType>
+  constexpr bool IsEqual(const fltType& x, const fltType& y)
+  {
+    return IsZero(x-y);
+  }
+
+  template<typename fltType>
+  constexpr bool IsLess(const fltType& x, const fltType& y)
+  {
+    return IsNegative(x-y);
+  }
+
+  template<typename fltType>
+  constexpr bool IsGreater(const fltType& x, const fltType& y)
+  {
+    return IsPositive(x-y);
+  }
+
+  template<typename intType>
+  constexpr bool IsPowerOf2(const intType& x)
+  {
+    static_assert(std::is_integral_v<intType>);
+    return (x & (x - 1)) == 0;
+  }
+
+  template<typename fltType>
+  constexpr fltType Lerp(const fltType& a, const fltType& b, const fltType& s)
+  {
+    // use std::lerp() for C++20
+    if (s <= 0) {
+      return a;
+    } else if (s >= static_cast<fltType>(1)) {
+      return b;
+    } else {
+      return a + ((b - a) * s);
+    }
+  }
+
+  template<typename numType>
+  constexpr numType Sqr(const numType& x) { return x * x; }
+
+  template<typename numType>
+  constexpr numType iPow(numType x, int y)
+  {
+    if (y < 0) { return 0; }
+
+    numType val = 1;
+    while (y) {
+      if (y & 1) { val *= x; }
+      y >>= 1;
+      x *= x;
+    }
+
+    return val;
+  }
+
+  template<typename numType>
+  constexpr int Sgn(const numType& x)
+  {
+    return (x < 0) ? -1 : ((x > 0) ? 1 : 0);
+  }
+
+  template<typename numType>
+  constexpr numType Abs(const numType& x)
+  {
+    // constexpr version of std::abs
+    // NOTE: Abs(-MAX_INT) is undefined
+    return (x < 0) ? -x : x;
+  }
 }
