@@ -139,51 +139,8 @@ void gx::Gui::update(Window& win)
   }
 
   // char input
-  const bool charEvent = win.events() & EVENT_CHAR;
-  if (_focusID && charEvent) {
-    GuiElem* e = findElem(_focusID);
-    if (e) {
-      bool usedEvent = false;
-      int len = lengthUTF8(e->text);
-      for (const CharInfo& c : win.charData()) {
-        if (c.codepoint) {
-          usedEvent = true;
-          if (e->maxLength == 0 || len < e->maxLength) {
-            e->text += toUTF8(c.codepoint);
-            ++len;
-            _needRender = true;            
-            //println("char: ", c.codepoint);
-          }
-        } else if (c.key == gx::KEY_BACKSPACE) {
-          usedEvent = true;
-          if (!e->text.empty()) {
-            popbackUTF8(e->text);
-            --len;
-            _needRender = true;
-            //println("backspace");
-          }
-        } else if (c.key == gx::KEY_V && c.mods == gx::MOD_CONTROL) {
-          // (CTRL-V) paste first line of clipboard
-          usedEvent = true;
-          std::string cb = gx::getClipboard();
-          std::string_view line(cb.data(), cb.find('\n'));
-          for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
-            int code = itr.get();
-            if (code >= 32 && (e->maxLength == 0 || len < e->maxLength)) {
-              e->text += toUTF8(code);
-              ++len;
-              _needRender = true;
-            }
-          }
-        }
-      }
-
-      if (usedEvent) {
-        _lastCursorUpdate = win.pollTime();
-        _cursorState = true;
-        win.removeEvent(EVENT_CHAR);
-      }
-    }
+  if (_focusID && (win.events() & EVENT_CHAR)) {
+    processCharEvent(win);
   }
 
   // cursor blink update
@@ -206,6 +163,63 @@ void gx::Gui::update(Window& win)
     _needRedraw = true;
   } else {
     _needRedraw = false;
+  }
+}
+
+void gx::Gui::processCharEvent(Window& win)
+{
+  GuiElem* e = findElem(_focusID);
+  if (!e) { return; }
+
+  bool usedEvent = false;
+  int len = lengthUTF8(e->text);
+  for (const CharInfo& c : win.charData()) {
+    if (c.codepoint) {
+      usedEvent = true;
+      if (e->maxLength == 0 || len < e->maxLength) {
+        e->text += toUTF8(c.codepoint);
+        ++len;
+        _needRender = true;
+        //println("char: ", c.codepoint);
+      }
+    } else if (c.key == gx::KEY_BACKSPACE) {
+      usedEvent = true;
+      if (!e->text.empty()) {
+        popbackUTF8(e->text);
+        --len;
+        _needRender = true;
+        //println("backspace");
+      }
+    } else if (c.key == gx::KEY_V && c.mods == gx::MOD_CONTROL) {
+      // (CTRL-V) paste first line of clipboard
+      usedEvent = true;
+      std::string cb = gx::getClipboard();
+      std::string_view line(cb.data(), cb.find('\n'));
+      for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
+        int code = itr.get();
+        if (code >= 32 && (e->maxLength == 0 || len < e->maxLength)) {
+          e->text += toUTF8(code);
+          ++len;
+          _needRender = true;
+        }
+      }
+    } else if ((c.key == gx::KEY_TAB && c.mods == 0) || c.key == gx::KEY_ENTER) {
+      GuiElem* next = findNextElem(_focusID, GUI_ENTRY);
+      _focusID = next ? next->id : 0;
+      _needRender = true;
+      usedEvent = true;
+    } else if (c.key == gx::KEY_TAB && c.mods == gx::MOD_SHIFT) {
+      GuiElem* prev = findPrevElem(_focusID, GUI_ENTRY);
+      _focusID = prev ? prev->id : 0;
+      _needRender = true;
+      usedEvent = true;
+    }
+  }
+
+  if (usedEvent) {
+    _lastCursorUpdate = win.pollTime();
+    _cursorState = true;
+    win.removeEvent(EVENT_CHAR);
   }
 }
 
@@ -524,6 +538,56 @@ gx::GuiElem* gx::Gui::findElem(int id)
 const gx::GuiElem* gx::Gui::findElem(int id) const
 {
   return findElemT(&_rootElem, id);
+}
+
+gx::GuiElem* gx::Gui::findNextElem(int id, GuiElemType type)
+{
+  assert(id != 0);
+  std::vector<GuiElem*> stack;
+  GuiElem* e = &_rootElem;
+  GuiElem* next = nullptr;
+  GuiElem* first = nullptr;
+  for (;;) {
+    if (e->id > 0 && (type == GUI_NULL || e->type == type)) {
+      if (e->id == (id+1)) { return e; }
+      if (e->id > id && (!next || e->id < next->id)) { next = e; }
+      if (!first || e->id < first->id) { first = e; }
+    }
+
+    if (!e->elems.empty()) {
+      stack.reserve(stack.size() + e->elems.size());
+      for (GuiElem& c : e->elems) { stack.push_back(&c); }
+    }
+
+    if (stack.empty()) { return next ? next : first; }
+    e = stack.back();
+    stack.pop_back();
+  }
+}
+
+gx::GuiElem* gx::Gui::findPrevElem(int id, GuiElemType type)
+{
+  assert(id != 0);
+  std::vector<GuiElem*> stack;
+  GuiElem* e = &_rootElem;
+  GuiElem* prev = nullptr;
+  GuiElem* last = nullptr;
+  for (;;) {
+    if (e->id > 0 && (type == GUI_NULL || e->type == type)) {
+      if (e->id == (id-1)) { return e; }
+      if (e->id < id && (!prev || e->id > prev->id)) { prev = e; }
+      if (!last || e->id > last->id) { last = e; }
+    }
+
+    if (!e->elems.empty()) {
+      stack.reserve(stack.size() + e->elems.size());
+      for (GuiElem& c : e->elems) { stack.push_back(&c); }
+    }
+
+    if (stack.empty()) { return prev ? prev : last; }
+    e = stack.back();
+    stack.pop_back();
+  }
 }
 
 void gx::Gui::drawRec(const GuiElem& def, uint32_t col)

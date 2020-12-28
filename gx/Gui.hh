@@ -143,7 +143,10 @@ class gx::Gui
   GuiElem* findElem(float x, float y);
   GuiElem* findElem(int id);
   const GuiElem* findElem(int id) const;
+  GuiElem* findNextElem(int id, GuiElemType type = GUI_NULL);
+  GuiElem* findPrevElem(int id, GuiElemType type = GUI_NULL);
   void drawRec(const GuiElem& def, uint32_t col);
+  void processCharEvent(Window& win);
 };
 
 
