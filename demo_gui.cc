@@ -109,7 +109,11 @@ int main(int argc, char* argv[])
 
     gui3.update(win);
     needRedraw |= gui3.needRedraw();
-    // FINISH - gui3 event handling
+    if (gui3.entryID() > 0) {
+      gx::println("GUI3 entry", gui3.entryID(), ": ",
+                  gui3.getText(gui3.entryID()));
+    }
+
     //gx::println("time ", win.pollTime());
   }
 

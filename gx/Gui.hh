@@ -105,6 +105,9 @@ class gx::Gui
     // id of button released, cleared on next update call
     // (was previously pressed, button released while still over same button)
   [[nodiscard]] int focusID() const { return _focusID; }
+    // id of active text entry
+  [[nodiscard]] int entryID() const { return _entryID; }
+    // id of text entry with value update (triggered with tab/enter)
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // true if GUI needs to be redrawn
 
@@ -126,14 +129,16 @@ class gx::Gui
   int _releasedID = 0;
   int _lastPressedID = 0;
   int _focusID = 0;
+  int _entryID = 0;
   GuiElemType _lastType = GUI_NULL;
   int64_t _lastCursorUpdate = 0;
+  int _uniqueID = -1;
   bool _cursorState = false;
   bool _needSize = true;
   bool _needPos = true;
   bool _needRender = true;
   bool _needRedraw = true;
-  int _uniqueID = -1;
+  bool _textChanged = false;
 
   void init(GuiElem& def);
   void calcSize(GuiElem& def);
@@ -147,6 +152,7 @@ class gx::Gui
   GuiElem* findPrevElem(int id, GuiElemType type = GUI_NULL);
   void drawRec(const GuiElem& def, uint32_t col);
   void processCharEvent(Window& win);
+  void setFocusID(int id);
 };
 
 

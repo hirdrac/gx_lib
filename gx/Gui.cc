@@ -60,6 +60,11 @@ void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
 
 void gx::Gui::update(Window& win)
 {
+  // clear event state that only persists for a single update
+  _releasedID = 0;
+  _entryID = 0;
+
+  // size & position update
   if (_needSize) {
     calcSize(_rootElem);
     _needSize = false;
@@ -95,7 +100,7 @@ void gx::Gui::update(Window& win)
   // update pressedID
   if (buttonDown && (win.removedEvents() & EVENT_MOUSE_BUTTON1) && _focusID) {
     // clear focus if button clicked in another GUI
-    _focusID = 0;
+    setFocusID(0);
     _needRender = true;
   }
 
@@ -104,7 +109,7 @@ void gx::Gui::update(Window& win)
           // treat moving between menus with button held as a press event
           || (type == GUI_MENU && _lastPressedID != id && _lastType == GUI_MENU)))
   {
-    _focusID = (type == GUI_ENTRY) ?  id : 0;
+    setFocusID((type == GUI_ENTRY) ?  id : 0);
     _lastCursorUpdate = win.pollTime();
     _cursorState = true;
     _pressedID = id;
@@ -126,8 +131,6 @@ void gx::Gui::update(Window& win)
     _lastType = GUI_NULL;
     deactivate(_rootElem); // close open menus
     _needRender = true;
-  } else {
-    _releasedID = 0;
   }
 
   // update heldID
@@ -135,7 +138,7 @@ void gx::Gui::update(Window& win)
 
   // clear button event if used by GUI
   if (buttonEvent && (_pressedID != 0 || _releasedID != 0)) {
-    win.removeEvent(gx::EVENT_MOUSE_BUTTON1);
+    win.removeEvent(EVENT_MOUSE_BUTTON1);
   }
 
   // char input
@@ -180,20 +183,27 @@ void gx::Gui::processCharEvent(Window& win)
         e->text += toUTF8(c.codepoint);
         ++len;
         _needRender = true;
+        _textChanged = true;
         //println("char: ", c.codepoint);
       }
-    } else if (c.key == gx::KEY_BACKSPACE) {
+    } else if (c.key == KEY_BACKSPACE) {
       usedEvent = true;
       if (!e->text.empty()) {
-        popbackUTF8(e->text);
-        --len;
+        if (c.mods == MOD_ALT) {
+          e->text.clear();
+          len = 0;
+        } else {
+          popbackUTF8(e->text);
+          --len;
+        }
         _needRender = true;
+        _textChanged = true;
         //println("backspace");
       }
-    } else if (c.key == gx::KEY_V && c.mods == gx::MOD_CONTROL) {
+    } else if (c.key == KEY_V && c.mods == MOD_CONTROL) {
       // (CTRL-V) paste first line of clipboard
       usedEvent = true;
-      std::string cb = gx::getClipboard();
+      std::string cb = getClipboard();
       std::string_view line(cb.data(), cb.find('\n'));
       for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
         int code = itr.get();
@@ -203,14 +213,14 @@ void gx::Gui::processCharEvent(Window& win)
           _needRender = true;
         }
       }
-    } else if ((c.key == gx::KEY_TAB && c.mods == 0) || c.key == gx::KEY_ENTER) {
+    } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       GuiElem* next = findNextElem(_focusID, GUI_ENTRY);
-      _focusID = next ? next->id : 0;
+      setFocusID(next ? next->id : 0);
       _needRender = true;
       usedEvent = true;
-    } else if (c.key == gx::KEY_TAB && c.mods == gx::MOD_SHIFT) {
+    } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
       GuiElem* prev = findPrevElem(_focusID, GUI_ENTRY);
-      _focusID = prev ? prev->id : 0;
+      setFocusID(prev ? prev->id : 0);
       _needRender = true;
       usedEvent = true;
     }
@@ -221,6 +231,15 @@ void gx::Gui::processCharEvent(Window& win)
     _cursorState = true;
     win.removeEvent(EVENT_CHAR);
   }
+}
+
+void gx::Gui::setFocusID(int id)
+{
+  if (_focusID != id && _textChanged) {
+    _textChanged = false;
+    _entryID = _focusID;
+  }
+  _focusID = id;
 }
 
 bool gx::Gui::setText(int id, std::string_view text)
@@ -407,7 +426,7 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
       break;
     case GUI_LABEL:
       _dl.color(_theme.colorText);
-      _dl.text(*_theme.baseFont, def._x, def._y, gx::ALIGN_TOP_LEFT,
+      _dl.text(*_theme.baseFont, def._x, def._y, ALIGN_TOP_LEFT,
                _theme.spacing, def.text);
       break;
     case GUI_HLINE:
@@ -468,13 +487,13 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
         tx -= tw - def._w;
         _dl.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
                       def._x + float(fnt.size() / 2), _theme.colorText);
-        _dl.text(fnt, tx, def._y, gx::ALIGN_TOP_LEFT,
+        _dl.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
                  _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
       } else {
         _dl.color(_theme.colorText);
-        _dl.text(fnt, tx, def._y, gx::ALIGN_TOP_LEFT, _theme.spacing, def.text);
+        _dl.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing, def.text);
       }
-      _dl.text(fnt, tx, def._y, gx::ALIGN_TOP_LEFT,
+      _dl.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
                _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
       if (def.id == _focusID && _cursorState) {
         // draw cursor
