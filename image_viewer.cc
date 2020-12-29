@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
 
   int entryNo = 0;
   for (Entry& e : entries) {
-    e.tex.init(win, e.img);
+    e.tex.init(win, e.img, 3, gx::FILTER_LINEAR, gx::FILTER_LINEAR);
   }
 
   win.setBGColor(gx::BLACK);
