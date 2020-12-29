@@ -96,25 +96,25 @@ int main(int argc, char* argv[])
     gui1.update(win);
     needRedraw |= gui1.needRedraw();
     if (gui1.releasedID() > 0) {
-      gx::println("GUI1 released:", gui1.releasedID());
+      gx::println_err("GUI1 released:", gui1.releasedID());
       if (gui1.releasedID() == 99) { running = false; }
     }
 
     gui2.update(win);
     needRedraw |= gui2.needRedraw();
     if (gui2.releasedID() > 0) {
-      gx::println("GUI2 released:", gui2.releasedID());
+      gx::println_err("GUI2 released:", gui2.releasedID());
       if (gui2.releasedID() == 99) { running = false; }
     }
 
     gui3.update(win);
     needRedraw |= gui3.needRedraw();
     if (gui3.entryID() > 0) {
-      gx::println("GUI3 entry", gui3.entryID(), ": ",
-                  gui3.getText(gui3.entryID()));
+      gx::println_err("GUI3 entry", gui3.entryID(), ": ",
+                      gui3.getText(gui3.entryID()));
     }
 
-    //gx::println("time ", win.pollTime());
+    //gx::println_err("time ", win.pollTime());
   }
 
   return 0;
