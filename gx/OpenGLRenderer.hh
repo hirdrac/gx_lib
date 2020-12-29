@@ -29,7 +29,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool init(GLFWwindow* win) override;
 
   int maxTextureSize() override { return GLTexture2D::maxSize(); }
-  TextureID setTexture(TextureID id, const Image& img, FilterType minFilter, FilterType magFilter) override;
+  TextureID setTexture(TextureID id, const Image& img, int levels,
+                       FilterType minFilter, FilterType magFilter) override;
   void freeTexture(TextureID id) override { _textures.erase(id); }
   void setBGColor(float r, float g, float b) override { _bgColor.set(r,g,b); }
 

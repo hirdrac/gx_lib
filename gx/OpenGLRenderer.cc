@@ -182,7 +182,8 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
 }
 
 gx::TextureID gx::OpenGLRenderer::setTexture(
-  TextureID id, const Image& img, FilterType minFilter, FilterType magFilter)
+  TextureID id, const Image& img, int levels,
+  FilterType minFilter, FilterType magFilter)
 {
   GLenum texformat, imgformat;
   switch (img.channels()) {
@@ -208,12 +209,13 @@ gx::TextureID gx::OpenGLRenderer::setTexture(
   setCurrentContext(_window);
   if (!t || t.width() != img.width() || t.height() != img.height()
       || t.internalFormat() != texformat) {
-    t.init(1, texformat, img.width(), img.height());
+    t.init(std::max(1, levels), texformat, img.width(), img.height());
     ePtr->shader = (img.channels() == 1) ? 1 : 2;
   }
 
   t.setSubImage2D(
     0, 0, 0, img.width(), img.height(), imgformat, img.data());
+  if (levels > 1) { t.generateMipmap(); }
 
   // TODO - make these configurable
   t.setParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -225,13 +227,17 @@ gx::TextureID gx::OpenGLRenderer::setTexture(
     // GL_MIRROR_CLAMP_TO_EDGE
 
   if (minFilter != FILTER_UNSPECIFIED) {
-    t.setParameter(GL_TEXTURE_MIN_FILTER,
-                   (minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
-    // other values:
-    // GL_NEAREST_MIPMAP_NEAREST
-    // GL_LINEAR_MIPMAP_NEAREST
-    // GL_NEAREST_MIPMAP_LINEAR
-    // GL_LINEAR_MIPMAP_LINEAR
+    if (levels <= 1) {
+      t.setParameter(GL_TEXTURE_MIN_FILTER,
+                     (minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
+    } else {
+      t.setParameter(GL_TEXTURE_MIN_FILTER,
+                     (minFilter == FILTER_LINEAR)
+                     ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR);
+      // other values:
+      // GL_NEAREST_MIPMAP_NEAREST
+      // GL_LINEAR_MIPMAP_NEAREST
+    }
   }
 
   if (magFilter != FILTER_UNSPECIFIED) {
