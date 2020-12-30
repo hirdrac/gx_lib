@@ -10,6 +10,7 @@
 
 #pragma once
 #include "DrawList.hh"
+#include "Align.hh"
 #include "Color.hh"
 #include "Types.hh"
 #include <string_view>
