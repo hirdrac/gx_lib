@@ -3,6 +3,7 @@
 // Copyright (C) 2020 Richard Bradley
 //
 // TODO - investigate using stb_truetype.h
+// TODO - use signed distance fields for font texture
 
 #include "Font.hh"
 #include "Image.hh"
@@ -27,29 +28,55 @@ namespace {
     ftLib = nullptr;
   }
 
-  int initFreeType()
+  bool initFreeType()
   {
+    if (ftLib) { return true; }
+
     if (FT_Init_FreeType(&ftLib)) {
       LOG_ERROR("FT_Init_FreeType() failed");
-      return -1;
+      return false;
     }
 
     std::atexit(cleanupFreeType);
-    return 0;
+    return true;
+  }
+
+  bool genGlyphs(gx::Font& font, FT_Face face,
+                 uint32_t start = 0, uint32_t end = 0)
+  {
+    // read font glyph data
+    bool hasVert = FT_HAS_VERTICAL(face);
+    FT_UInt index = 0;
+    FT_ULong ch = FT_Get_First_Char(face, &index);
+
+    for (; index != 0; ch = FT_Get_Next_Char(face, ch, &index)) {
+      if (ch < 32 || ch < start) { continue; }
+      else if (end != 0 && ch > end) { break; }
+
+      if (FT_Load_Glyph(face, index, FT_LOAD_DEFAULT)) {
+        LOG_ERROR("FT_Load_Glyph() failed");
+        return false;
+      }
+
+      FT_GlyphSlot gs = face->glyph;
+      if (FT_Render_Glyph(gs, FT_RENDER_MODE_NORMAL)) {
+        LOG_ERROR("FT_Render_Glyph() failed");
+        return false;
+      }
+
+      float advX = float(gs->advance.x) / 64.0f;
+      float advY = hasVert ? (float(gs->advance.y) / 64.0f) : 0;
+      font.addGlyph(ch, gs->bitmap.width, gs->bitmap.rows, gs->bitmap_left,
+                    gs->bitmap_top, advX, advY, gs->bitmap.buffer, true);
+    }
+    return true;
   }
 }
 
 
 bool gx::Font::init(const char* fileName, int fontSize)
 {
-  if (!ftLib) {
-    int error = initFreeType();
-    if (error) { return false; }
-  }
-
-  // range of characters (make configurable?)
-  uint32_t start = 0;
-  uint32_t end = 0; // no end
+  if (!initFreeType()) { return false; }
 
   FT_Face face;
   if (FT_New_Face(ftLib, fileName, 0, &face)) {
@@ -59,48 +86,51 @@ bool gx::Font::init(const char* fileName, int fontSize)
 
   if (FT_Set_Pixel_Sizes(face, 0, fontSize)) {
     LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
+    FT_Done_Face(face);
     return false;
   }
 
   // read font glyph data
-  bool hasVert = FT_HAS_VERTICAL(face);
-  FT_UInt index = 0;
-  FT_ULong ch = FT_Get_First_Char(face, &index);
-
-  for (; index != 0; ch = FT_Get_Next_Char(face, ch, &index)) {
-    if (ch < 32 || ch < start) { continue; }
-    else if (end != 0 && ch > end) { break; }
-
-    if (FT_Load_Glyph(face, index, FT_LOAD_DEFAULT)) {
-      LOG_ERROR("FT_Load_Glyph() failed");
-      return -1;
-    }
-
-    FT_GlyphSlot gs = face->glyph;
-    if (FT_Render_Glyph(gs, FT_RENDER_MODE_NORMAL)) {
-      LOG_ERROR("FT_Render_Glyph() failed");
-      return -1;
-    }
-
-    float advX = float(gs->advance.x) / 64.0f;
-    float advY = hasVert ? (float(gs->advance.y) / 64.0f) : 0;
-    addGlyph(ch, gs->bitmap.width, gs->bitmap.rows, gs->bitmap_left,
-	     gs->bitmap_top, advX, advY, gs->bitmap.buffer, true);
-  }
-
   _size = fontSize;
-  return true;
+  bool status = genGlyphs(*this, face);
+  FT_Done_Face(face);
+  return status;
 }
 
-bool gx::Font::init(const GlyphStaticData* data, int glyphs, int fontSize)
+bool gx::Font::initFromMemory(
+  const void* mem, std::size_t memSize, int fontSize)
 {
+  if (!initFreeType()) { return false; }
+
+  FT_Face face;
+  if (FT_New_Memory_Face(ftLib, (const FT_Byte*)mem, memSize, 0, &face)) {
+    LOG_ERROR("FT_New_Memory_Face(), failed");
+    return false;
+  }
+
+  if (FT_Set_Pixel_Sizes(face, 0, fontSize)) {
+    LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
+    FT_Done_Face(face);
+    return false;
+  }
+
+  // read font glyph data
+  _size = fontSize;
+  bool status = genGlyphs(*this, face);
+  FT_Done_Face(face);
+  return status;
+}
+
+bool gx::Font::initFromData(
+  const GlyphStaticData* data, int glyphs, int fontSize)
+{
+  _size = fontSize;
   for (int i = 0; i < glyphs; ++i) {
     const auto& d = data[i];
     addGlyph(d.code, d.width, d.height, d.left, d.top, d.advX, d.advY,
              d.bitmap, false);
   }
 
-  _size = fontSize;
   return true;
 }
 

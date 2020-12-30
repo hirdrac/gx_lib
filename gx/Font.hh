@@ -36,8 +36,13 @@ class gx::Font
   bool init(const char* fileName, int fontSize);
   bool init(const std::string& fn, int fontSize) {
     return init(fn.c_str(), fontSize); }
+    // init from TTF file
 
-  bool init(const GlyphStaticData* data, int glyphs, int fontSize);
+  bool initFromMemory(const void* mem, std::size_t memSize, int fontSize);
+    // init from TTF file in memory
+
+  bool initFromData(const GlyphStaticData* data, int glyphs, int fontSize);
+    // init from static glyph data
 
   bool makeAtlas(Window& win);
 
