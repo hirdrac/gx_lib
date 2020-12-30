@@ -22,10 +22,7 @@
 //   - multiple image display in fullscreen (horizontal/vertical)
 //   - smooth scrolling when moving to next image
 //   - don't scroll if all images can fit on screen?
-
-// ISSUES
-// - initial window size limited to display size but 'setSize()' call can
-//   make window larger than display
+// - make texture mag filter configurable? ('smooth' mode would use linear)
 
 struct Entry
 {
@@ -83,7 +80,7 @@ int main(int argc, char* argv[])
 
   int entryNo = 0;
   for (Entry& e : entries) {
-    e.tex.init(win, e.img, 3, gx::FILTER_LINEAR, gx::FILTER_LINEAR);
+    e.tex.init(win, e.img, 3, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
   }
 
   win.setBGColor(gx::BLACK);
