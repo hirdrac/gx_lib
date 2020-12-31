@@ -15,6 +15,8 @@ class GLUniform1i
   GLUniform1i() = default;
   GLUniform1i(GLint loc) : _loc(loc) { }
 
+  explicit operator bool() const { return _loc != -1; }
+
   void set(GLint v) { GLCALL(glUniform1i, _loc, v); }
 
  private:
@@ -26,6 +28,8 @@ class GLUniform2i
  public:
   GLUniform2i() = default;
   GLUniform2i(GLint loc) : _loc(loc) { }
+
+  explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1) { GLCALL(glUniform2i, _loc, v0, v1); }
 
@@ -41,6 +45,8 @@ class GLUniform3i
  public:
   GLUniform3i() = default;
   GLUniform3i(GLint loc) : _loc(loc) { }
+
+  explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1, GLfloat v2) {
     GLCALL(glUniform3i, _loc, v0, v1, v2); }
@@ -58,6 +64,8 @@ class GLUniform4i
   GLUniform4i() = default;
   GLUniform4i(GLint loc) : _loc(loc) { }
 
+  explicit operator bool() const { return _loc != -1; }
+
   void set(GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
     GLCALL(glUniform4i, _loc, v0, v1, v2, v3); }
 
@@ -74,6 +82,8 @@ class GLUniform1f
   GLUniform1f() = default;
   GLUniform1f(GLint loc) : _loc(loc) { }
 
+  explicit operator bool() const { return _loc != -1; }
+
   void set(GLint v) { GLCALL(glUniform1f, _loc, v); }
 
  private:
@@ -85,6 +95,8 @@ class GLUniform2f
  public:
   GLUniform2f() = default;
   GLUniform2f(GLint loc) : _loc(loc) { }
+
+  explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1) { GLCALL(glUniform2f, _loc, v0, v1); }
 
@@ -100,6 +112,8 @@ class GLUniform3f
  public:
   GLUniform3f() = default;
   GLUniform3f(GLint loc) : _loc(loc) { }
+
+  explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1, GLfloat v2) {
     GLCALL(glUniform3f, _loc, v0, v1, v2); }
@@ -117,6 +131,8 @@ class GLUniform4f
   GLUniform4f() = default;
   GLUniform4f(GLint loc) : _loc(loc) { }
 
+  explicit operator bool() const { return _loc != -1; }
+
   void set(GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
     GLCALL(glUniform4f, _loc, v0, v1, v2, v3); }
 
@@ -132,6 +148,8 @@ class GLUniformMat4f
  public:
   GLUniformMat4f() = default;
   GLUniformMat4f(GLint loc) : _loc(loc) { }
+
+  explicit operator bool() const { return _loc != -1; }
 
   template <class T>
   void set(const T& m, bool transpose = false) {
