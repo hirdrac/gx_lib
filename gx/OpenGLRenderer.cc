@@ -121,9 +121,7 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
     "in vec4 v_color;"
     "out vec4 fragColor;"
     "void main() { fragColor = v_color; }";
-  _sp0 = makeProgram(SP0V_SRC, SP0F_SRC);
-  _sp0_trans = getUniformLoc(_sp0, "trans");
-  _sp0_modColor = getUniformLoc(_sp0, "modColor");
+  _sp[0] = makeProgram(SP0V_SRC, SP0F_SRC);
 
   // mono color texture shader (fonts)
   static const char* SP1V_SRC =
@@ -148,10 +146,7 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
     "  if (a == 0.0) discard;"
     "  fragColor = vec4(v_color.rgb, v_color.a * a);"
     "}";
-  _sp1 = makeProgram(SP1V_SRC, SP1F_SRC);
-  _sp1_trans = getUniformLoc(_sp1, "trans");
-  _sp1_modColor = getUniformLoc(_sp1, "modColor");
-  _sp1_texUnit = getUniformLoc(_sp1, "texUnit");
+  _sp[1] = makeProgram(SP1V_SRC, SP1F_SRC);
 
   // full color texture shader (images)
   static const char* SP2F_SRC =
@@ -160,10 +155,18 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
     "uniform sampler2D texUnit;"
     "out vec4 fragColor;"
     "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }";
-  _sp2 = makeProgram(SP1V_SRC, SP2F_SRC);
-  _sp2_trans = getUniformLoc(_sp2, "trans");
-  _sp2_modColor = getUniformLoc(_sp2, "modColor");
-  _sp2_texUnit = getUniformLoc(_sp2, "texUnit");
+  _sp[2] = makeProgram(SP1V_SRC, SP2F_SRC);
+
+  // uniform location cache
+  bool status = true;
+  for (int i = 0; i < 3; ++i) {
+    status = status && _sp[i];
+    _sp_trans[i] = getUniformLoc(_sp[i], "trans");
+    _sp_modColor[i] = getUniformLoc(_sp[i], "modColor");
+    if (i > 0) {
+      _sp_texUnit[i] = getUniformLoc(_sp[i], "texUnit");
+    }
+  }
 
 #if 0
   // debug output
@@ -178,7 +181,7 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
   println("GL_SMOOTH_LINE_WIDTH_GRANULARITY: ", val[0]);
 #endif
 
-  return _sp0 && _sp1 && _sp2;
+  return status;
 }
 
 gx::TextureID gx::OpenGLRenderer::setTexture(
@@ -504,31 +507,12 @@ void gx::OpenGLRenderer::renderFrame()
       }
     }
 
-    switch (shader) {
-      case 0: // solid
-	if (shader != lastShader) {
-	  _sp0.use();
-	  _sp0_trans.set(trans);
-	}
-        _sp0_modColor.set(dc.modColor);
-	break;
-      case 1: // mono texture
-	if (shader != lastShader) {
-	  _sp1.use();
-	  _sp1_trans.set(trans);
-	}
-        _sp1_modColor.set(dc.modColor);
-	_sp1_texUnit.set(texUnit);
-	break;
-      case 2: // full-color texture
-	if (shader != lastShader) {
-	  _sp2.use();
-	  _sp2_trans.set(trans);
-	}
-        _sp2_modColor.set(dc.modColor);
-	_sp2_texUnit.set(texUnit);
-	break;
+    if (shader != lastShader) {
+      _sp[shader].use();
+      _sp_trans[shader].set(trans);
     }
+    if (_sp_texUnit[shader]) {_sp_texUnit[shader].set(texUnit); }
+    _sp_modColor[shader].set(dc.modColor);
 
     if (dc.mode == GL_LINES && dc.lineWidth != lastLineWidth) {
       GLCALL(glLineWidth, dc.lineWidth);

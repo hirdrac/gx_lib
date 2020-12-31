@@ -42,19 +42,10 @@ class gx::OpenGLRenderer final : public gx::Renderer
   int _width = 0, _height = 0;
   Vec3 _bgColor = {0,0,0};
 
-  GLProgram _sp0;
-  GLUniformMat4f _sp0_trans;
-  GLUniform4f _sp0_modColor;
-
-  GLProgram _sp1;
-  GLUniformMat4f _sp1_trans;
-  GLUniform4f _sp1_modColor;
-  GLUniform1i _sp1_texUnit;
-
-  GLProgram _sp2;
-  GLUniformMat4f _sp2_trans;
-  GLUniform4f _sp2_modColor;
-  GLUniform1i _sp2_texUnit;
+  GLProgram _sp[3];
+  GLUniformMat4f _sp_trans[3];
+  GLUniform4f _sp_modColor[3];
+  GLUniform1i _sp_texUnit[3];
 
   GLVertexArray _vao;
   GLBuffer _vbo;
