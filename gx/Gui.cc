@@ -1,6 +1,6 @@
 //
 // gx/Gui.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #include "Gui.hh"
@@ -110,7 +110,7 @@ void gx::Gui::update(Window& win)
           || (type == GUI_MENU && _lastPressedID != id && _lastType == GUI_MENU)))
   {
     setFocusID((type == GUI_ENTRY) ?  id : 0);
-    _lastCursorUpdate = win.pollTime();
+    _lastCursorUpdate = win.lastPollTime();
     _cursorState = true;
     _pressedID = id;
     _lastPressedID = id;
@@ -149,7 +149,7 @@ void gx::Gui::update(Window& win)
   // cursor blink update
   if (_focusID && _theme.cursorBlinkTime > 0) {
     int64_t blinks =
-      (win.pollTime() - _lastCursorUpdate) / int64_t(_theme.cursorBlinkTime);
+      (win.lastPollTime() - _lastCursorUpdate) / int64_t(_theme.cursorBlinkTime);
     if (blinks > 0) {
       _lastCursorUpdate += blinks * _theme.cursorBlinkTime;
       if (blinks & 1) { _cursorState = !_cursorState; }
@@ -227,7 +227,7 @@ void gx::Gui::processCharEvent(Window& win)
   }
 
   if (usedEvent) {
-    _lastCursorUpdate = win.pollTime();
+    _lastCursorUpdate = win.lastPollTime();
     _cursorState = true;
     win.removeEvent(EVENT_CHAR);
   }

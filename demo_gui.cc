@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
                       gui3.getText(gui3.entryID()));
     }
 
-    //gx::println_err("time ", win.pollTime());
+    //gx::println_err("time ", win.lastPollTime());
   }
 
   return 0;

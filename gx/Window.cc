@@ -299,7 +299,7 @@ int gx::Window::pollEvents()
   glfwPollEvents();
     // callbacks will set event values
 
-  _pollTime = usecSinceStart();
+  _lastPollTime = usecSinceStart();
   return _events;
 }
 

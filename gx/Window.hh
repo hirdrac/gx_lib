@@ -1,6 +1,6 @@
 //
 // gx/Window.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // encapsulation of core graphics output & user input
 //
@@ -179,7 +179,7 @@ class gx::Window
   int pollEvents();
     // updates event state, returns current event mask
 
-  [[nodiscard]] int64_t pollTime() const { return _pollTime; }
+  [[nodiscard]] int64_t lastPollTime() const { return _lastPollTime; }
     // time of last pollEvents()
     // (in microseconds since first window open)
 
@@ -232,7 +232,7 @@ class gx::Window
   int _maxTextureSize = 0;
 
   // event state
-  int64_t _pollTime = 0;
+  int64_t _lastPollTime = 0;
   int _events = 0, _removedEvents = 0;
   std::vector<KeyState> _keyStates;
   std::vector<CharInfo> _chars;
