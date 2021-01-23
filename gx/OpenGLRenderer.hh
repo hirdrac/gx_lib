@@ -1,6 +1,6 @@
 //
 // gx/OpenGLRenderer.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // FIXME - make TexID unique across all Renderer instances
 
@@ -35,7 +35,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
   void setBGColor(float r, float g, float b) override { _bgColor.set(r,g,b); }
 
   void clearFrame(int width, int height) override;
-  void draw(const DrawList& dl, const Color& modColor) override;
+  void draw(const DrawEntry* data, std::size_t dataSize,
+            const Color& modColor) override;
   void renderFrame() override;
 
  private:

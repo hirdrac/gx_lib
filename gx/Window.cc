@@ -1,10 +1,11 @@
 //
 // gx/Window.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #include "Window.hh"
 #include "OpenGLRenderer.hh"
+#include "DrawList.hh"
 #include "Logger.hh"
 #include "System.hh"
 //#include "Print.hh"
@@ -253,13 +254,15 @@ void gx::Window::clearFrame()
 void gx::Window::draw(const DrawList& dl)
 {
   assert(_renderer);
-  _renderer->draw(dl, WHITE);
+  const auto& d = dl.entries();
+  _renderer->draw(d.data(), d.size(), WHITE);
 }
 
 void gx::Window::draw(const DrawList& dl, const Color& modColor)
 {
   assert(_renderer);
-  _renderer->draw(dl, modColor);
+  const auto& d = dl.entries();
+  _renderer->draw(d.data(), d.size(), modColor);
 }
 
 void gx::Window::renderFrame()

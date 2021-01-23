@@ -1,12 +1,12 @@
 //
 // gx/OpenGLRenderer.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 // TODO - add blur transparency shader
 
 #include "OpenGLRenderer.hh"
-#include "DrawList.hh"
+#include "DrawEntry.hh"
 #include "Image.hh"
 #include "Color.hh"
 #include "Logger.hh"
@@ -260,13 +260,14 @@ void gx::OpenGLRenderer::clearFrame(int width, int height)
   _drawCalls.clear();
 }
 
-void gx::OpenGLRenderer::draw(const DrawList& dl, const Color& modColor)
+void gx::OpenGLRenderer::draw(
+  const DrawEntry* data, std::size_t dataSize, const Color& modColor)
 {
   _changed = true;
-  auto& entries = dl.entries();
+  const DrawEntry* end = data + dataSize;
 
   int size = 0; // vertices needed
-  for (auto itr = entries.cbegin(), end = entries.cend(); itr != end; ) {
+  for (const DrawEntry* itr = data; itr != end; ) {
     DrawCmd cmd = itr->cmd;
     switch (cmd) {
       case CMD_color:      itr += 2; break;
@@ -301,7 +302,7 @@ void gx::OpenGLRenderer::draw(const DrawList& dl, const Color& modColor)
   float lw = 1.0f;
   TextureID tid = 0;
 
-  for (auto itr = entries.cbegin(), end = entries.cend(); itr != end; ) {
+  for (const DrawEntry* itr = data; itr != end; ) {
     DrawCmd cmd = (itr++)->cmd;
     switch (cmd) {
       case CMD_color:     color = uval(itr); break;

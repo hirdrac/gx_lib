@@ -1,6 +1,6 @@
 //
 // gx/Renderer.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 // TODO - texture wrap/filter settings
@@ -13,7 +13,7 @@
 struct GLFWwindow;
 namespace gx {
   class Image;
-  class DrawList;
+  class DrawEntry;
   class Renderer;
 }
 
@@ -37,7 +37,8 @@ class gx::Renderer
 
   // draw methods
   virtual void clearFrame(int width, int height) = 0;
-  virtual void draw(const DrawList& dl, const Color& col) = 0;
+  virtual void draw(const DrawEntry* data, std::size_t dataSize,
+                    const Color& col) = 0;
   virtual void renderFrame() = 0;
 
  protected:
