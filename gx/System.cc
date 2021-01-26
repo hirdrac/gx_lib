@@ -1,6 +1,6 @@
 //
 // gx/System.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #include "System.hh"
@@ -12,6 +12,7 @@
 
 namespace {
   std::thread::id mainThreadID = std::this_thread::get_id();
+    // limitation of GLFW, most API calls must be from main thread
 
   void errorCB(int error, const char* txt)
   {
@@ -31,6 +32,7 @@ bool gx::initGLFW()
 
   init = true;
   glfwSetErrorCallback(errorCB);
+  //glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, GLFW_FALSE);
   if (!glfwInit()) {
     LOG_ERROR("glfwInit() failed");
     return false;

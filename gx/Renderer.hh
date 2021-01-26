@@ -3,7 +3,7 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - texture wrap/filter settings
+// TODO - texture wrap settings
 
 #pragma once
 #include "Color.hh"
