@@ -1,13 +1,20 @@
 //
 // gx/Logger.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
+
+// TODO - threaded support
+//   * IO operations handled on dedicated thread
+//   * message string creation, time capture on calling thread
+// TODO - naming threads
+//   * at thread creation, thread ID given short name that is
+//     used for logging instead of ID (main, render, log)
 
 #include "Logger.hh"
 #include <string>
-#include <string_view>
 #include <iostream>
 #include <fstream>
+#include <mutex>
 #include <cstdio>
 #include <ctime>
 #include <unistd.h>
@@ -28,7 +35,8 @@ static inline pid_t get_threadid() { return syscall(SYS_gettid); }
 static inline pid_t get_threadid() { return 0; }
 #endif
 
-namespace {
+namespace
+{
   const pid_t mainThreadID = get_threadid();
 
   void logTime(std::ostream& os)
@@ -52,66 +60,6 @@ namespace {
 		       td->tm_hour, td->tm_min, td->tm_sec);
     return std::string(str, len);
   }
-}
-
-
-// **** LoggerImpl class ****
-class gx::LoggerImpl
-{
- public:
-  virtual ~LoggerImpl() = default;
-  virtual void log(const char* str, std::streamsize len) = 0;
-  virtual void rotate() { }
-
-  void log(std::string_view s) { return log(s.data(), s.size()); }
-};
-
-namespace
-{
-  class OStreamLogger final : public gx::LoggerImpl
-  {
-   public:
-    OStreamLogger(std::ostream& os) : _os(os) { }
-
-    void log(const char* str, std::streamsize len) override
-    {
-      _os.write(str, len);
-      _os.flush();
-    }
-
-   private:
-    std::ostream& _os;
-  };
-
-  class FileLogger final : public gx::LoggerImpl
-  {
-   public:
-    FileLogger(std::string_view file)
-      : _filename(file), _os(_filename, std::ios_base::app) { }
-
-    void log(const char* str, std::streamsize len) override
-    {
-      _os.write(str, len);
-      _os.flush();
-    }
-
-    void rotate() override
-    {
-      auto x = _filename.rfind('.');
-      std::string nf = _filename.substr(0,x) + fileTime();
-      if (x != std::string::npos) {
-	nf += _filename.substr(x);
-      }
-
-      _os.close();
-      std::rename(_filename.c_str(), nf.c_str());
-      _os = std::ofstream(_filename);
-    }
-
-   private:
-    std::string _filename;
-    std::ofstream _os;
-  };
 
   constexpr std::string_view levelStr(gx::LogLevel l)
   {
@@ -127,10 +75,61 @@ namespace
 }
 
 
-// **** Logger class ****
-gx::Logger::Logger() : _level(LVL_INFO)
+// **** LoggerImpl class ****
+class gx::LoggerImpl
 {
-}
+ public:
+  void setOStream(std::ostream& os)
+  {
+    std::lock_guard lg(_mutex);
+    _fileName.clear();
+    _fileStream.close();
+    _os = &os;
+  }
+
+  void setFile(std::string_view fileName)
+  {
+    std::lock_guard lg(_mutex);
+    _fileName = fileName;
+    _fileStream = std::ofstream(_fileName, std::ios_base::app);
+    _os = &_fileStream;
+  }
+
+  void log(const char* str, std::streamsize len)
+  {
+    std::lock_guard lg(_mutex);
+    _os->write(str, len);
+    _os->flush();
+  }
+
+  void log(std::string_view s) { return log(s.data(), s.size()); }
+
+  void rotate()
+  {
+    std::lock_guard lg(_mutex);
+    if (!_fileStream) return;
+
+    auto x = _fileName.rfind('.');
+    std::string nf = _fileName.substr(0,x) + fileTime();
+    if (x != std::string::npos) {
+      nf += _fileName.substr(x);
+    }
+
+    _fileStream.close();
+    std::rename(_fileName.c_str(), nf.c_str());
+    _fileStream = std::ofstream(_fileName, std::ios_base::app);
+  }
+
+ private:
+  std::ostream* _os = &std::cerr;
+  std::ofstream _fileStream;
+  std::string _fileName;
+  std::mutex _mutex;
+};
+
+
+// **** Logger class ****
+gx::Logger::Logger() : _impl(new LoggerImpl) { }
 
 gx::Logger::~Logger() = default;
   // NOTE: default destructor needed here because LoggerImpl is not
@@ -138,17 +137,17 @@ gx::Logger::~Logger() = default;
 
 void gx::Logger::setOStream(std::ostream& os)
 {
-  _impl.reset(new OStreamLogger(os));
+  _impl->setOStream(os);
 }
 
 void gx::Logger::setFile(std::string_view fileName)
 {
-  _impl.reset(new FileLogger(fileName));
+  _impl->setFile(fileName);
 }
 
 void gx::Logger::rotate()
 {
-  if (_impl) { _impl->rotate(); }
+  _impl->rotate();
 }
 
 void gx::Logger::header(std::ostringstream& os, LogLevel lvl)
@@ -166,6 +165,5 @@ void gx::Logger::logMsg(std::ostringstream& os, const char* file, int line)
   os << file << ':' << line << ")\n";
 
   // output to stream
-  if (!_impl) { setOStream(std::cerr); }
   _impl->log(os.str());
 }

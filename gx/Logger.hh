@@ -1,6 +1,6 @@
 //
 // gx/Logger.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #pragma once
@@ -52,7 +52,7 @@ class gx::Logger
 
  private:
   std::unique_ptr<LoggerImpl> _impl;
-  LogLevel _level;
+  LogLevel _level = LVL_INFO;
 
   // methods
   void header(std::ostringstream& os, LogLevel lvl);
