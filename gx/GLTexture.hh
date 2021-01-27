@@ -1,6 +1,6 @@
 //
 // GLTexture.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // wrapper for OpenGL texture object
 // (texture target as a template parameter)
@@ -9,7 +9,7 @@
 #pragma once
 #include "OpenGL.hh"
 #include <utility>
-#ifdef GL33
+#ifdef GX_GL33
 #include <memory>
 #endif
 
@@ -152,7 +152,7 @@ class GLTextureT
   GLsizei _height = 0;
   GLsizei _depth = 0;
 
-#ifdef GL33
+#ifdef GX_GL33
   void bindCheck() {
     if (GLLastTextureBind != _tex) {
       // don't care which unit is active
@@ -222,7 +222,7 @@ GLuint GLTextureT<TARGET>::init(
   _width = width;
   _height = 0;
   _depth = 0;
-#ifdef GL33
+#ifdef GX_GL33
   GLCALL(glGenTextures, 1, &_tex);
   bindCheck();
   //glTexStorage1D(TARGET, levels, internalformat, width); //GL4.2
@@ -248,7 +248,7 @@ GLuint GLTextureT<TARGET>::init(
   _width = width;
   _height = height;
   _depth = 0;
-#ifdef GL33
+#ifdef GX_GL33
   GLCALL(glGenTextures, 1, &_tex);
   bindCheck();
   //glTexStorage2D(TARGET, levels, internalformat, width, height); //GL4.2
@@ -301,7 +301,7 @@ GLuint GLTextureT<TARGET>::init(
   _width = width;
   _height = height;
   _depth = depth;
-#ifdef GL33
+#ifdef GX_GL33
   GLCALL(glGenTextures, 1, &_tex);
   bindCheck();
   //glTexStorage3D(TARGET, levels, internalformat, width, height, depth); //GL4.2
@@ -336,7 +336,7 @@ GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
   _width = 0;
   _height = 0;
   _depth = 0;
-#ifdef GL33
+#ifdef GX_GL33
   if (!_tex) { glGenTextures(1, &_tex); }
   bindCheck();
   GLCALL(glTexBuffer, TARGET, internalformat, buffer);
@@ -350,7 +350,7 @@ GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
 template <GLenum TARGET>
 void GLTextureT<TARGET>::detachBuffer()
 {
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexBuffer, TARGET, _internalformat, 0);
 #else
@@ -361,7 +361,7 @@ void GLTextureT<TARGET>::detachBuffer()
 template <GLenum TARGET>
 void GLTextureT<TARGET>::bindUnit(GLuint unit, GLuint tex)
 {
-#ifdef GL33
+#ifdef GX_GL33
   GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
   GLCALL(glBindTexture, TARGET, tex);
   GLLastTextureBind = tex;
@@ -375,7 +375,7 @@ void GLTextureT<TARGET>::setSubImage1D(
   GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void* pixels)
 {
   setUnpackAlignment(width, format, type);
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexSubImage1D, TARGET, level, xoffset, width, format, type, pixels);
 #else
@@ -389,7 +389,7 @@ void GLTextureT<TARGET>::setSubImage2D(
   GLenum format, GLenum type, const void* pixels)
 {
   setUnpackAlignment(width, format, type);
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
 	 width, height, format, type, pixels);
@@ -406,7 +406,7 @@ void GLTextureT<TARGET>::setSubImage3D(
   GLenum format, GLenum type, const void* pixels)
 {
   setUnpackAlignment(width, format, type);
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
 	 width, height, depth, format, type, pixels);
@@ -420,7 +420,7 @@ template <GLenum TARGET>
 void GLTextureT<TARGET>::getImage(
   GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels)
 {
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glGetTexImage, TARGET, level, format, type, pixels);
 #else
@@ -431,7 +431,7 @@ void GLTextureT<TARGET>::getImage(
 template <GLenum TARGET>
 void GLTextureT<TARGET>::generateMipmap()
 {
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glGenerateMipmap, TARGET);
 #else
@@ -442,7 +442,7 @@ void GLTextureT<TARGET>::generateMipmap()
 template <GLenum TARGET>
 void GLTextureT<TARGET>::clear(GLint level, GLenum format)
 {
-#ifdef GL33
+#ifdef GX_GL33
   auto empty = std::make_unique<GLubyte[]>(
     _width * std::max(_height,1) * std::max(_depth,1) * 4);
   if (_depth > 0) {
@@ -494,7 +494,7 @@ template <GLenum TARGET>
 void GLTextureT<TARGET>::cleanup() noexcept
 {
   if (_tex) {
-#ifdef GL33
+#ifdef GX_GL33
     if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
 #endif
     GLCALL(glDeleteTextures, 1, &_tex);
@@ -504,7 +504,7 @@ void GLTextureT<TARGET>::cleanup() noexcept
 template <GLenum TARGET>
 void GLTextureT<TARGET>::setParameter(GLenum pname, GLfloat param)
 {
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexParameterf, TARGET, pname, param);
 #else
@@ -515,7 +515,7 @@ void GLTextureT<TARGET>::setParameter(GLenum pname, GLfloat param)
 template <GLenum TARGET>
 void GLTextureT<TARGET>::setParameter(GLenum pname, GLint param)
 {
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexParameteri, TARGET, pname, param);
 #else
@@ -526,7 +526,7 @@ void GLTextureT<TARGET>::setParameter(GLenum pname, GLint param)
 template <GLenum TARGET>
 void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLfloat* params)
 {
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexParameterfv, TARGET, pname, params);
 #else
@@ -537,7 +537,7 @@ void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLfloat* params)
 template <GLenum TARGET>
 void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLint* params)
 {
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexParameteriv, TARGET, pname, params);
 #else
@@ -548,7 +548,7 @@ void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLint* params)
 template <GLenum TARGET>
 void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLint* params)
 {
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexParameterIiv, TARGET, pname, params);
 #else
@@ -559,7 +559,7 @@ void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLint* params)
 template <GLenum TARGET>
 void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLuint* params)
 {
-#ifdef GL33
+#ifdef GX_GL33
   bindCheck();
   GLCALL(glTexParameterIuiv, TARGET, pname, params);
 #else

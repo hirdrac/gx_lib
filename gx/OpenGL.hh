@@ -10,7 +10,7 @@
 #include <string>
 #include <string_view>
 
-#ifdef GL33
+#ifdef GX_GL33
 #define GLNAMESPACE gx_gl33
 constexpr int GL_VERSION_MAJOR = 3;
 constexpr int GL_VERSION_MINOR = 3;
@@ -32,7 +32,7 @@ inline namespace GLNAMESPACE {
 extern bool GLInitialized;
   // check if GL calls are safe (mainly for destructors)
 
-#ifdef GL33
+#ifdef GX_GL33
 extern GLuint GLLastBufferBind;
 extern GLuint GLLastArrayBufferBind;
 extern GLuint GLLastVertexArrayBind;

@@ -11,7 +11,7 @@ inline namespace GLNAMESPACE {
 
 // **** Globals ****
 bool GLInitialized = false;
-#ifdef GL33
+#ifdef GX_GL33
 GLuint GLLastBufferBind = 0;
 GLuint GLLastArrayBufferBind = 0;
 GLuint GLLastVertexArrayBind = 0;
@@ -20,7 +20,7 @@ GLuint GLLastTextureBind = 0;
 
 
 // **** Callbacks ****
-#ifndef GL33
+#ifndef GX_GL33
 static void APIENTRY GLDebugCB(
   GLenum source, GLenum type, GLuint id, GLenum severity,
   GLsizei length, const GLchar *message, const void *userParam)
@@ -80,7 +80,7 @@ bool GLSetupContext(GLADloadproc loadProc)
     GLInitialized = true;
   }
 
-#ifndef GL33
+#ifndef GX_GL33
   GLint flags = 0;
   glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
   if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
@@ -103,7 +103,7 @@ void GLClearState()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
 
-#ifdef GL33
+#ifdef GX_GL33
   GLLastBufferBind = 0;
   GLLastArrayBufferBind = 0;
   GLLastVertexArrayBind = 0;
