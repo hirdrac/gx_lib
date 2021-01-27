@@ -1,6 +1,6 @@
 //
 // OpenGL.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // OpenGL API include & generic utility functions
 //
@@ -139,7 +139,7 @@ int GLCheckErrors(std::string_view msg, const char* file = __FILE__,
 
 
 // **** Macros ****
-#ifdef DEBUG_GL
+#ifdef GX_DEBUG_GL
 #define GLCALL(fn,...) do { (fn)(__VA_ARGS__); GLCheckErrors(#fn); } while(0)
 #else
 #define GLCALL(fn,...) (fn)(__VA_ARGS__)

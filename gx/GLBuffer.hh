@@ -1,6 +1,6 @@
 //
 // GLBuffer.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // wrapper for OpenGL buffer object
 //
@@ -252,12 +252,12 @@ void* GLBuffer::map(GLenum access)
 #ifdef GL33
   bindCheck();
   void* result = glMapBuffer(_target, access);
-  #if DEBUG_GL
+  #if GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapBuffer"); }
   #endif
 #else
   void* result = glMapNamedBuffer(_buffer, access);
-  #if DEBUG_GL
+  #if GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapNamedBuffer"); }
   #endif
 #endif
@@ -269,12 +269,12 @@ bool GLBuffer::unmap()
 #ifdef GL33
   bindCheck();
   bool result = glUnmapBuffer(_target);
-  #if DEBUG_GL
+  #if GX_DEBUG_GL
   GLCheckErrors("glUnmapBuffer");
   #endif
 #else
   bool result = glUnmapNamedBuffer(_buffer);
-  #if DEBUG_GL
+  #if GX_DEBUG_GL
   GLCheckErrors("glUnmapNamedBuffer");
   #endif
 #endif
@@ -286,12 +286,12 @@ void* GLBuffer::mapRange(GLintptr offset, GLsizeiptr length, GLbitfield access)
 #ifdef GL33
   bindCheck();
   void* result = glMapBufferRange(_target, offset, length, access);
-  #if DEBUG_GL
+  #if GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapBufferRange"); }
   #endif
 #else
   void* result = glMapNamedBufferRange(_buffer, offset, length, access);
-  #if DEBUG_GL
+  #if GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapNamedBufferRange"); }
   #endif
 #endif
