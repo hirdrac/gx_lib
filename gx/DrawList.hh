@@ -7,6 +7,7 @@
 // TODO - text vertical/horizontal scaling
 // TODO - text rotation
 // TODO - support color gradiant for primitives other than rectangle
+// TODO - extract out 'context' data into a different type
 
 #pragma once
 #include "DrawEntry.hh"
@@ -48,7 +49,9 @@ class gx::DrawList
   inline void vgradiant(float y0, uint32_t c0, float y1, uint32_t c1);
 
   inline void lineWidth(float w);
-  inline void texture(const Texture& t);
+
+  inline void texture(TextureID tid);
+  void texture(const Texture& t) { texture(t.id()); }
 
   // line drawing
   void line(Vec2 p0, Vec2 p1) { add(CMD_line, p0.x, p0.y, p1.x, p1.y); }
@@ -200,9 +203,8 @@ void gx::DrawList::lineWidth(float w)
   }
 }
 
-void gx::DrawList::texture(const Texture& t)
+void gx::DrawList::texture(TextureID tid)
 {
-  TextureID tid = t.id();
   if (tid != _lastTexID) {
     _lastTexID = tid;
     add(CMD_texture, tid);
