@@ -1,5 +1,5 @@
 //
-// OpenGL.hh
+// gx/OpenGL.hh
 // Copyright (C) 2021 Richard Bradley
 //
 // OpenGL API include & generic utility functions

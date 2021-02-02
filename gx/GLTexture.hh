@@ -1,5 +1,5 @@
 //
-// GLTexture.hh
+// gx/GLTexture.hh
 // Copyright (C) 2021 Richard Bradley
 //
 // wrapper for OpenGL texture object

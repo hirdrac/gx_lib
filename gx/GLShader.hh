@@ -1,5 +1,5 @@
 //
-// GLShader.hh
+// gx/GLShader.hh
 // Copyright (C) 2020 Richard Bradley
 //
 // wrapper for OpenGL shader object

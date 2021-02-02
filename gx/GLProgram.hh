@@ -1,5 +1,5 @@
 //
-// GLProgram.hh
+// gx/GLProgram.hh
 // Copyright (C) 2020 Richard Bradley
 //
 // wrapper for OpenGL program object

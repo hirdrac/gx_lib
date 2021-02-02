@@ -1,5 +1,5 @@
 //
-// GLBuffer.hh
+// gx/GLBuffer.hh
 // Copyright (C) 2021 Richard Bradley
 //
 // wrapper for OpenGL buffer object

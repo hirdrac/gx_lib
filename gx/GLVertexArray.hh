@@ -1,5 +1,5 @@
 //
-// GLVertexArray.hh
+// gx/GLVertexArray.hh
 // Copyright (C) 2021 Richard Bradley
 //
 // wrapper for OpenGL vertex array object

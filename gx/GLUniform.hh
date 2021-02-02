@@ -1,6 +1,6 @@
 //
-// GLUniform.hh
-// Copyright (C) 2020 Richard Bradley
+// gx/GLUniform.hh
+// Copyright (C) 2021 Richard Bradley
 //
 
 #pragma once
