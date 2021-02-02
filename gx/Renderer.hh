@@ -13,7 +13,7 @@
 struct GLFWwindow;
 namespace gx {
   class Image;
-  class DrawEntry;
+  struct DrawEntry;
   class Renderer;
 }
 
