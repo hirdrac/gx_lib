@@ -1,12 +1,13 @@
 //
 // gx/Gui.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // Graphical user interface rendering & event handling
 //
 
 // TODO - sub menus
 // TODO - menu item key short-cuts
+// TODO - list select (combo box)
 
 #pragma once
 #include "DrawList.hh"
@@ -28,7 +29,7 @@ namespace gx {
     GUI_NULL = 0,
     GUI_HFRAME, GUI_VFRAME, GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_BUTTON,
     GUI_MENU, GUI_MENU_HFRAME, GUI_MENU_VFRAME, GUI_MENU_ITEM,
-    GUI_ENTRY
+    GUI_ENTRY, GUI_IMAGE
   };
 
   enum ButtonState {
@@ -44,14 +45,31 @@ namespace gx {
 
 struct gx::GuiElem
 {
+  // shared properties
   std::vector<GuiElem> elems;  // child elements
+  GuiElemType type;
   std::string text;  // label text
   AlignEnum align = ALIGN_TOP_LEFT;
   int id = 0;
-  GuiElemType type;
-  float size = 0;
-  int maxLength = 0;
 
+  // elem type specific properties
+  struct EntryProps {
+    float size; // width in characters
+    int maxLength;
+  };
+
+  struct ImageProps {
+    float width, height;
+    TextureID texId;
+    Vec2 texCoord0, texCoord1;
+  };
+
+  union {
+    EntryProps entry;
+    ImageProps image;
+  };
+
+  // layout state
   float _x = 0, _y = 0, _w = 0, _h = 0; // layout position/size
   bool _active = false;                 // popup/menu enabled
 
@@ -269,9 +287,8 @@ namespace gx {
   {
     GuiElem e(GUI_MENU);
     e.elems.push_back(gx::guiLabel(text));
-    GuiElem frame(GUI_MENU_VFRAME);
+    GuiElem& frame = e.elems.emplace_back(GUI_MENU_VFRAME);
     frame.elems = {items...};
-    e.elems.push_back(std::move(frame));
     return e;
   }
 
@@ -287,9 +304,21 @@ namespace gx {
   inline GuiElem guiEntry(float size, int maxLength, int eventID)
   {
     GuiElem e(GUI_ENTRY);
-    e.size = size;
-    e.maxLength = maxLength;
+    e.entry.size = size;
+    e.entry.maxLength = maxLength;
     e.id = eventID;
+    return e;
+  }
+
+  // Image
+  inline GuiElem guiImage(float w, float h, TextureID tid, Vec2 t0, Vec2 t1)
+  {
+    GuiElem e(GUI_IMAGE);
+    e.image.width = w;
+    e.image.height = h;
+    e.image.texId = tid;
+    e.image.texCoord0 = t0;
+    e.image.texCoord1 = t1;
     return e;
   }
 }

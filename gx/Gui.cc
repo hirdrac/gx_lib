@@ -173,13 +173,14 @@ void gx::Gui::processCharEvent(Window& win)
 {
   GuiElem* e = findElem(_focusID);
   if (!e) { return; }
+  assert(e->type == GUI_ENTRY);
 
   bool usedEvent = false;
   int len = lengthUTF8(e->text);
   for (const CharInfo& c : win.charData()) {
     if (c.codepoint) {
       usedEvent = true;
-      if (e->maxLength == 0 || len < e->maxLength) {
+      if (e->entry.maxLength == 0 || len < e->entry.maxLength) {
         e->text += toUTF8(c.codepoint);
         ++len;
         _needRender = true;
@@ -207,7 +208,7 @@ void gx::Gui::processCharEvent(Window& win)
       std::string_view line(cb.data(), cb.find('\n'));
       for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
         int code = itr.get();
-        if (code >= 32 && (e->maxLength == 0 || len < e->maxLength)) {
+        if (code >= 32 && (e->entry.maxLength == 0 || len < e->entry.maxLength)) {
           e->text += toUTF8(code);
           ++len;
           _needRender = true;
@@ -336,11 +337,15 @@ void gx::Gui::calcSize(GuiElem& def)
     case GUI_ENTRY: {
       assert(_theme.baseFont != nullptr);
       const Font& fnt = *_theme.baseFont;
-      def._w = def.size * fnt.calcWidth("A");
+      def._w = def.entry.size * fnt.calcWidth("A");
       def._h = fnt.size();
       // FIXME - use better width value than capital A * size
       break;
     }
+    case GUI_IMAGE:
+      def._w = def.image.width + (_theme.border * 2);
+      def._h = def.image.height + (_theme.border * 2);
+      break;
     default:
       LOG_ERROR("unknown type ", def.type);
       break;
@@ -398,6 +403,7 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
     case GUI_HLINE:
     case GUI_VLINE:
     case GUI_ENTRY:
+    case GUI_IMAGE:
       // noting extra to do
       break;
     default:
@@ -503,6 +509,12 @@ void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
       }
       break;
     }
+    case GUI_IMAGE:
+      _dl.texture(def.image.texId);
+      _dl.rectangle(def._x + _theme.border, def._y + _theme.border,
+                    def.image.width, def.image.height,
+                    def.image.texCoord0, def.image.texCoord1);
+      break;
     default:
       LOG_ERROR("unknown type ", def.type);
       break;
