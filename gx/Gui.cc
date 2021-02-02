@@ -160,8 +160,8 @@ void gx::Gui::update(Window& win)
 
   // redraw GUI if needed
   if (_needRender) {
+    _dl.clear();
     DrawContext dc(_dl);
-    dc.clear();
     drawRec(dc, _rootElem, _theme.colorBackground);
     drawElem(dc, _rootElem, BSTATE_NONE);
     _needRender = false;
