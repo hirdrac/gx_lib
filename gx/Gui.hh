@@ -20,6 +20,7 @@
 
 namespace gx {
   class Window;
+  class DrawContext;
   class Font;
   class Gui;
   struct GuiElem;
@@ -163,13 +164,13 @@ class gx::Gui
   void calcSize(GuiElem& def);
   void calcPos(GuiElem& def, float base_x, float base_y);
   void deactivate(GuiElem& def);
-  void drawElem(GuiElem& def, ButtonState bstate);
+  void drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate);
   GuiElem* findElem(float x, float y);
   GuiElem* findElem(int id);
   const GuiElem* findElem(int id) const;
   GuiElem* findNextElem(int id, GuiElemType type = GUI_NULL);
   GuiElem* findPrevElem(int id, GuiElemType type = GUI_NULL);
-  void drawRec(const GuiElem& def, uint32_t col);
+  void drawRec(DrawContext& dc, const GuiElem& def, uint32_t col);
   void processCharEvent(Window& win);
   void setFocusID(int id);
 };

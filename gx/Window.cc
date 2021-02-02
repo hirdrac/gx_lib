@@ -255,15 +255,13 @@ void gx::Window::clearFrame()
 void gx::Window::draw(const DrawList& dl)
 {
   assert(_renderer);
-  const auto& d = dl.entries();
-  _renderer->draw(d.data(), d.size(), WHITE);
+  _renderer->draw(dl.data(), dl.size(), WHITE);
 }
 
 void gx::Window::draw(const DrawList& dl, const Color& modColor)
 {
   assert(_renderer);
-  const auto& d = dl.entries();
-  _renderer->draw(d.data(), d.size(), modColor);
+  _renderer->draw(dl.data(), dl.size(), modColor);
 }
 
 void gx::Window::renderFrame()

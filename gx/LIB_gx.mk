@@ -2,7 +2,7 @@
 
 LIB_gx = libgx
 LIB_gx.SRC =\
-  Logger.cc Unicode.cc System.cc Window.cc DrawList.cc Font.cc Image.cc\
+  Logger.cc Unicode.cc System.cc Window.cc DrawContext.cc Font.cc Image.cc\
   Texture.cc Gui.cc Renderer.cc OpenGLRenderer.cc OpenGL.cc\
   glad.c stb_image.c
 LIB_gx.PACKAGES = glfw3:3.2 freetype2

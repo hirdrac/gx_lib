@@ -9,6 +9,7 @@
 #include "gx/Font.hh"
 #include "gx/Texture.hh"
 #include "gx/DrawList.hh"
+#include "gx/DrawContext.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
 
@@ -41,14 +42,16 @@ int main(int argc, char** argv)
 
   win.setSize(t.width(), t.height(), false);
   win.setBGColor(.3,.1,.1);
+  gx::DrawList dl;
+  gx::DrawContext dc(dl);
 
   // main loop
   do {
     if (win.resized()) {
       // 'resized' always true once at start
-      gx::DrawList dl;
-      dl.texture(t);
-      dl.rectangle(0, 0, win.width(), win.height(), {0,0}, {1,1});
+      dc.clear();
+      dc.texture(t);
+      dc.rectangle(0, 0, win.width(), win.height(), {0,0}, {1,1});
 
       win.clearFrame();
       win.draw(dl);

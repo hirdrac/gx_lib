@@ -1,12 +1,13 @@
 //
 // image_viewer.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
 #include "gx/Window.hh"
 #include "gx/DrawList.hh"
+#include "gx/DrawContext.hh"
 #include "gx/Texture.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
@@ -85,6 +86,7 @@ int main(int argc, char* argv[])
 
   win.setBGColor(gx::BLACK);
   gx::DrawList dl;
+  gx::DrawContext dc(dl);
   bool refresh = true;
 
   for (;;) {
@@ -95,11 +97,11 @@ int main(int argc, char* argv[])
       auto [iw,ih] = calcSize(win, e.img);
       int ix = (float(win.width()) - iw) / 2.0f;
       int iy = (float(win.height()) - ih) / 2.0f;
-      dl.clear();
-      dl.color(gx::WHITE);
-      dl.texture(e.tex);
-      dl.rectangle(ix, iy, iw, ih, {0,0}, {1,1});
-      dl.color(gx::GRAY50);
+      dc.clear();
+      dc.color(gx::WHITE);
+      dc.texture(e.tex);
+      dc.rectangle(ix, iy, iw, ih, {0,0}, {1,1});
+      dc.color(gx::GRAY50);
 
       // multi-image horizontal display in fullscreen
       constexpr int border = 8;
@@ -112,8 +114,8 @@ int main(int argc, char* argv[])
           int ix0 = prev_x - (iw0 + border); prev_x = ix0;
           if ((ix0+iw0) < 0) { break; }
           int iy0 = (float(win.height()) - ih0) / 2.0f;
-          dl.texture(e0.tex);
-          dl.rectangle(ix0, iy0, iw0, ih0, {0,0}, {1,1});
+          dc.texture(e0.tex);
+          dc.rectangle(ix0, iy0, iw0, ih0, {0,0}, {1,1});
         }
 
         // display next image(s)
@@ -124,8 +126,8 @@ int main(int argc, char* argv[])
           int ix1 = prev_x; prev_x += iw1 + border;
           if (ix1 > win.width()) { break; }
           int iy1 = (float(win.height()) - ih1) / 2.0f;
-          dl.texture(e1.tex);
-          dl.rectangle(ix1, iy1, iw1, ih1, {0,0}, {1,1});
+          dc.texture(e1.tex);
+          dc.rectangle(ix1, iy1, iw1, ih1, {0,0}, {1,1});
         }
       }
 

@@ -1,5 +1,5 @@
 //
-// gx/DrawList.hh
+// gx/DrawContext.hh
 // Copyright (C) 2021 Richard Bradley
 //
 
@@ -7,10 +7,9 @@
 // TODO - text vertical/horizontal scaling
 // TODO - text rotation
 // TODO - support color gradiant for primitives other than rectangle
-// TODO - extract out 'context' data into a different type
 
 #pragma once
-#include "DrawEntry.hh"
+#include "DrawList.hh"
 #include "Texture.hh"
 #include "Color.hh"
 #include "Align.hh"
@@ -27,19 +26,19 @@ namespace gx {
   struct VertexPTC { Vec2 pt, tx; uint32_t c; };
 
   class Font;
-  class DrawList;
+  class DrawContext;
 }
 
 
-class gx::DrawList
+class gx::DrawContext
 {
  public:
-  DrawList() { init(); }
+  DrawContext(DrawList& dl) : _data(&dl) { init(); }
 
   // Low-level data entry
-  void clear() { init(); _data.clear(); }
-  void reserve(std::size_t n) { _data.reserve(n); }
-  [[nodiscard]] std::size_t size() const { return _data.size(); }
+  void clear() { init(); _data->clear(); }
+  void reserve(std::size_t n) { _data->reserve(n); }
+  [[nodiscard]] std::size_t size() const { return _data->size(); }
 
   // control/state change
   inline void color(float r, float g, float b, float a = 1.0f);
@@ -110,10 +109,10 @@ class gx::DrawList
     _text(f, x, y, align, spacing, text, &clip); }
 
   // Data extraction
-  [[nodiscard]] const std::vector<DrawEntry>& entries() const { return _data; }
+  [[nodiscard]] const DrawList& drawList() const { return *_data; }
 
  private:
-  std::vector<DrawEntry> _data;
+  DrawList* _data = nullptr;
   uint32_t _lastColor;
   float _lastLineWidth;
   TextureID _lastTexID;
@@ -135,7 +134,7 @@ class gx::DrawList
   template<typename... Args>
   void add(DrawCmd cmd, const Args&... args) {
     std::initializer_list<DrawEntry> x = {cmd, args...};
-    _data.insert(_data.end(), x.begin(), x.end());
+    _data->insert(_data->end(), x.begin(), x.end());
   }
 
   void _text(const Font& f, float x, float y, AlignEnum align, int spacing,
@@ -146,17 +145,17 @@ class gx::DrawList
 
 
 // **** Inline Implementations ****
-void gx::DrawList::color(float r, float g, float b, float a)
+void gx::DrawContext::color(float r, float g, float b, float a)
 {
   color(packRGBA8(r, g, b, a));
 }
 
-void gx::DrawList::color(const Color& c)
+void gx::DrawContext::color(const Color& c)
 {
   color(packRGBA8(c));
 }
 
-void gx::DrawList::color(uint32_t c)
+void gx::DrawContext::color(uint32_t c)
 {
   _colorMode = CM_SOLID;
   if (c != _lastColor) {
@@ -165,7 +164,7 @@ void gx::DrawList::color(uint32_t c)
   }
 }
 
-void gx::DrawList::hgradiant(float x0, uint32_t c0, float x1, uint32_t c1)
+void gx::DrawContext::hgradiant(float x0, uint32_t c0, float x1, uint32_t c1)
 {
   if (c0 == c1) {
     color(c0);
@@ -180,7 +179,7 @@ void gx::DrawList::hgradiant(float x0, uint32_t c0, float x1, uint32_t c1)
   }
 }
 
-void gx::DrawList::vgradiant(float y0, uint32_t c0, float y1, uint32_t c1)
+void gx::DrawContext::vgradiant(float y0, uint32_t c0, float y1, uint32_t c1)
 {
   if (c0 == c1) {
     color(c0);
@@ -195,7 +194,7 @@ void gx::DrawList::vgradiant(float y0, uint32_t c0, float y1, uint32_t c1)
   }
 }
 
-void gx::DrawList::lineWidth(float w)
+void gx::DrawContext::lineWidth(float w)
 {
   if (w != _lastLineWidth) {
     _lastLineWidth = w;
@@ -203,7 +202,7 @@ void gx::DrawList::lineWidth(float w)
   }
 }
 
-void gx::DrawList::texture(TextureID tid)
+void gx::DrawContext::texture(TextureID tid)
 {
   if (tid != _lastTexID) {
     _lastTexID = tid;
@@ -211,7 +210,7 @@ void gx::DrawList::texture(TextureID tid)
   }
 }
 
-uint32_t gx::DrawList::gradiantColor(float g) const
+uint32_t gx::DrawContext::gradiantColor(float g) const
 {
   if (g <= _g0) { return _c0; }
   else if (g >= _g1) { return _c1; }

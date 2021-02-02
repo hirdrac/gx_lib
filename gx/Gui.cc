@@ -5,6 +5,7 @@
 
 #include "Gui.hh"
 #include "Window.hh"
+#include "DrawContext.hh"
 #include "Font.hh"
 #include "Unicode.hh"
 #include "System.hh"
@@ -159,9 +160,10 @@ void gx::Gui::update(Window& win)
 
   // redraw GUI if needed
   if (_needRender) {
-    _dl.clear();
-    drawRec(_rootElem, _theme.colorBackground);
-    drawElem(_rootElem, BSTATE_NONE);
+    DrawContext dc(_dl);
+    dc.clear();
+    drawRec(dc, _rootElem, _theme.colorBackground);
+    drawElem(dc, _rootElem, BSTATE_NONE);
     _needRender = false;
     _needRedraw = true;
   } else {
@@ -418,102 +420,102 @@ void gx::Gui::deactivate(GuiElem& def)
   for (GuiElem& e : def.elems) { deactivate(e); }
 }
 
-void gx::Gui::drawElem(GuiElem& def, ButtonState bstate)
+void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
 {
   switch (def.type) {
     case GUI_HFRAME:
     case GUI_VFRAME:
-      for (GuiElem& e : def.elems) { drawElem(e, bstate); }
+      for (GuiElem& e : def.elems) { drawElem(dc, e, bstate); }
       break;
     case GUI_MENU_HFRAME:
     case GUI_MENU_VFRAME:
-      drawRec(def, _theme.colorMenuItem);
-      for (GuiElem& e : def.elems) { drawElem(e, bstate); }
+      drawRec(dc, def, _theme.colorMenuItem);
+      for (GuiElem& e : def.elems) { drawElem(dc, e, bstate); }
       break;
     case GUI_LABEL:
-      _dl.color(_theme.colorText);
-      _dl.text(*_theme.baseFont, def._x, def._y, ALIGN_TOP_LEFT,
+      dc.color(_theme.colorText);
+      dc.text(*_theme.baseFont, def._x, def._y, ALIGN_TOP_LEFT,
                _theme.spacing, def.text);
       break;
     case GUI_HLINE:
     case GUI_VLINE:
-      _dl.color(_theme.colorText);
-      _dl.rectangle(def._x + _theme.border, def._y + _theme.border, def._w - (_theme.border*2), def._h - (_theme.border*2));
+      dc.color(_theme.colorText);
+      dc.rectangle(def._x + _theme.border, def._y + _theme.border, def._w - (_theme.border*2), def._h - (_theme.border*2));
       break;
     case GUI_BUTTON:
       if (def.id == _heldID) {
         if (def.id == _hoverID) {
-          drawRec(def, _theme.colorButtonPressed);
+          drawRec(dc, def, _theme.colorButtonPressed);
           bstate = BSTATE_PRESSED;
         } else {
-          drawRec(def, _theme.colorButtonHeldOnly);
+          drawRec(dc, def, _theme.colorButtonHeldOnly);
           bstate = BSTATE_HELD_ONLY;
         }
       } else if (def.id == _hoverID && !_heldID) {
-        drawRec(def, _theme.colorButtonHover);
+        drawRec(dc, def, _theme.colorButtonHover);
         bstate = BSTATE_HOVER;
       } else {
-        drawRec(def, _theme.colorButtonNormal);
+        drawRec(dc, def, _theme.colorButtonNormal);
         bstate = BSTATE_NORMAL;
       }
-      drawElem(def.elems[0], bstate);
+      drawElem(dc, def.elems[0], bstate);
       break;
     case GUI_MENU:
       if (def.id == _heldID) {
-        drawRec(def, _theme.colorMenuSelect);
+        drawRec(dc, def, _theme.colorMenuSelect);
         bstate = BSTATE_HELD_ONLY;
       } else if (def.id == _hoverID && !_heldID) {
-        drawRec(def, _theme.colorMenuHover);
+        drawRec(dc, def, _theme.colorMenuHover);
         bstate = BSTATE_HOVER;
       } else {
-        drawRec(def, _theme.colorMenuNormal);
+        drawRec(dc, def, _theme.colorMenuNormal);
         bstate = BSTATE_NORMAL;
       }
-      drawElem(def.elems[0], bstate);
-      if (def._active) { drawElem(def.elems[1], bstate); }
+      drawElem(dc, def.elems[0], bstate);
+      if (def._active) { drawElem(dc, def.elems[1], bstate); }
       break;
     case GUI_MENU_ITEM:
       if (def.id == _hoverID) {
-        drawRec(def, _theme.colorMenuItemSelect);
+        drawRec(dc, def, _theme.colorMenuItemSelect);
       }
-      drawElem(def.elems[0], bstate);
+      drawElem(dc, def.elems[0], bstate);
       break;
     case GUI_ENTRY: {
       const Font& fnt = *_theme.baseFont;
       float tw = fnt.calcWidth(def.text);
       if (def.id == _focusID) {
-        drawRec(def, _theme.colorEntryFocus);
+        drawRec(dc, def, _theme.colorEntryFocus);
         tw += 1 + _theme.cursorWidth;
       } else {
-        drawRec(def, _theme.colorEntry);
+        drawRec(dc, def, _theme.colorEntry);
       }
       float tx = def._x;
       if (tw > def._w) {
         // text doesn't fit in entry
         tx -= tw - def._w;
-        _dl.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
-                      def._x + float(fnt.size() / 2), _theme.colorText);
-        _dl.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
-                 _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
+        dc.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
+                     def._x + float(fnt.size() / 2), _theme.colorText);
+        dc.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
+                _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
       } else {
-        _dl.color(_theme.colorText);
-        _dl.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing, def.text);
+        dc.color(_theme.colorText);
+        dc.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing, def.text);
       }
-      _dl.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
-               _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
+      dc.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
+              _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
       if (def.id == _focusID && _cursorState) {
         // draw cursor
-        _dl.color(_theme.colorCursor);
-        _dl.rectangle(tx + tw - _theme.cursorWidth, def._y+1,
-                      _theme.cursorWidth, fnt.size()-2);
+        dc.color(_theme.colorCursor);
+        dc.rectangle(tx + tw - _theme.cursorWidth, def._y+1,
+                     _theme.cursorWidth, fnt.size()-2);
       }
       break;
     }
     case GUI_IMAGE:
-      _dl.texture(def.image.texId);
-      _dl.rectangle(def._x + _theme.border, def._y + _theme.border,
-                    def.image.width, def.image.height,
-                    def.image.texCoord0, def.image.texCoord1);
+      dc.texture(def.image.texId);
+      dc.rectangle(def._x + _theme.border, def._y + _theme.border,
+                   def.image.width, def.image.height,
+                   def.image.texCoord0, def.image.texCoord1);
       break;
     default:
       LOG_ERROR("unknown type ", def.type);
@@ -621,18 +623,18 @@ gx::GuiElem* gx::Gui::findPrevElem(int id, GuiElemType type)
   }
 }
 
-void gx::Gui::drawRec(const GuiElem& def, uint32_t col)
+void gx::Gui::drawRec(DrawContext& dc, const GuiElem& def, uint32_t col)
 {
   if (col != 0) {
-    _dl.color(col);
-    _dl.rectangle(def._x, def._y, def._w, def._h);
+    dc.color(col);
+    dc.rectangle(def._x, def._y, def._w, def._h);
   }
 
   if (_theme.colorEdge != 0) {
-    _dl.color(_theme.colorEdge);
-    _dl.rectangle(def._x, def._y, def._w, 1);
-    _dl.rectangle(def._x, def._y + def._h - 1, def._w, 1);
-    _dl.rectangle(def._x, def._y, 1, def._h);
-    _dl.rectangle(def._x + def._w - 1, def._y, 1, def._h);
+    dc.color(_theme.colorEdge);
+    dc.rectangle(def._x, def._y, def._w, 1);
+    dc.rectangle(def._x, def._y + def._h - 1, def._w, 1);
+    dc.rectangle(def._x, def._y, 1, def._h);
+    dc.rectangle(def._x + def._w - 1, def._y, 1, def._h);
   }
 }

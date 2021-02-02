@@ -1,14 +1,14 @@
 //
-// gx/DrawList.cc
-// Copyright (C) 2020 Richard Bradley
+// gx/DrawContext.cc
+// Copyright (C) 2021 Richard Bradley
 //
 
-#include "DrawList.hh"
+#include "DrawContext.hh"
 #include "Font.hh"
 #include "Unicode.hh"
 
 
-void gx::DrawList::rectangle(float x, float y, float w, float h)
+void gx::DrawContext::rectangle(float x, float y, float w, float h)
 {
   const float x0 = x;
   const float y0 = y;
@@ -35,7 +35,7 @@ void gx::DrawList::rectangle(float x, float y, float w, float h)
   }
 }
 
-void gx::DrawList::rectangle(
+void gx::DrawContext::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1)
 {
   const float x0 = x;
@@ -63,7 +63,7 @@ void gx::DrawList::rectangle(
   }
 }
 
-void gx::DrawList::rectangle(
+void gx::DrawContext::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1, const Rect& clip)
 {
   float x0 = x;
@@ -122,7 +122,7 @@ void gx::DrawList::rectangle(
   }
 }
 
-void gx::DrawList::_text(
+void gx::DrawContext::_text(
   const Font& f, float x, float y, AlignEnum align, int spacing,
   std::string_view text, const Rect* clipPtr)
 {

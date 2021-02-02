@@ -11,6 +11,7 @@
 
 #pragma once
 #include "Color.hh"
+#include "DrawList.hh"
 #include <string_view>
 #include <string>
 #include <vector>
@@ -126,7 +127,6 @@ namespace gx {
   };
 
   class Window;
-  class DrawList;
   class Image;
   class Renderer;
   class Gui;
