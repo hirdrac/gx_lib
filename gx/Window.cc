@@ -143,6 +143,7 @@ bool gx::Window::open(int flags)
   glfwDefaultWindowHints();
   glfwWindowHint(GLFW_DECORATED, glfwBool(decorated));
   glfwWindowHint(GLFW_RESIZABLE, glfwBool(resizable));
+  //glfwWindowHint(GLFW_SAMPLES, 0);
   glfwWindowHint(GLFW_DOUBLEBUFFER, glfwBool(doubleBuffer));
   glfwWindowHint(GLFW_VISIBLE, glfwBool(false));
   //glfwWindowHint(GLFW_FOCUSED, glfwBool(false));

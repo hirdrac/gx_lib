@@ -4,6 +4,12 @@
 //
 
 // TODO - add blur transparency shader
+// TODO - render thread
+//   * thread for OpenGL, glfwMakeContextCurrent(), glfwGetProcAddress(),
+//     glfwSwapInterval(), glfwSwapBuffers() calls
+//   * _drawCalls, _vertices in struct passed to render thread
+//     (2 instances for tripple buffer like rendering)
+//   * make _textures read thread safe
 
 #include "OpenGLRenderer.hh"
 #include "DrawEntry.hh"
