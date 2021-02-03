@@ -6,7 +6,7 @@
 //
 
 #pragma once
-#include "glad.h"
+#include "3rd/glad.h"
 #include <string>
 #include <string_view>
 

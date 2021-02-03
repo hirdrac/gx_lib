@@ -7,7 +7,7 @@
 #include "Glyph.hh"
 #include "Logger.hh"
 #include <cassert>
-#include "stb_image.h"
+#include "3rd/stb_image.h"
 
 
 bool gx::Image::init(int width, int height, int channels)
