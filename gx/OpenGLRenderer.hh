@@ -35,6 +35,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   void setBGColor(float r, float g, float b) override { _bgColor.set(r,g,b); }
 
   void clearFrame(int width, int height) override;
+  void setTransform(const Mat4& view, const Mat4& proj) override;
   void draw(const DrawEntry* data, std::size_t dataSize,
             const Color& modColor) override;
   void renderFrame() override;
@@ -61,12 +62,18 @@ class gx::OpenGLRenderer final : public gx::Renderer
   };
   std::unordered_map<TextureID,TextureEntry> _textures;
 
+  struct TransformEntry {
+    Mat4 view, projection;
+  };
+  std::vector<TransformEntry> _transforms;
+
   struct DrawCall {
     GLenum mode; // GL_LINES, GL_TRIANGLES
     GLsizei count;
     Color modColor;
     TextureID texID;
     float lineWidth;
+    int transformNo;
   };
   std::vector<DrawCall> _drawCalls;
   TextureID _lastTexID = 0;
@@ -79,14 +86,17 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   void addDrawCall(GLenum mode, GLsizei count, const Color& modColor,
                    TextureID texID, float lineWidth) {
+    int transformNo = int(_transforms.size())-1;
     if (!_drawCalls.empty()) {
       DrawCall& dc = _drawCalls.back();
-      if (mode == dc.mode && texID == dc.texID && lineWidth == dc.lineWidth) {
+      if (mode == dc.mode && texID == dc.texID && lineWidth == dc.lineWidth
+          && transformNo == dc.transformNo) {
 	dc.count += count;
 	return;
       }
     }
-    _drawCalls.push_back({mode, count, modColor, texID, lineWidth});
+    _drawCalls.push_back(
+      {mode, count, modColor, texID, lineWidth, transformNo});
   }
 
   // prevent copy/assignment

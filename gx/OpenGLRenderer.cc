@@ -50,13 +50,13 @@ namespace {
       return GLProgram();
     }
 
-    GLProgram p;
-    if (!p.init(vshader, fshader)) {
-      LOG_ERROR("program link error: ", p.infoLog());
+    GLProgram prog;
+    if (!prog.init(vshader, fshader)) {
+      LOG_ERROR("program link error: ", prog.infoLog());
       return GLProgram();
     }
 
-    return p;
+    return prog;
   }
 
   GLint getUniformLoc(const GLProgram& p, const char* name)
@@ -263,7 +263,22 @@ void gx::OpenGLRenderer::clearFrame(int width, int height)
   _height = height;
   _changed = true;
   _vertices.clear();
+  _transforms.clear();
   _drawCalls.clear();
+}
+
+void gx::OpenGLRenderer::setTransform(const Mat4& view, const Mat4& proj)
+{
+  if (!_transforms.empty()
+      && (_drawCalls.empty()
+          || _drawCalls.back().transformNo != (int(_transforms.size())-1)))
+  {
+    // last set transform not used for a draw call and can just be replaced
+    _transforms.back() = {view, proj};
+  } else {
+    // add new transform entry
+    _transforms.push_back({view, proj});
+  }
 }
 
 void gx::OpenGLRenderer::draw(
@@ -484,8 +499,17 @@ void gx::OpenGLRenderer::renderFrame()
   Mat4 trans = {
     2.0f / float(_width), 0, 0, 0,
     0, -2.0f / float(_height), 0, 0,
+    //  negative value flips vertial direction for OpenGL
     0, 0, 1, 0,
     -1, 1, 0, 1 };
+
+  // OpenGL coords (left handed)
+  //   (-1,-1) at bottom left corner
+  //   Z coord: -1 to 1
+
+  // Vulkan coords (right handed)
+  //   (-1,-1) at top left corner
+  //   Z coord: 0 to 1
 
   // clear texture unit assignments
   for (auto& t : _textures) { t.second.unit = -1; }
@@ -496,9 +520,9 @@ void gx::OpenGLRenderer::renderFrame()
   GLint first = 0;
   int lastShader = -1;
   float lastLineWidth = 0.0f;
-  for (DrawCall& dc : _drawCalls) {
+  for (const DrawCall& dc : _drawCalls) {
     GLuint texUnit = 0;
-    int shader = 0;
+    int shader = 0; // solid color shader
     if (dc.texID > 0) {
       // shader uses texture - determine texture unit & bind if neccessary
       // (FIXME - no max texture units check currently)
@@ -510,16 +534,21 @@ void gx::OpenGLRenderer::renderFrame()
 	  entry.tex.bindUnit(entry.unit);
 	}
 	texUnit = entry.unit;
-	shader = entry.shader;
+	shader = entry.shader; // mono or color texture shader (1 or 2)
       }
     }
 
-    if (shader != lastShader) {
-      _sp[shader].use();
+    if (shader != lastShader) { _sp[shader].use(); }
+    if (dc.transformNo >= 0) {
+      const TransformEntry& t = _transforms[dc.transformNo];
+      _sp_trans[shader].set(t.view * t.projection);
+    } else {
+      // FIXME - use default ortho projection for now
+      // (require transform later)
       _sp_trans[shader].set(trans);
     }
-    if (_sp_texUnit[shader]) {_sp_texUnit[shader].set(texUnit); }
     _sp_modColor[shader].set(dc.modColor);
+    if (_sp_texUnit[shader]) {_sp_texUnit[shader].set(texUnit); }
 
     if (dc.mode == GL_LINES && dc.lineWidth != lastLineWidth) {
       GLCALL(glLineWidth, dc.lineWidth);

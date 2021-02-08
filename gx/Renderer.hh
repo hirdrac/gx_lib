@@ -37,6 +37,7 @@ class gx::Renderer
 
   // draw methods
   virtual void clearFrame(int width, int height) = 0;
+  virtual void setTransform(const Mat4& view, const Mat4& proj) = 0;
   virtual void draw(const DrawEntry* data, std::size_t dataSize,
                     const Color& col) = 0;
   virtual void renderFrame() = 0;
