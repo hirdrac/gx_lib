@@ -5,7 +5,6 @@
 
 #include "Window.hh"
 #include "OpenGLRenderer.hh"
-#include "DrawList.hh"
 #include "Logger.hh"
 #include "System.hh"
 //#include "Print.hh"
@@ -186,7 +185,6 @@ bool gx::Window::open(int flags)
   }
 
   _renderer = std::move(ren);
-  _maxTextureSize = _renderer->maxTextureSize();
 
   glfwSetWindowUserPointer(win, this);
   if (fixedAspectRatio) {
@@ -238,36 +236,6 @@ void gx::Window::updateMouseState(GLFWwindow* w)
   _mouseX = mx;
   _mouseY = my;
   _mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
-}
-
-void gx::Window::setBGColor(float r, float g, float b)
-{
-  assert(_renderer);
-  _renderer->setBGColor(r,g,b);
-}
-
-void gx::Window::clearFrame()
-{
-  assert(_renderer);
-  _renderer->clearFrame(_width, _height);
-}
-
-void gx::Window::draw(const DrawList& dl)
-{
-  assert(_renderer);
-  _renderer->draw(dl.data(), dl.size(), WHITE);
-}
-
-void gx::Window::draw(const DrawList& dl, const Color& modColor)
-{
-  assert(_renderer);
-  _renderer->draw(dl.data(), dl.size(), modColor);
-}
-
-void gx::Window::renderFrame()
-{
-  assert(_renderer);
-  _renderer->renderFrame();
 }
 
 int gx::Window::pollEvents()

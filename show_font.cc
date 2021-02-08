@@ -1,11 +1,12 @@
 //
 // show_font.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // displays font atlas texture
 //
 
 #include "gx/Window.hh"
+#include "gx/Renderer.hh"
 #include "gx/Font.hh"
 #include "gx/Texture.hh"
 #include "gx/DrawList.hh"
@@ -41,7 +42,9 @@ int main(int argc, char** argv)
   const gx::Texture& t = fnt.tex();
 
   win.setSize(t.width(), t.height(), false);
-  win.setBGColor(.3,.1,.1);
+
+  gx::Renderer& ren = win.renderer();
+  ren.setBGColor(.3,.1,.1);
   gx::DrawList dl;
   gx::DrawContext dc(dl);
 
@@ -53,11 +56,11 @@ int main(int argc, char** argv)
       dc.texture(t);
       dc.rectangle(0, 0, win.width(), win.height(), {0,0}, {1,1});
 
-      win.clearFrame();
-      win.draw(dl);
+      ren.clearFrame(win.width(), win.height());
+      ren.draw(dl);
     }
 
-    win.renderFrame();
+    ren.renderFrame();
     win.pollEvents();
   } while (!win.closed() && !win.keyPressCount(gx::KEY_ESCAPE, false));
   return 0;

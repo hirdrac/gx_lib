@@ -10,12 +10,11 @@
 // TODO - frame stats (draw calls, buffer size)
 
 #pragma once
-#include "Color.hh"
-#include "DrawList.hh"
+#include "RendererPtr.hh"
 #include <string_view>
 #include <string>
 #include <vector>
-#include <memory>
+#include <cassert>
 
 
 struct GLFWwindow;
@@ -156,23 +155,6 @@ class gx::Window
   [[nodiscard]] int height() const { return _height; }
   [[nodiscard]] const std::string& title() const { return _title; }
   [[nodiscard]] bool fullScreen() const { return _fullScreen; }
-  [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
-
-  //// Render Functions ////
-  void setBGColor(float r, float g, float b);
-  void setBGColor(const Color& c) { setBGColor(c.r, c.g, c.b); }
-  void clearFrame();
-  void draw(const DrawList& dl);
-  void draw(const DrawList& dl, const Color& modColor);
-
-  template <typename Drawable>
-  void draw(const Drawable& d) { draw(d.drawList()); }
-
-  template <typename Drawable, typename... Args>
-  void draw(const Drawable& d, const Args&... args) {
-    draw(d.drawList(), args...); }
-
-  void renderFrame();
 
 
   //// Event Handling ////
@@ -216,11 +198,12 @@ class gx::Window
   [[nodiscard]] const std::vector<CharInfo>& charData() const {
     return _chars; }
 
- protected:
-  friend class Texture;
-  std::shared_ptr<Renderer> _renderer;
+  // renderer access methods
+  const RendererPtr& rendererPtr() { return _renderer; }
+  Renderer& renderer() { assert(_renderer != nullptr); return *_renderer; }
 
  private:
+  RendererPtr _renderer;
   int _width = 0, _height = 0;
   int _fsWidth = 0, _fsHeight = 0;
   int _minWidth = -1, _minHeight = -1;
@@ -229,7 +212,6 @@ class gx::Window
   MouseModeEnum _mouseMode = MOUSE_NORMAL;
   bool _sizeSet = false;
   bool _fullScreen = false;
-  int _maxTextureSize = 0;
 
   // event state
   int64_t _lastPollTime = 0;

@@ -7,6 +7,7 @@
 
 #pragma once
 #include "Color.hh"
+#include "DrawList.hh"
 #include "Types.hh"
 
 
@@ -22,14 +23,10 @@ class gx::Renderer
  public:
   virtual ~Renderer();
 
-  // GLFW window methods
-  GLFWwindow* window() { return _window; }
-
   // setup methods
   virtual void setWindowHints(bool debug) = 0;
   virtual bool init(GLFWwindow* win) = 0;
 
-  virtual int maxTextureSize() = 0;
   virtual TextureID setTexture(TextureID id, const Image& img, int levels,
                                FilterType minFilter, FilterType magFilter) = 0;
   virtual void freeTexture(TextureID id) = 0;
@@ -42,6 +39,27 @@ class gx::Renderer
                     const Color& col) = 0;
   virtual void renderFrame() = 0;
 
+
+  // helper functions
+  void setBGColor(const Color& c) { setBGColor(c.r, c.g, c.b); }
+
+  void draw(const DrawList& dl) {
+    draw(dl.data(), dl.size(), WHITE); }
+  void draw(const DrawList& dl, const Color& modColor) {
+    draw(dl.data(), dl.size(), modColor); }
+
+  template <typename Drawable>
+  void draw(const Drawable& d) { draw(d.drawList()); }
+
+  template <typename Drawable, typename... Args>
+  void draw(const Drawable& d, const Args&... args) {
+    draw(d.drawList(), args...); }
+
+  // general accessors
+  [[nodiscard]] GLFWwindow* window() { return _window; }
+  [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
+
  protected:
   GLFWwindow* _window = nullptr;
+  int _maxTextureSize = 0;
 };

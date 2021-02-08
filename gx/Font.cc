@@ -1,6 +1,6 @@
 //
 // gx/Font.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // TODO - investigate using stb_truetype.h
 // TODO - use signed distance fields for font texture
@@ -8,6 +8,7 @@
 #include "Font.hh"
 #include "Image.hh"
 #include "Window.hh"
+#include "Renderer.hh"
 #include "Logger.hh"
 #include <string>
 #include <cstdlib>
@@ -150,7 +151,7 @@ bool gx::Font::makeAtlas(Window& win)
   }
 
   // calculate texture size
-  int maxSize = win.maxTextureSize();
+  int maxSize = win.renderer().maxTextureSize();
   int texW, texH;
   int rows = 0;
   do {

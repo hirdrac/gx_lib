@@ -1,4 +1,10 @@
+//
+// demo_gui.cc
+// Copyright (C) 2021 Richard Bradley
+//
+
 #include "gx/Window.hh"
+#include "gx/Renderer.hh"
 #include "gx/Font.hh"
 #include "gx/Gui.hh"
 #include "gx/Print.hh"
@@ -64,7 +70,8 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  win.setBGColor(.1,.3,.1);
+  gx::Renderer& ren = win.renderer();
+  ren.setBGColor(.1,.3,.1);
   fnt.makeAtlas(win);
   bool running = true;
   bool needRedraw = true;
@@ -73,13 +80,13 @@ int main(int argc, char* argv[])
     // draw frame
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
-      win.clearFrame();
-      win.draw(gui1);
-      win.draw(gui2);
-      win.draw(gui3);
+      ren.clearFrame(win.width(), win.height());
+      ren.draw(gui1);
+      ren.draw(gui2);
+      ren.draw(gui3);
       needRedraw = false;
     }
-    win.renderFrame();
+    ren.renderFrame();
 
     // handle events
     win.pollEvents();

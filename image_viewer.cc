@@ -6,6 +6,7 @@
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
 #include "gx/Window.hh"
+#include "gx/Renderer.hh"
 #include "gx/DrawList.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Texture.hh"
@@ -84,7 +85,8 @@ int main(int argc, char* argv[])
     e.tex.init(win, e.img, 3, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
   }
 
-  win.setBGColor(gx::BLACK);
+  gx::Renderer& ren = win.renderer();
+  ren.setBGColor(gx::BLACK);
   gx::DrawList dl;
   gx::DrawContext dc(dl);
   bool refresh = true;
@@ -131,12 +133,12 @@ int main(int argc, char* argv[])
         }
       }
 
-      win.clearFrame();
-      win.draw(dl);
+      ren.clearFrame(win.width(), win.height());
+      ren.draw(dl);
       refresh = false;
     }
 
-    win.renderFrame();
+    ren.renderFrame();
 
     win.pollEvents();
     if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }

@@ -110,6 +110,7 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
     return false;
   }
 
+  _maxTextureSize = GLTexture2D::maxSize();
   glfwSwapInterval(1); // enable V-SYNC
 
   // solid color shader

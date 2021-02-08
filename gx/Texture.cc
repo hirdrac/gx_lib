@@ -1,6 +1,6 @@
 //
 // gx/Texture.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #include "Texture.hh"
@@ -23,7 +23,7 @@ gx::Texture& gx::Texture::operator=(Texture&& t) noexcept
 bool gx::Texture::init(Window& win, const Image& img, int levels,
                        FilterType minFilter, FilterType magFilter)
 {
-  _renderer = win._renderer;
+  _renderer = win.rendererPtr();
   _texID = _renderer->setTexture(0, img, levels, minFilter, magFilter);
   _width = img.width();
   _height = img.height();

@@ -1,17 +1,16 @@
 //
 // gx/Texture.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #pragma once
+#include "RendererPtr.hh"
 #include "Types.hh"
 #include <utility>
-#include <memory>
 
 namespace gx {
   class Texture;
   class Window;
-  class Renderer;
   class Image;
 }
 
@@ -48,7 +47,7 @@ class gx::Texture
   [[nodiscard]] FilterType magFilter() const { return _magFilter; }
 
  private:
-  std::shared_ptr<Renderer> _renderer;
+  RendererPtr _renderer;
   TextureID _texID = 0;
   int _width = 0, _height = 0;
   int _levels = 1; // mipmap levels
