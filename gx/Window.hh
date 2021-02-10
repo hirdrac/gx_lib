@@ -7,7 +7,6 @@
 
 // TODO - settings for resizable,decorated,fixedAspectRatio
 // TODO - setting for min/max width/height on resizable windows
-// TODO - frame stats (draw calls, buffer size)
 
 #pragma once
 #include "RendererPtr.hh"
@@ -126,10 +125,7 @@ namespace gx {
   };
 
   class Window;
-  class Image;
   class Renderer;
-  class Gui;
-  class Texture;
 }
 
 class gx::Window

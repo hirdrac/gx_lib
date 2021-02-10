@@ -8,6 +8,7 @@
 // TODO - sub menus
 // TODO - menu item key short-cuts
 // TODO - list select (combo box)
+// TODO - control allowed char types for entry (numeric only, etc.)
 
 #pragma once
 #include "DrawList.hh"
