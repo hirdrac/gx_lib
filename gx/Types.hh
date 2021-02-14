@@ -1,6 +1,6 @@
 //
 // gx/Types.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #pragma once
@@ -14,6 +14,7 @@ namespace gx {
   using Vec3 = Vector3<float>;
   using Vec4 = Vector4<float>;
   using Mat4 = Matrix4x4<float,ROW_MAJOR>;
+
   using TextureID = uint32_t;
 
 
@@ -32,4 +33,12 @@ namespace gx {
 
   // basic types
   struct Rect { float x, y, w, h; };
+
+  struct Vertex2C { float x, y; uint32_t c; };        // 12
+  struct Vertex2T { float x, y, s, t; };              // 16
+  struct Vertex2TC { float x, y, s, t; uint32_t c; }; // 20
+
+  struct Vertex3C { float x, y, z; uint32_t c; };        // 16
+  struct Vertex3T { float x, y, z, s, t; };              // 20
+  struct Vertex3TC { float x, y, z, s, t; uint32_t c; }; // 24
 }

@@ -1,11 +1,18 @@
-# gx_lib - 2D Graphics/GUI library
+# gx_lib - Simple 2D/3D Graphics/GUI library
 
 ## Features
-* Simplified window & event management (uses GLFW internally for this)
-* 2D Triangle/Rectangle/Line drawing (uses OpenGL 4.5, can use OpenGL 3.3 if necessary)
-* Text rendering with TTF fonts (loaded by FreeType library)
-* Image/Texture rendering (stb_image)
+* Simplified window & event management
+* 2D Triangle/Rectangle/Line drawing
+* Flat shaded 3D Triangle/Quad drawing
+* Text rendering with TTF fonts
+* Image/Texture rendering
 * Basic GUI element support for simple interfaces
+
+## Libraries/APIs Used
+* GLFW - window/event support
+* OpenGL 3.3/4.5 - graphics rendering
+* FreeType2 - TTF font rendering
+* stb_image - image loading
 
 ## Platforms
 * Linux

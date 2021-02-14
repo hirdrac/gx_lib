@@ -4,6 +4,7 @@
 //
 
 // TODO - texture wrap settings
+// TODO - frame stats (draw calls, buffer size)
 
 #pragma once
 #include "Color.hh"
@@ -26,11 +27,12 @@ class gx::Renderer
   // setup methods
   virtual void setWindowHints(bool debug) = 0;
   virtual bool init(GLFWwindow* win) = 0;
+  virtual void setBGColor(float r, float g, float b) = 0;
 
+  // texture methods
   virtual TextureID setTexture(TextureID id, const Image& img, int levels,
                                FilterType minFilter, FilterType magFilter) = 0;
   virtual void freeTexture(TextureID id) = 0;
-  virtual void setBGColor(float r, float g, float b) = 0;
 
   // draw methods
   virtual void clearFrame(int width, int height) = 0;
@@ -59,7 +61,17 @@ class gx::Renderer
   [[nodiscard]] GLFWwindow* window() { return _window; }
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
 
+  // draw capabilities
+  enum CapabilityEnum {
+    BLEND = 1, DEPTH_TEST = 2 };
+  static constexpr int INIT_CAPABILITIES = BLEND;
+
+  void enable(CapabilityEnum c) { _drawCap |= c; }
+  void disable(CapabilityEnum c) { _drawCap &= ~int(c); }
+  void setCapabilities(int c) { _drawCap = c; }
+
  protected:
   GLFWwindow* _window = nullptr;
   int _maxTextureSize = 0;
+  int _drawCap = 0; // capabilities to use for next draw call
 };

@@ -2,7 +2,8 @@
 // gx/OpenGLRenderer.hh
 // Copyright (C) 2021 Richard Bradley
 //
-// FIXME - make TexID unique across all Renderer instances
+
+// FIXME - make TextureID unique across all Renderer instances
 
 #pragma once
 #include "Renderer.hh"
@@ -50,8 +51,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   GLVertexArray _vao;
   GLBuffer _vbo;
-  struct Vertex { float x,y,s,t; uint32_t c; };
-  std::vector<Vertex> _vertices;
+  std::vector<Vertex3TC> _vertices;
 
   struct TextureEntry {
     GLTexture2D tex;
@@ -73,15 +73,20 @@ class gx::OpenGLRenderer final : public gx::Renderer
     TextureID texID;
     float lineWidth;
     int transformNo;
+    int capabilities; // Renderer::CapabilityEnum bitfield
   };
   std::vector<DrawCall> _drawCalls;
   TextureID _lastTexID = 0;
   bool _changed = true;
 
   void addVertex(Vec2 pt, uint32_t c) {
-    _vertices.push_back({pt.x,pt.y, 0.0f,0.0f, c}); }
+    _vertices.push_back({pt.x,pt.y,0.0f, 0.0f,0.0f, c}); }
+  void addVertex(Vec3 pt, uint32_t c) {
+    _vertices.push_back({pt.x,pt.y,pt.z, 0.0f,0.0f, c}); }
   void addVertex(Vec2 pt, Vec2 tx, uint32_t c) {
-    _vertices.push_back({pt.x,pt.y, tx.x,tx.y, c}); }
+    _vertices.push_back({pt.x,pt.y,0.0f, tx.x,tx.y, c}); }
+  void addVertex(Vec3 pt, Vec2 tx, uint32_t c) {
+    _vertices.push_back({pt.x,pt.y,pt.z, tx.x,tx.y, c}); }
 
   void addDrawCall(GLenum mode, GLsizei count, const Color& modColor,
                    TextureID texID, float lineWidth) {
@@ -89,14 +94,17 @@ class gx::OpenGLRenderer final : public gx::Renderer
     if (!_drawCalls.empty()) {
       DrawCall& dc = _drawCalls.back();
       if (mode == dc.mode && texID == dc.texID && lineWidth == dc.lineWidth
-          && transformNo == dc.transformNo) {
+          && transformNo == dc.transformNo && _drawCap == dc.capabilities) {
 	dc.count += count;
 	return;
       }
     }
     _drawCalls.push_back(
-      {mode, count, modColor, texID, lineWidth, transformNo});
+      {mode, count, modColor, texID, lineWidth, transformNo, _drawCap});
   }
+
+  int _currentGLCap = -1; // current GL capability state
+  void setGLCapabilities(int cap);
 
   // prevent copy/assignment
   OpenGLRenderer(const OpenGLRenderer&) = delete;

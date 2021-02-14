@@ -20,11 +20,6 @@
 
 
 namespace gx {
-  // **** Types ****
-  struct VertexPT { Vec2 pt, tx; };
-  struct VertexPC { Vec2 pt; uint32_t c; };
-  struct VertexPTC { Vec2 pt, tx; uint32_t c; };
-
   class Font;
   class DrawContext;
 }
@@ -53,52 +48,84 @@ class gx::DrawContext
   void texture(const Texture& t) { texture(t.id()); }
 
   // line drawing
-  void line(Vec2 p0, Vec2 p1) { add(CMD_line, p0.x, p0.y, p1.x, p1.y); }
+  void line(Vec2 a, Vec2 b) {
+    add(CMD_line2, a.x, a.y, b.x, b.y); }
+  void line(const Vec3& a, const Vec3& b) {
+    add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z); }
 
-  // 2D poly drawing
+  // poly drawing
   // Triangle  Quad  Rectangle
-  //   0--1    0--1    XY--+
+  //   A--B    A--B    XY--+
   //   | /     | /|    |   H
   //   |/      |/ |    |   |
-  //   2       2--3    +-W-+
+  //   C       C--D    +-W-+
 
-  void triangle(Vec2 p0, Vec2 p1, Vec2 p2) {
-    add(CMD_triangle, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y); }
-  void triangle(const VertexPT& v0, const VertexPT& v1, const VertexPT& v2) {
-    add(CMD_triangleT, v0.pt.x, v0.pt.y, v0.tx.x, v0.tx.y,
-        v1.pt.x, v1.pt.y, v1.tx.x, v1.tx.y,
-        v2.pt.x, v2.pt.y, v2.tx.x, v2.tx.y); }
-  void triangle(const VertexPC& v0, const VertexPC& v1, const VertexPC& v2) {
-    add(CMD_triangleC, v0.pt.x, v0.pt.y, v0.c,
-        v1.pt.x, v1.pt.y, v1.c, v2.pt.x, v2.pt.y, v2.c); }
-  void triangle(const VertexPTC& v0, const VertexPTC& v1, const VertexPTC& v2) {
-    add(CMD_triangleTC, v0.pt.x, v0.pt.y, v0.tx.x, v0.tx.y, v0.c,
-        v1.pt.x, v1.pt.y, v1.tx.x, v1.tx.y, v1.c,
-        v2.pt.x, v2.pt.y, v2.tx.x, v2.tx.y, v2.c); }
+  void triangle(Vec2 a, Vec2 b, Vec2 c) {
+    add(CMD_triangle2, a.x, a.y, b.x, b.y, c.x, c.y); }
+  void triangle(const Vec3& a, const Vec3& b, const Vec3& c) {
+    add(CMD_triangle3, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z); }
 
-  void quad(Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3) {
-    add(CMD_quad, p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y); }
-  void quad(const VertexPT& v0, const VertexPT& v1,
-            const VertexPT& v2, const VertexPT& v3) {
-    add(CMD_quadT, v0.pt.x, v0.pt.y, v0.tx.x, v0.tx.y,
-        v1.pt.x, v1.pt.y, v1.tx.x, v1.tx.y,
-        v2.pt.x, v2.pt.y, v2.tx.x, v2.tx.y,
-        v3.pt.x, v3.pt.y, v3.tx.x, v3.tx.y); }
-  void quad(const VertexPC& v0, const VertexPC& v1,
-            const VertexPC& v2, const VertexPC& v3) {
-    add(CMD_quadC, v0.pt.x, v0.pt.y, v0.c, v1.pt.x, v1.pt.y, v1.c,
-        v2.pt.x, v2.pt.y, v2.c, v3.pt.x, v3.pt.y, v3.c); }
-  void quad(const VertexPTC& v0, const VertexPTC& v1,
-            const VertexPTC& v2, const VertexPTC& v3) {
-    add(CMD_quadTC, v0.pt.x, v0.pt.y, v0.tx.x, v0.tx.y, v0.c,
-        v1.pt.x, v1.pt.y, v1.tx.x, v1.tx.y, v1.c,
-        v2.pt.x, v2.pt.y, v2.tx.x, v2.tx.y, v2.c,
-        v3.pt.x, v3.pt.y, v3.tx.x, v3.tx.y, v3.c); }
+  void triangle(const Vertex2C& a, const Vertex2C& b, const Vertex2C& c) {
+    add(CMD_triangle2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c); }
+  void triangle(const Vertex3C& a, const Vertex3C& b, const Vertex3C& c) {
+    add(CMD_triangle3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
+        c.x, c.y, c.z, c.c); }
+
+  void triangle(const Vertex2T& a, const Vertex2T& b, const Vertex2T& c) {
+    add(CMD_triangle2T, a.x, a.y, a.s, a.t,
+        b.x, b.y, b.s, b.t, c.x, c.y, c.s, c.t); }
+  void triangle(const Vertex3T& a, const Vertex3T& b, const Vertex3T& c) {
+    add(CMD_triangle3T, a.x, a.y, a.z, a.s, a.t,
+        b.x, b.y, b.z, b.s, b.t, c.x, c.y, c.z, c.s, c.t); }
+
+  void triangle(const Vertex2TC& a, const Vertex2TC& b, const Vertex2TC& c) {
+    add(CMD_triangle2TC, a.x, a.y, a.s, a.t, a.c,
+        b.x, b.y, b.s, b.t, b.c, c.x, c.y, c.s, c.t, c.c); }
+  void triangle(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c) {
+    add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
+        b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
+
+  void quad(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
+    add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
+  void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) {
+    add(CMD_quad3, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, d.x, d.y, d.z); }
+
+  void quad(const Vertex2C& a, const Vertex2C& b,
+            const Vertex2C& c, const Vertex2C& d) {
+    add(CMD_quad2C, a.x, a.y, a.c, b.x, b.y, b.c,
+        c.x, c.y, c.c, d.x, d.y, d.c); }
+  void quad(const Vertex3C& a, const Vertex3C& b,
+            const Vertex3C& c, const Vertex3C& d) {
+    add(CMD_quad3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
+        c.x, c.y, c.z, c.c, d.x, d.y, d.z, d.c); }
+
+  void quad(const Vertex2T& a, const Vertex2T& b,
+            const Vertex2T& c, const Vertex2T& d) {
+    add(CMD_quad2T, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t,
+        c.x, c.y, c.s, c.t, d.x, d.y, d.s, d.t); }
+  void quad(const Vertex3T& a, const Vertex3T& b,
+            const Vertex3T& c, const Vertex3T& d) {
+    add(CMD_quad3T, a.x, a.y, a.z, a.s, a.t, b.x, b.y, b.z, b.s, b.t,
+        c.x, c.y, c.z, c.s, c.t, d.x, d.y, d.z, d.s, d.t); }
+
+  void quad(const Vertex2TC& a, const Vertex2TC& b,
+            const Vertex2TC& c, const Vertex2TC& d) {
+    add(CMD_quad2TC, a.x, a.y, a.s, a.t, a.c, b.x, b.y, b.s, b.t, b.c,
+        c.x, c.y, c.s, c.t, c.c, d.x, d.y, d.s, d.t, d.c); }
+  void quad(const Vertex3TC& a, const Vertex3TC& b,
+            const Vertex3TC& c, const Vertex3TC& d) {
+    add(CMD_quad3TC, a.x, a.y, a.z, a.s, a.t, a.c, b.x, b.y, b.z, b.s, b.t, b.c,
+        c.x, c.y, c.z, c.s, c.t, c.c, d.x, d.y, d.z, d.s, d.t, d.c); }
 
   void rectangle(float x, float y, float w, float h);
+  void rectangle(const Rect& r) { rectangle(r.x, r.y, r.w, r.h); }
   void rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1);
+  void rectangle(const Rect& r, Vec2 t0, Vec2 t1) {
+    rectangle(r.x, r.y, r.w, r.h, t0, t1); }
   void rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1,
                  const Rect& clip);
+  void rectangle(const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip) {
+    rectangle(r.x, r.y, r.w, r.h, t0, t1, clip); }
 
   // High-level data entry
   void text(const Font& f, float x, float y, AlignEnum align, int spacing,

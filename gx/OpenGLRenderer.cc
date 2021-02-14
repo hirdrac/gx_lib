@@ -15,6 +15,7 @@
 #include "DrawEntry.hh"
 #include "Image.hh"
 #include "Color.hh"
+#include "Camera.hh"
 #include "Logger.hh"
 #include "OpenGL.hh"
 //#include "Print.hh"
@@ -78,6 +79,9 @@ namespace {
   template <typename T>
   gx::Vec2 fval2(T& itr) { return {fval(itr), fval(itr)}; }
 
+  template <typename T>
+  gx::Vec3 fval3(T& itr) { return {fval(itr), fval(itr), fval(itr)}; }
+
   // **** Callbacks ****
   void CleanUpOpenGL()
   {
@@ -115,14 +119,14 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
 
   // solid color shader
   static const char* SP0V_SRC =
-    "layout(location = 0) in vec4 in_pos;" // x,y
-    "layout(location = 1) in uint in_color;"
+    "layout(location = 0) in vec3 in_pos;" // x,y,z
+    "layout(location = 2) in uint in_color;"
     "uniform mat4 trans;"
     "uniform vec4 modColor;"
     "out vec4 v_color;"
     "void main() {"
     "  v_color = unpackUnorm4x8(in_color) * modColor;"
-    "  gl_Position = trans * vec4(in_pos.xy, 0, 1);"
+    "  gl_Position = trans * vec4(in_pos, 1);"
     "}";
   static const char* SP0F_SRC =
     "in vec4 v_color;"
@@ -132,16 +136,17 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
 
   // mono color texture shader (fonts)
   static const char* SP1V_SRC =
-    "layout(location = 0) in vec4 in_pos;" // x,y,s,t
-    "layout(location = 1) in uint in_color;"
+    "layout(location = 0) in vec3 in_pos;" // x,y,z
+    "layout(location = 1) in vec2 in_tc;"  // s,t
+    "layout(location = 2) in uint in_color;"
     "uniform mat4 trans;"
     "uniform vec4 modColor;"
     "out vec4 v_color;"
     "out vec2 v_texCoord;"
     "void main() {"
     "  v_color = unpackUnorm4x8(in_color) * modColor;"
-    "  v_texCoord = in_pos.zw;"
-    "  gl_Position = trans * vec4(in_pos.xy, 0, 1);"
+    "  v_texCoord = in_tc;"
+    "  gl_Position = trans * vec4(in_pos, 1);"
     "}";
   static const char* SP1F_SRC =
     "in vec2 v_texCoord;"
@@ -264,8 +269,14 @@ void gx::OpenGLRenderer::clearFrame(int width, int height)
   _height = height;
   _changed = true;
   _vertices.clear();
+
+  Mat4 trans;
+  calcScreenOrthoProjection(width, height, trans);
   _transforms.clear();
+  _transforms.push_back({Mat4Identity, trans});
+
   _drawCalls.clear();
+  setCapabilities(INIT_CAPABILITIES);
 }
 
 void gx::OpenGLRenderer::setTransform(const Mat4& view, const Mat4& proj)
@@ -292,20 +303,30 @@ void gx::OpenGLRenderer::draw(
   for (const DrawEntry* itr = data; itr != end; ) {
     DrawCmd cmd = itr->cmd;
     switch (cmd) {
-      case CMD_color:      itr += 2; break;
-      case CMD_lineWidth:  itr += 2; break;
-      case CMD_texture:    itr += 2; break;
-      case CMD_line:       itr += 5;  size += 2; break;
-      case CMD_triangle:   itr += 7;  size += 3; break;
-      case CMD_triangleT:  itr += 13; size += 3; break;
-      case CMD_triangleC:  itr += 10; size += 3; break;
-      case CMD_triangleTC: itr += 16; size += 3; break;
-      case CMD_quad:       itr += 9;  size += 6; break;
-      case CMD_quadT:      itr += 17; size += 6; break;
-      case CMD_quadC:      itr += 13; size += 6; break;
-      case CMD_quadTC:     itr += 21; size += 6; break;
-      case CMD_rectangle:  itr += 5;  size += 6; break;
-      case CMD_rectangleT: itr += 9;  size += 6; break;
+      case CMD_color:       itr += 2; break;
+      case CMD_lineWidth:   itr += 2; break;
+      case CMD_texture:     itr += 2; break;
+      case CMD_line2:       itr += 5;  size += 2; break;
+      case CMD_line3:       itr += 7;  size += 2; break;
+      case CMD_triangle2:   itr += 7;  size += 3; break;
+      case CMD_triangle3:   itr += 10; size += 3; break;
+      case CMD_triangle2T:  itr += 13; size += 3; break;
+      case CMD_triangle3T:  itr += 16; size += 3; break;
+      case CMD_triangle2C:  itr += 10; size += 3; break;
+      case CMD_triangle3C:  itr += 13; size += 3; break;
+      case CMD_triangle2TC: itr += 16; size += 3; break;
+      case CMD_triangle3TC: itr += 19; size += 3; break;
+      case CMD_quad2:       itr += 9;  size += 6; break;
+      case CMD_quad3:       itr += 13; size += 6; break;
+      case CMD_quad2T:      itr += 17; size += 6; break;
+      case CMD_quad3T:      itr += 21; size += 6; break;
+      case CMD_quad2C:      itr += 13; size += 6; break;
+      case CMD_quad3C:      itr += 17; size += 6; break;
+      case CMD_quad2TC:     itr += 21; size += 6; break;
+      case CMD_quad3TC:     itr += 25; size += 6; break;
+      case CMD_rectangle:   itr += 5;  size += 6; break;
+      case CMD_rectangleT:  itr += 9;  size += 6; break;
+
       default:
         itr = end; // stop reading at first invalid cmd
         LOG_ERROR("unknown DrawCmd value: ", int(cmd));
@@ -331,20 +352,33 @@ void gx::OpenGLRenderer::draw(
       case CMD_lineWidth: lw    = fval(itr); break;
       case CMD_texture:   tid   = uval(itr); break;
 
-      case CMD_line: {
+      case CMD_line2: {
 	addVertex(fval2(itr), color);
 	addVertex(fval2(itr), color);
 	addDrawCall(GL_LINES, 2, modColor, 0, lw);
 	break;
       }
-      case CMD_triangle: {
+      case CMD_line3: {
+        addVertex(fval3(itr), color);
+        addVertex(fval3(itr), color);
+	addDrawCall(GL_LINES, 2, modColor, 0, lw);
+        break;
+      }
+      case CMD_triangle2: {
 	addVertex(fval2(itr), color);
 	addVertex(fval2(itr), color);
 	addVertex(fval2(itr), color);
 	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
 	break;
       }
-      case CMD_triangleT: {
+      case CMD_triangle3: {
+	addVertex(fval3(itr), color);
+	addVertex(fval3(itr), color);
+	addVertex(fval3(itr), color);
+	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
+	break;
+      }
+      case CMD_triangle2T: {
         Vec2 p0 = fval2(itr), t0 = fval2(itr);
         Vec2 p1 = fval2(itr), t1 = fval2(itr);
         Vec2 p2 = fval2(itr), t2 = fval2(itr);
@@ -354,7 +388,17 @@ void gx::OpenGLRenderer::draw(
 	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
         break;
       }
-      case CMD_triangleC: {
+      case CMD_triangle3T: {
+        Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr);
+        Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr);
+        Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr);
+        addVertex(p0, t0, color);
+	addVertex(p1, t1, color);
+	addVertex(p2, t2, color);
+	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
+        break;
+      }
+      case CMD_triangle2C: {
         Vec2 p0 = fval2(itr); uint32_t c0 = uval(itr);
         Vec2 p1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec2 p2 = fval2(itr); uint32_t c2 = uval(itr);
@@ -364,7 +408,17 @@ void gx::OpenGLRenderer::draw(
 	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
         break;
       }
-      case CMD_triangleTC: {
+      case CMD_triangle3C: {
+        Vec3 p0 = fval3(itr); uint32_t c0 = uval(itr);
+        Vec3 p1 = fval3(itr); uint32_t c1 = uval(itr);
+        Vec3 p2 = fval3(itr); uint32_t c2 = uval(itr);
+        addVertex(p0, c0);
+	addVertex(p1, c1);
+	addVertex(p2, c2);
+	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
+        break;
+      }
+      case CMD_triangle2TC: {
         Vec2 p0 = fval2(itr), t0 = fval2(itr); uint32_t c0 = uval(itr);
         Vec2 p1 = fval2(itr), t1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec2 p2 = fval2(itr), t2 = fval2(itr); uint32_t c2 = uval(itr);
@@ -374,7 +428,17 @@ void gx::OpenGLRenderer::draw(
 	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
         break;
       }
-      case CMD_quad: {
+      case CMD_triangle3TC: {
+        Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr); uint32_t c0 = uval(itr);
+        Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr); uint32_t c1 = uval(itr);
+        Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr); uint32_t c2 = uval(itr);
+        addVertex(p0, t0, c0);
+	addVertex(p1, t1, c1);
+	addVertex(p2, t2, c2);
+	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
+        break;
+      }
+      case CMD_quad2: {
         Vec2 p0 = fval2(itr), p1 = fval2(itr);
         Vec2 p2 = fval2(itr), p3 = fval2(itr);
 	addVertex(p0, color);
@@ -386,7 +450,19 @@ void gx::OpenGLRenderer::draw(
 	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
         break;
       }
-      case CMD_quadT: {
+      case CMD_quad3: {
+        Vec3 p0 = fval3(itr), p1 = fval3(itr);
+        Vec3 p2 = fval3(itr), p3 = fval3(itr);
+	addVertex(p0, color);
+	addVertex(p1, color);
+	addVertex(p2, color);
+        addVertex(p1, color);
+        addVertex(p3, color);
+        addVertex(p2, color);
+	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
+        break;
+      }
+      case CMD_quad2T: {
         Vec2 p0 = fval2(itr), t0 = fval2(itr);
         Vec2 p1 = fval2(itr), t1 = fval2(itr);
         Vec2 p2 = fval2(itr), t2 = fval2(itr);
@@ -400,7 +476,21 @@ void gx::OpenGLRenderer::draw(
 	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
         break;
       }
-      case CMD_quadC: {
+      case CMD_quad3T: {
+        Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr);
+        Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr);
+        Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr);
+        Vec3 p3 = fval3(itr); Vec2 t3 = fval2(itr);
+	addVertex(p0, t0, color);
+	addVertex(p1, t1, color);
+	addVertex(p2, t2, color);
+        addVertex(p1, t1, color);
+        addVertex(p3, t3, color);
+        addVertex(p2, t2, color);
+	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
+        break;
+      }
+      case CMD_quad2C: {
         Vec2 p0 = fval2(itr); uint32_t c0 = uval(itr);
         Vec2 p1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec2 p2 = fval2(itr); uint32_t c2 = uval(itr);
@@ -414,11 +504,39 @@ void gx::OpenGLRenderer::draw(
 	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
         break;
       }
-      case CMD_quadTC: {
+      case CMD_quad3C: {
+        Vec3 p0 = fval3(itr); uint32_t c0 = uval(itr);
+        Vec3 p1 = fval3(itr); uint32_t c1 = uval(itr);
+        Vec3 p2 = fval3(itr); uint32_t c2 = uval(itr);
+        Vec3 p3 = fval3(itr); uint32_t c3 = uval(itr);
+        addVertex(p0, c0);
+	addVertex(p1, c1);
+	addVertex(p2, c2);
+	addVertex(p1, c1);
+	addVertex(p3, c3);
+	addVertex(p2, c2);
+	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
+        break;
+      }
+      case CMD_quad2TC: {
         Vec2 p0 = fval2(itr), t0 = fval2(itr); uint32_t c0 = uval(itr);
         Vec2 p1 = fval2(itr), t1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec2 p2 = fval2(itr), t2 = fval2(itr); uint32_t c2 = uval(itr);
         Vec2 p3 = fval2(itr), t3 = fval2(itr); uint32_t c3 = uval(itr);
+	addVertex(p0, t0, c0);
+	addVertex(p1, t1, c1);
+	addVertex(p2, t2, c2);
+	addVertex(p1, t1, c1);
+	addVertex(p3, t3, c3);
+	addVertex(p2, t2, c2);
+	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
+        break;
+      }
+      case CMD_quad3TC: {
+        Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr); uint32_t c0 = uval(itr);
+        Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr); uint32_t c1 = uval(itr);
+        Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr); uint32_t c2 = uval(itr);
+        Vec3 p3 = fval3(itr); Vec2 t3 = fval2(itr); uint32_t c3 = uval(itr);
 	addVertex(p0, t0, c0);
 	addVertex(p1, t1, c1);
 	addVertex(p2, t2, c2);
@@ -466,51 +584,32 @@ void gx::OpenGLRenderer::renderFrame()
   setCurrentContext(_window);
   GLCALL(glViewport, 0, 0, _width, _height);
   GLCALL(glClearColor, _bgColor.r, _bgColor.g, _bgColor.b, 0);
-  GLCALL(glClear, GL_COLOR_BUFFER_BIT); // | GL_DEPTH_BUFFER_BIT
+  GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  GLCALL(glEnable, GL_BLEND);
+  _currentGLCap = -1; // force all capabilities to be set at first drawcall
   GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  GLCALL(glDisable, GL_DEPTH_TEST);
   GLCALL(glEnable, GL_LINE_SMOOTH);
 
   // vbo/vao setup
   if (_changed) {
     _changed = false;
-    if (!_drawCalls.empty()) {
-      if (!_vbo) { _vbo.init(); }
-      _vbo.setData(_vertices, GL_DYNAMIC_DRAW);
-
-      if (!_vao) { _vao.init(); }
-      constexpr std::size_t stride = sizeof(float)*4 + sizeof(uint32_t);
-      _vao.enableAttrib(0); // vec4 (x,y,tx,ty)
-      _vao.setAttrib(0, _vbo, 0, stride, 4, GL_FLOAT, GL_FALSE);
-      _vao.enableAttrib(1); // uint (r,g,b,a packed int)
-      //_vao.setAttrib(1, _vbo, sizeof(float)*4, stride, 4, GL_FLOAT, GL_FALSE);
-      _vao.setAttribI(1, _vbo, sizeof(float)*4, stride, 1, GL_UNSIGNED_INT);
-    } else {
+    if (_drawCalls.empty()) {
       _vbo = GLBuffer();
       _vao = GLVertexArray();
+    } else {
+      if (!_vbo) {
+        _vbo.init();
+        _vao.init();
+        _vao.enableAttrib(0); // vec3 (x,y,z)
+        _vao.setAttrib(0, _vbo, 0, 24, 3, GL_FLOAT, GL_FALSE);
+        _vao.enableAttrib(1); // vec2 (s,t)
+        _vao.setAttrib(1, _vbo, 12, 24, 2, GL_FLOAT, GL_FALSE);
+        _vao.enableAttrib(2); // uint (r,g,b,a packed int)
+        _vao.setAttribI(2, _vbo, 20, 24, 1, GL_UNSIGNED_INT);
+      }
+      _vbo.setData(_vertices, GL_DYNAMIC_DRAW);
     }
   }
-
-  // simple ortho projection for 2d rendering in screen coords
-  //  x:[0 width] => x:[-1 1]
-  //  y:[0 height]   y:[-1 1]
-  // origin in upper left corner
-  Mat4 trans = {
-    2.0f / float(_width), 0, 0, 0,
-    0, -2.0f / float(_height), 0, 0,
-    //  negative value flips vertial direction for OpenGL
-    0, 0, 1, 0,
-    -1, 1, 0, 1 };
-
-  // OpenGL coords (left handed)
-  //   (-1,-1) at bottom left corner
-  //   Z coord: -1 to 1
-
-  // Vulkan coords (right handed)
-  //   (-1,-1) at top left corner
-  //   Z coord: 0 to 1
 
   // clear texture unit assignments
   for (auto& t : _textures) { t.second.unit = -1; }
@@ -522,6 +621,9 @@ void gx::OpenGLRenderer::renderFrame()
   int lastShader = -1;
   float lastLineWidth = 0.0f;
   for (const DrawCall& dc : _drawCalls) {
+    if (dc.capabilities != _currentGLCap) {
+      setGLCapabilities(dc.capabilities); }
+
     GLuint texUnit = 0;
     int shader = 0; // solid color shader
     if (dc.texID > 0) {
@@ -543,10 +645,6 @@ void gx::OpenGLRenderer::renderFrame()
     if (dc.transformNo >= 0) {
       const TransformEntry& t = _transforms[dc.transformNo];
       _sp_trans[shader].set(t.view * t.projection);
-    } else {
-      // FIXME - use default ortho projection for now
-      // (require transform later)
-      _sp_trans[shader].set(trans);
     }
     _sp_modColor[shader].set(dc.modColor);
     if (_sp_texUnit[shader]) {_sp_texUnit[shader].set(texUnit); }
@@ -565,4 +663,31 @@ void gx::OpenGLRenderer::renderFrame()
   glfwSwapBuffers(_window);
   GLCheckErrors("GL error");
   GLClearState();
+}
+
+void gx::OpenGLRenderer::setGLCapabilities(int cap)
+{
+  if (_currentGLCap < 0)
+  {
+    // don't assume current state - enable/disable all values
+    GLCALL((cap & BLEND)      ? glEnable : glDisable, GL_BLEND);
+    GLCALL((cap & DEPTH_TEST) ? glEnable : glDisable, GL_DEPTH_TEST);
+  }
+  else
+  {
+    // enable/disable only for changes
+    if (!(_currentGLCap & BLEND) && (cap & BLEND)) {
+      GLCALL(glEnable, GL_BLEND);
+    } else if ((_currentGLCap & BLEND) && !(cap & BLEND)) {
+      GLCALL(glDisable, GL_BLEND);
+    }
+
+    if (!(_currentGLCap & DEPTH_TEST) && (cap & DEPTH_TEST)) {
+      GLCALL(glEnable, GL_DEPTH_TEST);
+    } else if ((_currentGLCap & DEPTH_TEST) && !(cap & DEPTH_TEST)) {
+      GLCALL(glDisable, GL_DEPTH_TEST);
+    }
+  }
+
+  _currentGLCap = cap;
 }

@@ -17,7 +17,7 @@ void gx::DrawContext::rectangle(float x, float y, float w, float h)
   if (_colorMode == CM_HGRADIANT) {
     uint32_t c0 = gradiantColor(x0);
     uint32_t c1 = gradiantColor(x1);
-    add(CMD_quadC,
+    add(CMD_quad2C,
         x0, y0, c0,
         x1, y0, c1,
         x0, y1, c0,
@@ -25,7 +25,7 @@ void gx::DrawContext::rectangle(float x, float y, float w, float h)
   } else if (_colorMode == CM_VGRADIANT) {
     uint32_t c0 = gradiantColor(y0);
     uint32_t c1 = gradiantColor(y1);
-    add(CMD_quadC,
+    add(CMD_quad2C,
         x0, y0, c0,
         x1, y0, c0,
         x0, y1, c1,
@@ -45,7 +45,7 @@ void gx::DrawContext::rectangle(
   if (_colorMode == CM_HGRADIANT) {
     uint32_t c0 = gradiantColor(x0);
     uint32_t c1 = gradiantColor(x1);
-    add(CMD_quadTC,
+    add(CMD_quad2TC,
         x0, y0, t0.x, t0.y, c0,
         x1, y0, t1.x, t0.y, c1,
         x0, y1, t0.x, t1.y, c0,
@@ -53,7 +53,7 @@ void gx::DrawContext::rectangle(
   } else if (_colorMode == CM_VGRADIANT) {
     uint32_t c0 = gradiantColor(y0);
     uint32_t c1 = gradiantColor(y1);
-    add(CMD_quadTC,
+    add(CMD_quad2TC,
         x0, y0, t0.x, t0.y, c0,
         x1, y0, t1.x, t0.y, c0,
         x0, y1, t0.x, t1.y, c1,
@@ -104,7 +104,7 @@ void gx::DrawContext::rectangle(
   if (_colorMode == CM_HGRADIANT) {
     uint32_t c0 = gradiantColor(x0);
     uint32_t c1 = gradiantColor(x1);
-    add(CMD_quadTC,
+    add(CMD_quad2TC,
         x0, y0, tx0, ty0, c0,
         x1, y0, tx1, ty0, c1,
         x0, y1, tx0, ty1, c0,
@@ -112,7 +112,7 @@ void gx::DrawContext::rectangle(
   } else if (_colorMode == CM_VGRADIANT) {
     uint32_t c0 = gradiantColor(y0);
     uint32_t c1 = gradiantColor(y1);
-    add(CMD_quadTC,
+    add(CMD_quad2TC,
         x0, y0, tx0, ty0, c0,
         x1, y0, tx1, ty0, c0,
         x0, y1, tx0, ty1, c1,
