@@ -349,7 +349,7 @@ void gx::Gui::calcSize(GuiElem& def)
       def._h = def.image.height + (_theme.border * 2);
       break;
     default:
-      LOG_ERROR("unknown type ", def.type);
+      GX_LOG_ERROR("unknown type ", def.type);
       break;
   }
 }
@@ -409,7 +409,7 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
       // noting extra to do
       break;
     default:
-      LOG_ERROR("unknown type ", def.type);
+      GX_LOG_ERROR("unknown type ", def.type);
       break;
   }
 }
@@ -518,7 +518,7 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
                    def.image.texCoord0, def.image.texCoord1);
       break;
     default:
-      LOG_ERROR("unknown type ", def.type);
+      GX_LOG_ERROR("unknown type ", def.type);
       break;
   }
 }

@@ -1,6 +1,6 @@
 //
 // gx/Image.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #include "Image.hh"
@@ -41,7 +41,7 @@ bool gx::Image::init(const char* filename)
   int w = 0, h = 0, c = 0;
   uint8_t* data = stbi_load(filename, &w, &h, &c, 0);
   if (!data) {
-    LOG_ERROR("stbi_load() failed");
+    GX_LOG_ERROR("stbi_load() failed");
     return false;
   }
 

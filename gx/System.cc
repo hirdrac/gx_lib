@@ -16,7 +16,7 @@ namespace {
 
   void errorCB(int error, const char* txt)
   {
-    LOG_ERROR("GLFW ERROR(", error, "): ", txt);
+    GX_LOG_ERROR("GLFW ERROR(", error, "): ", txt);
   }
 }
 
@@ -34,7 +34,7 @@ bool gx::initGLFW()
   glfwSetErrorCallback(errorCB);
   //glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, GLFW_FALSE);
   if (!glfwInit()) {
-    LOG_ERROR("glfwInit() failed");
+    GX_LOG_ERROR("glfwInit() failed");
     return false;
   }
 

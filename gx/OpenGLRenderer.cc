@@ -41,19 +41,19 @@ namespace {
   {
     GLShader vshader;
     if (!vshader.init(GL_VERTEX_SHADER, vsrc, GLSL_SOURCE_HEADER)) {
-      LOG_ERROR("vshader error: ", vshader.infoLog());
+      GX_LOG_ERROR("vshader error: ", vshader.infoLog());
       return GLProgram();
     }
 
     GLShader fshader;
     if (!fshader.init(GL_FRAGMENT_SHADER, fsrc, GLSL_SOURCE_HEADER)) {
-      LOG_ERROR("fshader error: ", fshader.infoLog());
+      GX_LOG_ERROR("fshader error: ", fshader.infoLog());
       return GLProgram();
     }
 
     GLProgram prog;
     if (!prog.init(vshader, fshader)) {
-      LOG_ERROR("program link error: ", prog.infoLog());
+      GX_LOG_ERROR("program link error: ", prog.infoLog());
       return GLProgram();
     }
 
@@ -64,7 +64,7 @@ namespace {
   {
     GLint loc = p.getUniformLocation(name);
     if (loc < 0) {
-      LOG_ERROR("unknown uniform location '", name, "' for prog ", p.id());
+      GX_LOG_ERROR("unknown uniform location '", name, "' for prog ", p.id());
     }
     return loc;
   }
@@ -329,7 +329,7 @@ void gx::OpenGLRenderer::draw(
 
       default:
         itr = end; // stop reading at first invalid cmd
-        LOG_ERROR("unknown DrawCmd value: ", int(cmd));
+        GX_LOG_ERROR("unknown DrawCmd value: ", int(cmd));
 	break;
     }
   }

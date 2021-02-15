@@ -102,7 +102,7 @@ void gx::Window::setMouseMode(MouseModeEnum mode)
 {
   int val = cursorInputModeVal(mode);
   if (val < 0) {
-    LOG_ERROR("setMouseMode(): invalid mode ", mode);
+    GX_LOG_ERROR("setMouseMode(): invalid mode ", mode);
     return;
   }
 
@@ -173,7 +173,7 @@ bool gx::Window::open(int flags)
   GLFWwindow* win = glfwCreateWindow(
     width, height, _title.c_str(), _fullScreen ? monitor : nullptr, nullptr);
   if (!win) {
-    LOG_ERROR("glfwCreateWindow() failed");
+    GX_LOG_ERROR("glfwCreateWindow() failed");
     return false;
   }
 
@@ -291,7 +291,7 @@ void gx::Window::closeCB(GLFWwindow* win)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("unknown close window event");
+    GX_LOG_ERROR("unknown close window event");
     return;
   }
 
@@ -307,7 +307,7 @@ void gx::Window::sizeCB(GLFWwindow* win, int width, int height)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("unknown size event");
+    GX_LOG_ERROR("unknown size event");
     return;
   }
 
@@ -324,7 +324,7 @@ void gx::Window::keyCB(
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("unknown key event");
+    GX_LOG_ERROR("unknown key event");
     return;
   }
 
@@ -368,7 +368,7 @@ void gx::Window::charCB(GLFWwindow* win, unsigned int codepoint)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("charmod event for unknown display");
+    GX_LOG_ERROR("charmod event for unknown display");
     return;
   }
 
@@ -382,7 +382,7 @@ void gx::Window::cursorEnterCB(GLFWwindow* win, int entered)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("unknown cursor event");
+    GX_LOG_ERROR("unknown cursor event");
     return;
   }
 
@@ -396,7 +396,7 @@ void gx::Window::cursorPosCB(GLFWwindow* win, double xpos, double ypos)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("unknown cursor event");
+    GX_LOG_ERROR("unknown cursor event");
     return;
   }
 
@@ -411,7 +411,7 @@ void gx::Window::mouseButtonCB(GLFWwindow* win, int button, int action, int mods
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("unknown mouse button even");
+    GX_LOG_ERROR("unknown mouse button even");
     return;
   }
 
@@ -436,7 +436,7 @@ void gx::Window::mouseButtonCB(GLFWwindow* win, int button, int action, int mods
     case GLFW_MOUSE_BUTTON_8:
       b = BUTTON8; e._events |= EVENT_MOUSE_BUTTON8; break;
     default:
-      LOG_ERROR("unknown mouse button ", button);
+      GX_LOG_ERROR("unknown mouse button ", button);
       return;
   }
 
@@ -452,7 +452,7 @@ void gx::Window::scrollCB(GLFWwindow* win, double xoffset, double yoffset)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("unknown mouse button event");
+    GX_LOG_ERROR("unknown mouse button event");
     return;
   }
 
@@ -467,7 +467,7 @@ void gx::Window::iconifyCB(GLFWwindow* win, int iconified)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("unknown iconify event");
+    GX_LOG_ERROR("unknown iconify event");
     return;
   }
 
@@ -481,7 +481,7 @@ void gx::Window::focusCB(GLFWwindow* win, int focused)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    LOG_ERROR("unknown focus event");
+    GX_LOG_ERROR("unknown focus event");
     return;
   }
 

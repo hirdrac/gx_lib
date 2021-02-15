@@ -62,7 +62,7 @@ static void APIENTRY GLDebugCB(
       lvl = gx::LVL_INFO; break;
   }
 
-  LOGGER_LOG(
+  GX_LOGGER_LOG(
     gx::defaultLogger(), lvl, "GLDebug: source=", sourceStr, " type=",
     typeStr, " id=", id, severityStr, " message=[", message, ']');
 }
@@ -74,7 +74,7 @@ bool GLSetupContext(GLADloadproc loadProc)
 {
   if (!GLInitialized) {
     if (gladLoadGLLoader(loadProc) == 0) {
-      LOG_ERROR("failed to setup GL context");
+      GX_LOG_ERROR("failed to setup GL context");
       return false;
     }
     GLInitialized = true;
@@ -84,7 +84,7 @@ bool GLSetupContext(GLADloadproc loadProc)
   GLint flags = 0;
   glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
   if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
-    LOG_INFO("OpenGL debug context enabled");
+    GX_LOG_INFO("OpenGL debug context enabled");
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(GLDebugCB, nullptr);
@@ -133,8 +133,8 @@ int GLCheckErrors(std::string_view msg, const char* file, int line)
   int count = 0;
   GLenum error;
   while ((error = glGetError()) != GL_NO_ERROR) {
-    LOGGER_LOG_FL(gx::defaultLogger(), gx::LVL_ERROR, file, line, msg, ": ",
-                  GLErrorStr(error));
+    GX_LOGGER_LOG_FL(gx::defaultLogger(), gx::LVL_ERROR, file, line, msg, ": ",
+                     GLErrorStr(error));
     ++count;
   }
 

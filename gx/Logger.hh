@@ -75,21 +75,21 @@ namespace gx {
 
 
 // **** Macros ****
-#define LOGGER_LOG_FL(logger,lvl,file,line,...) \
+#define GX_LOGGER_LOG_FL(logger,lvl,file,line,...) \
   do { gx::Logger& lg(logger); if ((lvl)>=lg.level()) { lg.log((lvl),(file),(line),__VA_ARGS__); } } while(0)
 
-#define LOGGER_LOG(logger,lvl,...)\
-  LOGGER_LOG_FL((logger),(lvl),__FILE__,__LINE__,__VA_ARGS__)
+#define GX_LOGGER_LOG(logger,lvl,...)\
+  GX_LOGGER_LOG_FL((logger),(lvl),__FILE__,__LINE__,__VA_ARGS__)
 
 
 // default logger instance logging macros
-#define LOG_TRACE(...) \
-  LOGGER_LOG(gx::defaultLogger(),gx::LVL_TRACE,__VA_ARGS__)
-#define LOG_INFO(...) \
-  LOGGER_LOG(gx::defaultLogger(),gx::LVL_INFO,__VA_ARGS__)
-#define LOG_WARN(...) \
-  LOGGER_LOG(gx::defaultLogger(),gx::LVL_WARN,__VA_ARGS__)
-#define LOG_ERROR(...) \
-  LOGGER_LOG(gx::defaultLogger(),gx::LVL_ERROR,__VA_ARGS__)
-#define LOG_FATAL(...) \
-  LOGGER_LOG(gx::defaultLogger(),gx::LVL_FATAL,__VA_ARGS__)
+#define GX_LOG_TRACE(...) \
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_TRACE,__VA_ARGS__)
+#define GX_LOG_INFO(...) \
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_INFO,__VA_ARGS__)
+#define GX_LOG_WARN(...) \
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_WARN,__VA_ARGS__)
+#define GX_LOG_ERROR(...) \
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_ERROR,__VA_ARGS__)
+#define GX_LOG_FATAL(...) \
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_FATAL,__VA_ARGS__)

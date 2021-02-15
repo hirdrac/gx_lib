@@ -23,7 +23,7 @@ namespace {
   void cleanupFreeType()
   {
     if (ftLib && FT_Done_FreeType(ftLib)) {
-      LOG_ERROR("FT_Done_FreeType() failed");
+      GX_LOG_ERROR("FT_Done_FreeType() failed");
     }
 
     ftLib = nullptr;
@@ -34,7 +34,7 @@ namespace {
     if (ftLib) { return true; }
 
     if (FT_Init_FreeType(&ftLib)) {
-      LOG_ERROR("FT_Init_FreeType() failed");
+      GX_LOG_ERROR("FT_Init_FreeType() failed");
       return false;
     }
 
@@ -55,13 +55,13 @@ namespace {
       else if (end != 0 && ch > end) { break; }
 
       if (FT_Load_Glyph(face, index, FT_LOAD_DEFAULT)) {
-        LOG_ERROR("FT_Load_Glyph() failed");
+        GX_LOG_ERROR("FT_Load_Glyph() failed");
         return false;
       }
 
       FT_GlyphSlot gs = face->glyph;
       if (FT_Render_Glyph(gs, FT_RENDER_MODE_NORMAL)) {
-        LOG_ERROR("FT_Render_Glyph() failed");
+        GX_LOG_ERROR("FT_Render_Glyph() failed");
         return false;
       }
 
@@ -81,12 +81,12 @@ bool gx::Font::init(const char* fileName, int fontSize)
 
   FT_Face face;
   if (FT_New_Face(ftLib, fileName, 0, &face)) {
-    LOG_ERROR("FT_New_Face(\"", fileName, "\") failed");
+    GX_LOG_ERROR("FT_New_Face(\"", fileName, "\") failed");
     return false;
   }
 
   if (FT_Set_Pixel_Sizes(face, 0, fontSize)) {
-    LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
+    GX_LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
     FT_Done_Face(face);
     return false;
   }
@@ -105,12 +105,12 @@ bool gx::Font::initFromMemory(
 
   FT_Face face;
   if (FT_New_Memory_Face(ftLib, (const FT_Byte*)mem, memSize, 0, &face)) {
-    LOG_ERROR("FT_New_Memory_Face(), failed");
+    GX_LOG_ERROR("FT_New_Memory_Face(), failed");
     return false;
   }
 
   if (FT_Set_Pixel_Sizes(face, 0, fontSize)) {
-    LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
+    GX_LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
     FT_Done_Face(face);
     return false;
   }
