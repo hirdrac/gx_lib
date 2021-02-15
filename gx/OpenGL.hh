@@ -140,9 +140,9 @@ int GLCheckErrors(std::string_view msg, const char* file = __FILE__,
 
 // **** Macros ****
 #ifdef GX_DEBUG_GL
-#define GLCALL(fn,...) do { (fn)(__VA_ARGS__); GLCheckErrors(#fn); } while(0)
+#define GX_GLCALL(fn,...) do { (fn)(__VA_ARGS__); GLCheckErrors(#fn); } while(0)
 #else
-#define GLCALL(fn,...) (fn)(__VA_ARGS__)
+#define GX_GLCALL(fn,...) (fn)(__VA_ARGS__)
 #endif
 
 

@@ -66,14 +66,14 @@ GLuint GLShader::init(GLenum type, const char* src, const char* header)
 
   if (header) {
     const char* src_array[] = { header, src };
-    GLCALL(glShaderSource, _shader, 2, src_array, nullptr);
+    GX_GLCALL(glShaderSource, _shader, 2, src_array, nullptr);
   } else {
-    GLCALL(glShaderSource, _shader, 1, &src, nullptr);
+    GX_GLCALL(glShaderSource, _shader, 1, &src, nullptr);
   }
 
-  GLCALL(glCompileShader, _shader);
+  GX_GLCALL(glCompileShader, _shader);
   int compile_ok = GL_FALSE;
-  GLCALL(glGetShaderiv, _shader, GL_COMPILE_STATUS, &compile_ok);
+  GX_GLCALL(glGetShaderiv, _shader, GL_COMPILE_STATUS, &compile_ok);
 
   return compile_ok ? _shader : 0;
 }
@@ -81,12 +81,12 @@ GLuint GLShader::init(GLenum type, const char* src, const char* header)
 std::string GLShader::infoLog()
 {
   GLint logLen = 0;
-  GLCALL(glGetShaderiv, _shader, GL_INFO_LOG_LENGTH, &logLen);
+  GX_GLCALL(glGetShaderiv, _shader, GL_INFO_LOG_LENGTH, &logLen);
   if (logLen <= 0) { return std::string(); }
 
   GLsizei len = 0;
   auto tmp = std::make_unique<char[]>(logLen);
-  GLCALL(glGetShaderInfoLog, _shader, logLen, &len, tmp.get());
+  GX_GLCALL(glGetShaderInfoLog, _shader, logLen, &len, tmp.get());
 
   return std::string(tmp.get(), len);
 }
@@ -94,7 +94,7 @@ std::string GLShader::infoLog()
 void GLShader::cleanup() noexcept
 {
   if (_shader) {
-    GLCALL(glDeleteShader, _shader);
+    GX_GLCALL(glDeleteShader, _shader);
   }
 }
 

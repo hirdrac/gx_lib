@@ -87,17 +87,17 @@ GLuint GLVertexArray::init()
 {
   cleanup();
 #ifdef GX_GL33
-  GLCALL(glGenVertexArrays, 1, &_vao);
+  GX_GLCALL(glGenVertexArrays, 1, &_vao);
   // VA created when bound for the first time
 #else
-  GLCALL(glCreateVertexArrays, 1, &_vao);
+  GX_GLCALL(glCreateVertexArrays, 1, &_vao);
 #endif
   return _vao;
 }
 
 void GLVertexArray::bind()
 {
-  GLCALL(glBindVertexArray, _vao);
+  GX_GLCALL(glBindVertexArray, _vao);
 #ifdef GX_GL33
   GLLastVertexArrayBind = _vao;
 #endif
@@ -105,7 +105,7 @@ void GLVertexArray::bind()
 
 void GLVertexArray::unbind()
 {
-  GLCALL(glBindVertexArray, 0);
+  GX_GLCALL(glBindVertexArray, 0);
 #ifdef GX_GL33
   GLLastVertexArrayBind = 0;
 #endif
@@ -115,9 +115,9 @@ void GLVertexArray::enableAttrib(GLuint index)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glEnableVertexAttribArray, index);
+  GX_GLCALL(glEnableVertexAttribArray, index);
 #else
-  GLCALL(glEnableVertexArrayAttrib, _vao, index);
+  GX_GLCALL(glEnableVertexArrayAttrib, _vao, index);
 #endif
 }
 
@@ -125,9 +125,9 @@ void GLVertexArray::disableAttrib(GLuint index)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glDisableVertexAttribArray, index);
+  GX_GLCALL(glDisableVertexAttribArray, index);
 #else
-  GLCALL(glDisableVertexArrayAttrib, _vao, index);
+  GX_GLCALL(glDisableVertexArrayAttrib, _vao, index);
 #endif
 }
 
@@ -138,13 +138,13 @@ void GLVertexArray::setAttrib(
 #ifdef GX_GL33
   bindCheck();
   bufferBindCheck(buffer);
-  GLCALL(glVertexAttribPointer, index, size, type, normalized, stride,
-	 reinterpret_cast<const void*>(offset));
+  GX_GLCALL(glVertexAttribPointer, index, size, type, normalized, stride,
+            reinterpret_cast<const void*>(offset));
 #else
   // attribindex & bindingindex set the same for simplicity
-  GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
-  GLCALL(glVertexArrayAttribBinding, _vao, index, index);
-  GLCALL(glVertexArrayAttribFormat, _vao, index, size, type, normalized, 0);
+  GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
+  GX_GLCALL(glVertexArrayAttribBinding, _vao, index, index);
+  GX_GLCALL(glVertexArrayAttribFormat, _vao, index, size, type, normalized, 0);
 #endif
 }
 
@@ -155,13 +155,13 @@ void GLVertexArray::setAttribI(
 #ifdef GX_GL33
   bindCheck();
   bufferBindCheck(buffer);
-  GLCALL(glVertexAttribIPointer, index, size, type, stride,
+  GX_GLCALL(glVertexAttribIPointer, index, size, type, stride,
 	 reinterpret_cast<const void*>(offset));
 #else
   // attribindex & bindingindex set the same for simplicity
-  GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
-  GLCALL(glVertexArrayAttribBinding, _vao, index, index);
-  GLCALL(glVertexArrayAttribIFormat, _vao, index, size, type, 0);
+  GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
+  GX_GLCALL(glVertexArrayAttribBinding, _vao, index, index);
+  GX_GLCALL(glVertexArrayAttribIFormat, _vao, index, size, type, 0);
 #endif
 }
 
@@ -172,13 +172,13 @@ void GLVertexArray::setAttribL(
 #ifdef GX_GL33
   bindCheck();
   bufferBindCheck(buffer);
-  GLCALL(glVertexAttribLPointer, index, size, type, stride,
-	 reinterpret_cast<const void*>(offset));
+  GX_GLCALL(glVertexAttribLPointer, index, size, type, stride,
+            reinterpret_cast<const void*>(offset));
 #else
   // attribindex & bindingindex set the same for simplicity
-  GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
-  GLCALL(glVertexArrayAttribBinding, _vao, index, index);
-  GLCALL(glVertexArrayAttribLFormat, _vao, index, size, type, 0);
+  GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
+  GX_GLCALL(glVertexArrayAttribBinding, _vao, index, index);
+  GX_GLCALL(glVertexArrayAttribLFormat, _vao, index, size, type, 0);
 #endif
 }
 
@@ -186,9 +186,9 @@ void GLVertexArray::setAttribDivisor(GLuint index, GLuint divisor)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glVertexAttribDivisor, index, divisor);
+  GX_GLCALL(glVertexAttribDivisor, index, divisor);
 #else
-  GLCALL(glVertexArrayBindingDivisor, _vao, index, divisor);
+  GX_GLCALL(glVertexArrayBindingDivisor, _vao, index, divisor);
 #endif
 }
 
@@ -198,7 +198,7 @@ void GLVertexArray::cleanup() noexcept
 #ifdef GX_GL33
     if (GLLastVertexArrayBind == _vao) { GLLastVertexArrayBind = 0; }
 #endif
-    GLCALL(glDeleteVertexArrays, 1, &_vao);
+    GX_GLCALL(glDeleteVertexArrays, 1, &_vao);
   }
 }
 

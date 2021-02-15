@@ -17,7 +17,7 @@ class GLUniform1i
 
   explicit operator bool() const { return _loc != -1; }
 
-  void set(GLint v) { GLCALL(glUniform1i, _loc, v); }
+  void set(GLint v) { GX_GLCALL(glUniform1i, _loc, v); }
 
  private:
   GLint _loc = -1;
@@ -31,10 +31,10 @@ class GLUniform2i
 
   explicit operator bool() const { return _loc != -1; }
 
-  void set(GLfloat v0, GLfloat v1) { GLCALL(glUniform2i, _loc, v0, v1); }
+  void set(GLfloat v0, GLfloat v1) { GX_GLCALL(glUniform2i, _loc, v0, v1); }
 
   template <class T>
-  void set(const T& v) { GLCALL(glUniform2iv, _loc, 1, std::data(v)); }
+  void set(const T& v) { GX_GLCALL(glUniform2iv, _loc, 1, std::data(v)); }
 
  private:
   GLint _loc = -1;
@@ -49,10 +49,10 @@ class GLUniform3i
   explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1, GLfloat v2) {
-    GLCALL(glUniform3i, _loc, v0, v1, v2); }
+    GX_GLCALL(glUniform3i, _loc, v0, v1, v2); }
 
   template <class T>
-  void set(const T& v) { GLCALL(glUniform3iv, _loc, 1, std::data(v)); }
+  void set(const T& v) { GX_GLCALL(glUniform3iv, _loc, 1, std::data(v)); }
 
  private:
   GLint _loc = -1;
@@ -67,10 +67,10 @@ class GLUniform4i
   explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
-    GLCALL(glUniform4i, _loc, v0, v1, v2, v3); }
+    GX_GLCALL(glUniform4i, _loc, v0, v1, v2, v3); }
 
   template <class T>
-  void set(const T& v) { GLCALL(glUniform4iv, _loc, 1, std::data(v)); }
+  void set(const T& v) { GX_GLCALL(glUniform4iv, _loc, 1, std::data(v)); }
 
  private:
   GLint _loc = -1;
@@ -84,7 +84,7 @@ class GLUniform1f
 
   explicit operator bool() const { return _loc != -1; }
 
-  void set(GLint v) { GLCALL(glUniform1f, _loc, v); }
+  void set(GLint v) { GX_GLCALL(glUniform1f, _loc, v); }
 
  private:
   GLint _loc = -1;
@@ -98,10 +98,10 @@ class GLUniform2f
 
   explicit operator bool() const { return _loc != -1; }
 
-  void set(GLfloat v0, GLfloat v1) { GLCALL(glUniform2f, _loc, v0, v1); }
+  void set(GLfloat v0, GLfloat v1) { GX_GLCALL(glUniform2f, _loc, v0, v1); }
 
   template <class T>
-  void set(const T& v) { GLCALL(glUniform2fv, _loc, 1, std::data(v)); }
+  void set(const T& v) { GX_GLCALL(glUniform2fv, _loc, 1, std::data(v)); }
 
  private:
   GLint _loc = -1;
@@ -116,10 +116,10 @@ class GLUniform3f
   explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1, GLfloat v2) {
-    GLCALL(glUniform3f, _loc, v0, v1, v2); }
+    GX_GLCALL(glUniform3f, _loc, v0, v1, v2); }
 
   template <class T>
-  void set(const T& v) { GLCALL(glUniform3fv, _loc, 1, std::data(v)); }
+  void set(const T& v) { GX_GLCALL(glUniform3fv, _loc, 1, std::data(v)); }
 
  private:
   GLint _loc = -1;
@@ -134,10 +134,10 @@ class GLUniform4f
   explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
-    GLCALL(glUniform4f, _loc, v0, v1, v2, v3); }
+    GX_GLCALL(glUniform4f, _loc, v0, v1, v2, v3); }
 
   template <class T>
-  void set(const T& v) { GLCALL(glUniform4fv, _loc, 1, std::data(v)); }
+  void set(const T& v) { GX_GLCALL(glUniform4fv, _loc, 1, std::data(v)); }
 
  private:
   GLint _loc = -1;
@@ -153,7 +153,7 @@ class GLUniformMat4f
 
   template <class T>
   void set(const T& m, bool transpose = false) {
-    GLCALL(glUniformMatrix4fv, _loc, 1, GLBool(transpose), std::data(m)); }
+    GX_GLCALL(glUniformMatrix4fv, _loc, 1, GLBool(transpose), std::data(m)); }
 
  private:
   GLint _loc = -1;

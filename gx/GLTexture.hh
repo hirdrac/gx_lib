@@ -156,7 +156,7 @@ class GLTextureT
   void bindCheck() {
     if (GLLastTextureBind != _tex) {
       // don't care which unit is active
-      GLCALL(glBindTexture, TARGET, _tex);
+      GX_GLCALL(glBindTexture, TARGET, _tex);
       GLLastTextureBind = _tex;
     }
   }
@@ -223,17 +223,17 @@ GLuint GLTextureT<TARGET>::init(
   _height = 0;
   _depth = 0;
 #ifdef GX_GL33
-  GLCALL(glGenTextures, 1, &_tex);
+  GX_GLCALL(glGenTextures, 1, &_tex);
   bindCheck();
   //glTexStorage1D(TARGET, levels, internalformat, width); //GL4.2
   for (int i = 0; i < levels; ++i) {
-    GLCALL(glTexImage1D, TARGET, i, internalformat, width, 0,
-	   GL_RED, GL_UNSIGNED_BYTE, nullptr);
+    GX_GLCALL(glTexImage1D, TARGET, i, internalformat, width, 0,
+              GL_RED, GL_UNSIGNED_BYTE, nullptr);
     width = std::max(1, (width / 2));
   }
 #else
-  GLCALL(glCreateTextures, TARGET, 1, &_tex);
-  GLCALL(glTextureStorage1D, _tex, levels, internalformat, width);
+  GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
+  GX_GLCALL(glTextureStorage1D, _tex, levels, internalformat, width);
 #endif
   return _tex;
 }
@@ -249,44 +249,44 @@ GLuint GLTextureT<TARGET>::init(
   _height = height;
   _depth = 0;
 #ifdef GX_GL33
-  GLCALL(glGenTextures, 1, &_tex);
+  GX_GLCALL(glGenTextures, 1, &_tex);
   bindCheck();
   //glTexStorage2D(TARGET, levels, internalformat, width, height); //GL4.2
   if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
     for (int i = 0; i < levels; ++i) {
-      GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X, i, internalformat,
-	     width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
-      GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, i, internalformat,
-	     width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
-      GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, i, internalformat,
-	     width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
-      GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, i, internalformat,
-	     width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
-      GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, i, internalformat,
-	     width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
-      GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, i, internalformat,
-	     width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X, i, internalformat,
+                width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, i, internalformat,
+                width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, i, internalformat,
+                width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, i, internalformat,
+                width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, i, internalformat,
+                width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, i, internalformat,
+                width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
       width = std::max(1, (width / 2));
       height = std::max(1, (height / 2));
     }
   } else if constexpr (TARGET == GL_TEXTURE_1D_ARRAY
                        || TARGET == GL_PROXY_TEXTURE_1D_ARRAY) {
     for (int i = 0; i < levels; ++i) {
-      GLCALL(glTexImage2D, TARGET, i, internalformat, width, height, 0,
-	     GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage2D, TARGET, i, internalformat, width, height, 0,
+                GL_RED, GL_UNSIGNED_BYTE, nullptr);
       width = std::max(1, (width / 2));
     }
   } else {
     for (int i = 0; i < levels; ++i) {
-      GLCALL(glTexImage2D, TARGET, i, internalformat, width, height, 0,
-	     GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage2D, TARGET, i, internalformat, width, height, 0,
+                GL_RED, GL_UNSIGNED_BYTE, nullptr);
       width = std::max(1, (width / 2));
       height = std::max(1, (height / 2));
     }
   }
 #else
-  GLCALL(glCreateTextures, TARGET, 1, &_tex);
-  GLCALL(glTextureStorage2D, _tex, levels, internalformat, width, height);
+  GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
+  GX_GLCALL(glTextureStorage2D, _tex, levels, internalformat, width, height);
 #endif
   return _tex;
 }
@@ -302,28 +302,28 @@ GLuint GLTextureT<TARGET>::init(
   _height = height;
   _depth = depth;
 #ifdef GX_GL33
-  GLCALL(glGenTextures, 1, &_tex);
+  GX_GLCALL(glGenTextures, 1, &_tex);
   bindCheck();
   //glTexStorage3D(TARGET, levels, internalformat, width, height, depth); //GL4.2
   if constexpr (TARGET == GL_TEXTURE_3D || TARGET == GL_PROXY_TEXTURE_3D) {
     for (int i = 0; i < levels; ++i) {
-      GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
-	     GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
+                GL_RED, GL_UNSIGNED_BYTE, nullptr);
       width = std::max(1, (width / 2));
       height = std::max(1, (height / 2));
       depth = std::max(1, (depth / 2));
     }
   } else {
     for (int i = 0; i < levels; ++i) {
-      GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
-	     GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
+                GL_RED, GL_UNSIGNED_BYTE, nullptr);
       width = std::max(1, (width / 2));
       height = std::max(1, (height / 2));
     }
   }
 #else
-  GLCALL(glCreateTextures, TARGET, 1, &_tex);
-  GLCALL(glTextureStorage3D, _tex, levels, internalformat, width, height, depth);
+  GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
+  GX_GLCALL(glTextureStorage3D, _tex, levels, internalformat, width, height, depth);
 #endif
   return _tex;
 }
@@ -351,10 +351,10 @@ GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
 #ifdef GX_GL33
   if (!_tex) { glGenTextures(1, &_tex); }
   bindCheck();
-  GLCALL(glTexBuffer, TARGET, internalformat, buffer);
+  GX_GLCALL(glTexBuffer, TARGET, internalformat, buffer);
 #else
   if (!_tex) { glCreateTextures(TARGET, 1, &_tex); }
-  GLCALL(glTextureBuffer, _tex, internalformat, buffer);
+  GX_GLCALL(glTextureBuffer, _tex, internalformat, buffer);
 #endif
   return _tex;
 }
@@ -364,9 +364,9 @@ void GLTextureT<TARGET>::detachBuffer()
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexBuffer, TARGET, _internalformat, 0);
+  GX_GLCALL(glTexBuffer, TARGET, _internalformat, 0);
 #else
-  GLCALL(glTextureBuffer, _tex, _internalformat, 0);
+  GX_GLCALL(glTextureBuffer, _tex, _internalformat, 0);
 #endif
 }
 
@@ -374,11 +374,11 @@ template <GLenum TARGET>
 void GLTextureT<TARGET>::bindUnit(GLuint unit, GLuint tex)
 {
 #ifdef GX_GL33
-  GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
-  GLCALL(glBindTexture, TARGET, tex);
+  GX_GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
+  GX_GLCALL(glBindTexture, TARGET, tex);
   GLLastTextureBind = tex;
 #else
-  GLCALL(glBindTextureUnit, unit, tex);
+  GX_GLCALL(glBindTextureUnit, unit, tex);
 #endif
 }
 
@@ -389,9 +389,9 @@ void GLTextureT<TARGET>::setSubImage1D(
   setUnpackAlignment(width, format, type);
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexSubImage1D, TARGET, level, xoffset, width, format, type, pixels);
+  GX_GLCALL(glTexSubImage1D, TARGET, level, xoffset, width, format, type, pixels);
 #else
-  GLCALL(glTextureSubImage1D, _tex, level, xoffset, width, format, type, pixels);
+  GX_GLCALL(glTextureSubImage1D, _tex, level, xoffset, width, format, type, pixels);
 #endif
 }
 
@@ -403,11 +403,11 @@ void GLTextureT<TARGET>::setSubImage2D(
   setUnpackAlignment(width, format, type);
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
-	 width, height, format, type, pixels);
+  GX_GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
+            width, height, format, type, pixels);
 #else
-  GLCALL(glTextureSubImage2D, _tex, level, xoffset, yoffset,
-	 width, height, format, type, pixels);
+  GX_GLCALL(glTextureSubImage2D, _tex, level, xoffset, yoffset,
+            width, height, format, type, pixels);
 #endif
 }
 
@@ -420,11 +420,11 @@ void GLTextureT<TARGET>::setSubImage3D(
   setUnpackAlignment(width, format, type);
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
-	 width, height, depth, format, type, pixels);
+  GX_GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
+            width, height, depth, format, type, pixels);
 #else
-  GLCALL(glTextureSubImage3D, _tex, level, xoffset, yoffset, zoffset,
-	 width, height, depth, format, type, pixels);
+  GX_GLCALL(glTextureSubImage3D, _tex, level, xoffset, yoffset, zoffset,
+            width, height, depth, format, type, pixels);
 #endif
 }
 
@@ -434,9 +434,9 @@ void GLTextureT<TARGET>::getImage(
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glGetTexImage, TARGET, level, format, type, pixels);
+  GX_GLCALL(glGetTexImage, TARGET, level, format, type, pixels);
 #else
-  GLCALL(glGetTextureImage, _tex, level, format, type, bufSize, pixels);
+  GX_GLCALL(glGetTextureImage, _tex, level, format, type, bufSize, pixels);
 #endif
 }
 
@@ -445,9 +445,9 @@ void GLTextureT<TARGET>::generateMipmap()
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glGenerateMipmap, TARGET);
+  GX_GLCALL(glGenerateMipmap, TARGET);
 #else
-  GLCALL(glGenerateTextureMipmap, _tex);
+  GX_GLCALL(glGenerateTextureMipmap, _tex);
 #endif
 }
 
@@ -465,7 +465,7 @@ void GLTextureT<TARGET>::clear(GLint level, GLenum format)
     setSubImage1D(level, 0, _width, format, empty.get());
   }
 #else
-  GLCALL(glClearTexImage, _tex, level, format, GL_UNSIGNED_BYTE, nullptr);
+  GX_GLCALL(glClearTexImage, _tex, level, format, GL_UNSIGNED_BYTE, nullptr);
 #endif
 }
 
@@ -499,7 +499,7 @@ void GLTextureT<TARGET>::setUnpackAlignment(
   else if (x & 2) { align = 2; }
   else if (x & 4) { align = 4; }
 
-  GLCALL(glPixelStorei, GL_UNPACK_ALIGNMENT, align);
+  GX_GLCALL(glPixelStorei, GL_UNPACK_ALIGNMENT, align);
 }
 
 template <GLenum TARGET>
@@ -509,7 +509,7 @@ void GLTextureT<TARGET>::cleanup() noexcept
 #ifdef GX_GL33
     if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
 #endif
-    GLCALL(glDeleteTextures, 1, &_tex);
+    GX_GLCALL(glDeleteTextures, 1, &_tex);
   }
 }
 
@@ -518,9 +518,9 @@ void GLTextureT<TARGET>::setParameter(GLenum pname, GLfloat param)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexParameterf, TARGET, pname, param);
+  GX_GLCALL(glTexParameterf, TARGET, pname, param);
 #else
-  GLCALL(glTextureParameterf, _tex, pname, param);
+  GX_GLCALL(glTextureParameterf, _tex, pname, param);
 #endif
 }
 
@@ -529,9 +529,9 @@ void GLTextureT<TARGET>::setParameter(GLenum pname, GLint param)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexParameteri, TARGET, pname, param);
+  GX_GLCALL(glTexParameteri, TARGET, pname, param);
 #else
-  GLCALL(glTextureParameteri, _tex, pname, param);
+  GX_GLCALL(glTextureParameteri, _tex, pname, param);
 #endif
 }
 
@@ -540,9 +540,9 @@ void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLfloat* params)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexParameterfv, TARGET, pname, params);
+  GX_GLCALL(glTexParameterfv, TARGET, pname, params);
 #else
-  GLCALL(glTextureParameterfv, _tex, pname, params);
+  GX_GLCALL(glTextureParameterfv, _tex, pname, params);
 #endif
 }
 
@@ -551,9 +551,9 @@ void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLint* params)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexParameteriv, TARGET, pname, params);
+  GX_GLCALL(glTexParameteriv, TARGET, pname, params);
 #else
-  GLCALL(glTextureParameteriv, _tex, pname, params);
+  GX_GLCALL(glTextureParameteriv, _tex, pname, params);
 #endif
 }
 
@@ -562,9 +562,9 @@ void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLint* params)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexParameterIiv, TARGET, pname, params);
+  GX_GLCALL(glTexParameterIiv, TARGET, pname, params);
 #else
-  GLCALL(glTextureParameterIiv, _tex, pname, params);
+  GX_GLCALL(glTextureParameterIiv, _tex, pname, params);
 #endif
 }
 
@@ -573,9 +573,9 @@ void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLuint* params)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glTexParameterIuiv, TARGET, pname, params);
+  GX_GLCALL(glTexParameterIuiv, TARGET, pname, params);
 #else
-  GLCALL(glTextureParameterIuiv, _tex, pname, params);
+  GX_GLCALL(glTextureParameterIuiv, _tex, pname, params);
 #endif
 }
 

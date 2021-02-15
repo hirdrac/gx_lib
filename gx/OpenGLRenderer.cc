@@ -582,13 +582,13 @@ void gx::OpenGLRenderer::draw(
 void gx::OpenGLRenderer::renderFrame()
 {
   setCurrentContext(_window);
-  GLCALL(glViewport, 0, 0, _width, _height);
-  GLCALL(glClearColor, _bgColor.r, _bgColor.g, _bgColor.b, 0);
-  GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  GX_GLCALL(glViewport, 0, 0, _width, _height);
+  GX_GLCALL(glClearColor, _bgColor.r, _bgColor.g, _bgColor.b, 0);
+  GX_GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   _currentGLCap = -1; // force all capabilities to be set at first drawcall
-  GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  GLCALL(glEnable, GL_LINE_SMOOTH);
+  GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GX_GLCALL(glEnable, GL_LINE_SMOOTH);
 
   // vbo/vao setup
   if (_changed) {
@@ -650,11 +650,11 @@ void gx::OpenGLRenderer::renderFrame()
     if (_sp_texUnit[shader]) {_sp_texUnit[shader].set(texUnit); }
 
     if (dc.mode == GL_LINES && dc.lineWidth != lastLineWidth) {
-      GLCALL(glLineWidth, dc.lineWidth);
+      GX_GLCALL(glLineWidth, dc.lineWidth);
       lastLineWidth = dc.lineWidth;
     }
 
-    GLCALL(glDrawArrays, dc.mode, first, dc.count);
+    GX_GLCALL(glDrawArrays, dc.mode, first, dc.count);
     first += dc.count;
     lastShader = shader;
   }
@@ -670,22 +670,22 @@ void gx::OpenGLRenderer::setGLCapabilities(int cap)
   if (_currentGLCap < 0)
   {
     // don't assume current state - enable/disable all values
-    GLCALL((cap & BLEND)      ? glEnable : glDisable, GL_BLEND);
-    GLCALL((cap & DEPTH_TEST) ? glEnable : glDisable, GL_DEPTH_TEST);
+    GX_GLCALL((cap & BLEND)      ? glEnable : glDisable, GL_BLEND);
+    GX_GLCALL((cap & DEPTH_TEST) ? glEnable : glDisable, GL_DEPTH_TEST);
   }
   else
   {
     // enable/disable only for changes
     if (!(_currentGLCap & BLEND) && (cap & BLEND)) {
-      GLCALL(glEnable, GL_BLEND);
+      GX_GLCALL(glEnable, GL_BLEND);
     } else if ((_currentGLCap & BLEND) && !(cap & BLEND)) {
-      GLCALL(glDisable, GL_BLEND);
+      GX_GLCALL(glDisable, GL_BLEND);
     }
 
     if (!(_currentGLCap & DEPTH_TEST) && (cap & DEPTH_TEST)) {
-      GLCALL(glEnable, GL_DEPTH_TEST);
+      GX_GLCALL(glEnable, GL_DEPTH_TEST);
     } else if ((_currentGLCap & DEPTH_TEST) && !(cap & DEPTH_TEST)) {
-      GLCALL(glDisable, GL_DEPTH_TEST);
+      GX_GLCALL(glDisable, GL_DEPTH_TEST);
     }
   }
 

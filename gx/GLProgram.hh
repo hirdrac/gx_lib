@@ -36,14 +36,14 @@ class GLProgram
   GLuint release() noexcept { return std::exchange(_prog, 0); }
     // releases ownership of managed program object, returns object id
 
-  void attach(GLuint shader) { GLCALL(glAttachShader, _prog, shader); }
+  void attach(GLuint shader) { GX_GLCALL(glAttachShader, _prog, shader); }
   void attach(const GLShader& s) { attach(s.id()); }
 
-  void detach(GLuint shader) { GLCALL(glDetachShader, _prog, shader); }
+  void detach(GLuint shader) { GX_GLCALL(glDetachShader, _prog, shader); }
   void detach(const GLShader& s) { detach(s.id()); }
 
   void bindAttribLocation(GLuint index, const char* name) {
-    GLCALL(glBindAttribLocation, _prog, index, name); }
+    GX_GLCALL(glBindAttribLocation, _prog, index, name); }
 
   inline bool link();
   [[nodiscard]] inline bool validate();
@@ -57,9 +57,9 @@ class GLProgram
   [[nodiscard]] GLuint getUniformBlockIndex(const char* blockName) const {
     return glGetUniformBlockIndex(_prog, blockName); }
   void setUniformBlockBinding(GLuint blockIndex, GLuint blockBinding) {
-    GLCALL(glUniformBlockBinding, _prog, blockIndex, blockBinding); }
+    GX_GLCALL(glUniformBlockBinding, _prog, blockIndex, blockBinding); }
 
-  void use() { GLCALL(glUseProgram, _prog); }
+  void use() { GX_GLCALL(glUseProgram, _prog); }
 
   // variable arg overloads
   template<typename... Args>
@@ -108,33 +108,33 @@ GLuint GLProgram::init()
 
 bool GLProgram::link()
 {
-  GLCALL(glLinkProgram, _prog);
+  GX_GLCALL(glLinkProgram, _prog);
 
   GLint status = 0;
-  GLCALL(glGetProgramiv, _prog, GL_LINK_STATUS, &status);
+  GX_GLCALL(glGetProgramiv, _prog, GL_LINK_STATUS, &status);
   return status;
 }
 
 bool GLProgram::validate()
 {
-  GLCALL(glValidateProgram, _prog);
+  GX_GLCALL(glValidateProgram, _prog);
 
   GLint status = 0;
-  GLCALL(glGetProgramiv, _prog, GL_VALIDATE_STATUS, &status);
+  GX_GLCALL(glGetProgramiv, _prog, GL_VALIDATE_STATUS, &status);
   return status;
 }
 
 std::string GLProgram::infoLog() const
 {
   GLint logLen = 0;
-  GLCALL(glGetProgramiv, _prog, GL_INFO_LOG_LENGTH, &logLen);
+  GX_GLCALL(glGetProgramiv, _prog, GL_INFO_LOG_LENGTH, &logLen);
   if (logLen <= 0) { return std::string(); }
 
   GLsizei len = 0;
   //auto tmp = std::make_unique<char[]>(logLen);
   //char* tmp = (char*)__builtin_alloca(logLen);
   char tmp[logLen];
-  GLCALL(glGetProgramInfoLog, _prog, logLen, &len, tmp);
+  GX_GLCALL(glGetProgramInfoLog, _prog, logLen, &len, tmp);
 
   return std::string(tmp, len);
 }
@@ -142,7 +142,7 @@ std::string GLProgram::infoLog() const
 void GLProgram::cleanup() noexcept
 {
   if (_prog) {
-    GLCALL(glDeleteProgram, _prog);
+    GX_GLCALL(glDeleteProgram, _prog);
   }
 }
 

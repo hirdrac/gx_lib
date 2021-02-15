@@ -141,9 +141,9 @@ GLuint GLBuffer::init()
   _size = 0;
 #ifdef GX_GL33
   _target = GL_NONE;
-  GLCALL(glGenBuffers, 1, &_buffer);
+  GX_GLCALL(glGenBuffers, 1, &_buffer);
 #else
-  GLCALL(glCreateBuffers, 1, &_buffer);
+  GX_GLCALL(glCreateBuffers, 1, &_buffer);
 #endif
   return _buffer;
 }
@@ -166,12 +166,12 @@ GLuint GLBuffer::init(GLsizei size, const GLvoid* data)
 #ifdef GX_GL33
   // immutable buffer not available, just make normal buffer
   _target = GL_ARRAY_BUFFER;
-  GLCALL(glGenBuffers, 1, &_buffer);
+  GX_GLCALL(glGenBuffers, 1, &_buffer);
   bindCheck();
-  GLCALL(glBufferData, _target, size, data, data ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+  GX_GLCALL(glBufferData, _target, size, data, data ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 #else
-  GLCALL(glCreateBuffers, 1, &_buffer);
-  GLCALL(glNamedBufferStorage, _buffer, size, data, data ? 0 : GL_DYNAMIC_STORAGE_BIT);
+  GX_GLCALL(glCreateBuffers, 1, &_buffer);
+  GX_GLCALL(glNamedBufferStorage, _buffer, size, data, data ? 0 : GL_DYNAMIC_STORAGE_BIT);
 #endif
   return _buffer;
 }
@@ -185,7 +185,7 @@ void GLBuffer::bind(GLenum target)
   // use glVertexArrayVertexBuffer() for ARRAY_BUFFER
   // use glTextureBuffer()/glBindTextureUnit() for TEXTURE_BUFFER
 
-  GLCALL(glBindBuffer, target, _buffer);
+  GX_GLCALL(glBindBuffer, target, _buffer);
 #ifdef GX_GL33
   if (target == GL_ARRAY_BUFFER) {
     GLLastArrayBufferBind = _buffer;
@@ -200,7 +200,7 @@ void GLBuffer::bind(GLenum target)
 
 void GLBuffer::bindBase(GLenum target, GLuint index)
 {
-  GLCALL(glBindBufferBase, target, index, _buffer);
+  GX_GLCALL(glBindBufferBase, target, index, _buffer);
 #ifdef GX_GL33
   _target = target;
 #endif
@@ -209,7 +209,7 @@ void GLBuffer::bindBase(GLenum target, GLuint index)
 void GLBuffer::bindRange(GLenum target, GLuint index,
 			 GLintptr offset, GLsizeiptr size)
 {
-  GLCALL(glBindBufferRange, target, index, _buffer, offset, size);
+  GX_GLCALL(glBindBufferRange, target, index, _buffer, offset, size);
 #ifdef GX_GL33
   _target = target;
 #endif
@@ -217,7 +217,7 @@ void GLBuffer::bindRange(GLenum target, GLuint index,
 
 void GLBuffer::unbind(GLenum target)
 {
-  GLCALL(glBindBuffer, target, 0);
+  GX_GLCALL(glBindBuffer, target, 0);
 #ifdef GX_GL33
   GLLastBufferBind = 0;
   if (target == GL_ARRAY_BUFFER) {
@@ -231,9 +231,9 @@ void GLBuffer::setData(GLsizei size, const void* data, GLenum usage)
   _size = size;
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glBufferData, _target, size, data, usage);
+  GX_GLCALL(glBufferData, _target, size, data, usage);
 #else
-  GLCALL(glNamedBufferData, _buffer, size, data, usage);
+  GX_GLCALL(glNamedBufferData, _buffer, size, data, usage);
 #endif
 }
 
@@ -241,9 +241,9 @@ void GLBuffer::setSubData(GLintptr offset, GLsizei size, const void* data)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glBufferSubData, _target, offset, size, data);
+  GX_GLCALL(glBufferSubData, _target, offset, size, data);
 #else
-  GLCALL(glNamedBufferSubData, _buffer, offset, size, data);
+  GX_GLCALL(glNamedBufferSubData, _buffer, offset, size, data);
 #endif
 }
 
@@ -302,9 +302,9 @@ void GLBuffer::flushMappedRange(GLintptr offset, GLsizeiptr length)
 {
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glFlushMappedBufferRange, _target, offset, length);
+  GX_GLCALL(glFlushMappedBufferRange, _target, offset, length);
 #else
-  GLCALL(glFlushMappedNamedBufferRange, _buffer, offset, length);
+  GX_GLCALL(glFlushMappedNamedBufferRange, _buffer, offset, length);
 #endif
 }
 
@@ -313,9 +313,9 @@ GLint GLBuffer::getParameteri(GLenum pname)
   GLint result;
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glGetBufferParameteriv, _target, pname, &result);
+  GX_GLCALL(glGetBufferParameteriv, _target, pname, &result);
 #else
-  GLCALL(glGetNamedBufferParameteriv, _buffer, pname, &result);
+  GX_GLCALL(glGetNamedBufferParameteriv, _buffer, pname, &result);
 #endif
   return result;
 }
@@ -325,9 +325,9 @@ GLint64 GLBuffer::getParameteri64(GLenum pname)
   GLint64 result;
 #ifdef GX_GL33
   bindCheck();
-  GLCALL(glGetBufferParameteri64v, _target, pname, &result);
+  GX_GLCALL(glGetBufferParameteri64v, _target, pname, &result);
 #else
-  GLCALL(glGetNamedBufferParameteri64v, _buffer, pname, &result);
+  GX_GLCALL(glGetNamedBufferParameteri64v, _buffer, pname, &result);
 #endif
   return result;
 }
@@ -339,7 +339,7 @@ void GLBuffer::cleanup() noexcept
     if (GLLastBufferBind == _buffer) { GLLastBufferBind = 0; }
     if (GLLastArrayBufferBind == _buffer) { GLLastArrayBufferBind = 0; }
 #endif
-    GLCALL(glDeleteBuffers, 1, &_buffer);
+    GX_GLCALL(glDeleteBuffers, 1, &_buffer);
   }
 }
 
