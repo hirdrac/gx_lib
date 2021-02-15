@@ -7,7 +7,7 @@
 #include "Logger.hh"
 
 
-inline namespace GLNAMESPACE {
+inline namespace GX_GLNAMESPACE {
 
 // **** Globals ****
 bool GLInitialized = false;
@@ -141,4 +141,4 @@ int GLCheckErrors(std::string_view msg, const char* file, int line)
   return count;
 }
 
-} // end GLNAMESPACE
+} // end GX_GLNAMESPACE

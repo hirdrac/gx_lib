@@ -11,14 +11,14 @@
 #include <string_view>
 
 #ifdef GX_GL33
-#define GLNAMESPACE gx_gl33
+#define GX_GLNAMESPACE gx_gl33
 constexpr int GL_VERSION_MAJOR = 3;
 constexpr int GL_VERSION_MINOR = 3;
 constexpr const char* GLSL_SOURCE_HEADER =
   "#version 330 core\n"
   "#extension GL_ARB_shading_language_packing : enable\n";
 #else
-#define GLNAMESPACE gx_gl45
+#define GX_GLNAMESPACE gx_gl45
 constexpr int GL_VERSION_MAJOR = 4;
 constexpr int GL_VERSION_MINOR = 5;
 constexpr const char* GLSL_SOURCE_HEADER =
@@ -26,7 +26,7 @@ constexpr const char* GLSL_SOURCE_HEADER =
 #endif
 
 
-inline namespace GLNAMESPACE {
+inline namespace GX_GLNAMESPACE {
 
 // **** Globals ****
 extern bool GLInitialized;
@@ -176,4 +176,4 @@ template<> struct GLType<GLuint> {
 template <class T>
 constexpr GLenum GLType_v = GLType<T>::value;
 
-} // end GLNAMESPACE
+} // end GX_GLNAMESPACE

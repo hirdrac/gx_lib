@@ -1,6 +1,6 @@
 //
 // gx/GLShader.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // wrapper for OpenGL shader object
 //
@@ -12,7 +12,7 @@
 #include <utility>
 
 
-inline namespace GLNAMESPACE {
+inline namespace GX_GLNAMESPACE {
 
 class GLShader
 {
@@ -98,4 +98,4 @@ void GLShader::cleanup() noexcept
   }
 }
 
-} // end GLNAMESPACE
+} // end GX_GLNAMESPACE

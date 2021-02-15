@@ -7,7 +7,7 @@
 #include "OpenGL.hh"
 
 
-inline namespace GLNAMESPACE {
+inline namespace GX_GLNAMESPACE {
 
 class GLUniform1i
 {
@@ -159,4 +159,4 @@ class GLUniformMat4f
   GLint _loc = -1;
 };
 
-} // end GLNAMESPACE
+} // end GX_GLNAMESPACE

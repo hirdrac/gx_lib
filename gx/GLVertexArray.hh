@@ -11,7 +11,7 @@
 #include <utility>
 
 
-inline namespace GLNAMESPACE {
+inline namespace GX_GLNAMESPACE {
 
 class GLVertexArray
 {
@@ -202,4 +202,4 @@ void GLVertexArray::cleanup() noexcept
   }
 }
 
-} // end GLNAMESPACE
+} // end GX_GLNAMESPACE

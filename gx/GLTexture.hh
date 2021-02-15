@@ -14,7 +14,7 @@
 #endif
 
 
-inline namespace GLNAMESPACE {
+inline namespace GX_GLNAMESPACE {
 
 // **** Texture constants based on target ****
 template <GLenum TARGET> struct GLTextureVals {
@@ -579,4 +579,4 @@ void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLuint* params)
 #endif
 }
 
-} // end GLNAMESPACE
+} // end GX_GLNAMESPACE

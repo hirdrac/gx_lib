@@ -10,7 +10,7 @@
 #include <utility>
 
 
-inline namespace GLNAMESPACE {
+inline namespace GX_GLNAMESPACE {
 
 class GLBuffer
 {
@@ -343,4 +343,4 @@ void GLBuffer::cleanup() noexcept
   }
 }
 
-} // end GLNAMESPACE
+} // end GX_GLNAMESPACE

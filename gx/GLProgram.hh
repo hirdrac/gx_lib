@@ -1,6 +1,6 @@
 //
 // gx/GLProgram.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // wrapper for OpenGL program object
 //
@@ -13,7 +13,7 @@
 //#include <memory>
 
 
-inline namespace GLNAMESPACE {
+inline namespace GX_GLNAMESPACE {
 
 class GLProgram
 {
@@ -146,4 +146,4 @@ void GLProgram::cleanup() noexcept
   }
 }
 
-} // end GLNAMESPACE
+} // end GX_GLNAMESPACE
