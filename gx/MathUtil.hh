@@ -1,6 +1,6 @@
 //
 // gx/MathUtil.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // fun and useful numeric constants and
 // various numeric functions needing a home
@@ -46,69 +46,69 @@ namespace gx {
 
   // **** Functions ****
   template<typename fltType>
-  constexpr fltType DegToRad(const fltType& deg)
+  [[nodiscard]] constexpr fltType DegToRad(const fltType& deg)
   {
     return deg * DEG_TO_RAD<fltType>;
   }
 
   template<typename fltType>
-  constexpr fltType RadToDeg(const fltType& rad)
+  [[nodiscard]] constexpr fltType RadToDeg(const fltType& rad)
   {
     return rad * RAD_TO_DEG<fltType>;
   }
 
   template<typename fltType>
-  constexpr bool IsZero(const fltType& x)
+  [[nodiscard]] constexpr bool IsZero(const fltType& x)
   {
     return (x > -VERY_SMALL<fltType>) && (x < VERY_SMALL<fltType>);
   }
 
   template<typename fltType>
-  constexpr bool IsOne(const fltType& x)
+  [[nodiscard]] constexpr bool IsOne(const fltType& x)
   {
     return (x > (static_cast<fltType>(1) - VERY_SMALL<fltType>))
       && (x < (static_cast<fltType>(1) + VERY_SMALL<fltType>));
   }
 
   template<typename fltType>
-  constexpr bool IsPositive(const fltType& x)
+  [[nodiscard]] constexpr bool IsPositive(const fltType& x)
   {
     return (x >= VERY_SMALL<fltType>);
   }
 
   template<typename fltType>
-  constexpr bool IsNegative(const fltType& x)
+  [[nodiscard]] constexpr bool IsNegative(const fltType& x)
   {
     return (x <= -VERY_SMALL<fltType>);
   }
 
   template<typename fltType>
-  constexpr bool IsEqual(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool IsEqual(const fltType& x, const fltType& y)
   {
     return IsZero(x-y);
   }
 
   template<typename fltType>
-  constexpr bool IsLess(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool IsLess(const fltType& x, const fltType& y)
   {
     return IsNegative(x-y);
   }
 
   template<typename fltType>
-  constexpr bool IsGreater(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool IsGreater(const fltType& x, const fltType& y)
   {
     return IsPositive(x-y);
   }
 
   template<typename intType>
-  constexpr bool IsPowerOf2(const intType& x)
+  [[nodiscard]] constexpr bool IsPowerOf2(const intType& x)
   {
     static_assert(std::is_integral_v<intType>);
     return (x & (x - 1)) == 0;
   }
 
   template<typename fltType>
-  constexpr fltType Lerp(const fltType& a, const fltType& b, const fltType& s)
+  [[nodiscard]] constexpr fltType Lerp(const fltType& a, const fltType& b, const fltType& s)
   {
     // use std::lerp() for C++20
     if (s <= 0) {
@@ -121,10 +121,10 @@ namespace gx {
   }
 
   template<typename numType>
-  constexpr numType Sqr(const numType& x) { return x * x; }
+  [[nodiscard]] constexpr numType Sqr(const numType& x) { return x * x; }
 
   template<typename numType>
-  constexpr numType iPow(numType x, int y)
+  [[nodiscard]] constexpr numType iPow(numType x, int y)
   {
     if (y < 0) { return 0; }
 
@@ -139,13 +139,13 @@ namespace gx {
   }
 
   template<typename numType>
-  constexpr int Sgn(const numType& x)
+  [[nodiscard]] constexpr int Sgn(const numType& x)
   {
     return (x < 0) ? -1 : ((x > 0) ? 1 : 0);
   }
 
   template<typename numType>
-  constexpr numType Abs(const numType& x)
+  [[nodiscard]] constexpr numType Abs(const numType& x)
   {
     // constexpr version of std::abs
     // NOTE: Abs(-MAX_INT) is undefined
