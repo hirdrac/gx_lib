@@ -1,6 +1,6 @@
 //
 // gx/Font.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #pragma once
@@ -46,26 +46,28 @@ class gx::Font
 
   bool makeAtlas(Window& win);
 
-  int size() const { return _size; }
+  [[nodiscard]] int size() const { return _size; }
     // font pixel size
 
-  float ymin() const { return _ymin; }
-  float ymax() const { return _ymax; }
+  [[nodiscard]] float ymin() const { return _ymin; }
+  [[nodiscard]] float ymax() const { return _ymax; }
     // min/max y values relative to origin for baseline calculation
     // (only ascii alpha-numeric values used for calc)
 
-  const Texture& tex() const { return _tex; }
+  [[nodiscard]] const Texture& tex() const { return _tex; }
     // texture atlas created by engine
 
-  const Glyph* findGlyph(int code) const {
+  [[nodiscard]] const Glyph* findGlyph(int code) const {
     auto i = _glyphs.find(code);
     return (i != _glyphs.end()) ? &(i->second) : nullptr;
   }
 
-  float calcWidth(std::string_view text) const;
+  [[nodiscard]] const auto& glyphs() const { return _glyphs; }
+
+  [[nodiscard]] float calcWidth(std::string_view text) const;
     // single text line width calculation
 
-  int calcLines(std::string_view text) const;
+  [[nodiscard]] int calcLines(std::string_view text) const;
 
   void setSize(int s) { _size = s; }
   void setYmin(float y) { _ymin = y; }

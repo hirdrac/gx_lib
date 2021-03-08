@@ -13,6 +13,7 @@
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
+#include "gx/Unicode.hh"
 
 
 int main(int argc, char** argv)
@@ -47,6 +48,7 @@ int main(int argc, char** argv)
   ren.setBGColor(.3,.1,.1);
   gx::DrawList dl;
   gx::DrawContext dc(dl);
+  int lastCode = 0;
 
   // main loop
   do {
@@ -62,6 +64,19 @@ int main(int argc, char** argv)
 
     ren.renderFrame();
     win.pollEvents();
+    if (win.mouseIn() && (win.events() & gx::EVENT_MOUSE_MOVE)) {
+      const float tx = win.mouseX() / double(t.width());
+      const float ty = win.mouseY() / double(t.height());
+      for (auto& [c,g] : fnt.glyphs()) {
+        if (tx >= g.t0.x && tx <= g.t1.x && ty >= g.t0.y && ty <= g.t1.y) {
+          if (lastCode != c) {
+            gx::println("code:",c," '",gx::toUTF8(c),"'");
+            lastCode = c;
+          }
+          break;
+        }
+      }
+    }
   } while (!win.closed() && !win.keyPressCount(gx::KEY_ESCAPE, false));
   return 0;
 }
