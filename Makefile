@@ -19,6 +19,7 @@ BIN3.LIBS = LIB_gx
 
 STANDARD = c++17
 OPTIONS = lto modern_c++
+# NOTE: lto doesn't work for clang on MINGW64/MSys2
 DEFINE = GX_DEBUG_GL
 WARN_EXTRA = extra-semi fatal-errors conversion
 #FLAGS_RELEASE = -DNDEBUG
