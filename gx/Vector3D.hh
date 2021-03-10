@@ -10,14 +10,6 @@
 #include <ostream>
 
 
-#ifndef __has_builtin
-#define __has_builtin(x) 0
-#endif
-#if !__has_builtin(__builtin_sqrt)
-#error "__builtin_sqrt() required"
-#endif
-
-
 namespace gx {
   // **** Template Types ****
   template<typename T> class Vector2;
@@ -83,7 +75,7 @@ class gx::Vector2
   [[nodiscard]] constexpr const T* data() const noexcept { return _val; }
 
   [[nodiscard]] constexpr T lengthSqr() const { return Sqr(x)+Sqr(y); }
-  [[nodiscard]] constexpr T length() const { return __builtin_sqrt(lengthSqr()); }
+  [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
   [[nodiscard]] constexpr bool isUnit() const { return IsOne(lengthSqr()); }
 
   constexpr void set(T vx, T vy) { x = vx; y = vy; }
@@ -151,7 +143,7 @@ class gx::Vector3
   [[nodiscard]] constexpr const T* data() const noexcept { return _val; }
 
   [[nodiscard]] constexpr T lengthSqr() const { return Sqr(x)+Sqr(y)+Sqr(z); }
-  [[nodiscard]] constexpr T length() const { return __builtin_sqrt(lengthSqr()); }
+  [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
   [[nodiscard]] constexpr bool isUnit() const { return IsOne(lengthSqr()); }
 
   constexpr void set(T vx, T vy, T vz) { x = vx; y = vy; z = vz; }
@@ -363,12 +355,12 @@ namespace gx {
     return Sqr(a.x - b.x) + Sqr(a.y - b.y) + Sqr(a.z - b.z); }
 
   template<typename T>
-  [[nodiscard]] constexpr T PointDistance(const Vector2<T>& a, const Vector2<T>& b) {
-    return __builtin_sqrt(PointDistanceSqr(a, b)); }
+  [[nodiscard]] T PointDistance(const Vector2<T>& a, const Vector2<T>& b) {
+    return std::sqrt(PointDistanceSqr(a, b)); }
 
   template<typename T>
-  [[nodiscard]] constexpr T PointDistance(const Vector3<T>& a, const Vector3<T>& b) {
-    return __builtin_sqrt(PointDistanceSqr(a, b)); }
+  [[nodiscard]] T PointDistance(const Vector3<T>& a, const Vector3<T>& b) {
+    return std::sqrt(PointDistanceSqr(a, b)); }
 
   template<typename T>
   [[nodiscard]] constexpr T DotProduct(const Vector2<T>& a, const Vector2<T>& b) {
