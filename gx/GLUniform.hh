@@ -9,6 +9,73 @@
 
 inline namespace GX_GLNAMESPACE {
 
+class GLUniform1f
+{
+ public:
+  GLUniform1f() = default;
+  GLUniform1f(GLint loc) : _loc(loc) { }
+
+  explicit operator bool() const { return _loc != -1; }
+
+  void set(GLfloat v) { GX_GLCALL(glUniform1f, _loc, v); }
+
+ private:
+  GLint _loc = -1;
+};
+
+class GLUniform2f
+{
+ public:
+  GLUniform2f() = default;
+  GLUniform2f(GLint loc) : _loc(loc) { }
+
+  explicit operator bool() const { return _loc != -1; }
+
+  void set(GLfloat v0, GLfloat v1) { GX_GLCALL(glUniform2f, _loc, v0, v1); }
+
+  template <class T>
+  void set(const T& v) { GX_GLCALL(glUniform2fv, _loc, 1, std::data(v)); }
+
+ private:
+  GLint _loc = -1;
+};
+
+class GLUniform3f
+{
+ public:
+  GLUniform3f() = default;
+  GLUniform3f(GLint loc) : _loc(loc) { }
+
+  explicit operator bool() const { return _loc != -1; }
+
+  void set(GLfloat v0, GLfloat v1, GLfloat v2) {
+    GX_GLCALL(glUniform3f, _loc, v0, v1, v2); }
+
+  template <class T>
+  void set(const T& v) { GX_GLCALL(glUniform3fv, _loc, 1, std::data(v)); }
+
+ private:
+  GLint _loc = -1;
+};
+
+class GLUniform4f
+{
+ public:
+  GLUniform4f() = default;
+  GLUniform4f(GLint loc) : _loc(loc) { }
+
+  explicit operator bool() const { return _loc != -1; }
+
+  void set(GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
+    GX_GLCALL(glUniform4f, _loc, v0, v1, v2, v3); }
+
+  template <class T>
+  void set(const T& v) { GX_GLCALL(glUniform4fv, _loc, 1, std::data(v)); }
+
+ private:
+  GLint _loc = -1;
+};
+
 class GLUniform1i
 {
  public:
@@ -76,68 +143,68 @@ class GLUniform4i
   GLint _loc = -1;
 };
 
-class GLUniform1f
+class GLUniform1ui
 {
  public:
-  GLUniform1f() = default;
-  GLUniform1f(GLint loc) : _loc(loc) { }
+  GLUniform1ui() = default;
+  GLUniform1ui(GLint loc) : _loc(loc) { }
 
   explicit operator bool() const { return _loc != -1; }
 
-  void set(GLfloat v) { GX_GLCALL(glUniform1f, _loc, v); }
+  void set(GLuint v) { GX_GLCALL(glUniform1ui, _loc, v); }
 
  private:
   GLint _loc = -1;
 };
 
-class GLUniform2f
+class GLUniform2ui
 {
  public:
-  GLUniform2f() = default;
-  GLUniform2f(GLint loc) : _loc(loc) { }
+  GLUniform2ui() = default;
+  GLUniform2ui(GLint loc) : _loc(loc) { }
 
   explicit operator bool() const { return _loc != -1; }
 
-  void set(GLfloat v0, GLfloat v1) { GX_GLCALL(glUniform2f, _loc, v0, v1); }
+  void set(GLuint v0, GLuint v1) { GX_GLCALL(glUniform2ui, _loc, v0, v1); }
 
   template <class T>
-  void set(const T& v) { GX_GLCALL(glUniform2fv, _loc, 1, std::data(v)); }
+  void set(const T& v) { GX_GLCALL(glUniform2uiv, _loc, 1, std::data(v)); }
 
  private:
   GLint _loc = -1;
 };
 
-class GLUniform3f
+class GLUniform3ui
 {
  public:
-  GLUniform3f() = default;
-  GLUniform3f(GLint loc) : _loc(loc) { }
+  GLUniform3ui() = default;
+  GLUniform3ui(GLint loc) : _loc(loc) { }
 
   explicit operator bool() const { return _loc != -1; }
 
-  void set(GLfloat v0, GLfloat v1, GLfloat v2) {
-    GX_GLCALL(glUniform3f, _loc, v0, v1, v2); }
+  void set(GLuint v0, GLuint v1, GLuint v2) {
+    GX_GLCALL(glUniform3ui, _loc, v0, v1, v2); }
 
   template <class T>
-  void set(const T& v) { GX_GLCALL(glUniform3fv, _loc, 1, std::data(v)); }
+  void set(const T& v) { GX_GLCALL(glUniform3uiv, _loc, 1, std::data(v)); }
 
  private:
   GLint _loc = -1;
 };
 
-class GLUniform4f
+class GLUniform4ui
 {
  public:
-  GLUniform4f() = default;
-  GLUniform4f(GLint loc) : _loc(loc) { }
+  GLUniform4ui() = default;
+  GLUniform4ui(GLint loc) : _loc(loc) { }
 
   explicit operator bool() const { return _loc != -1; }
 
-  void set(GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
-    GX_GLCALL(glUniform4f, _loc, v0, v1, v2, v3); }
+  void set(GLuint v0, GLuint v1, GLuint v2, GLuint v3) {
+    GX_GLCALL(glUniform4ui, _loc, v0, v1, v2, v3); }
 
   template <class T>
-  void set(const T& v) { GX_GLCALL(glUniform4fv, _loc, 1, std::data(v)); }
+  void set(const T& v) { GX_GLCALL(glUniform4uiv, _loc, 1, std::data(v)); }
 
  private:
   GLint _loc = -1;
