@@ -8,8 +8,8 @@
 #pragma once
 #include "OpenGL.hh"
 #include <string>
-#include <memory>
 #include <utility>
+//#include <memory>
 
 
 inline namespace GX_GLNAMESPACE {
@@ -85,10 +85,12 @@ std::string GLShader::infoLog()
   if (logLen <= 0) { return std::string(); }
 
   GLsizei len = 0;
-  auto tmp = std::make_unique<char[]>(logLen);
-  GX_GLCALL(glGetShaderInfoLog, _shader, logLen, &len, tmp.get());
+  //auto tmp = std::make_unique<char[]>(logLen);
+  //char* tmp = (char*)__builtin_alloca(logLen);
+  char tmp[logLen];
+  GX_GLCALL(glGetShaderInfoLog, _shader, logLen, &len, tmp);
 
-  return std::string(tmp.get(), len);
+  return std::string(tmp, std::size_t(len));
 }
 
 void GLShader::cleanup() noexcept

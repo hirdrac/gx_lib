@@ -271,7 +271,7 @@ void gx::OpenGLRenderer::clearFrame(int width, int height)
   _vertices.clear();
 
   Mat4 trans;
-  calcScreenOrthoProjection(width, height, trans);
+  calcScreenOrthoProjection(float(width), float(height), trans);
   _transforms.clear();
   _transforms.push_back({Mat4Identity, trans});
 
@@ -299,7 +299,7 @@ void gx::OpenGLRenderer::draw(
   _changed = true;
   const DrawEntry* end = data + dataSize;
 
-  int size = 0; // vertices needed
+  unsigned int size = 0; // vertices needed
   for (const DrawEntry* itr = data; itr != end; ) {
     DrawCmd cmd = itr->cmd;
     switch (cmd) {
@@ -613,7 +613,7 @@ void gx::OpenGLRenderer::renderFrame()
 
   // clear texture unit assignments
   for (auto& t : _textures) { t.second.unit = -1; }
-  GLuint nextTexUnit = 0;
+  int nextTexUnit = 0;
 
   // draw
   _vao.bind();
@@ -624,7 +624,7 @@ void gx::OpenGLRenderer::renderFrame()
     if (dc.capabilities != _currentGLCap) {
       setGLCapabilities(dc.capabilities); }
 
-    GLuint texUnit = 0;
+    int texUnit = 0;
     int shader = 0; // solid color shader
     if (dc.texID > 0) {
       // shader uses texture - determine texture unit & bind if neccessary
@@ -634,7 +634,7 @@ void gx::OpenGLRenderer::renderFrame()
 	auto& [id,entry] = *itr;
 	if (entry.unit < 0) {
 	  entry.unit = nextTexUnit++;
-	  entry.tex.bindUnit(entry.unit);
+	  entry.tex.bindUnit(GLuint(entry.unit));
 	}
 	texUnit = entry.unit;
 	shader = entry.shader; // mono or color texture shader (1 or 2)
@@ -643,7 +643,7 @@ void gx::OpenGLRenderer::renderFrame()
 
     if (shader != lastShader) { _sp[shader].use(); }
     if (dc.transformNo >= 0) {
-      const TransformEntry& t = _transforms[dc.transformNo];
+      const TransformEntry& t = _transforms[std::size_t(dc.transformNo)];
       _sp_trans[shader].set(t.view * t.projection);
     }
     _sp_modColor[shader].set(dc.modColor);

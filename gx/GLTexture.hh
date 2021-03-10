@@ -473,7 +473,7 @@ template <GLenum TARGET>
 float GLTextureT<TARGET>::coordX(int x) const
 {
   if constexpr (TARGET == GL_TEXTURE_RECTANGLE) {
-    return x;
+    return float(x);
   } else {
     return float(x) / float(_width);
   }
@@ -483,7 +483,7 @@ template <GLenum TARGET>
 float GLTextureT<TARGET>::coordY(int y) const
 {
   if constexpr (TARGET == GL_TEXTURE_RECTANGLE) {
-    return y;
+    return float(y);
   } else {
     return float(y) / float(_height);
   }

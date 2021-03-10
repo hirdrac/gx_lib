@@ -1,6 +1,6 @@
 //
 // gx/Unicode.cc
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #include "Unicode.hh"
@@ -17,7 +17,7 @@
 
 
 // functions
-std::string gx::toUTF8(int num)
+std::string gx::toUTF8(int32_t num)
 {
   char str[8];
   char* ptr = str;
@@ -75,7 +75,7 @@ bool gx::UTF8Iterator::next()
   return true;
 }
 
-int gx::UTF8Iterator::get() const
+int32_t gx::UTF8Iterator::get() const
 {
   if (done()) { return -1; }
 

@@ -12,6 +12,7 @@
 #include "Logger.hh"
 #include <string>
 #include <cstdlib>
+#include <cassert>
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
@@ -67,8 +68,9 @@ namespace {
 
       float advX = float(gs->advance.x) / 64.0f;
       float advY = hasVert ? (float(gs->advance.y) / 64.0f) : 0;
-      font.addGlyph(ch, gs->bitmap.width, gs->bitmap.rows, gs->bitmap_left,
-                    gs->bitmap_top, advX, advY, gs->bitmap.buffer, true);
+      font.addGlyph(int(ch), int(gs->bitmap.width), int(gs->bitmap.rows),
+                    float(gs->bitmap_left), float(gs->bitmap_top),
+                    advX, advY, gs->bitmap.buffer, true);
     }
     return true;
   }
@@ -85,7 +87,7 @@ bool gx::Font::init(const char* fileName, int fontSize)
     return false;
   }
 
-  if (FT_Set_Pixel_Sizes(face, 0, fontSize)) {
+  if (FT_Set_Pixel_Sizes(face, 0, FT_UInt(fontSize))) {
     GX_LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
     FT_Done_Face(face);
     return false;
@@ -104,12 +106,13 @@ bool gx::Font::initFromMemory(
   if (!initFreeType()) { return false; }
 
   FT_Face face;
-  if (FT_New_Memory_Face(ftLib, (const FT_Byte*)mem, memSize, 0, &face)) {
+  if (FT_New_Memory_Face(
+        ftLib, (const FT_Byte*)mem, FT_Long(memSize), 0, &face)) {
     GX_LOG_ERROR("FT_New_Memory_Face(), failed");
     return false;
   }
 
-  if (FT_Set_Pixel_Sizes(face, 0, fontSize)) {
+  if (FT_Set_Pixel_Sizes(face, 0, FT_UInt(fontSize))) {
     GX_LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
     FT_Done_Face(face);
     return false;
@@ -156,7 +159,7 @@ bool gx::Font::makeAtlas(Window& win)
   int rows = 0;
   do {
     ++rows;
-    texW = maxW + ((totalW + _glyphs.size() + 1) / rows);
+    texW = maxW + ((totalW + int(_glyphs.size()) + 1) / rows);
     texH = ((maxH+1) * rows) + 1;
   } while ((texW > texH*2) || (texW > maxSize));
 
@@ -205,7 +208,7 @@ void gx::Font::addGlyph(
 {
   _changed = true;
   Glyph& g = newGlyph(code, width, height, left, top, advX, advY);
-  int size = g.width * g.height;
+  std::size_t size = g.width * g.height;
   if (copy && bitmap && size > 0) {
     g.bitmap_copy.reset(new uint8_t[size]);
     std::memcpy(g.bitmap_copy.get(), bitmap, size);
@@ -229,9 +232,12 @@ void gx::Font::addGlyph(
 gx::Glyph& gx::Font::newGlyph(
   int code, int width, int height, float left, float top, float advX, float advY)
 {
+  assert(width >= 0 && width < 0xffff);
+  assert(height >= 0 && height < 0xffff);
+
   Glyph& g = _glyphs[code];
-  g.width = width;
-  g.height = height;
+  g.width = uint16_t(width);
+  g.height = uint16_t(height);
   g.left = left;
   g.top = top;
   g.advX = advX;
@@ -239,9 +245,9 @@ gx::Glyph& gx::Font::newGlyph(
 
   if ((code > 47 && code < 94) || (code > 96 && code < 127)) {
     // ymin/ymax adjust for a limited range of characters
-    int yt = top;
+    float yt = top;
     if (yt > _ymax) { _ymax = yt; }
-    int yb = top - height;
+    float yb = top - float(height);
     if (yb < _ymin) { _ymin = yb; }
   }
 

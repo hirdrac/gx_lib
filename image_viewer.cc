@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
   bool refresh = true;
 
   for (;;) {
-    Entry& e = entries[entryNo];
+    Entry& e = entries[std::size_t(entryNo)];
     if (win.resized() || refresh) {
       win.setTitle(gx::concat(e.file, " - ", e.img.width(), 'x', e.img.height(),
                               'x', e.img.channels()));
@@ -114,7 +114,7 @@ int main(int argc, char* argv[])
         // display previous image(s)
         int prev_x = ix;
         for (int x = entryNo - 1; x >= 0; --x) {
-          Entry& e0 = entries[x];
+          Entry& e0 = entries[std::size_t(x)];
           auto [iw0,ih0] = calcSize(win, e0.img);
           int ix0 = prev_x - (iw0 + border); prev_x = ix0;
           if ((ix0+iw0) < 0) { break; }
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
         // display next image(s)
         prev_x = ix + iw + border;
         for (int x = entryNo + 1; x <= lastNo; ++x) {
-          Entry& e1 = entries[x];
+          Entry& e1 = entries[std::size_t(x)];
           auto [iw1,ih1] = calcSize(win, e1.img);
           int ix1 = prev_x; prev_x += iw1 + border;
           if (ix1 > win.width()) { break; }

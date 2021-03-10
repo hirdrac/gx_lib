@@ -1,6 +1,6 @@
 //
 // gx/Image.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // TODO - save to file
 // TODO - load from static data
@@ -34,7 +34,8 @@ class gx::Image
   [[nodiscard]] int width() const { return _width; }
   [[nodiscard]] int height() const { return _height; }
   [[nodiscard]] int channels() const { return _channels; }
-  [[nodiscard]] std::size_t size() const { return _width * _height * _channels; }
+  [[nodiscard]] std::size_t size() const {
+    return std::size_t(_width * _height * _channels); }
   [[nodiscard]] const uint8_t* data() const { return _data; }
 
   // image editing methods

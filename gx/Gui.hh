@@ -81,21 +81,21 @@ struct gx::GuiElem
 struct gx::GuiTheme
 {
   const Font* baseFont = nullptr;
-  uint32_t colorBackground = packRGBA8(.2,.2,.2,1);
-  uint32_t colorText = packRGBA8(1,1,1,1);
-  uint32_t colorEdge = 0; //packRGBA8(1,1,1,1);
-  uint32_t colorButtonNormal = packRGBA8(.4,.4,.4,1);
-  uint32_t colorButtonHover = packRGBA8(.8,.4,.4,1);
-  uint32_t colorButtonPressed = packRGBA8(.8,.8,.8,1);
-  uint32_t colorButtonHeldOnly = packRGBA8(.6,.6,.6,1);
+  uint32_t colorBackground = packRGBA8(.2f,.2f,.2f,1.0f);
+  uint32_t colorText = packRGBA8(1.0f,1.0f,1.0f,1.0f);
+  uint32_t colorEdge = 0; //packRGBA8(1.0f,1.0f,1.0f,1.0f);
+  uint32_t colorButtonNormal = packRGBA8(.4f,.4f,.4f,1.0f);
+  uint32_t colorButtonHover = packRGBA8(.8f,.4f,.4f,1.0f);
+  uint32_t colorButtonPressed = packRGBA8(.8f,.8f,.8f,1.0f);
+  uint32_t colorButtonHeldOnly = packRGBA8(.6f,.6f,.6f,1.0f);
   uint32_t colorMenuNormal = 0;
-  uint32_t colorMenuHover = packRGBA8(.8,.4,.4,1);
-  uint32_t colorMenuSelect = packRGBA8(.6,.6,.6,1);
-  uint32_t colorMenuItem = packRGBA8(0,0,0,1);
-  uint32_t colorMenuItemSelect = packRGBA8(.8,.8,.8,1);
-  uint32_t colorEntry = packRGBA8(0,0,.2,1);
-  uint32_t colorEntryFocus = packRGBA8(.1,.1,.3,1);
-  uint32_t colorCursor = packRGBA8(1,1,.6,1);
+  uint32_t colorMenuHover = packRGBA8(.8f,.4f,.4f,1.0f);
+  uint32_t colorMenuSelect = packRGBA8(.6f,.6f,.6f,1.0f);
+  uint32_t colorMenuItem = packRGBA8(0.0f,0.0f,0.0f,1.0f);
+  uint32_t colorMenuItemSelect = packRGBA8(.8f,.8f,.8f,1.0f);
+  uint32_t colorEntry = packRGBA8(0.0f,0.0f,.2f,1.0f);
+  uint32_t colorEntryFocus = packRGBA8(.1f,.1f,.3f,1.0f);
+  uint32_t colorCursor = packRGBA8(1.0f,1.0f,.6f,1.0f);
   uint32_t cursorBlinkTime = 400000; // 1 sec
   uint32_t cursorWidth = 3;
   int16_t spacing = 2;

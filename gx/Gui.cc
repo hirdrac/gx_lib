@@ -15,13 +15,13 @@
 #include <cassert>
 
 namespace {
-  constexpr bool contains(const gx::GuiElem& e, float x, float y)
+  [[nodiscard]] constexpr bool contains(const gx::GuiElem& e, float x, float y)
   {
     return (x >= e._x) && (x < (e._x + e._w))
       && (y >= e._y) && (y < (e._y + e._h));
   }
 
-  constexpr float actualX(float x, float w, gx::AlignEnum a)
+  [[nodiscard]] constexpr float actualX(float x, float w, gx::AlignEnum a)
   {
     if (gx::HAlign(a) == gx::ALIGN_LEFT) {
       return x;
@@ -32,7 +32,7 @@ namespace {
     }
   }
 
-  constexpr float actualY(float y, float h, gx::AlignEnum a)
+  [[nodiscard]] constexpr float actualY(float y, float h, gx::AlignEnum a)
   {
     if (gx::VAlign(a) == gx::ALIGN_TOP) {
       return y;
@@ -303,26 +303,26 @@ void gx::Gui::calcSize(GuiElem& def)
       const Font& fnt = *_theme.baseFont;
       def._w = fnt.calcWidth(def.text);
       int lines = fnt.calcLines(def.text);
-      def._h = (fnt.size() - 1) * lines
-        + (_theme.spacing * std::max(lines - 1, 0));
+      def._h = float(
+        (fnt.size() - 1) * lines + (_theme.spacing * std::max(lines - 1, 0)));
       // FIXME - improve line height calc (based on font ymax/ymin?)
       break;
     }
     case GUI_HLINE:
-      def._w = 32 + _theme.border*2;
-      def._h = 1 + _theme.border*2;
+      def._w = float(32 + _theme.border*2);
+      def._h = float(1 + _theme.border*2);
       break;
     case GUI_VLINE:
-      def._w = 1 + _theme.border*2;
-      def._h = 32 + _theme.border*2;
+      def._w = float(1 + _theme.border*2);
+      def._h = float(32 + _theme.border*2);
       break;
     case GUI_BUTTON:
     case GUI_MENU_ITEM: {
       assert(def.elems.size() == 1);
       GuiElem& e = def.elems[0];
       calcSize(e);
-      def._w = e._w + (_theme.border * 2);
-      def._h = e._h + (_theme.border * 2);
+      def._w = float(e._w + (_theme.border * 2));
+      def._h = float(e._h + (_theme.border * 2));
       break;
     }
     case GUI_MENU: {
@@ -330,8 +330,8 @@ void gx::Gui::calcSize(GuiElem& def)
       // menu button
       GuiElem& e = def.elems[0];
       calcSize(e);
-      def._w = e._w + (_theme.border * 2);
-      def._h = e._h + (_theme.border * 2);
+      def._w = float(e._w + (_theme.border * 2));
+      def._h = float(e._h + (_theme.border * 2));
       // menu items
       calcSize(def.elems[1]);
       break;
@@ -340,7 +340,7 @@ void gx::Gui::calcSize(GuiElem& def)
       assert(_theme.baseFont != nullptr);
       const Font& fnt = *_theme.baseFont;
       def._w = def.entry.size * fnt.calcWidth("A");
-      def._h = fnt.size();
+      def._h = float(fnt.size());
       // FIXME - use better width value than capital A * size
       break;
     }
@@ -485,7 +485,7 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
       float tw = fnt.calcWidth(def.text);
       if (def.id == _focusID) {
         drawRec(dc, def, _theme.colorEntryFocus);
-        tw += 1 + _theme.cursorWidth;
+        tw += float(1 + _theme.cursorWidth);
       } else {
         drawRec(dc, def, _theme.colorEntry);
       }
@@ -506,8 +506,8 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
       if (def.id == _focusID && _cursorState) {
         // draw cursor
         dc.color(_theme.colorCursor);
-        dc.rectangle(tx + tw - _theme.cursorWidth, def._y+1,
-                     _theme.cursorWidth, fnt.size()-2);
+        dc.rectangle(tx + tw - float(_theme.cursorWidth), def._y+1,
+                     float(_theme.cursorWidth), float(fnt.size()-2));
       }
       break;
     }

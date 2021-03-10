@@ -29,7 +29,7 @@
 // Linux specific thread id
 // NOTE: 'gettid()' is available in glibc 2.30
 //   for earlier versions, this function is needed
-static inline pid_t get_threadid() { return syscall(SYS_gettid); }
+static inline pid_t get_threadid() { return pid_t(syscall(SYS_gettid)); }
 #else
 // thread ID logging disabled
 static inline pid_t get_threadid() { return 0; }
@@ -47,7 +47,7 @@ namespace
     int len = snprintf(str, sizeof(str), "%d-%02d-%02d %02d:%02d:%02d ",
 		       td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
 		       td->tm_hour, td->tm_min, td->tm_sec);
-    os.write(str, len);
+    os.write(str, std::streamsize(len));
   }
 
   std::string fileTime()
@@ -58,7 +58,7 @@ namespace
     int len = snprintf(str, sizeof(str), "-%d%02d%02d_%02d%02d%02d",
 		       td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
 		       td->tm_hour, td->tm_min, td->tm_sec);
-    return std::string(str, len);
+    return std::string(str, std::size_t(len));
   }
 
   constexpr std::string_view levelStr(gx::LogLevel l)
@@ -102,7 +102,8 @@ class gx::LoggerImpl
     _os->flush();
   }
 
-  void log(std::string_view s) { return log(s.data(), s.size()); }
+  void log(std::string_view s) {
+    return log(s.data(), std::streamsize(s.size())); }
 
   void rotate()
   {

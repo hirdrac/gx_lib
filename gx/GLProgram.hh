@@ -136,7 +136,7 @@ std::string GLProgram::infoLog() const
   char tmp[logLen];
   GX_GLCALL(glGetProgramInfoLog, _prog, logLen, &len, tmp);
 
-  return std::string(tmp, len);
+  return std::string(tmp, std::size_t(len));
 }
 
 void GLProgram::cleanup() noexcept

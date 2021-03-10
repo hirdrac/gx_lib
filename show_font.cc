@@ -45,7 +45,7 @@ int main(int argc, char** argv)
   win.setSize(t.width(), t.height(), false);
 
   gx::Renderer& ren = win.renderer();
-  ren.setBGColor(.3,.1,.1);
+  ren.setBGColor(.3f,.1f,.1f);
   gx::DrawList dl;
   gx::DrawContext dc(dl);
   int lastCode = 0;
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
       // 'resized' always true once at start
       dc.clear();
       dc.texture(t);
-      dc.rectangle(0, 0, win.width(), win.height(), {0,0}, {1,1});
+      dc.rectangle(0, 0, float(win.width()), float(win.height()), {0,0}, {1,1});
 
       ren.clearFrame(win.width(), win.height());
       ren.draw(dl);
@@ -65,8 +65,8 @@ int main(int argc, char** argv)
     ren.renderFrame();
     win.pollEvents();
     if (win.mouseIn() && (win.events() & gx::EVENT_MOUSE_MOVE)) {
-      const float tx = win.mouseX() / double(win.width());
-      const float ty = win.mouseY() / double(win.height());
+      const float tx = win.mouseX() / float(win.width());
+      const float ty = win.mouseY() / float(win.height());
       for (auto& [c,g] : fnt.glyphs()) {
         if (tx >= g.t0.x && tx <= g.t1.x && ty >= g.t0.y && ty <= g.t1.y) {
           if (lastCode != c) {

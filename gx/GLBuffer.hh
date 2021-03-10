@@ -86,11 +86,11 @@ class GLBuffer
 
   template <class T>
   void setData(const T& x, GLenum usage) {
-    setData(sizeof(x[0])*std::size(x), std::data(x), usage); }
+    setData(GLsizei(sizeof(x[0])*std::size(x)), std::data(x), usage); }
 
   template <class T>
   void setSubData(GLintptr offset, const T& x) {
-    setSubData(offset, sizeof(x[0])*std::size(x), std::data(x)); }
+    setSubData(offset, GLsizei(sizeof(x[0])*std::size(x)), std::data(x)); }
 
  private:
   GLuint _buffer = 0;

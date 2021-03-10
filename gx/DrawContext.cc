@@ -131,17 +131,17 @@ void gx::DrawContext::_text(
   int lines = 1;
   for (char ch : text) { if (ch == '\n') { ++lines; } }
 
-  float fs = float(f.size()) + spacing;
+  float fs = float(f.size() + spacing);
   float cursorY;
   switch (VAlign(align)) {
     case ALIGN_TOP:
       cursorY = y + f.ymax();
       break;
     case ALIGN_BOTTOM:
-      cursorY = y + f.ymin() - (fs*(lines-1));
+      cursorY = y + f.ymin() - (fs*float(lines-1));
       break;
     default: // ALIGN_VCENTER
-      cursorY = y + (f.ymax() - (fs*(lines-1))) / 2.0f;
+      cursorY = y + (f.ymax() - (fs*float(lines-1))) / 2.0f;
       break;
   }
 
@@ -170,8 +170,8 @@ void gx::DrawContext::_text(
 
         if (g->width > 0 && g->height > 0) {
           // convert x,y to int to make sure text is pixel aligned
-          float gx = int(cursorX + g->left);
-          float gy = int(cursorY - g->top);
+          float gx = float(int(cursorX + g->left));
+          float gy = float(int(cursorY - g->top));
 
           if (clipPtr) {
             rectangle(gx, gy, g->width, g->height, g->t0, g->t1, *clipPtr);

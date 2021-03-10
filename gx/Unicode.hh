@@ -1,6 +1,6 @@
 //
 // gx/Unicode.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // Unicode/UTF-8 utilities
 // (C++17 version)
@@ -9,12 +9,14 @@
 #pragma once
 #include <string>
 #include <string_view>
+#include <cstdint>
 
 
 namespace gx
 {
   // functions
-  std::string toUTF8(int code);
+  std::string toUTF8(int32_t code);
+  inline std::string toUTF8(uint32_t code) { return toUTF8(int32_t(code)); }
     // returns UTF-8 encoded value (1-4 characters) of a unicode character
 
   int lengthUTF8(std::string_view str);
@@ -51,7 +53,7 @@ class gx::UTF8Iterator
     // advance to next character, return true if there are still
     // characters to process
 
-  [[nodiscard]] int get() const;
+  [[nodiscard]] int32_t get() const;
     // return current unicode character
 
  private:

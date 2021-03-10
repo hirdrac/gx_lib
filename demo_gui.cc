@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
   }
 
   gx::Renderer& ren = win.renderer();
-  ren.setBGColor(.1,.3,.1);
+  ren.setBGColor(.1f,.3f,.1f);
   fnt.makeAtlas(win);
   bool running = true;
   bool needRedraw = true;
