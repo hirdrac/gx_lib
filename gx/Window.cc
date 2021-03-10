@@ -233,8 +233,8 @@ void gx::Window::updateMouseState(GLFWwindow* w)
 {
   double mx = 0, my = 0;
   glfwGetCursorPos(w, &mx, &my);
-  _mouseX = mx;
-  _mouseY = my;
+  _mouseX = float(mx);
+  _mouseY = float(my);
   _mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
 }
 
@@ -403,8 +403,8 @@ void gx::Window::cursorPosCB(GLFWwindow* win, double xpos, double ypos)
   //println("cursor pos event: ", xpos, ' ', ypos);
   auto& e = *static_cast<Window*>(ePtr);
   e._events |= EVENT_MOUSE_MOVE;
-  e._mouseX = xpos;
-  e._mouseY = ypos;
+  e._mouseX = float(xpos);
+  e._mouseY = float(ypos);
 }
 
 void gx::Window::mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
@@ -459,8 +459,8 @@ void gx::Window::scrollCB(GLFWwindow* win, double xoffset, double yoffset)
   //println("scroll event: ", xoffset, ' ', yoffset);
   auto& e = *static_cast<Window*>(ePtr);
   e._events |= EVENT_MOUSE_SCROLL;
-  e._scrollX += xoffset;
-  e._scrollY += yoffset;
+  e._scrollX += float(xoffset);
+  e._scrollY += float(yoffset);
 }
 
 void gx::Window::iconifyCB(GLFWwindow* win, int iconified)

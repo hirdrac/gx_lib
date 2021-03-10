@@ -174,10 +174,10 @@ class gx::Window
   [[nodiscard]] bool closed() const { return _events & EVENT_CLOSE; }
 
   // mouse state
-  [[nodiscard]] double mouseX() const { return _mouseX; }
-  [[nodiscard]] double mouseY() const { return _mouseY; }
-  [[nodiscard]] double scrollX() const { return _scrollX; }
-  [[nodiscard]] double scrollY() const { return _scrollY; }
+  [[nodiscard]] float mouseX() const { return _mouseX; }
+  [[nodiscard]] float mouseY() const { return _mouseY; }
+  [[nodiscard]] float scrollX() const { return _scrollX; }
+  [[nodiscard]] float scrollY() const { return _scrollY; }
   [[nodiscard]] int buttons() const { return _buttons; }
   [[nodiscard]] int mods() const { return _mods; }
   [[nodiscard]] bool mouseIn() const { return _mouseIn; }
