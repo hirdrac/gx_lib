@@ -11,16 +11,6 @@
 #include <ostream>
 
 
-#ifndef __has_builtin
-#define __has_builtin(x) 0
-#endif
-#if !__has_builtin(__builtin_cos)
-#error "__builtin_cos() required"
-#elif !__has_builtin(__builtin_sin)
-#error "__builtin_sin() required"
-#endif
-
-
 namespace gx {
   // **** Types ****
   enum MatrixOrderType { ROW_MAJOR, COLUMN_MAJOR };
@@ -57,9 +47,9 @@ class gx::Matrix4x4
 
   template<unsigned int N>
   constexpr self_type& operator=(const T (&vals)[N]) {
-    // NOTE: required by clang for 'Matrix m = {...}'
+    // NOTE: definition required by clang for 'Matrix m = {...}'
     static_assert(N == size());
-    for (int i = 0; i != size(); ++i) { _val[i] = vals[i]; }
+    for (unsigned int i = 0; i != size(); ++i) { _val[i] = vals[i]; }
     return *this;
   }
 
@@ -98,32 +88,26 @@ class gx::Matrix4x4
   void translateOptimized(const Vector3<T>& v) {
     translateOptimized(v.x, v.y, v.z); }
 
-  constexpr void setRotationX(T rad) {
-    setRotationX_sc(__builtin_sin(rad), __builtin_cos(rad)); }
+  void setRotationX(T rad) { setRotationX_sc(std::sin(rad), std::cos(rad)); }
   constexpr void setRotationX_sc(T sinVal, T cosVal);
-  constexpr void rotateX(T rad) {
-    rotateX_sc(__builtin_sin(rad), __builtin_cos(rad)); }
+  void rotateX(T rad) { rotateX_sc(std::sin(rad), std::cos(rad)); }
   constexpr void rotateX_sc(T sinVal, T cosVal);
 
-  constexpr void setRotationY(T rad) {
-    setRotationY_sc(__builtin_sin(rad), __builtin_cos(rad)); }
+  void setRotationY(T rad) { setRotationY_sc(std::sin(rad), std::cos(rad)); }
   constexpr void setRotationY_sc(T sinVal, T cosVal);
-  constexpr void rotateY(T rad) {
-    rotateY_sc(__builtin_sin(rad), __builtin_cos(rad)); }
+  void rotateY(T rad) { rotateY_sc(std::sin(rad), std::cos(rad)); }
   constexpr void rotateY_sc(T sinVal, T cosVal);
 
-  constexpr void setRotationZ(T rad) {
-    setRotationZ_sc(__builtin_sin(rad), __builtin_cos(rad)); }
+  void setRotationZ(T rad) { setRotationZ_sc(std::sin(rad), std::cos(rad)); }
   constexpr void setRotationZ_sc(T sinVal, T cosVal);
-  constexpr void rotateZ(T rad) {
-    rotateZ_sc(__builtin_sin(rad), __builtin_cos(rad)); }
+  void rotateZ(T rad) { rotateZ_sc(std::sin(rad), std::cos(rad)); }
   constexpr void rotateZ_sc(T sinVal, T cosVal);
 
-  constexpr void setRotation(const Vector3<T>& axis, T rad) {
-    setRotation_sc(axis, __builtin_sin(rad), __builtin_cos(rad)); }
+  void setRotation(const Vector3<T>& axis, T rad) {
+    setRotation_sc(axis, std::sin(rad), std::cos(rad)); }
   constexpr void setRotation_sc(const Vector3<T>& axis, T sinVal, T cosVal);
-  constexpr void rotate(const Vector3<T>& axis, T rad) {
-    rotate_sc(axis, __builtin_sin(rad), __builtin_cos(rad)); }
+  void rotate(const Vector3<T>& axis, T rad) {
+    rotate_sc(axis, std::sin(rad), std::cos(rad)); }
   constexpr void rotate_sc(const Vector3<T>& axis, T sinVal, T cosVal);
 
   constexpr void setScaling(T sx, T sy, T sz);
@@ -158,15 +142,15 @@ namespace gx {
     const Matrix4x4<T,ROW_MAJOR>& a, const Matrix4x4<T,ROW_MAJOR>& b)
   {
     Matrix4x4<T,ROW_MAJOR> m;
-    //for (int i = 0; i != 16; i += 4) {
+    //for (unsigned int i = 0; i != 16; i += 4) {
     //  m[i]   = (a[i]*b[0]) + (a[i+1]*b[4]) + (a[i+2]*b[8])  + (a[i+3]*b[12]);
     //  m[i+1] = (a[i]*b[1]) + (a[i+1]*b[5]) + (a[i+2]*b[9])  + (a[i+3]*b[13]);
     //  m[i+2] = (a[i]*b[2]) + (a[i+1]*b[6]) + (a[i+2]*b[10]) + (a[i+3]*b[14]);
     //  m[i+3] = (a[i]*b[3]) + (a[i+1]*b[7]) + (a[i+2]*b[11]) + (a[i+3]*b[15]);
     //}
 
-    for (int i = 0; i != 16; ++i) {
-      const int aa = i & ~3, bb = i & 3;
+    for (unsigned int i = 0; i != 16; ++i) {
+      const unsigned int aa = i & ~3u, bb = i & 3u;
       m[i] = (a[aa]*b[bb]) + (a[aa+1]*b[bb+4])
         + (a[aa+2]*b[bb+8]) + (a[aa+3]*b[bb+12]);
     }
@@ -179,15 +163,15 @@ namespace gx {
     const Matrix4x4<T,COLUMN_MAJOR>& a, const Matrix4x4<T,COLUMN_MAJOR>& b)
   {
     Matrix4x4<T,COLUMN_MAJOR> m;
-    //for (int i = 0; i != 16; i += 4) {
+    //for (unsigned int i = 0; i != 16; i += 4) {
     //  m[i]   = (a[0]*b[i]) + (a[4]*b[i+1]) + (a[8]*b[i+2])  + (a[12]*b[i+3]);
     //  m[i+1] = (a[1]*b[i]) + (a[5]*b[i+1]) + (a[9]*b[i+2])  + (a[13]*b[i+3]);
     //  m[i+2] = (a[2]*b[i]) + (a[6]*b[i+1]) + (a[10]*b[i+2]) + (a[14]*b[i+3]);
     //  m[i+3] = (a[3]*b[i]) + (a[7]*b[i+1]) + (a[11]*b[i+2]) + (a[15]*b[i+3]);
     //}
 
-    for (int i = 0; i != 16; ++i) {
-      const int aa = i & 3, bb = i & ~3;
+    for (unsigned int i = 0; i != 16; ++i) {
+      const unsigned int aa = i & 3u, bb = i & ~3u;
       m[i] = (a[aa]*b[bb]) + (a[aa+4]*b[bb+1])
         + (a[aa+8]*b[bb+2]) + (a[aa+12]*b[bb+3]);
     }
@@ -223,7 +207,7 @@ namespace gx {
   inline std::ostream& operator<<(
     std::ostream& out, const Matrix4x4<T,ROW_MAJOR>& m)
   {
-    for (int i = 0; i != 16; i += 4) {
+    for (unsigned int i = 0; i != 16; i += 4) {
       out << '[' << m[i] << '\t' << m[i+1] << '\t' << m[i+2]
           << '\t'	<< m[i+3] << "\t]\n";
     }
@@ -235,7 +219,7 @@ namespace gx {
   inline std::ostream& operator<<(
     std::ostream& out, const Matrix4x4<T,COLUMN_MAJOR>& m)
   {
-    for (int i = 0; i != 4; ++i) {
+    for (unsigned int i = 0; i != 4; ++i) {
       out << '[' << m[i] << '\t' << m[i+4] << '\t' << m[i+8]
           << '\t'	<< m[i+12] << "\t]\n";
     }
@@ -283,7 +267,7 @@ constexpr void gx::Matrix4x4<T,MOT>::translate(T tx, T ty, T tz)
   //_13 += _15 * ty;
   //_14 += _15 * tz;
 
-  for (int i = 0; i != 16; i += 4) {
+  for (unsigned int i = 0; i != 16; i += 4) {
     const T v = _val[(i & ~3) + 3];
     _val[i]   += v * tx;
     _val[i+1] += v * ty;
@@ -331,7 +315,7 @@ constexpr void gx::Matrix4x4<T,MOT>::rotateX_sc(T sinVal, T cosVal)
   // [c0 c1 c2 c3] [0 -s  c  0] [c0  (c1)(c)-(c2)(s)  (c1)(s)+(c2)(c)  c3]
   // [d0 d1 d2 d3] [0  0  0  1] [d0  (d1)(c)-(d2)(s)  (d1)(s)+(d2)(c)  d3]
 
-  for (int i = 0; i != 16; i += 4) {
+  for (unsigned int i = 0; i != 16; i += 4) {
     const T t1 = _val[i+1], t2 = _val[i+2];
     _val[i+1] = (t1*cosVal) - (t2*sinVal);
     _val[i+2] = (t1*sinVal) + (t2*cosVal);
@@ -363,7 +347,7 @@ constexpr void gx::Matrix4x4<T,MOT>::rotateY_sc(T sinVal, T cosVal)
   // [c0 c1 c2 c3] [s  0  c  0] [(c0)(c)+(c2)(s)  c1  -(c0)(s)+(c2)(c)  c3]
   // [d0 d1 d2 d3] [0  0  0  1] [(d0)(c)+(d2)(s)  d1  -(d0)(s)+(d2)(c)  d3]
 
-  for (int i = 0; i != 16; i += 4) {
+  for (unsigned int i = 0; i != 16; i += 4) {
     const T t0 = _val[i], t2 = _val[i+2];
     _val[i]   = (t0*cosVal) + (t2*sinVal);
     _val[i+2] = (t2*cosVal) - (t0*sinVal);
@@ -395,7 +379,7 @@ constexpr void gx::Matrix4x4<T,MOT>::rotateZ_sc(T sinVal, T cosVal)
   // [c0 c1 c2 c3] [ 0  0  1  0] [(c0)(c)-(c1)(s)  (c0)(s)+(c1)(c)  c2  c3]
   // [d0 d1 d2 d3] [ 0  0  0  1] [(d0)(c)-(d1)(s)  (d0)(s)+(d1)(c)  d2  d3]
 
-  for (int i = 0; i != 16; i += 4) {
+  for (unsigned int i = 0; i != 16; i += 4) {
     const T t0 = _val[i], t1 = _val[i+1];
     _val[i]   = (t0*cosVal) - (t1*sinVal);
     _val[i+1] = (t0*sinVal) + (t1*cosVal);
@@ -457,7 +441,7 @@ constexpr void gx::Matrix4x4<T,MOT>::rotate_sc(
   const T ys = axis.y * sinVal;
   const T zs = axis.z * sinVal;
 
-  for (int i = 0; i != 16; i += 4) {
+  for (unsigned int i = 0; i != 16; i += 4) {
     const T t0 = _val[i];
     const T t1 = _val[i+1];
     const T t2 = _val[i+2];
