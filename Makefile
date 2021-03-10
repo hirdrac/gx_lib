@@ -20,7 +20,7 @@ BIN3.LIBS = LIB_gx
 STANDARD = c++17
 OPTIONS = lto modern_c++
 DEFINE = GX_DEBUG_GL
-WARN_EXTRA = extra-semi fatal-errors
+WARN_EXTRA = extra-semi fatal-errors conversion
 #FLAGS_RELEASE = -DNDEBUG
 
 include Makefile.mk
