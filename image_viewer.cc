@@ -92,9 +92,11 @@ int main(int argc, char* argv[])
   gx::DrawList dl;
   gx::DrawContext dc(dl);
   bool refresh = true;
+  constexpr int border = 8;
 
+  // main loop
   for (;;) {
-    Entry& e = entries[std::size_t(entryNo)];
+    const Entry& e = entries[std::size_t(entryNo)];
     if (win.resized() || refresh) {
       win.setTitle(gx::concat(e.file, " - ", e.img.width(), 'x', e.img.height(),
                               'x', e.img.channels()));
@@ -104,17 +106,16 @@ int main(int argc, char* argv[])
       dc.clear();
       dc.color(gx::WHITE);
       dc.texture(e.tex);
-      dc.rectangle(float(ix), float(iy), float(iw), float(ih),
-                   {0,0}, {1,1});
-      dc.color(gx::GRAY50);
+      dc.rectangle(float(ix), float(iy), float(iw), float(ih), {0,0}, {1,1});
 
       // multi-image horizontal display in fullscreen
-      constexpr int border = 8;
       if (iw < (win.width() - border)) {
+        dc.color(gx::GRAY50);
+
         // display previous image(s)
         int prev_x = ix;
         for (int x = entryNo - 1; x >= 0; --x) {
-          Entry& e0 = entries[std::size_t(x)];
+          const Entry& e0 = entries[std::size_t(x)];
           auto [iw0,ih0] = calcSize(win, e0.img);
           int ix0 = prev_x - (iw0 + border); prev_x = ix0;
           if ((ix0+iw0) < 0) { break; }
@@ -127,7 +128,7 @@ int main(int argc, char* argv[])
         // display next image(s)
         prev_x = ix + iw + border;
         for (int x = entryNo + 1; x <= lastNo; ++x) {
-          Entry& e1 = entries[std::size_t(x)];
+          const Entry& e1 = entries[std::size_t(x)];
           auto [iw1,ih1] = calcSize(win, e1.img);
           int ix1 = prev_x; prev_x += iw1 + border;
           if (ix1 > win.width()) { break; }
@@ -172,7 +173,7 @@ int main(int argc, char* argv[])
     if (no != entryNo) {
       entryNo = no;
       if (!win.fullScreen()) {
-        Entry& e2 = entries[std::size_t(entryNo)];
+        const Entry& e2 = entries[std::size_t(entryNo)];
         win.setSize(e2.img.width(), e2.img.height(), false);
       }
       refresh = true;
