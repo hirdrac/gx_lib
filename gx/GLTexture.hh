@@ -17,7 +17,7 @@
 inline namespace GX_GLNAMESPACE {
 
 // **** Texture constants based on target ****
-template <GLenum TARGET> struct GLTextureVals {
+template<GLenum TARGET> struct GLTextureVals {
   static constexpr GLenum pnameMaxSize = GL_MAX_TEXTURE_SIZE;
 };
 
@@ -43,7 +43,7 @@ template<> struct GLTextureVals<GL_TEXTURE_BUFFER> {
 
 
 // **** Main texture template definition ****
-template <GLenum TARGET>
+template<GLenum TARGET>
 class GLTextureT
 {
  public:
@@ -97,16 +97,16 @@ class GLTextureT
     GLsizei width, GLsizei height, GLsizei depth,
     GLenum format, GLenum type, const void* pixels);
 
-  template <typename PixelT>
+  template<typename PixelT>
   void setSubImage1D(GLint level, GLint xoffset, GLsizei width,
                      GLenum format, const PixelT* pixels) {
     setSubImage1D(level, xoffset, width, format, GLType_v<PixelT>, pixels); }
-  template <typename PixelT>
+  template<typename PixelT>
   void setSubImage2D(GLint level, GLint xoffset, GLint yoffset, GLsizei width,
                      GLsizei height, GLenum format, const PixelT* pixels) {
     setSubImage2D(level, xoffset, yoffset, width, height, format,
                   GLType_v<PixelT>, pixels); }
-  template <typename PixelT>
+  template<typename PixelT>
   void setSubImage3D(GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                      GLsizei width, GLsizei height, GLsizei depth,
                      GLenum format, const PixelT* pixels) {
@@ -185,7 +185,7 @@ using GLTexture2DMultisampleArray = GLTextureT<GL_TEXTURE_2D_MULTISAMPLE_ARRAY>;
 
 
 // **** Inline Implementations ****
-template <GLenum TARGET>
+template<GLenum TARGET>
 GLTextureT<TARGET>::GLTextureT(GLTextureT<TARGET>&& t) noexcept
   : _tex(t.release())
 {
@@ -196,7 +196,7 @@ GLTextureT<TARGET>::GLTextureT(GLTextureT<TARGET>&& t) noexcept
   _depth = t._depth;
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 GLTextureT<TARGET>&
 GLTextureT<TARGET>::operator=(GLTextureT<TARGET>&& t) noexcept
 {
@@ -212,7 +212,7 @@ GLTextureT<TARGET>::operator=(GLTextureT<TARGET>&& t) noexcept
   return *this;
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 GLuint GLTextureT<TARGET>::init(
   GLsizei levels, GLenum internalformat, GLsizei width)
 {
@@ -238,7 +238,7 @@ GLuint GLTextureT<TARGET>::init(
   return _tex;
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 GLuint GLTextureT<TARGET>::init(
   GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
 {
@@ -291,7 +291,7 @@ GLuint GLTextureT<TARGET>::init(
   return _tex;
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 GLuint GLTextureT<TARGET>::init(
   GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
 {
@@ -340,7 +340,7 @@ GLuint GLTextureT<TARGET>::init(
 //   4.5 -
 //     glTextureStorage3DMultisample
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
 {
   _internalformat = internalformat;
@@ -359,7 +359,7 @@ GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
   return _tex;
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::detachBuffer()
 {
 #ifdef GX_GL33
@@ -370,7 +370,7 @@ void GLTextureT<TARGET>::detachBuffer()
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::bindUnit(GLuint unit, GLuint tex)
 {
 #ifdef GX_GL33
@@ -382,7 +382,7 @@ void GLTextureT<TARGET>::bindUnit(GLuint unit, GLuint tex)
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setSubImage1D(
   GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void* pixels)
 {
@@ -395,7 +395,7 @@ void GLTextureT<TARGET>::setSubImage1D(
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setSubImage2D(
   GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
   GLenum format, GLenum type, const void* pixels)
@@ -411,7 +411,7 @@ void GLTextureT<TARGET>::setSubImage2D(
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setSubImage3D(
   GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
   GLsizei width, GLsizei height, GLsizei depth,
@@ -428,7 +428,7 @@ void GLTextureT<TARGET>::setSubImage3D(
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::getImage(
   GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels)
 {
@@ -440,7 +440,7 @@ void GLTextureT<TARGET>::getImage(
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::generateMipmap()
 {
 #ifdef GX_GL33
@@ -451,7 +451,7 @@ void GLTextureT<TARGET>::generateMipmap()
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::clear(GLint level, GLenum format)
 {
 #ifdef GX_GL33
@@ -469,7 +469,7 @@ void GLTextureT<TARGET>::clear(GLint level, GLenum format)
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 float GLTextureT<TARGET>::coordX(int x) const
 {
   if constexpr (TARGET == GL_TEXTURE_RECTANGLE) {
@@ -479,7 +479,7 @@ float GLTextureT<TARGET>::coordX(int x) const
   }
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 float GLTextureT<TARGET>::coordY(int y) const
 {
   if constexpr (TARGET == GL_TEXTURE_RECTANGLE) {
@@ -489,7 +489,7 @@ float GLTextureT<TARGET>::coordY(int y) const
   }
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setUnpackAlignment(
   GLsizei width, GLenum format, GLenum type)
 {
@@ -502,7 +502,7 @@ void GLTextureT<TARGET>::setUnpackAlignment(
   GX_GLCALL(glPixelStorei, GL_UNPACK_ALIGNMENT, align);
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::cleanup() noexcept
 {
   if (_tex) {
@@ -513,7 +513,7 @@ void GLTextureT<TARGET>::cleanup() noexcept
   }
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameter(GLenum pname, GLfloat param)
 {
 #ifdef GX_GL33
@@ -524,7 +524,7 @@ void GLTextureT<TARGET>::setParameter(GLenum pname, GLfloat param)
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameter(GLenum pname, GLint param)
 {
 #ifdef GX_GL33
@@ -535,7 +535,7 @@ void GLTextureT<TARGET>::setParameter(GLenum pname, GLint param)
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLfloat* params)
 {
 #ifdef GX_GL33
@@ -546,7 +546,7 @@ void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLfloat* params)
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLint* params)
 {
 #ifdef GX_GL33
@@ -557,7 +557,7 @@ void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLint* params)
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLint* params)
 {
 #ifdef GX_GL33
@@ -568,7 +568,7 @@ void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLint* params)
 #endif
 }
 
-template <GLenum TARGET>
+template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLuint* params)
 {
 #ifdef GX_GL33

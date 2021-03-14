@@ -80,15 +80,15 @@ class GLBuffer
 
 
   // convenience methods/overloads
-  template <class T>
+  template<class T>
   GLuint init(const T& x) {
     return init(sizeof(x[0])*std::size(x), std::data(x)); }
 
-  template <class T>
+  template<class T>
   void setData(const T& x, GLenum usage) {
     setData(GLsizei(sizeof(x[0])*std::size(x)), std::data(x), usage); }
 
-  template <class T>
+  template<class T>
   void setSubData(GLintptr offset, const T& x) {
     setSubData(offset, GLsizei(sizeof(x[0])*std::size(x)), std::data(x)); }
 

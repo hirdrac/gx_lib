@@ -147,7 +147,7 @@ int GLCheckErrors(std::string_view msg, const char* file = __FILE__,
 
 
 // **** Types ****
-template <typename T> struct GLType { };
+template<typename T> struct GLType { };
 
 template<> struct GLType<GLfloat> {
   static constexpr GLenum value = GL_FLOAT; };
@@ -173,7 +173,7 @@ template<> struct GLType<GLint> {
 template<> struct GLType<GLuint> {
   static constexpr GLenum value = GL_UNSIGNED_INT; };
 
-template <class T>
+template<class T>
 constexpr GLenum GLType_v = GLType<T>::value;
 
 } // end GX_GLNAMESPACE

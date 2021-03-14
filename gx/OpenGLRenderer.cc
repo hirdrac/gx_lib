@@ -70,16 +70,16 @@ namespace {
   }
 
   // DrawEntry iterator reading helper functions
-  template <typename T>
+  template<typename T>
   uint32_t uval(T& itr) { return (itr++)->uval; }
 
-  template <typename T>
+  template<typename T>
   float fval(T& itr) { return (itr++)->fval; }
 
-  template <typename T>
+  template<typename T>
   gx::Vec2 fval2(T& itr) { return {fval(itr), fval(itr)}; }
 
-  template <typename T>
+  template<typename T>
   gx::Vec3 fval3(T& itr) { return {fval(itr), fval(itr), fval(itr)}; }
 
   // **** Callbacks ****

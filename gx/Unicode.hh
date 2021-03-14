@@ -39,7 +39,7 @@ class gx::UTF8Iterator
   constexpr UTF8Iterator(const char* s, const char* e) noexcept
     : _itr(s), _end(e) { }
 
-  template <class T>
+  template<class T>
   explicit UTF8Iterator(const T& s)
     : _itr(std::data(s)), _end(std::data(s) + std::size(s)) { }
 

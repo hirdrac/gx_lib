@@ -50,10 +50,10 @@ class gx::Renderer
   void draw(const DrawList& dl, const Color& modColor) {
     draw(dl.data(), dl.size(), modColor); }
 
-  template <typename Drawable>
+  template<typename Drawable>
   void draw(const Drawable& d) { draw(d.drawList()); }
 
-  template <typename Drawable, typename... Args>
+  template<typename Drawable, typename... Args>
   void draw(const Drawable& d, const Args&... args) {
     draw(d.drawList(), args...); }
 
