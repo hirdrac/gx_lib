@@ -6,6 +6,7 @@
 #include "DrawContext.hh"
 #include "Font.hh"
 #include "Unicode.hh"
+#include "MathUtil.hh"
 
 
 void gx::DrawContext::rectangle(float x, float y, float w, float h)
@@ -186,5 +187,41 @@ void gx::DrawContext::_text(
     if (pos == std::string_view::npos || pos >= (text.size() - 1)) { break; }
     lineStart = pos + 1;
     cursorY += fs;
+  }
+}
+
+void gx::DrawContext::circleSector(
+  Vec2 center, float radius, float startAngle, float endAngle, int segments,
+  uint32_t color0, uint32_t color1)
+{
+  while (endAngle <= startAngle) { endAngle += 360.0f; }
+  endAngle = std::min(endAngle, startAngle + 360.0f);
+
+  const float angle0 = DegToRad(startAngle);
+  const float angle1 = DegToRad(endAngle);
+  const float segmentAngle = (angle1 - angle0) / float(segments);
+
+  Vertex2C v0 = {center.x, center.y, color0};
+
+  Vertex2C v1;
+  v1.x = center.x + (radius * std::sin(angle0));
+  v1.y = center.y - (radius * std::cos(angle0));
+  v1.c = color1;
+
+  Vertex2C v2;
+  v2.c = color1;
+
+  float a = angle0;
+  for (int i = 0; i < segments; ++i) {
+    if (i == segments-1) { a = angle1; } else { a += segmentAngle; }
+
+    v2.x = center.x + (radius * std::sin(a));
+    v2.y = center.y - (radius * std::cos(a));
+
+    triangle(v0, v1, v2);
+
+    // setup for next iteration
+    v1.x = v2.x;
+    v1.y = v2.y;
   }
 }
