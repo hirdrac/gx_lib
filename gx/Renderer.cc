@@ -4,12 +4,13 @@
 //
 
 #include "Renderer.hh"
+#include "System.hh"
 #include <GLFW/glfw3.h>
 
 
 gx::Renderer::~Renderer()
 {
-  if (_window) {
+  if (_window && glfwInitStatus()) {
     glfwDestroyWindow(_window);
   }
 }

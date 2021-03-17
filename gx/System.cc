@@ -18,6 +18,14 @@ namespace {
   {
     GX_LOG_ERROR("GLFW ERROR(", error, "): ", txt);
   }
+
+  bool lib_init = false;
+
+  void shutdown()
+  {
+    glfwTerminate();
+    lib_init = false;
+  }
 }
 
 bool gx::isMainThread()
@@ -27,10 +35,9 @@ bool gx::isMainThread()
 
 bool gx::initGLFW()
 {
-  static bool init = false;
-  if (init) { return true; }
+  if (lib_init) { return true; }
 
-  init = true;
+  lib_init = true;
   glfwSetErrorCallback(errorCB);
   //glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, GLFW_FALSE);
   if (!glfwInit()) {
@@ -38,8 +45,13 @@ bool gx::initGLFW()
     return false;
   }
 
-  std::atexit(glfwTerminate);
+  std::atexit(shutdown);
   return true;
+}
+
+bool gx::glfwInitStatus()
+{
+  return lib_init;
 }
 
 std::string gx::getClipboard()

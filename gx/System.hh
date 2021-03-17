@@ -1,6 +1,6 @@
 //
 // gx/System.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // GLFW init & other misc GLFW/OS function wrappers
 
@@ -12,6 +12,10 @@ namespace gx {
   bool isMainThread();
 
   bool initGLFW();
+    // initialized library & setup error logging
+
+  [[nodiscard]] bool glfwInitStatus();
+    // returns true if GLFW is initialized
 
   std::string getClipboard();
 
