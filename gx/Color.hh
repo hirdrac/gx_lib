@@ -1,6 +1,6 @@
 //
 // gx/Color.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 // Color types & utility functions
 
@@ -36,7 +36,7 @@ namespace gx {
   }
 
   constexpr uint32_t packRGBA8(const Color& c) {
-    return packRGBA8(c.r, c.g, c.b, c.a);
+    return packRGBA8(c.x, c.y, c.z, c.w);
   }
 
   constexpr float unpackRed(uint32_t c) {
