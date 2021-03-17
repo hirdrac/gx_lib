@@ -24,12 +24,12 @@ constexpr uint32_t RED = gx::packRGBA8(1.0f, 0, 0, 1.0f);
 // **** Draw Functions ****
 void draw_circle1(gx::DrawContext& dc, float x, float y)
 {
-  dc.circleSector({x + 200, y + 200}, 150, 0, 0, 32, 0xff000000, 0xffffffff);
+  dc.circleSector({x + 200, y + 200}, 150, 0, 0, 32, RED, WHITE);
 }
 
 void draw_circle2(gx::DrawContext& dc, float x, float y)
 {
-  dc.circleSector({x + 200, y + 200}, 150, 20, 270, 32, 0xff000000, 0xffffffff);
+  dc.circleSector({x + 200, y + 200}, 150, 20, 270, 32, BLACK, WHITE);
 }
 
 
@@ -60,12 +60,10 @@ int main(int argc, char** argv)
   gx::Renderer& ren = win.renderer();
   ren.setBGColor(.2f,.2f,.5f);
   fnt.makeAtlas(win);
-  bool running = true;
-  bool needRedraw = true;
 
-  while (running) {
+  for (;;) {
     // draw frame
-    if (win.resized() || needRedraw) {
+    if (win.resized()) {
       gx::DrawList dl;
       gx::DrawContext dc(dl);
 
@@ -87,7 +85,6 @@ int main(int argc, char** argv)
 
       ren.clearFrame(win.width(), win.height());
       ren.draw(dl);
-      needRedraw = false;
     }
     ren.renderFrame();
 
