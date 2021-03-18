@@ -4,12 +4,9 @@
 //
 
 // TODO - add blur transparency shader
-// TODO - render thread
+// TODO - render thread:
 //   * thread for OpenGL, glfwMakeContextCurrent(), glfwGetProcAddress(),
 //     glfwSwapInterval(), glfwSwapBuffers() calls
-//   * _drawCalls, _vertices in struct passed to render thread
-//     (2 instances for tripple buffer like rendering)
-//   * make _textures read thread safe
 
 #include "OpenGLRenderer.hh"
 #include "DrawEntry.hh"
@@ -18,9 +15,10 @@
 #include "Camera.hh"
 #include "Logger.hh"
 #include "OpenGL.hh"
-//#include "Print.hh"
+#include "Print.hh"
 #include <GLFW/glfw3.h>
 #include <cstdlib>
+#include <cassert>
 
 namespace {
   // **** Helper Functions ****
@@ -70,17 +68,32 @@ namespace {
   }
 
   // DrawEntry iterator reading helper functions
-  template<typename T>
-  uint32_t uval(T& itr) { return (itr++)->uval; }
+  inline uint32_t ival(const gx::DrawEntry*& ptr) {
+    return (ptr++)->ival; }
+  inline uint32_t uval(const gx::DrawEntry*& ptr) {
+    return (ptr++)->uval; }
+  inline float fval(const gx::DrawEntry*& ptr) {
+    return (ptr++)->fval; }
+  inline gx::Vec2 fval2(const gx::DrawEntry*& ptr) {
+    return {fval(ptr), fval(ptr)}; }
+  inline gx::Vec3 fval3(const gx::DrawEntry*& ptr) {
+    return {fval(ptr), fval(ptr), fval(ptr)}; }
+  inline gx::Mat4 mat4_val(const gx::DrawEntry*& ptr) {
+    return {fval(ptr), fval(ptr), fval(ptr), fval(ptr),
+            fval(ptr), fval(ptr), fval(ptr), fval(ptr),
+            fval(ptr), fval(ptr), fval(ptr), fval(ptr),
+            fval(ptr), fval(ptr), fval(ptr), fval(ptr)}; }
 
-  template<typename T>
-  float fval(T& itr) { return (itr++)->fval; }
+  // vertex output functions
+  inline void vertex(gx::Vertex3TC*& ptr, gx::Vec2 pt, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,0.0f, 0.0f,0.0f, c}; }
+  inline void vertex(gx::Vertex3TC*& ptr, gx::Vec3 pt, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,pt.z, 0.0f,0.0f, c}; }
+  inline void vertex(gx::Vertex3TC*& ptr, gx::Vec2 pt, gx::Vec2 tx, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,0.0f, tx.x,tx.y, c}; }
+  inline void vertex(gx::Vertex3TC*& ptr, gx::Vec3 pt, gx::Vec2 tx, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,pt.z, tx.x,tx.y, c}; }
 
-  template<typename T>
-  gx::Vec2 fval2(T& itr) { return {fval(itr), fval(itr)}; }
-
-  template<typename T>
-  gx::Vec3 fval3(T& itr) { return {fval(itr), fval(itr), fval(itr)}; }
 
   // **** Callbacks ****
   void CleanUpOpenGL()
@@ -122,10 +135,10 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
     "layout(location = 0) in vec3 in_pos;" // x,y,z
     "layout(location = 2) in uint in_color;"
     "uniform mat4 trans;"
-    "uniform vec4 modColor;"
+    "uniform uint modColor;"
     "out vec4 v_color;"
     "void main() {"
-    "  v_color = unpackUnorm4x8(in_color) * modColor;"
+    "  v_color = unpackUnorm4x8(in_color) * unpackUnorm4x8(modColor);"
     "  gl_Position = trans * vec4(in_pos, 1);"
     "}";
   static const char* SP0F_SRC =
@@ -140,11 +153,11 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
     "layout(location = 1) in vec2 in_tc;"  // s,t
     "layout(location = 2) in uint in_color;"
     "uniform mat4 trans;"
-    "uniform vec4 modColor;"
+    "uniform uint modColor;"
     "out vec4 v_color;"
     "out vec2 v_texCoord;"
     "void main() {"
-    "  v_color = unpackUnorm4x8(in_color) * modColor;"
+    "  v_color = unpackUnorm4x8(in_color) * unpackUnorm4x8(modColor);"
     "  v_texCoord = in_tc;"
     "  gl_Position = trans * vec4(in_pos, 1);"
     "}";
@@ -267,8 +280,9 @@ void gx::OpenGLRenderer::clearFrame(int width, int height)
 {
   _width = width;
   _height = height;
+  _drawBuffer.clear();
+  _lastCap = -1;
   _changed = true;
-  _vertices.clear();
 
   Mat4 trans;
   calcScreenOrthoProjection(float(width), float(height), trans);
@@ -276,56 +290,43 @@ void gx::OpenGLRenderer::clearFrame(int width, int height)
   _transforms.push_back({Mat4Identity, trans});
 
   _drawCalls.clear();
-  setCapabilities(INIT_CAPABILITIES);
 }
 
-void gx::OpenGLRenderer::setTransform(const Mat4& view, const Mat4& proj)
+void gx::OpenGLRenderer::setupBuffer()
 {
-  if (!_transforms.empty()
-      && (_drawCalls.empty()
-          || _drawCalls.back().transformNo != (int(_transforms.size())-1)))
-  {
-    // last set transform not used for a draw call and can just be replaced
-    _transforms.back() = {view, proj};
-  } else {
-    // add new transform entry
-    _transforms.push_back({view, proj});
-  }
-}
-
-void gx::OpenGLRenderer::draw(
-  const DrawEntry* data, std::size_t dataSize, const Color& modColor)
-{
-  _changed = true;
-  const DrawEntry* end = data + dataSize;
+  const DrawEntry* data = _drawBuffer.data();
+  const DrawEntry* end  = data + _drawBuffer.size();
 
   unsigned int size = 0; // vertices needed
   for (const DrawEntry* itr = data; itr != end; ) {
     DrawCmd cmd = itr->cmd;
     switch (cmd) {
-      case CMD_color:       itr += 2; break;
-      case CMD_lineWidth:   itr += 2; break;
-      case CMD_texture:     itr += 2; break;
-      case CMD_line2:       itr += 5;  size += 2; break;
-      case CMD_line3:       itr += 7;  size += 2; break;
-      case CMD_triangle2:   itr += 7;  size += 3; break;
-      case CMD_triangle3:   itr += 10; size += 3; break;
-      case CMD_triangle2T:  itr += 13; size += 3; break;
-      case CMD_triangle3T:  itr += 16; size += 3; break;
-      case CMD_triangle2C:  itr += 10; size += 3; break;
-      case CMD_triangle3C:  itr += 13; size += 3; break;
-      case CMD_triangle2TC: itr += 16; size += 3; break;
-      case CMD_triangle3TC: itr += 19; size += 3; break;
-      case CMD_quad2:       itr += 9;  size += 6; break;
-      case CMD_quad3:       itr += 13; size += 6; break;
-      case CMD_quad2T:      itr += 17; size += 6; break;
-      case CMD_quad3T:      itr += 21; size += 6; break;
-      case CMD_quad2C:      itr += 13; size += 6; break;
-      case CMD_quad3C:      itr += 17; size += 6; break;
-      case CMD_quad2TC:     itr += 21; size += 6; break;
-      case CMD_quad3TC:     itr += 25; size += 6; break;
-      case CMD_rectangle:   itr += 5;  size += 6; break;
-      case CMD_rectangleT:  itr += 9;  size += 6; break;
+      case CMD_capabilities: itr += 2; break;
+      case CMD_transform:    itr += 33; break;
+      case CMD_color:        itr += 2; break;
+      case CMD_modColor:     itr += 2; break;
+      case CMD_texture:      itr += 2; break;
+      case CMD_lineWidth:    itr += 2; break;
+      case CMD_line2:        itr += 5;  size += 2; break;
+      case CMD_line3:        itr += 7;  size += 2; break;
+      case CMD_triangle2:    itr += 7;  size += 3; break;
+      case CMD_triangle3:    itr += 10; size += 3; break;
+      case CMD_triangle2T:   itr += 13; size += 3; break;
+      case CMD_triangle3T:   itr += 16; size += 3; break;
+      case CMD_triangle2C:   itr += 10; size += 3; break;
+      case CMD_triangle3C:   itr += 13; size += 3; break;
+      case CMD_triangle2TC:  itr += 16; size += 3; break;
+      case CMD_triangle3TC:  itr += 19; size += 3; break;
+      case CMD_quad2:        itr += 9;  size += 6; break;
+      case CMD_quad3:        itr += 13; size += 6; break;
+      case CMD_quad2T:       itr += 17; size += 6; break;
+      case CMD_quad3T:       itr += 21; size += 6; break;
+      case CMD_quad2C:       itr += 13; size += 6; break;
+      case CMD_quad3C:       itr += 17; size += 6; break;
+      case CMD_quad2TC:      itr += 21; size += 6; break;
+      case CMD_quad3TC:      itr += 25; size += 6; break;
+      case CMD_rectangle:    itr += 5;  size += 6; break;
+      case CMD_rectangleT:   itr += 9;  size += 6; break;
 
       default:
         itr = end; // stop reading at first invalid cmd
@@ -334,132 +335,174 @@ void gx::OpenGLRenderer::draw(
     }
   }
 
+  if (size == 0) {
+    _vbo = GLBuffer();
+    _vao = GLVertexArray();
+    return;
+  }
+
+  if (!_vbo) {
+    _vbo.init();
+    _vao.init();
+    _vao.enableAttrib(0); // vec3 (x,y,z)
+    _vao.setAttrib(0, _vbo, 0, 24, 3, GL_FLOAT, GL_FALSE);
+    _vao.enableAttrib(1); // vec2 (s,t)
+    _vao.setAttrib(1, _vbo, 12, 24, 2, GL_FLOAT, GL_FALSE);
+    _vao.enableAttrib(2); // uint (r,g,b,a packed int)
+    _vao.setAttribI(2, _vbo, 20, 24, 1, GL_UNSIGNED_INT);
+  }
+
+  _vbo.setData(GLsizei(size * sizeof(Vertex3TC)), nullptr, GL_STREAM_DRAW);
+  Vertex3TC* ptr = (Vertex3TC*)_vbo.map(GL_WRITE_ONLY);
+  assert(ptr != nullptr);
+
   // general triangle layout
   //  0--1
   //  | /|
   //  |/ |
   //  2--3
 
-  _vertices.reserve(_vertices.size() + size);
   uint32_t color = 0xffffffff;
-  float lw = 1.0f;
+  uint32_t modColor = 0xffffffff;
   TextureID tid = 0;
+  float lw = 1.0f;
+  int cap = 0;
 
   for (const DrawEntry* itr = data; itr != end; ) {
     DrawCmd cmd = (itr++)->cmd;
     switch (cmd) {
+      case CMD_capabilities:
+        cap = ival(itr);
+        break;
+
+      case CMD_transform: {
+        Mat4 view = mat4_val(itr), proj = mat4_val(itr);
+        if (!_transforms.empty()
+            && (_drawCalls.empty()
+                || _drawCalls.back().transformNo != (int(_transforms.size())-1)))
+        {
+          // last set transform not used for a draw call and can just be replaced
+          _transforms.back() = {view, proj};
+        } else {
+          // add new transform entry
+          _transforms.push_back({view, proj});
+        }
+        break;
+      }
+
       case CMD_color:     color = uval(itr); break;
-      case CMD_lineWidth: lw    = fval(itr); break;
+      case CMD_modColor:  modColor = uval(itr); break;
       case CMD_texture:   tid   = uval(itr); break;
+      case CMD_lineWidth: lw    = fval(itr); break;
 
       case CMD_line2: {
-	addVertex(fval2(itr), color);
-	addVertex(fval2(itr), color);
-	addDrawCall(GL_LINES, 2, modColor, 0, lw);
+	vertex(ptr, fval2(itr), color);
+	vertex(ptr, fval2(itr), color);
+	addDrawCall(2, GL_LINES, modColor, 0, lw, cap);
 	break;
       }
       case CMD_line3: {
-        addVertex(fval3(itr), color);
-        addVertex(fval3(itr), color);
-	addDrawCall(GL_LINES, 2, modColor, 0, lw);
+        vertex(ptr, fval3(itr), color);
+        vertex(ptr, fval3(itr), color);
+	addDrawCall(2, GL_LINES, modColor, 0, lw, cap);
         break;
       }
       case CMD_triangle2: {
-	addVertex(fval2(itr), color);
-	addVertex(fval2(itr), color);
-	addVertex(fval2(itr), color);
-	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
+	vertex(ptr, fval2(itr), color);
+	vertex(ptr, fval2(itr), color);
+	vertex(ptr, fval2(itr), color);
+	addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, cap);
 	break;
       }
       case CMD_triangle3: {
-	addVertex(fval3(itr), color);
-	addVertex(fval3(itr), color);
-	addVertex(fval3(itr), color);
-	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
+	vertex(ptr, fval3(itr), color);
+	vertex(ptr, fval3(itr), color);
+	vertex(ptr, fval3(itr), color);
+	addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, cap);
 	break;
       }
       case CMD_triangle2T: {
         Vec2 p0 = fval2(itr), t0 = fval2(itr);
         Vec2 p1 = fval2(itr), t1 = fval2(itr);
         Vec2 p2 = fval2(itr), t2 = fval2(itr);
-        addVertex(p0, t0, color);
-	addVertex(p1, t1, color);
-	addVertex(p2, t2, color);
-	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
+        vertex(ptr, p0, t0, color);
+	vertex(ptr, p1, t1, color);
+	vertex(ptr, p2, t2, color);
+	addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, cap);
         break;
       }
       case CMD_triangle3T: {
         Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr);
         Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr);
         Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr);
-        addVertex(p0, t0, color);
-	addVertex(p1, t1, color);
-	addVertex(p2, t2, color);
-	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
+        vertex(ptr, p0, t0, color);
+	vertex(ptr, p1, t1, color);
+	vertex(ptr, p2, t2, color);
+	addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, cap);
         break;
       }
       case CMD_triangle2C: {
         Vec2 p0 = fval2(itr); uint32_t c0 = uval(itr);
         Vec2 p1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec2 p2 = fval2(itr); uint32_t c2 = uval(itr);
-        addVertex(p0, c0);
-	addVertex(p1, c1);
-	addVertex(p2, c2);
-	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
+        vertex(ptr, p0, c0);
+	vertex(ptr, p1, c1);
+	vertex(ptr, p2, c2);
+	addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, cap);
         break;
       }
       case CMD_triangle3C: {
         Vec3 p0 = fval3(itr); uint32_t c0 = uval(itr);
         Vec3 p1 = fval3(itr); uint32_t c1 = uval(itr);
         Vec3 p2 = fval3(itr); uint32_t c2 = uval(itr);
-        addVertex(p0, c0);
-	addVertex(p1, c1);
-	addVertex(p2, c2);
-	addDrawCall(GL_TRIANGLES, 3, modColor, 0, lw);
+        vertex(ptr, p0, c0);
+	vertex(ptr, p1, c1);
+	vertex(ptr, p2, c2);
+	addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, cap);
         break;
       }
       case CMD_triangle2TC: {
         Vec2 p0 = fval2(itr), t0 = fval2(itr); uint32_t c0 = uval(itr);
         Vec2 p1 = fval2(itr), t1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec2 p2 = fval2(itr), t2 = fval2(itr); uint32_t c2 = uval(itr);
-        addVertex(p0, t0, c0);
-	addVertex(p1, t1, c1);
-	addVertex(p2, t2, c2);
-	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
+        vertex(ptr, p0, t0, c0);
+	vertex(ptr, p1, t1, c1);
+	vertex(ptr, p2, t2, c2);
+	addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, cap);
         break;
       }
       case CMD_triangle3TC: {
         Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr); uint32_t c0 = uval(itr);
         Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr); uint32_t c2 = uval(itr);
-        addVertex(p0, t0, c0);
-	addVertex(p1, t1, c1);
-	addVertex(p2, t2, c2);
-	addDrawCall(GL_TRIANGLES, 3, modColor, tid, lw);
+        vertex(ptr, p0, t0, c0);
+	vertex(ptr, p1, t1, c1);
+	vertex(ptr, p2, t2, c2);
+	addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, cap);
         break;
       }
       case CMD_quad2: {
         Vec2 p0 = fval2(itr), p1 = fval2(itr);
         Vec2 p2 = fval2(itr), p3 = fval2(itr);
-	addVertex(p0, color);
-	addVertex(p1, color);
-	addVertex(p2, color);
-        addVertex(p1, color);
-        addVertex(p3, color);
-        addVertex(p2, color);
-	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
+	vertex(ptr, p0, color);
+	vertex(ptr, p1, color);
+	vertex(ptr, p2, color);
+        vertex(ptr, p1, color);
+        vertex(ptr, p3, color);
+        vertex(ptr, p2, color);
+	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
         break;
       }
       case CMD_quad3: {
         Vec3 p0 = fval3(itr), p1 = fval3(itr);
         Vec3 p2 = fval3(itr), p3 = fval3(itr);
-	addVertex(p0, color);
-	addVertex(p1, color);
-	addVertex(p2, color);
-        addVertex(p1, color);
-        addVertex(p3, color);
-        addVertex(p2, color);
-	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
+	vertex(ptr, p0, color);
+	vertex(ptr, p1, color);
+	vertex(ptr, p2, color);
+        vertex(ptr, p1, color);
+        vertex(ptr, p3, color);
+        vertex(ptr, p2, color);
+	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
         break;
       }
       case CMD_quad2T: {
@@ -467,13 +510,13 @@ void gx::OpenGLRenderer::draw(
         Vec2 p1 = fval2(itr), t1 = fval2(itr);
         Vec2 p2 = fval2(itr), t2 = fval2(itr);
         Vec2 p3 = fval2(itr), t3 = fval2(itr);
-	addVertex(p0, t0, color);
-	addVertex(p1, t1, color);
-	addVertex(p2, t2, color);
-        addVertex(p1, t1, color);
-        addVertex(p3, t3, color);
-        addVertex(p2, t2, color);
-	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
+	vertex(ptr, p0, t0, color);
+	vertex(ptr, p1, t1, color);
+	vertex(ptr, p2, t2, color);
+        vertex(ptr, p1, t1, color);
+        vertex(ptr, p3, t3, color);
+        vertex(ptr, p2, t2, color);
+	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
         break;
       }
       case CMD_quad3T: {
@@ -481,13 +524,13 @@ void gx::OpenGLRenderer::draw(
         Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr);
         Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr);
         Vec3 p3 = fval3(itr); Vec2 t3 = fval2(itr);
-	addVertex(p0, t0, color);
-	addVertex(p1, t1, color);
-	addVertex(p2, t2, color);
-        addVertex(p1, t1, color);
-        addVertex(p3, t3, color);
-        addVertex(p2, t2, color);
-	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
+	vertex(ptr, p0, t0, color);
+	vertex(ptr, p1, t1, color);
+	vertex(ptr, p2, t2, color);
+        vertex(ptr, p1, t1, color);
+        vertex(ptr, p3, t3, color);
+        vertex(ptr, p2, t2, color);
+	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
         break;
       }
       case CMD_quad2C: {
@@ -495,13 +538,13 @@ void gx::OpenGLRenderer::draw(
         Vec2 p1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec2 p2 = fval2(itr); uint32_t c2 = uval(itr);
         Vec2 p3 = fval2(itr); uint32_t c3 = uval(itr);
-        addVertex(p0, c0);
-	addVertex(p1, c1);
-	addVertex(p2, c2);
-	addVertex(p1, c1);
-	addVertex(p3, c3);
-	addVertex(p2, c2);
-	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
+        vertex(ptr, p0, c0);
+	vertex(ptr, p1, c1);
+	vertex(ptr, p2, c2);
+	vertex(ptr, p1, c1);
+	vertex(ptr, p3, c3);
+	vertex(ptr, p2, c2);
+	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
         break;
       }
       case CMD_quad3C: {
@@ -509,13 +552,13 @@ void gx::OpenGLRenderer::draw(
         Vec3 p1 = fval3(itr); uint32_t c1 = uval(itr);
         Vec3 p2 = fval3(itr); uint32_t c2 = uval(itr);
         Vec3 p3 = fval3(itr); uint32_t c3 = uval(itr);
-        addVertex(p0, c0);
-	addVertex(p1, c1);
-	addVertex(p2, c2);
-	addVertex(p1, c1);
-	addVertex(p3, c3);
-	addVertex(p2, c2);
-	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
+        vertex(ptr, p0, c0);
+	vertex(ptr, p1, c1);
+	vertex(ptr, p2, c2);
+	vertex(ptr, p1, c1);
+	vertex(ptr, p3, c3);
+	vertex(ptr, p2, c2);
+	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
         break;
       }
       case CMD_quad2TC: {
@@ -523,13 +566,13 @@ void gx::OpenGLRenderer::draw(
         Vec2 p1 = fval2(itr), t1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec2 p2 = fval2(itr), t2 = fval2(itr); uint32_t c2 = uval(itr);
         Vec2 p3 = fval2(itr), t3 = fval2(itr); uint32_t c3 = uval(itr);
-	addVertex(p0, t0, c0);
-	addVertex(p1, t1, c1);
-	addVertex(p2, t2, c2);
-	addVertex(p1, t1, c1);
-	addVertex(p3, t3, c3);
-	addVertex(p2, t2, c2);
-	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
+	vertex(ptr, p0, t0, c0);
+	vertex(ptr, p1, t1, c1);
+	vertex(ptr, p2, t2, c2);
+	vertex(ptr, p1, t1, c1);
+	vertex(ptr, p3, t3, c3);
+	vertex(ptr, p2, t2, c2);
+	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
         break;
       }
       case CMD_quad3TC: {
@@ -537,25 +580,25 @@ void gx::OpenGLRenderer::draw(
         Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr); uint32_t c1 = uval(itr);
         Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr); uint32_t c2 = uval(itr);
         Vec3 p3 = fval3(itr); Vec2 t3 = fval2(itr); uint32_t c3 = uval(itr);
-	addVertex(p0, t0, c0);
-	addVertex(p1, t1, c1);
-	addVertex(p2, t2, c2);
-	addVertex(p1, t1, c1);
-	addVertex(p3, t3, c3);
-	addVertex(p2, t2, c2);
-	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
+	vertex(ptr, p0, t0, c0);
+	vertex(ptr, p1, t1, c1);
+	vertex(ptr, p2, t2, c2);
+	vertex(ptr, p1, t1, c1);
+	vertex(ptr, p3, t3, c3);
+	vertex(ptr, p2, t2, c2);
+	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
         break;
       }
       case CMD_rectangle: {
         Vec2 p0 = fval2(itr), p3 = fval2(itr);
         Vec2 p1 = {p3.x,p0.y}, p2 = {p0.x,p3.y};
-	addVertex(p0, color);
-	addVertex(p1, color);
-	addVertex(p2, color);
-	addVertex(p1, color);
-	addVertex(p3, color);
-	addVertex(p2, color);
-	addDrawCall(GL_TRIANGLES, 6, modColor, 0, lw);
+	vertex(ptr, p0, color);
+	vertex(ptr, p1, color);
+	vertex(ptr, p2, color);
+	vertex(ptr, p1, color);
+	vertex(ptr, p3, color);
+	vertex(ptr, p2, color);
+	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
 	break;
       }
       case CMD_rectangleT: {
@@ -563,13 +606,13 @@ void gx::OpenGLRenderer::draw(
         Vec2 p3 = fval2(itr), t3 = fval2(itr);
         Vec2 p1 = {p3.x,p0.y}, t1 = {t3.x,t0.y};
         Vec2 p2 = {p0.x,p3.y}, t2 = {t0.x,t3.y};
-	addVertex(p0, t0, color);
-	addVertex(p1, t1, color);
-	addVertex(p2, t2, color);
-	addVertex(p1, t1, color);
-	addVertex(p3, t3, color);
-	addVertex(p2, t2, color);
-	addDrawCall(GL_TRIANGLES, 6, modColor, tid, lw);
+	vertex(ptr, p0, t0, color);
+	vertex(ptr, p1, t1, color);
+	vertex(ptr, p2, t2, color);
+	vertex(ptr, p1, t1, color);
+	vertex(ptr, p3, t3, color);
+	vertex(ptr, p2, t2, color);
+	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
 	break;
       }
       default:
@@ -577,6 +620,12 @@ void gx::OpenGLRenderer::draw(
 	break;
     }
   }
+
+  _vbo.unmap();
+#if 0
+  println_err("drawBuffer:", _drawBuffer.size(), "  vertices:", size,
+              "  drawCalls:", _drawCalls.size());
+#endif
 }
 
 void gx::OpenGLRenderer::renderFrame()
@@ -590,25 +639,10 @@ void gx::OpenGLRenderer::renderFrame()
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
 
-  // vbo/vao setup
+  // vbo/vao setup & draw call generation
   if (_changed) {
     _changed = false;
-    if (_drawCalls.empty()) {
-      _vbo = GLBuffer();
-      _vao = GLVertexArray();
-    } else {
-      if (!_vbo) {
-        _vbo.init();
-        _vao.init();
-        _vao.enableAttrib(0); // vec3 (x,y,z)
-        _vao.setAttrib(0, _vbo, 0, 24, 3, GL_FLOAT, GL_FALSE);
-        _vao.enableAttrib(1); // vec2 (s,t)
-        _vao.setAttrib(1, _vbo, 12, 24, 2, GL_FLOAT, GL_FALSE);
-        _vao.enableAttrib(2); // uint (r,g,b,a packed int)
-        _vao.setAttribI(2, _vbo, 20, 24, 1, GL_UNSIGNED_INT);
-      }
-      _vbo.setData(_vertices, GL_DYNAMIC_DRAW);
-    }
+    setupBuffer();
   }
 
   // clear texture unit assignments
@@ -622,7 +656,8 @@ void gx::OpenGLRenderer::renderFrame()
   float lastLineWidth = 0.0f;
   for (const DrawCall& dc : _drawCalls) {
     if (dc.capabilities != _currentGLCap) {
-      setGLCapabilities(dc.capabilities); }
+      setGLCapabilities(dc.capabilities);
+    }
 
     int texUnit = 0;
     int shader = 0; // solid color shader

@@ -35,9 +35,6 @@ class gx::OpenGLRenderer final : public gx::Renderer
   void setBGColor(float r, float g, float b) override { _bgColor.set(r,g,b); }
 
   void clearFrame(int width, int height) override;
-  void setTransform(const Mat4& view, const Mat4& proj) override;
-  void draw(const DrawEntry* data, std::size_t dataSize,
-            const Color& modColor) override;
   void renderFrame() override;
 
  private:
@@ -46,12 +43,11 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   GLProgram _sp[3];
   GLUniformMat4f _sp_trans[3];
-  GLUniform4f _sp_modColor[3];
+  GLUniform1ui _sp_modColor[3];
   GLUniform1i _sp_texUnit[3];
 
   GLVertexArray _vao;
   GLBuffer _vbo;
-  std::vector<Vertex3TC> _vertices;
 
   struct TextureEntry {
     GLTexture2D tex;
@@ -60,6 +56,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     int shader = 0; // 1-mono, 2-color
   };
   std::unordered_map<TextureID,TextureEntry> _textures;
+  TextureID _lastTexID = 0;
 
   struct TransformEntry {
     Mat4 view, projection;
@@ -67,44 +64,35 @@ class gx::OpenGLRenderer final : public gx::Renderer
   std::vector<TransformEntry> _transforms;
 
   struct DrawCall {
-    GLenum mode; // GL_LINES, GL_TRIANGLES
     GLsizei count;
-    Color modColor;
+    GLenum mode; // GL_LINES, GL_TRIANGLES
+    uint32_t modColor;
     TextureID texID;
     float lineWidth;
     int transformNo;
     int capabilities; // Renderer::CapabilityEnum bitfield
   };
   std::vector<DrawCall> _drawCalls;
-  TextureID _lastTexID = 0;
-  bool _changed = true;
 
-  void addVertex(Vec2 pt, uint32_t c) {
-    _vertices.push_back({pt.x,pt.y,0.0f, 0.0f,0.0f, c}); }
-  void addVertex(Vec3 pt, uint32_t c) {
-    _vertices.push_back({pt.x,pt.y,pt.z, 0.0f,0.0f, c}); }
-  void addVertex(Vec2 pt, Vec2 tx, uint32_t c) {
-    _vertices.push_back({pt.x,pt.y,0.0f, tx.x,tx.y, c}); }
-  void addVertex(Vec3 pt, Vec2 tx, uint32_t c) {
-    _vertices.push_back({pt.x,pt.y,pt.z, tx.x,tx.y, c}); }
-
-  void addDrawCall(GLenum mode, GLsizei count, const Color& modColor,
-                   TextureID texID, float lineWidth) {
+  void addDrawCall(GLsizei count, GLenum mode, uint32_t modColor,
+                   TextureID texID, float lineWidth, int cap) {
     int transformNo = int(_transforms.size())-1;
     if (!_drawCalls.empty()) {
       DrawCall& dc = _drawCalls.back();
-      if (mode == dc.mode && texID == dc.texID && lineWidth == dc.lineWidth
-          && transformNo == dc.transformNo && _drawCap == dc.capabilities) {
+      if (mode == dc.mode && modColor == dc.modColor && texID == dc.texID
+          && lineWidth == dc.lineWidth && transformNo == dc.transformNo
+          && cap == dc.capabilities) {
 	dc.count += count;
 	return;
       }
     }
     _drawCalls.push_back(
-      {mode, count, modColor, texID, lineWidth, transformNo, _drawCap});
+      {count, mode, modColor, texID, lineWidth, transformNo, cap});
   }
 
   int _currentGLCap = -1; // current GL capability state
   void setGLCapabilities(int cap);
+  void setupBuffer();
 
   // prevent copy/assignment
   OpenGLRenderer(const OpenGLRenderer&) = delete;
