@@ -7,6 +7,7 @@
 // TODO - text vertical/horizontal scaling
 // TODO - text rotation
 // TODO - support color gradiant for primitives other than rectangle
+// TODO - textured roundedRectangle()
 
 #pragma once
 #include "DrawList.hh"
@@ -14,7 +15,6 @@
 #include "Color.hh"
 #include "Align.hh"
 #include "Types.hh"
-#include <vector>
 #include <string_view>
 #include <initializer_list>
 
@@ -135,12 +135,17 @@ class gx::DrawContext
             std::string_view text, const Rect& clip) {
     _text(f, x, y, align, spacing, text, &clip); }
 
+  void circleSector(
+    Vec2 center, float radius, float startAngle, float endAngle, int segments);
   void circleSector(Vec2 center, float radius, float startAngle, float endAngle,
                     int segments, uint32_t color0, uint32_t color1);
     // NOTE:
     //  * make start and end angles equal for a full circle
     //  * angles are in degrees
     //    angle 0 is (0, -radius) from center, 90 is (radius, 0) from center
+
+  void roundedRectangle(float x, float y, float w, float h,
+                        float curveRadius, int curveSegments);
 
   // Data extraction
   [[nodiscard]] const DrawList& drawList() const { return *_data; }

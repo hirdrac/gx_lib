@@ -3,6 +3,8 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
+// TODO - next/previous page when all items don't fit in window
+
 #include "gx/Window.hh"
 #include "gx/Renderer.hh"
 #include "gx/Font.hh"
@@ -17,6 +19,7 @@ constexpr int ITEM_WIDTH = 400;
 constexpr int ITEM_HEIGHT = 360;
 
 constexpr uint32_t WHITE = gx::packRGBA8(gx::WHITE);
+constexpr uint32_t GRAY50 = gx::packRGBA8(gx::GRAY50);
 constexpr uint32_t BLACK = gx::packRGBA8(gx::BLACK);
 constexpr uint32_t RED = gx::packRGBA8(1.0f, 0, 0, 1.0f);
 
@@ -24,19 +27,61 @@ constexpr uint32_t RED = gx::packRGBA8(1.0f, 0, 0, 1.0f);
 // **** Draw Functions ****
 void draw_circle1(gx::DrawContext& dc, float x, float y)
 {
-  dc.circleSector({x + 200, y + 200}, 150, 0, 0, 32, RED, WHITE);
+  dc.color(GRAY50);
+  dc.circleSector({x + 200, y + 200}, 150, 0, 0, 16);
 }
 
 void draw_circle2(gx::DrawContext& dc, float x, float y)
 {
+  dc.color(GRAY50);
+  dc.circleSector({x + 200, y + 200}, 150, 20, 270, 16);
+}
+
+void draw_circle3(gx::DrawContext& dc, float x, float y)
+{
+  dc.circleSector({x + 200, y + 200}, 150, 0, 0, 32, RED, WHITE);
+}
+
+void draw_circle4(gx::DrawContext& dc, float x, float y)
+{
   dc.circleSector({x + 200, y + 200}, 150, 20, 270, 32, BLACK, WHITE);
+}
+
+void draw_rrect1(gx::DrawContext& dc, float x, float y)
+{
+  dc.color(GRAY50);
+  dc.roundedRectangle(x+20, y+30, 360, 300, 60, 4);
+}
+
+void draw_rrect2(gx::DrawContext& dc, float x, float y)
+{
+  dc.color(WHITE);
+  dc.roundedRectangle(x+150, y+30, 100, 300, 60, 4);
+}
+
+void draw_rrect3(gx::DrawContext& dc, float x, float y)
+{
+  dc.color(WHITE);
+  dc.roundedRectangle(x+20, y+130, 360, 100, 60, 4);
+}
+
+void draw_rrect4(gx::DrawContext& dc, float x, float y)
+{
+  dc.color(WHITE);
+  dc.roundedRectangle(x+150, y+130, 100, 100, 60, 4);
 }
 
 
 struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   functions[] = {
-  {"Full Circle", draw_circle1},
-  {"Partial Circle", draw_circle2}
+  {"Solid Circle", draw_circle1},
+  {"Partial Circle", draw_circle2},
+  {"Gradiant Full Circle", draw_circle3},
+  {"Gradiant Partial Circle", draw_circle4},
+  {"Rounded Rectangle", draw_rrect1},
+  {"Narrow Width Rounded Rect", draw_rrect2},
+  {"Narrow Height Rounded Rect", draw_rrect3},
+  {"Narrow Width/Height Rounded Rect", draw_rrect4},
 };
 
 
@@ -78,7 +123,7 @@ int main(int argc, char** argv)
       dc.color(gx::WHITE);
       x = y = 0;
       for (auto& [desc,fn] : functions) {
-        dc.text(fnt, x+2, y+3, gx::ALIGN_TOP_LEFT, 2, desc);
+        dc.text(fnt, x+(ITEM_WIDTH/2), y+6, gx::ALIGN_TOP_CENTER, 2, desc);
         x += ITEM_WIDTH;
         if (x > float(win.width() - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }

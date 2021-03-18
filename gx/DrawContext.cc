@@ -191,6 +191,37 @@ void gx::DrawContext::_text(
 }
 
 void gx::DrawContext::circleSector(
+  Vec2 center, float radius, float startAngle, float endAngle, int segments)
+{
+  while (endAngle <= startAngle) { endAngle += 360.0f; }
+  endAngle = std::min(endAngle, startAngle + 360.0f);
+
+  const float angle0 = DegToRad(startAngle);
+  const float angle1 = DegToRad(endAngle);
+  const float segmentAngle = (angle1 - angle0) / float(segments);
+
+  Vec2 v0 {center.x, center.y};
+  Vec2 v1 {
+    v1.x = center.x + (radius * std::sin(angle0)),
+    v1.y = center.y - (radius * std::cos(angle0))};
+
+  float a = angle0;
+  for (int i = 0; i < segments; ++i) {
+    if (i == segments-1) { a = angle1; } else { a += segmentAngle; }
+
+    Vec2 v2 {
+      center.x + (radius * std::sin(a)),
+      center.y - (radius * std::cos(a))};
+
+    triangle(v0, v1, v2);
+
+    // setup for next iteration
+    v1.x = v2.x;
+    v1.y = v2.y;
+  }
+}
+
+void gx::DrawContext::circleSector(
   Vec2 center, float radius, float startAngle, float endAngle, int segments,
   uint32_t color0, uint32_t color1)
 {
@@ -201,7 +232,7 @@ void gx::DrawContext::circleSector(
   const float angle1 = DegToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
 
-  Vertex2C v0 = {center.x, center.y, color0};
+  Vertex2C v0 {center.x, center.y, color0};
 
   Vertex2C v1;
   v1.x = center.x + (radius * std::sin(angle0));
@@ -223,5 +254,33 @@ void gx::DrawContext::circleSector(
     // setup for next iteration
     v1.x = v2.x;
     v1.y = v2.y;
+  }
+}
+
+void gx::DrawContext::roundedRectangle(
+  float x, float y, float w, float h, float curveRadius, int curveSegments)
+{
+  float half_w = w / 2.0f;
+  float half_h = h / 2.0f;
+  float r = std::min(curveRadius, std::min(half_w, half_h));
+
+  // corners
+  circleSector({x+r,y+r}, r, 270, 0, curveSegments);      // top/left
+  circleSector({x+w-r,y+r}, r, 0, 90, curveSegments);     // top/right
+  circleSector({x+w-r,y+h-r}, r, 90, 180, curveSegments); // bottom/right
+  circleSector({x+r,y+h-r}, r, 180, 270, curveSegments);  // bottom/left
+
+  // borders/center
+  if (r < half_w && r < half_h) {
+    // can fit all borders
+    rectangle(x+r, y, w - (r*2.0f), r);
+    rectangle(x, y+r, w, h - (r*2.0f));
+    rectangle(x+r, y+h-r, w - (r*2.0f), r);
+  } else if (r < half_w) {
+    // can only fit top/bottom borders
+    rectangle(x+r, y, w - (r*2.0f), h);
+  } else if (r < half_h) {
+    // can only fit left/right borders
+    rectangle(x, y+r, w, h - (r*2.0f));
   }
 }
