@@ -178,6 +178,8 @@ class gx::DrawContext
 
   void _text(const Font& f, float x, float y, AlignEnum align, int spacing,
              std::string_view text, const Rect* clipPtr);
+  void _rect(float x, float y, float w, float h) {
+    add(CMD_rectangle, x, y, x + w, y + h); }
 
   [[nodiscard]] inline uint32_t gradiantColor(float g) const;
 };

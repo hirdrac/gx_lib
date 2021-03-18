@@ -232,7 +232,7 @@ void gx::DrawContext::circleSector(
   const float angle1 = DegToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
 
-  Vertex2C v0 {center.x, center.y, color0};
+  const Vertex2C v0 {center.x, center.y, color0};
 
   Vertex2C v1;
   v1.x = center.x + (radius * std::sin(angle0));
@@ -260,9 +260,9 @@ void gx::DrawContext::circleSector(
 void gx::DrawContext::roundedRectangle(
   float x, float y, float w, float h, float curveRadius, int curveSegments)
 {
-  float half_w = w / 2.0f;
-  float half_h = h / 2.0f;
-  float r = std::min(curveRadius, std::min(half_w, half_h));
+  const float half_w = w / 2.0f;
+  const float half_h = h / 2.0f;
+  const float r = std::min(curveRadius, std::min(half_w, half_h));
 
   // corners
   circleSector({x+r,y+r}, r, 270, 0, curveSegments);      // top/left
@@ -271,16 +271,16 @@ void gx::DrawContext::roundedRectangle(
   circleSector({x+r,y+h-r}, r, 180, 270, curveSegments);  // bottom/left
 
   // borders/center
-  if (r < half_w && r < half_h) {
+  if (r == curveRadius) {
     // can fit all borders
-    rectangle(x+r, y, w - (r*2.0f), r);
-    rectangle(x, y+r, w, h - (r*2.0f));
-    rectangle(x+r, y+h-r, w - (r*2.0f), r);
+    _rect(x+r, y, w - (r*2.0f), r);
+    _rect(x, y+r, w, h - (r*2.0f));
+    _rect(x+r, y+h-r, w - (r*2.0f), r);
   } else if (r < half_w) {
     // can only fit top/bottom borders
-    rectangle(x+r, y, w - (r*2.0f), h);
+    _rect(x+r, y, w - (r*2.0f), h);
   } else if (r < half_h) {
     // can only fit left/right borders
-    rectangle(x, y+r, w, h - (r*2.0f));
+    _rect(x, y+r, w, h - (r*2.0f));
   }
 }
