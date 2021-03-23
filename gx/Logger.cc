@@ -29,10 +29,11 @@
 // Linux specific thread id
 // NOTE: 'gettid()' is available in glibc 2.30
 //   for earlier versions, this function is needed
-static inline pid_t get_threadid() { return pid_t(syscall(SYS_gettid)); }
+[[nodiscard]] static inline pid_t get_threadid() {
+  return pid_t(syscall(SYS_gettid)); }
 #else
 // thread ID logging disabled
-static inline pid_t get_threadid() { return 0; }
+[[nodiscard]] static inline pid_t get_threadid() { return 0; }
 #endif
 
 namespace
@@ -50,7 +51,7 @@ namespace
     os.write(str, std::streamsize(len));
   }
 
-  std::string fileTime()
+  [[nodiscard]] std::string fileTime()
   {
     std::time_t t = std::time(nullptr);
     std::tm* td = std::localtime(&t);
@@ -61,7 +62,7 @@ namespace
     return std::string(str, std::size_t(len));
   }
 
-  constexpr std::string_view levelStr(gx::LogLevel l)
+  [[nodiscard]] constexpr std::string_view levelStr(gx::LogLevel l)
   {
     switch (l) {
       case gx::LVL_TRACE: return "[TRACE] ";

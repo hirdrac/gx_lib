@@ -23,7 +23,7 @@ class GLShader
 
   // operators
   inline GLShader& operator=(GLShader&& s) noexcept;
-  explicit operator bool() const { return _shader; }
+  [[nodiscard]] explicit operator bool() const { return _shader; }
 
   // accessors
   [[nodiscard]] GLuint id() const { return _shader; }

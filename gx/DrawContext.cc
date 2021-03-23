@@ -16,16 +16,16 @@ void gx::DrawContext::rectangle(float x, float y, float w, float h)
   const float x1 = x + w;
   const float y1 = y + h;
   if (_colorMode == CM_HGRADIANT) {
-    uint32_t c0 = gradiantColor(x0);
-    uint32_t c1 = gradiantColor(x1);
+    const uint32_t c0 = gradiantColor(x0);
+    const uint32_t c1 = gradiantColor(x1);
     add(CMD_quad2C,
         x0, y0, c0,
         x1, y0, c1,
         x0, y1, c0,
         x1, y1, c1);
   } else if (_colorMode == CM_VGRADIANT) {
-    uint32_t c0 = gradiantColor(y0);
-    uint32_t c1 = gradiantColor(y1);
+    const uint32_t c0 = gradiantColor(y0);
+    const uint32_t c1 = gradiantColor(y1);
     add(CMD_quad2C,
         x0, y0, c0,
         x1, y0, c0,
@@ -44,16 +44,16 @@ void gx::DrawContext::rectangle(
   const float x1 = x + w;
   const float y1 = y + h;
   if (_colorMode == CM_HGRADIANT) {
-    uint32_t c0 = gradiantColor(x0);
-    uint32_t c1 = gradiantColor(x1);
+    const uint32_t c0 = gradiantColor(x0);
+    const uint32_t c1 = gradiantColor(x1);
     add(CMD_quad2TC,
         x0, y0, t0.x, t0.y, c0,
         x1, y0, t1.x, t0.y, c1,
         x0, y1, t0.x, t1.y, c0,
         x1, y1, t1.x, t1.y, c1);
   } else if (_colorMode == CM_VGRADIANT) {
-    uint32_t c0 = gradiantColor(y0);
-    uint32_t c1 = gradiantColor(y1);
+    const uint32_t c0 = gradiantColor(y0);
+    const uint32_t c1 = gradiantColor(y1);
     add(CMD_quad2TC,
         x0, y0, t0.x, t0.y, c0,
         x1, y0, t1.x, t0.y, c0,
@@ -103,16 +103,16 @@ void gx::DrawContext::rectangle(
   }
 
   if (_colorMode == CM_HGRADIANT) {
-    uint32_t c0 = gradiantColor(x0);
-    uint32_t c1 = gradiantColor(x1);
+    const uint32_t c0 = gradiantColor(x0);
+    const uint32_t c1 = gradiantColor(x1);
     add(CMD_quad2TC,
         x0, y0, tx0, ty0, c0,
         x1, y0, tx1, ty0, c1,
         x0, y1, tx0, ty1, c0,
         x1, y1, tx1, ty1, c1);
   } else if (_colorMode == CM_VGRADIANT) {
-    uint32_t c0 = gradiantColor(y0);
-    uint32_t c1 = gradiantColor(y1);
+    const uint32_t c0 = gradiantColor(y0);
+    const uint32_t c1 = gradiantColor(y1);
     add(CMD_quad2TC,
         x0, y0, tx0, ty0, c0,
         x1, y0, tx1, ty0, c0,
@@ -132,7 +132,7 @@ void gx::DrawContext::_text(
   int lines = 1;
   for (char ch : text) { if (ch == '\n') { ++lines; } }
 
-  float fs = float(f.size() + spacing);
+  const float fs = float(f.size() + spacing);
   float cursorY;
   switch (VAlign(align)) {
     case ALIGN_TOP:
@@ -147,7 +147,7 @@ void gx::DrawContext::_text(
   }
 
   texture(f.tex());
-  AlignEnum h_align = HAlign(align);
+  const AlignEnum h_align = HAlign(align);
   std::size_t lineStart = 0;
   for (;;) {
     std::size_t pos = text.find('\n', lineStart);
@@ -171,8 +171,8 @@ void gx::DrawContext::_text(
 
         if (g->width > 0 && g->height > 0) {
           // convert x,y to int to make sure text is pixel aligned
-          float gx = float(int(cursorX + g->left));
-          float gy = float(int(cursorY - g->top));
+          const float gx = float(int(cursorX + g->left));
+          const float gy = float(int(cursorY - g->top));
 
           if (clipPtr) {
             rectangle(gx, gy, g->width, g->height, g->t0, g->t1, *clipPtr);
@@ -200,7 +200,8 @@ void gx::DrawContext::circleSector(
   const float angle1 = DegToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
 
-  Vec2 v0 {center.x, center.y};
+  const Vec2 v0 {center.x, center.y};
+
   Vec2 v1 {
     v1.x = center.x + (radius * std::sin(angle0)),
     v1.y = center.y - (radius * std::cos(angle0))};

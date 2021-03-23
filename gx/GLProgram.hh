@@ -24,7 +24,7 @@ class GLProgram
 
   // operators
   inline GLProgram& operator=(GLProgram&& p) noexcept;
-  explicit operator bool() const { return _prog; }
+  [[nodiscard]] explicit operator bool() const { return _prog; }
 
   // accessors
   [[nodiscard]] GLuint id() const { return _prog; }

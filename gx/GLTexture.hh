@@ -53,7 +53,7 @@ class GLTextureT
 
   // operators
   inline GLTextureT<TARGET>& operator=(GLTextureT<TARGET>&& t) noexcept;
-  explicit operator bool() const { return _tex; }
+  [[nodiscard]] explicit operator bool() const { return _tex; }
 
   // accessors
   [[nodiscard]] static GLenum target() { return TARGET; }

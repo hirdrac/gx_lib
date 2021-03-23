@@ -15,7 +15,7 @@ class GLUniform1f
   GLUniform1f() = default;
   GLUniform1f(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v) { GX_GLCALL(glUniform1f, _loc, v); }
 
@@ -29,7 +29,7 @@ class GLUniform2f
   GLUniform2f() = default;
   GLUniform2f(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1) { GX_GLCALL(glUniform2f, _loc, v0, v1); }
 
@@ -46,7 +46,7 @@ class GLUniform3f
   GLUniform3f() = default;
   GLUniform3f(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1, GLfloat v2) {
     GX_GLCALL(glUniform3f, _loc, v0, v1, v2); }
@@ -64,7 +64,7 @@ class GLUniform4f
   GLUniform4f() = default;
   GLUniform4f(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
     GX_GLCALL(glUniform4f, _loc, v0, v1, v2, v3); }
@@ -82,7 +82,7 @@ class GLUniform1i
   GLUniform1i() = default;
   GLUniform1i(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLint v) { GX_GLCALL(glUniform1i, _loc, v); }
 
@@ -96,7 +96,7 @@ class GLUniform2i
   GLUniform2i() = default;
   GLUniform2i(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLint v0, GLint v1) { GX_GLCALL(glUniform2i, _loc, v0, v1); }
 
@@ -113,7 +113,7 @@ class GLUniform3i
   GLUniform3i() = default;
   GLUniform3i(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLint v0, GLint v1, GLint v2) {
     GX_GLCALL(glUniform3i, _loc, v0, v1, v2); }
@@ -131,7 +131,7 @@ class GLUniform4i
   GLUniform4i() = default;
   GLUniform4i(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLint v0, GLint v1, GLint v2, GLint v3) {
     GX_GLCALL(glUniform4i, _loc, v0, v1, v2, v3); }
@@ -149,7 +149,7 @@ class GLUniform1ui
   GLUniform1ui() = default;
   GLUniform1ui(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLuint v) { GX_GLCALL(glUniform1ui, _loc, v); }
 
@@ -163,7 +163,7 @@ class GLUniform2ui
   GLUniform2ui() = default;
   GLUniform2ui(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLuint v0, GLuint v1) { GX_GLCALL(glUniform2ui, _loc, v0, v1); }
 
@@ -180,7 +180,7 @@ class GLUniform3ui
   GLUniform3ui() = default;
   GLUniform3ui(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLuint v0, GLuint v1, GLuint v2) {
     GX_GLCALL(glUniform3ui, _loc, v0, v1, v2); }
@@ -198,7 +198,7 @@ class GLUniform4ui
   GLUniform4ui() = default;
   GLUniform4ui(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   void set(GLuint v0, GLuint v1, GLuint v2, GLuint v3) {
     GX_GLCALL(glUniform4ui, _loc, v0, v1, v2, v3); }
@@ -216,7 +216,7 @@ class GLUniformMat4f
   GLUniformMat4f() = default;
   GLUniformMat4f(GLint loc) : _loc(loc) { }
 
-  explicit operator bool() const { return _loc != -1; }
+  [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
   template<class T>
   void set(const T& m, bool transpose = false) {

@@ -22,7 +22,7 @@ class GLVertexArray
 
   // operators
   inline GLVertexArray& operator=(GLVertexArray&& v) noexcept;
-  explicit operator bool() const { return _vao; }
+  [[nodiscard]] explicit operator bool() const { return _vao; }
 
   // accessors
   [[nodiscard]] GLuint id() const { return _vao; }

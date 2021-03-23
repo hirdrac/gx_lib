@@ -172,7 +172,7 @@ class gx::DrawContext
 
   template<typename... Args>
   void add(DrawCmd cmd, const Args&... args) {
-    std::initializer_list<DrawEntry> x = {cmd, args...};
+    const std::initializer_list<DrawEntry> x {cmd, args...};
     _data->insert(_data->end(), x.begin(), x.end());
   }
 
@@ -256,6 +256,6 @@ uint32_t gx::DrawContext::gradiantColor(float g) const
   if (g <= _g0) { return _c0; }
   else if (g >= _g1) { return _c1; }
 
-  float t = (g - _g0) / (_g1 - _g0);
+  const float t = (g - _g0) / (_g1 - _g0);
   return packRGBA8((_color0 * (1.0f-t)) + (_color1 * t));
 }

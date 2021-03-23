@@ -21,7 +21,7 @@ class GLBuffer
 
   // operators
   inline GLBuffer& operator=(GLBuffer&& b) noexcept;
-  explicit operator bool() const { return _buffer; }
+  [[nodiscard]] explicit operator bool() const { return _buffer; }
 
   // accessors
   [[nodiscard]] GLuint id() const { return _buffer; }

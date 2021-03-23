@@ -32,7 +32,7 @@ class gx::Texture
       _minFilter(t._minFilter), _magFilter(t._magFilter) { }
   Texture& operator=(Texture&& t) noexcept;
 
-  explicit operator bool() const { return _texID != 0; }
+  [[nodiscard]] explicit operator bool() const { return _texID != 0; }
 
   bool init(Window& win, const Image& img, int levels = 1,
             FilterType minFilter = FILTER_NEAREST,

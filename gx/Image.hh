@@ -39,7 +39,7 @@ class gx::Image
   [[nodiscard]] const uint8_t* data() const { return _data; }
 
   // image editing methods
-  bool canEdit() const { return _storage.get(); }
+  [[nodiscard]] bool canEdit() const { return _storage.get(); }
   bool clear();
   bool setPixel(int x, int y, const uint8_t* channels_vals);
   bool stamp(int x, int y, const Image& sub_image);

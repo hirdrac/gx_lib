@@ -20,24 +20,22 @@ namespace {
   using clock = std::chrono::steady_clock;
   clock::time_point startTime;
 
-  inline void initStartTime()
-  {
+  inline void initStartTime() {
     if (startTime.time_since_epoch().count() == 0) {
       startTime = clock::now();
     }
   }
 
-  inline int64_t usecSinceStart()
-  {
+  [[nodiscard]] inline int64_t usecSinceStart() {
     return std::chrono::duration_cast<std::chrono::microseconds>(
       clock::now() - startTime).count();
   }
 
   // **** Helper Functions ****
-  constexpr int glfwBool(bool val) { return val ? GLFW_TRUE : GLFW_FALSE; }
+  [[nodiscard]] constexpr int glfwBool(bool val) {
+    return val ? GLFW_TRUE : GLFW_FALSE; }
 
-  constexpr int cursorInputModeVal(gx::MouseModeEnum mode)
-  {
+  [[nodiscard]] constexpr int cursorInputModeVal(gx::MouseModeEnum mode) {
     switch (mode) {
       case gx::MOUSE_NORMAL:  return GLFW_CURSOR_NORMAL;
       case gx::MOUSE_HIDE:    return GLFW_CURSOR_HIDDEN;

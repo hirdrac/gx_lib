@@ -35,7 +35,7 @@ namespace {
     }
   }
 
-  GLProgram makeProgram(const char* vsrc, const char* fsrc)
+  [[nodiscard]] GLProgram makeProgram(const char* vsrc, const char* fsrc)
   {
     GLShader vshader;
     if (!vshader.init(GL_VERTEX_SHADER, vsrc, GLSL_SOURCE_HEADER)) {
@@ -58,7 +58,7 @@ namespace {
     return prog;
   }
 
-  GLint getUniformLoc(const GLProgram& p, const char* name)
+  [[nodiscard]] GLint getUniformLoc(const GLProgram& p, const char* name)
   {
     GLint loc = p.getUniformLocation(name);
     if (loc < 0) {

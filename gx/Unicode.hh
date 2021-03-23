@@ -15,11 +15,12 @@
 namespace gx
 {
   // functions
-  std::string toUTF8(int32_t code);
-  inline std::string toUTF8(uint32_t code) { return toUTF8(int32_t(code)); }
+  [[nodiscard]] std::string toUTF8(int32_t code);
+  [[nodiscard]] inline std::string toUTF8(uint32_t code) {
+    return toUTF8(int32_t(code)); }
     // returns UTF-8 encoded value (1-4 characters) of a unicode character
 
-  int lengthUTF8(std::string_view str);
+  [[nodiscard]] int lengthUTF8(std::string_view str);
     // returns UTF8 string length
 
   void popbackUTF8(std::string& str);

@@ -1,6 +1,6 @@
 //
 // gx/StringUtil.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2021 Richard Bradley
 //
 
 #pragma once
@@ -10,7 +10,7 @@
 namespace gx
 {
   template<typename... Args>
-  inline std::string concat(const Args&... args)
+  [[nodiscard]] inline std::string concat(const Args&... args)
   {
     std::ostringstream os;
     ((os << args),...);
