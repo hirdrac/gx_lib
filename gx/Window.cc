@@ -48,7 +48,7 @@ namespace {
 
 gx::Window::~Window()
 {
-  if (_renderer) {
+  if (_renderer && glfwInitStatus()) {
     assert(isMainThread());
     glfwHideWindow(_renderer->window());
     // window destroyed in Renderer destructor
