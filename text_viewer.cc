@@ -19,9 +19,11 @@
 #include "gx/Font.hh"
 #include "gx/Logger.hh"
 #include "gx/Print.hh"
+
 #include <fstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 
 constexpr int DEFAULT_WIDTH = 1280;
@@ -81,10 +83,14 @@ int main(int argc, char** argv)
 
   // main loop
   bool redraw = true;
-  bool endReached = false;
   for (;;) {
+    const int maxLines = win.height() / lineHeight;
+    const int endLine = std::max(int(text.size()) - maxLines, 0);
+
     // draw frame
     if (win.resized() || redraw) {
+      if (topLine > endLine) { topLine = endLine; }
+
       dc.clear();
       dc.color(gx::WHITE);
 
@@ -93,15 +99,11 @@ int main(int argc, char** argv)
       while (pos < int(text.size()) && ty < float(win.height())) {
         if (pos >= 0 && pos < int(text.size())) {
           const std::string& t = text[pos];
-          //float tw = fnt.calcWidth(t);
           dc.text(fnt, 0.0f, ty, gx::ALIGN_TOP_LEFT, spacing, t);
         }
         ty += float(lineHeight);
         ++pos;
       }
-
-      if (ty > float(win.height())) { --pos; }
-      endReached = pos >= int(text.size());
 
       ren.clearFrame(win.width(), win.height());
       ren.draw(dl);
@@ -120,32 +122,16 @@ int main(int argc, char** argv)
       }
     }
 
-    int lastTopLine = topLine;
-    if (win.keyPressCount(gx::KEY_UP, true) && topLine > 0) {
-      --topLine;
-    }
-    if (win.keyPressCount(gx::KEY_DOWN, true) && !endReached) {
-      ++topLine;
-    }
+    int lastTop = topLine;
+    if (win.keyPressCount(gx::KEY_UP, true)) { --topLine; }
+    if (win.keyPressCount(gx::KEY_DOWN, true)) { ++topLine; }
+    if (win.keyPressCount(gx::KEY_PAGE_UP, true)) { topLine -= maxLines; }
+    if (win.keyPressCount(gx::KEY_PAGE_DOWN, true)) { topLine += maxLines; }
+    if (win.keyPressCount(gx::KEY_HOME, false)) { topLine = 0; }
+    if (win.keyPressCount(gx::KEY_END, false)) { topLine = endLine; }
 
-    int maxLines = win.height() / lineHeight;
-    if (win.keyPressCount(gx::KEY_PAGE_UP, true)) {
-      topLine -= maxLines;
-      if (topLine < 0) { topLine = 0; }
-    }
-    if (win.keyPressCount(gx::KEY_PAGE_DOWN, true)) {
-      topLine += maxLines;
-      int max = std::max(int(text.size()) - maxLines, 0);
-      if (topLine > max) { topLine = max; }
-    }
-    if (win.keyPressCount(gx::KEY_HOME, false)) {
-      topLine = 0;
-    }
-    if (win.keyPressCount(gx::KEY_END, false)) {
-      topLine = int(text.size()) - maxLines;
-    }
-
-    if (lastTopLine != topLine) { redraw = true; }
+    topLine = std::clamp(topLine, 0, endLine);
+    if (lastTop != topLine) { redraw = true; }
   }
 
   return 0;
