@@ -8,18 +8,22 @@ BIN1 = image_viewer
 BIN1.SRC = image_viewer.cc
 BIN1.LIBS = LIB_gx
 
-BIN2 = show_font
-BIN2.SRC = show_font.cc
+BIN2 = text_viewer
+BIN2.SRC = text_viewer.cc
 BIN2.LIBS = LIB_gx
 
-
-BIN3 = demo_gui
-BIN3.SRC = demo_gui.cc
+BIN3 = show_font
+BIN3.SRC = show_font.cc
 BIN3.LIBS = LIB_gx
 
-BIN4 = demo_draw
-BIN4.SRC = demo_draw.cc
-BIN4.LIBS = LIB_gx
+
+BIN10 = demo_gui
+BIN10.SRC = demo_gui.cc
+BIN10.LIBS = LIB_gx
+
+BIN11 = demo_draw
+BIN11.SRC = demo_draw.cc
+BIN11.LIBS = LIB_gx
 
 
 STANDARD = c++17
