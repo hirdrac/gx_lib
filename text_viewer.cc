@@ -12,6 +12,7 @@
 // TODO - small text display on side with current view hi-lighted (like VS code)
 // TODO - configurable text size
 // TODO - goto line GUI
+// TODO - handle tabs
 
 #include "gx/Window.hh"
 #include "gx/Renderer.hh"
@@ -89,17 +90,14 @@ int main(int argc, char** argv)
 
     // draw frame
     if (win.resized() || redraw) {
-      if (topLine > endLine) { topLine = endLine; }
-
       dc.clear();
       dc.color(gx::WHITE);
 
       float ty = 0.0;
       int pos = topLine;
       while (pos < int(text.size()) && ty < float(win.height())) {
-        if (pos >= 0 && pos < int(text.size())) {
-          const std::string& t = text[pos];
-          dc.text(fnt, 0.0f, ty, gx::ALIGN_TOP_LEFT, spacing, t);
+        if (pos >= 0) {
+          dc.text(fnt, 0.0f, ty, gx::ALIGN_TOP_LEFT, spacing, text[pos]);
         }
         ty += float(lineHeight);
         ++pos;
