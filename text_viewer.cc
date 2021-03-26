@@ -4,7 +4,6 @@
 //
 
 // TODO - smooth scrolling
-// TODO - mouse scroll wheel
 // TODO - line wrap (with indicator)
 // TODO - embed default font file, configurable alternate font
 // TODO - status bar with filename, current line
@@ -29,6 +28,9 @@
 
 constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
+
+constexpr int FONT_SIZE = 20;
+constexpr int SCROLL_STEP = 3;
 
 
 int main(int argc, char** argv)
@@ -58,7 +60,7 @@ int main(int argc, char** argv)
   if (text.empty()) { text.push_back("* FILE EMPTY *"); }
 
   gx::Font fnt;
-  if (!fnt.init("data/LiberationMono-Regular.ttf", 20)) {
+  if (!fnt.init("data/LiberationMono-Regular.ttf", FONT_SIZE)) {
     gx::println_err("failed to load font");
     return -1;
   }
@@ -127,6 +129,7 @@ int main(int argc, char** argv)
     if (win.keyPressCount(gx::KEY_PAGE_DOWN, true)) { topLine += maxLines; }
     if (win.keyPressCount(gx::KEY_HOME, false)) { topLine = 0; }
     if (win.keyPressCount(gx::KEY_END, false)) { topLine = endLine; }
+    if (win.scrollY() != 0.0f) { topLine -= int(win.scrollY()) * SCROLL_STEP; }
 
     topLine = std::clamp(topLine, 0, endLine);
     if (lastTop != topLine) { redraw = true; }
