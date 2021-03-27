@@ -129,51 +129,51 @@ void gx::DrawContext::_text(
 {
   if (text.empty()) { return; }
 
-  int lines = 1;
-  for (char ch : text) { if (ch == '\n') { ++lines; } }
-
   const float fs = float(f.size() + spacing);
+  const AlignEnum h_align = HAlign(align);
+  const AlignEnum v_align = VAlign(align);
+
   float cursorY;
-  switch (VAlign(align)) {
-    case ALIGN_TOP:
-      cursorY = y + f.ymax();
-      break;
-    case ALIGN_BOTTOM:
-      cursorY = y + f.ymin() - (fs*float(lines-1));
-      break;
-    default: // ALIGN_VCENTER
-      cursorY = y + (f.ymax() - (fs*float(lines-1))) / 2.0f;
-      break;
+  if (v_align == ALIGN_TOP) {
+    cursorY = y + f.ymax();
+  } else {
+    int nl = 0;
+    for (char ch : text) { if (ch == '\n') { ++nl; } }
+    if (v_align == ALIGN_BOTTOM) {
+      cursorY = y + f.ymin() - (fs*float(nl));
+    } else { // ALIGN_VCENTER
+      cursorY = y + (f.ymax() - (fs*float(nl))) / 2.0f;
+    }
   }
 
   texture(f.tex());
-  const AlignEnum h_align = HAlign(align);
   std::size_t lineStart = 0;
+  float cursorX = x;
+
   for (;;) {
-    std::size_t pos = text.find('\n', lineStart);
+    std::size_t pos = (h_align == ALIGN_LEFT)
+      ? text.find_first_of("\t\n", lineStart) : text.find('\n', lineStart);
+    int endChar = (pos != std::string_view::npos) ? text[pos] : '\0';
+
     std::string_view line = text.substr(
-      lineStart, (pos != std::string_view::npos) ? pos - lineStart : pos);
+      lineStart, (pos != std::string_view::npos) ? (pos - lineStart) : pos);
 
     if (!line.empty()) {
-      float cursorX = x;
       if (h_align != ALIGN_LEFT) {
         float tw = f.calcWidth(line);
-        if (h_align == ALIGN_RIGHT) {
-          cursorX -= tw;
-        } else { // ALIGN_HCENTER
-          cursorX -= tw / 2.0f;
-        }
+        cursorX -= (h_align == ALIGN_RIGHT) ? tw : (tw / 2.0f);
       }
 
       for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
-        const Glyph* g = f.findGlyph(itr.get());
+        int ch = itr.get();
+        if (ch == '\t') { ch = ' '; }
+        const Glyph* g = f.findGlyph(ch);
         if (!g) { continue; }
 
         if (g->width > 0 && g->height > 0) {
           // convert x,y to int to make sure text is pixel aligned
           const float gx = float(int(cursorX + g->left));
           const float gy = float(int(cursorY - g->top));
-
           if (clipPtr) {
             rectangle(gx, gy, g->width, g->height, g->t0, g->t1, *clipPtr);
           } else {
@@ -184,9 +184,17 @@ void gx::DrawContext::_text(
       }
     }
 
-    if (pos == std::string_view::npos || pos >= (text.size() - 1)) { break; }
+    if (!endChar) { break; }
+
     lineStart = pos + 1;
-    cursorY += fs;
+    if (endChar == '\t') {
+      // adjust cursorX for tab (only for left alignment)
+      float t = std::floor((cursorX - _tabStart) / _tabWidth) + 1.0f;
+      cursorX = _tabStart + (t * _tabWidth);
+    } else if (endChar == '\n') {
+      // move to start of next line
+      cursorX = x; cursorY += fs;
+    }
   }
 }
 

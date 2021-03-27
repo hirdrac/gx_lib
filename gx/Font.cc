@@ -259,7 +259,9 @@ float gx::Font::calcWidth(std::string_view text) const
   float max_width = 0, width = 0;
   const Glyph* g = nullptr;
   for (auto ch : text) {
-    if (ch == '\n') {
+    if (ch == '\t') {
+      ch = ' '; // tab logic should be handled outside of thie function
+    } else if (ch == '\n') {
       //if (g) { width += -g->advX + (float(g->width) + g->left); }
       max_width = std::max(max_width, width);
       width = 0;

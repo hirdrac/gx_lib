@@ -47,6 +47,9 @@ class gx::DrawContext
   inline void texture(TextureID tid);
   void texture(const Texture& t) { texture(t.id()); }
 
+  void tabSize(float start, float width) {
+    _tabStart = start; _tabWidth = width; }
+
   // line drawing
   void line(Vec2 a, Vec2 b) {
     add(CMD_line2, a.x, a.y, b.x, b.y); }
@@ -59,7 +62,6 @@ class gx::DrawContext
   //   | /     | /|    |   H
   //   |/      |/ |    |   |
   //   C       C--D    +-W-+
-
   void triangle(Vec2 a, Vec2 b, Vec2 c) {
     add(CMD_triangle2, a.x, a.y, b.x, b.y, c.x, c.y); }
   void triangle(const Vec3& a, const Vec3& b, const Vec3& c) {
@@ -155,6 +157,7 @@ class gx::DrawContext
   uint32_t _lastColor;
   float _lastLineWidth;
   TextureID _lastTexID;
+  float _tabStart, _tabWidth;
 
   float _g0, _g1;         // x or y gradiant coords
   uint32_t _c0, _c1;      // gradiant colors (packed)
@@ -167,6 +170,8 @@ class gx::DrawContext
     _lastColor = 0xffffffff;
     _lastLineWidth = 1.0f;
     _lastTexID = 0;
+    _tabStart = 0.0f;
+    _tabWidth = 100.0f;
     _colorMode = CM_SOLID;
   }
 

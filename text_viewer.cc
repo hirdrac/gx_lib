@@ -11,7 +11,6 @@
 // TODO - small text display on side with current view hi-lighted (like VS code)
 // TODO - configurable text size
 // TODO - goto line GUI
-// TODO - handle tabs
 
 #include "gx/Window.hh"
 #include "gx/Renderer.hh"
@@ -30,6 +29,7 @@ constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
 
 constexpr int FONT_SIZE = 20;
+constexpr int TAB_SIZE = 8;
 constexpr int SCROLL_STEP = 3;
 
 
@@ -79,6 +79,7 @@ int main(int argc, char** argv)
 
   constexpr int spacing = 0;
   const int lineHeight = fnt.size() + spacing;
+  const float tabWidth = fnt.calcWidth(" ") * TAB_SIZE;
   int topLine = 0;
 
   gx::DrawList dl;
@@ -94,6 +95,7 @@ int main(int argc, char** argv)
     if (win.resized() || redraw) {
       dc.clear();
       dc.color(gx::WHITE);
+      dc.tabSize(0.0f, tabWidth);
 
       float ty = 0.0;
       int pos = topLine;
