@@ -10,7 +10,6 @@
 #include <string>
 #include <string_view>
 #include <map>
-#include <cstdint>
 
 
 namespace gx {
@@ -67,7 +66,9 @@ class gx::Font
   [[nodiscard]] float calcWidth(std::string_view text) const;
     // single text line width calculation
 
-  [[nodiscard]] int calcLines(std::string_view text) const;
+  [[nodiscard]] std::size_t fitChars(
+    std::string_view text, float maxWidth) const;
+    // returns size of substr to fit within specified width
 
   void setSize(int s) { _size = s; }
   void setYmin(float y) { _ymin = y; }

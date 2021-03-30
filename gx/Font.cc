@@ -274,13 +274,18 @@ float gx::Font::calcWidth(std::string_view text) const
   return std::max(max_width, width);
 }
 
-int gx::Font::calcLines(std::string_view text) const
+std::size_t gx::Font::fitChars(std::string_view text, float maxWidth) const
 {
-  if (text.empty()) { return 0; }
-  int lines = 1;
-  for (int ch : text) {
-    if (ch == '\n') { ++lines; }
+  float w = 0.0f;
+  for (size_t i = 0; i < text.size(); ++i) {
+    int ch = text[i];
+    if (ch == '\t') { ch = ' '; }
+    const Glyph* g = findGlyph(ch);
+    if (!g) { continue; }
+
+    if ((w + g->advX) > maxWidth) { return i; }
+    w += g->advX;
   }
 
-  return lines;
+  return text.size();
 }
