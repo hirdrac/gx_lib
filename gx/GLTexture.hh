@@ -126,8 +126,8 @@ class GLTextureT
   inline void clear(GLint level, GLenum format);
     // not valid for GL_TEXTURE_BUFFER
 
-  [[nodiscard]] inline float coordX(int x) const;
-  [[nodiscard]] inline float coordY(int y) const;
+  [[nodiscard]] inline float coordX(float x) const;
+  [[nodiscard]] inline float coordY(float y) const;
     // return texture coordinate for x/y pixel coord
 
   // set texture parameters
@@ -140,7 +140,7 @@ class GLTextureT
 
   [[nodiscard]] static GLint maxSize() {
     GLint s = 0;
-    glGetIntegerv(GLTextureVals<TARGET>::pnameMaxSize, &s);
+    GX_GLCALL(glGetIntegerv, GLTextureVals<TARGET>::pnameMaxSize, &s);
     return s;
   }
 
@@ -286,7 +286,8 @@ GLuint GLTextureT<TARGET>::init(
 
 template<GLenum TARGET>
 GLuint GLTextureT<TARGET>::init(
-  GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth)
+  GLsizei levels, GLenum internalformat,
+  GLsizei width, GLsizei height, GLsizei depth)
 {
   cleanup();
   _internalformat = internalformat;
@@ -342,11 +343,11 @@ GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
   _height = 0;
   _depth = 0;
 #ifdef GX_GL33
-  if (!_tex) { glGenTextures(1, &_tex); }
+  if (!_tex) { GX_GLCALL(glGenTextures, 1, &_tex); }
   bindCheck();
   GX_GLCALL(glTexBuffer, TARGET, internalformat, buffer);
 #else
-  if (!_tex) { glCreateTextures(TARGET, 1, &_tex); }
+  if (!_tex) { GX_GLCALL(glCreateTextures, TARGET, 1, &_tex); }
   GX_GLCALL(glTextureBuffer, _tex, internalformat, buffer);
 #endif
   return _tex;
@@ -468,22 +469,22 @@ void GLTextureT<TARGET>::clear(GLint level, GLenum format)
 }
 
 template<GLenum TARGET>
-float GLTextureT<TARGET>::coordX(int x) const
+float GLTextureT<TARGET>::coordX(float x) const
 {
   if constexpr (TARGET == GL_TEXTURE_RECTANGLE) {
-    return float(x);
+    return x;
   } else {
-    return float(x) / float(_width);
+    return x / float(_width);
   }
 }
 
 template<GLenum TARGET>
-float GLTextureT<TARGET>::coordY(int y) const
+float GLTextureT<TARGET>::coordY(float y) const
 {
   if constexpr (TARGET == GL_TEXTURE_RECTANGLE) {
-    return float(y);
+    return y;
   } else {
-    return float(y) / float(_height);
+    return y / float(_height);
   }
 }
 
