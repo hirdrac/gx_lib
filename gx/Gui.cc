@@ -15,13 +15,13 @@
 #include <cassert>
 
 namespace {
-  [[nodiscard]] constexpr bool contains(const gx::GuiElem& e, float x, float y)
+  [[nodiscard]] bool contains(const gx::GuiElem& e, float x, float y)
   {
     return (x >= e._x) && (x < (e._x + e._w))
       && (y >= e._y) && (y < (e._y + e._h));
   }
 
-  [[nodiscard]] constexpr float actualX(float x, float w, gx::AlignEnum a)
+  [[nodiscard]] float actualX(float x, float w, gx::AlignEnum a)
   {
     if (gx::HAlign(a) == gx::ALIGN_LEFT) {
       return x;
@@ -32,7 +32,7 @@ namespace {
     }
   }
 
-  [[nodiscard]] constexpr float actualY(float y, float h, gx::AlignEnum a)
+  [[nodiscard]] float actualY(float y, float h, gx::AlignEnum a)
   {
     if (gx::VAlign(a) == gx::ALIGN_TOP) {
       return y;
@@ -41,6 +41,16 @@ namespace {
     } else {
       return y - (h / 2.0f);
     }
+  }
+
+  [[nodiscard]] int calcLines(std::string_view text)
+  {
+    if (text.empty()) { return 0; }
+    int lines = 1;
+    for (int ch : text) {
+      if (ch == '\n') { ++lines; }
+    }
+    return lines;
   }
 }
 
@@ -302,7 +312,7 @@ void gx::Gui::calcSize(GuiElem& def)
       assert(_theme.baseFont != nullptr);
       const Font& fnt = *_theme.baseFont;
       def._w = fnt.calcWidth(def.text);
-      int lines = fnt.calcLines(def.text);
+      int lines = calcLines(def.text);
       def._h = float(
         (fnt.size() - 1) * lines + (_theme.spacing * std::max(lines - 1, 0)));
       // FIXME - improve line height calc (based on font ymax/ymin?)
