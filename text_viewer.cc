@@ -101,7 +101,7 @@ int main(int argc, char** argv)
       int pos = topLine;
       while (pos < int(text.size()) && ty < float(win.height())) {
         if (pos >= 0) {
-          dc.text(fnt, 0.0f, ty, gx::ALIGN_TOP_LEFT, spacing, text[pos]);
+          dc.text(fnt, 0.0f, ty, gx::ALIGN_TOP_LEFT, spacing, text[std::size_t(pos)]);
         }
         ty += float(lineHeight);
         ++pos;
