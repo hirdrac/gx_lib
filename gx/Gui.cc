@@ -3,6 +3,10 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
+// TODO - handle tab/enter/mouse select differently for entry
+// TODO - cursor movement for entry
+// TODO - separate pass for text rendering to reduce draw calls
+
 #include "Gui.hh"
 #include "Window.hh"
 #include "DrawContext.hh"
@@ -52,6 +56,12 @@ namespace {
     }
     return lines;
   }
+
+  void deactivate(gx::GuiElem& def)
+  {
+    def._active = false;
+    for (auto& e : def.elems) { deactivate(e); }
+  }
 }
 
 
@@ -63,29 +73,25 @@ void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
   _theme = theme;
   _pt.set(x, y);
   _rootElem.align = align;
-  _needSize = true;
-  _needPos = true;
+  _needLayout = true;
   _needRender = true;
-  _needRedraw = true;
 }
 
 void gx::Gui::update(Window& win)
 {
   // clear event state that only persists for a single update
+  _pressedID = 0;
   _releasedID = 0;
   _entryID = 0;
+  _needRedraw = false;
 
   // size & position update
-  if (_needSize) {
+  if (_needLayout) {
     calcSize(_rootElem);
-    _needSize = false;
-  }
-
-  if (_needPos) {
     float x = actualX(_pt.x, _rootElem._w, _rootElem.align);
     float y = actualY(_pt.y, _rootElem._h, _rootElem.align);
     calcPos(_rootElem, x, y);
-    _needPos = false;
+    _needLayout = false;
   }
 
   // button event & state update
@@ -103,69 +109,65 @@ void gx::Gui::update(Window& win)
   }
 
   // update hoverID
-  if (_hoverID != id && (!buttonDown || _lastPressedID != 0)) {
+  if (_hoverID != id
+      && (!buttonDown || (_heldType == GUI_MENU && type == GUI_MENU_ITEM))) {
     _hoverID = id;
     _needRender = true;
   }
 
-  // update pressedID
-  if (buttonDown && (win.removedEvents() & EVENT_MOUSE_BUTTON1) && _focusID) {
+  if (buttonDown) {
     // clear focus if button clicked in another GUI
-    setFocusID(0);
-    _needRender = true;
-  }
-
-  if (buttonDown
-      && (buttonEvent
-          // treat moving between menus with button held as a press event
-          || (type == GUI_MENU && _lastPressedID != id && _lastType == GUI_MENU)))
-  {
-    setFocusID((type == GUI_ENTRY) ?  id : 0);
-    _lastCursorUpdate = win.lastPollTime();
-    _cursorState = true;
-    _pressedID = id;
-    _lastPressedID = id;
-    _lastType = type;
-    if (type == GUI_MENU) {
-      deactivate(_rootElem); // close open menus
-      ptr->_active = true;
+    if ((win.removedEvents() & EVENT_MOUSE_BUTTON1) && _focusID != 0) {
+      setFocusID(0);
+      _needRender = true;
     }
-    _needRender = true;
+
+    // update pressedID
+    if (buttonEvent
+        // treat moving between menus with button held as a press event
+        || (type == GUI_MENU && _heldID != id && _heldType == GUI_MENU))
+    {
+      setFocusID((type == GUI_ENTRY) ?  id : 0);
+      _lastCursorUpdate = win.lastPollTime();
+      _cursorState = true;
+      _pressedID = id;
+      _heldID = id;
+      _heldType = type;
+      if (type == GUI_MENU) {
+        deactivate(_rootElem); // close open menus
+        ptr->_active = true;
+      }
+      _needRender = true;
+    }
   } else {
-    _pressedID = 0;
+    // update releasedID
+    if (buttonEvent) {
+      if ((_heldID == id) || (type == GUI_MENU_ITEM)) { _releasedID = id; }
+      _heldID = 0;
+      _heldType = GUI_NULL;
+      deactivate(_rootElem); // close open menus
+      _needRender = true;
+    }
   }
 
-  // update releasedID
-  if (!buttonDown && buttonEvent) {
-    if ((_lastPressedID == id) || (type == GUI_MENU_ITEM)) { _releasedID = id; }
-    _lastPressedID = 0;
-    _lastType = GUI_NULL;
-    deactivate(_rootElem); // close open menus
-    _needRender = true;
-  }
+  // entry input handling & cursor update
+  if (_focusID != 0) {
+    if (win.events() & EVENT_CHAR) { processCharEvent(win); }
 
-  // update heldID
-  _heldID = buttonDown ? _lastPressedID : 0;
+    if (_theme.cursorBlinkTime > 0) {
+      int64_t blinks = (win.lastPollTime() - _lastCursorUpdate)
+        / int64_t(_theme.cursorBlinkTime);
+      if (blinks > 0) {
+        _lastCursorUpdate += blinks * _theme.cursorBlinkTime;
+        if (blinks & 1) { _cursorState = !_cursorState; }
+        _needRender = true;
+      }
+    }
+  }
 
   // clear button event if used by GUI
   if (buttonEvent && (_pressedID != 0 || _releasedID != 0)) {
     win.removeEvent(EVENT_MOUSE_BUTTON1);
-  }
-
-  // char input
-  if (_focusID && (win.events() & EVENT_CHAR)) {
-    processCharEvent(win);
-  }
-
-  // cursor blink update
-  if (_focusID && _theme.cursorBlinkTime > 0) {
-    int64_t blinks =
-      (win.lastPollTime() - _lastCursorUpdate) / int64_t(_theme.cursorBlinkTime);
-    if (blinks > 0) {
-      _lastCursorUpdate += blinks * _theme.cursorBlinkTime;
-      if (blinks & 1) { _cursorState = !_cursorState; }
-      _needRender = true;
-    }
   }
 
   // redraw GUI if needed
@@ -176,8 +178,6 @@ void gx::Gui::update(Window& win)
     drawElem(dc, _rootElem, BSTATE_NONE);
     _needRender = false;
     _needRedraw = true;
-  } else {
-    _needRedraw = false;
   }
 }
 
@@ -261,9 +261,8 @@ bool gx::Gui::setText(int id, std::string_view text)
   if (!e) { return false; }
 
   e->text = text;
+  _needLayout = true;
   _needRender = true;
-  _needSize = true;
-  _needPos = true;
   return true;
 }
 
@@ -424,12 +423,6 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
   }
 }
 
-void gx::Gui::deactivate(GuiElem& def)
-{
-  def._active = false;
-  for (GuiElem& e : def.elems) { deactivate(e); }
-}
-
 void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
 {
   switch (def.type) {
@@ -461,7 +454,7 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
           drawRec(dc, def, _theme.colorButtonHeldOnly);
           bstate = BSTATE_HELD_ONLY;
         }
-      } else if (def.id == _hoverID && !_heldID) {
+      } else if (def.id == _hoverID) {
         drawRec(dc, def, _theme.colorButtonHover);
         bstate = BSTATE_HOVER;
       } else {
@@ -474,7 +467,7 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
       if (def.id == _heldID) {
         drawRec(dc, def, _theme.colorMenuSelect);
         bstate = BSTATE_HELD_ONLY;
-      } else if (def.id == _hoverID && !_heldID) {
+      } else if (def.id == _hoverID) {
         drawRec(dc, def, _theme.colorMenuHover);
         bstate = BSTATE_HOVER;
       } else {

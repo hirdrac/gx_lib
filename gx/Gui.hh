@@ -148,23 +148,20 @@ class gx::Gui
   int _heldID = 0;
   int _pressedID = 0;
   int _releasedID = 0;
-  int _lastPressedID = 0;
   int _focusID = 0;
   int _entryID = 0;
-  GuiElemType _lastType = GUI_NULL;
+  GuiElemType _heldType = GUI_NULL;
   int64_t _lastCursorUpdate = 0;
   int _uniqueID = -1;
   bool _cursorState = false;
-  bool _needSize = true;
-  bool _needPos = true;
+  bool _needLayout = true;
   bool _needRender = true;
-  bool _needRedraw = true;
+  bool _needRedraw = false;
   bool _textChanged = false;
 
   void init(GuiElem& def);
   void calcSize(GuiElem& def);
   void calcPos(GuiElem& def, float base_x, float base_y);
-  void deactivate(GuiElem& def);
   void drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate);
   GuiElem* findElem(float x, float y);
   GuiElem* findElem(int id);
