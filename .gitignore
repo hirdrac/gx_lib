@@ -2,6 +2,8 @@ build/
 libgx.a
 image_viewer
 image_viewer.exe
+text_viewer
+text_viewer.exe
 show_font
 show_font.exe
 demo_gui
