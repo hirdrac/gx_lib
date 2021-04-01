@@ -1,5 +1,7 @@
 build/
 libgx.a
+embed
+embed.exe
 image_viewer
 image_viewer.exe
 text_viewer

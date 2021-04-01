@@ -32,6 +32,10 @@ constexpr int FONT_SIZE = 20;
 constexpr int TAB_SIZE = 8;
 constexpr int SCROLL_STEP = 3;
 
+// font data from FixedWidthFontData.cc
+extern unsigned char FixedWidthFontData[];
+extern unsigned long FixedWidthFontDataSize;
+
 
 int main(int argc, char** argv)
 {
@@ -41,7 +45,7 @@ int main(int argc, char** argv)
   }
 
   std::string file = argv[1];
-  gx::defaultLogger().disable();
+  //gx::defaultLogger().disable();
 
   std::ifstream fs(file);
   if (!fs) {
@@ -60,7 +64,8 @@ int main(int argc, char** argv)
   if (text.empty()) { text.push_back("* FILE EMPTY *"); }
 
   gx::Font fnt;
-  if (!fnt.init("data/LiberationMono-Regular.ttf", FONT_SIZE)) {
+  //if (!fnt.init("data/LiberationMono-Regular.ttf", FONT_SIZE)) {
+  if (!fnt.initFromMemory(FixedWidthFontData, FixedWidthFontDataSize, FONT_SIZE)) {
     gx::println_err("failed to load font");
     return -1;
   }

@@ -12,11 +12,18 @@
 
 constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
+constexpr int FONT_SIZE = 24;
+
+// font data from VariableWidthFontData.cc
+extern unsigned char VariableWidthFontData[];
+extern unsigned long VariableWidthFontDataSize;
+
 
 int main(int argc, char* argv[])
 {
   gx::Font fnt;
-  if (!fnt.init("data/FreeSans.ttf", 24)) {
+  if (!fnt.initFromMemory(VariableWidthFontData, VariableWidthFontDataSize, FONT_SIZE)) {
+    //if (!fnt.init("data/FreeSans.ttf", 24)) {
     gx::println_err("failed to load font");
     return -1;
   }
