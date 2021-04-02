@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
   for (int i = 1; i < argc; ++i) {
     Entry e;
     e.file = argv[i];
-    if (!e.img.init(e.file)) {
+    if (!e.img.load(e.file)) {
       gx::println_err("Can't load \"", e.file, "\"");
       continue;
     }

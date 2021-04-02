@@ -6,12 +6,16 @@
 #include "Image.hh"
 #include "Glyph.hh"
 #include "Logger.hh"
-#include <cassert>
 #include "3rd/stb_image.h"
+
+#include <limits>
+#include <cassert>
 
 
 bool gx::Image::init(int width, int height, int channels)
 {
+  assert(width > 0 && height > 0 && channels > 0);
+
   _width = width;
   _height = height;
   _channels = channels;
@@ -23,6 +27,9 @@ bool gx::Image::init(int width, int height, int channels)
 bool gx::Image::init(int width, int height, int channels,
 		     const uint8_t* src_data, bool copy)
 {
+  assert(width > 0 && height > 0 && channels > 0);
+  assert(src_data != nullptr);
+
   _width = width;
   _height = height;
   _channels = channels;
@@ -36,12 +43,30 @@ bool gx::Image::init(int width, int height, int channels,
   return true;
 }
 
-bool gx::Image::init(const char* filename)
+bool gx::Image::load(const char* filename)
 {
   int w = 0, h = 0, c = 0;
   uint8_t* data = stbi_load(filename, &w, &h, &c, 0);
   if (!data) {
     GX_LOG_ERROR("stbi_load() failed");
+    return false;
+  }
+
+  init(w, h, c, data, true);
+  stbi_image_free(data);
+  return true;
+}
+
+bool gx::Image::loadFromMemory(const void* mem, std::size_t memSize)
+{
+  assert(mem != nullptr);
+  assert(memSize <= std::numeric_limits<int>::max());
+
+  int w = 0, h = 0, c = 0;
+  uint8_t* data = stbi_load_from_memory(
+    static_cast<const stbi_uc*>(mem), int(memSize), &w, &h, &c, 0);
+  if (!data) {
+    GX_LOG_ERROR("stbi_load_from_memory() failed");
     return false;
   }
 

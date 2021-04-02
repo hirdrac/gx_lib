@@ -3,7 +3,6 @@
 // Copyright (C) 2021 Richard Bradley
 //
 // TODO - save to file
-// TODO - load from static data
 
 #pragma once
 #include "Types.hh"
@@ -28,8 +27,10 @@ class gx::Image
   bool init(int width, int height, int channels);
   bool init(int width, int height, int channels,
 	    const uint8_t* data, bool copy);
-  bool init(const char* fileName);
-  bool init(const std::string& fileName) { return init(fileName.c_str()); }
+
+  bool load(const char* fileName);
+  bool load(const std::string& fileName) { return load(fileName.c_str()); }
+  bool loadFromMemory(const void* mem, std::size_t memSize);
 
   [[nodiscard]] int width() const { return _width; }
   [[nodiscard]] int height() const { return _height; }
