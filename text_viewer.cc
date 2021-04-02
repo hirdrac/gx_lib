@@ -45,7 +45,7 @@ int main(int argc, char** argv)
   }
 
   std::string file = argv[1];
-  //gx::defaultLogger().disable();
+  gx::defaultLogger().disable();
 
   std::ifstream fs(file);
   if (!fs) {
@@ -64,8 +64,7 @@ int main(int argc, char** argv)
   if (text.empty()) { text.push_back("* FILE EMPTY *"); }
 
   gx::Font fnt;
-  //if (!fnt.init("data/LiberationMono-Regular.ttf", FONT_SIZE)) {
-  if (!fnt.initFromMemory(FixedWidthFontData, FixedWidthFontDataSize, FONT_SIZE)) {
+  if (!fnt.loadFromMemory(FixedWidthFontData, FixedWidthFontDataSize, FONT_SIZE)) {
     gx::println_err("failed to load font");
     return -1;
   }

@@ -15,6 +15,7 @@
 // **** Constants ****
 constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
+constexpr int FONT_SIZE = 20;
 constexpr int ITEM_WIDTH = 400;
 constexpr int ITEM_HEIGHT = 360;
 
@@ -89,7 +90,7 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
 int main(int argc, char** argv)
 {
   gx::Font fnt;
-  if (!fnt.init("data/FreeSans.ttf", 20)) {
+  if (!fnt.load("data/FreeSans.ttf", FONT_SIZE)) {
     gx::println_err("failed to load font");
     return -1;
   }

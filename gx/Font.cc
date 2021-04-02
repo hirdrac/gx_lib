@@ -77,7 +77,7 @@ namespace {
 }
 
 
-bool gx::Font::init(const char* fileName, int fontSize)
+bool gx::Font::load(const char* fileName, int fontSize)
 {
   if (!initFreeType()) { return false; }
 
@@ -100,7 +100,7 @@ bool gx::Font::init(const char* fileName, int fontSize)
   return status;
 }
 
-bool gx::Font::initFromMemory(
+bool gx::Font::loadFromMemory(
   const void* mem, std::size_t memSize, int fontSize)
 {
   if (!initFreeType()) { return false; }

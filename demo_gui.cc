@@ -22,8 +22,7 @@ extern unsigned long VariableWidthFontDataSize;
 int main(int argc, char* argv[])
 {
   gx::Font fnt;
-  if (!fnt.initFromMemory(VariableWidthFontData, VariableWidthFontDataSize, FONT_SIZE)) {
-    //if (!fnt.init("data/FreeSans.ttf", 24)) {
+  if (!fnt.loadFromMemory(VariableWidthFontData, VariableWidthFontDataSize, FONT_SIZE)) {
     gx::println_err("failed to load font");
     return -1;
   }

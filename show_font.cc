@@ -27,7 +27,7 @@ int main(int argc, char** argv)
   int fontSize = std::atoi(argv[2]);
 
   gx::Font fnt;
-  if (!fnt.init(fontName, fontSize)) {
+  if (!fnt.load(fontName, fontSize)) {
     gx::println_err("failed to load font '", fontName, "'");
     return -1;
   }
