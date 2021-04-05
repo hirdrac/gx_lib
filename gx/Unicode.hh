@@ -51,8 +51,7 @@ class gx::UTF8Iterator
     // return true if there is no more data to read
 
   bool next();
-    // advance to next character, return true if there are still
-    // characters to process
+    // advance to next character, return false if already at the end
 
   [[nodiscard]] int32_t get() const;
     // return current unicode character

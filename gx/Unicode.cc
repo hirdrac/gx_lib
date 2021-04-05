@@ -15,6 +15,12 @@
 // additional char in multi-char encoding:
 //   0b10xxxxxx
 
+namespace {
+  [[nodiscard]] inline bool isMultiChar(int ch) {
+    return (ch & 0b11000000) == 0b10000000;
+  }
+}
+
 
 // functions
 std::string gx::toUTF8(int32_t num)
@@ -48,18 +54,19 @@ std::string gx::toUTF8(int32_t num)
 int gx::lengthUTF8(std::string_view sv)
 {
   int len = 0;
-  for (UTF8Iterator itr(sv); !itr.done(); itr.next()) { ++len; }
+  UTF8Iterator itr(sv);
+  while (itr.next()) { ++len; }
   return len;
 }
 
 void gx::popbackUTF8(std::string& str)
 {
   while (!str.empty()) {
-    int c = str.back();
+    int ch = uint8_t(str.back());
     str.pop_back();
 
     // stop pop back if char isn't the 2/3/4 char in a multi-char encoding
-    if ((c & 0b11000000) != 0b10000000) { break; }
+    if (!isMultiChar(ch)) { break; }
   }
 }
 
@@ -67,11 +74,13 @@ void gx::popbackUTF8(std::string& str)
 // UTF8Iterator implementation
 bool gx::UTF8Iterator::next()
 {
-  if (done()) { return false; }
-  do {
-    ++_itr;
-    if (done()) { return false; }
-  } while ((uint8_t(*_itr) & 0b11000000) == 0b10000000);
+  if (_end) {
+    if (_itr == _end) { return false; }
+    do { ++_itr; } while ((_itr != _end) && isMultiChar(uint8_t(*_itr)));
+  } else {
+    if (*_itr == '\0') { return false; }
+    do { ++_itr; } while (*_itr && isMultiChar(uint8_t(*_itr)));
+  }
   return true;
 }
 
@@ -81,7 +90,7 @@ int32_t gx::UTF8Iterator::get() const
 
   int ch = uint8_t(*_itr);
   if (ch < 0x80) {
-    return ch;
+    return ch;  // 1 byte ascii value
   }
 
   int bytes, minVal, val;
@@ -106,7 +115,7 @@ int32_t gx::UTF8Iterator::get() const
   while (++ptr != ptr_end) {
     if (ptr == _end) { return -1; }
     ch = uint8_t(*ptr);
-    if ((ch & 0b11000000) != 0b10000000) { return -1; }
+    if (!isMultiChar(ch)) { return -1; }
     val = (val << 6) | (ch & 0b111111);
   }
 
