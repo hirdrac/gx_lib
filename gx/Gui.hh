@@ -9,6 +9,7 @@
 // TODO - menu item key short-cuts
 // TODO - list select (combo box)
 // TODO - control allowed char types for entry (numeric only, etc.)
+// TODO - theme text colors for button state & entry text
 
 #pragma once
 #include "DrawList.hh"
@@ -81,6 +82,7 @@ struct gx::GuiElem
 struct gx::GuiTheme
 {
   const Font* baseFont = nullptr;
+
   uint32_t colorBackground = packRGBA8(.2f,.2f,.2f,1.0f);
   uint32_t colorText = packRGBA8(1.0f,1.0f,1.0f,1.0f);
   uint32_t colorEdge = 0; //packRGBA8(1.0f,1.0f,1.0f,1.0f);
@@ -96,10 +98,11 @@ struct gx::GuiTheme
   uint32_t colorEntry = packRGBA8(0.0f,0.0f,.2f,1.0f);
   uint32_t colorEntryFocus = packRGBA8(.1f,.1f,.3f,1.0f);
   uint32_t colorCursor = packRGBA8(1.0f,1.0f,.6f,1.0f);
+
   uint32_t cursorBlinkTime = 400000; // 1 sec
-  uint32_t cursorWidth = 3;
-  int16_t spacing = 2;
-  int16_t border = 4;
+  uint16_t cursorWidth = 3;
+  uint16_t spacing = 2;
+  uint16_t border = 4;
 };
 
 

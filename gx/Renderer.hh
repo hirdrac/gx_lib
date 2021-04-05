@@ -86,7 +86,7 @@ class gx::Renderer
 
  protected:
   GLFWwindow* _window = nullptr;
-  std::vector<DrawEntry> _drawBuffer;
+  DrawList _drawBuffer;
   int _maxTextureSize = 0;
   int _drawCap = INIT_CAPABILITIES;
   int _lastCap = -1;

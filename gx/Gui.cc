@@ -5,7 +5,9 @@
 
 // TODO - handle tab/enter/mouse select differently for entry
 // TODO - cursor movement for entry
-// TODO - separate pass for text rendering to reduce draw calls
+// TODO - group same draw types (rectangles,text) to reduce draw calls
+// TODO - separate pass for popup types to make sure they aren't covered
+// TODO - allow right button to open menus & select menu items
 
 #include "Gui.hh"
 #include "Window.hh"
@@ -51,9 +53,7 @@ namespace {
   {
     if (text.empty()) { return 0; }
     int lines = 1;
-    for (int ch : text) {
-      if (ch == '\n') { ++lines; }
-    }
+    for (int ch : text) { lines += (ch == '\n'); }
     return lines;
   }
 
@@ -128,8 +128,6 @@ void gx::Gui::update(Window& win)
         || (type == GUI_MENU && _heldID != id && _heldType == GUI_MENU))
     {
       setFocusID((type == GUI_ENTRY) ?  id : 0);
-      _lastCursorUpdate = win.lastPollTime();
-      _cursorState = true;
       _pressedID = id;
       _heldID = id;
       _heldType = type;
@@ -154,7 +152,12 @@ void gx::Gui::update(Window& win)
   if (_focusID != 0) {
     if (win.events() & EVENT_CHAR) { processCharEvent(win); }
 
-    if (_theme.cursorBlinkTime > 0) {
+    if (_pressedID != 0) {
+      // reset cursor blink state
+      _lastCursorUpdate = win.lastPollTime();
+      _cursorState = true;
+    } else if (_theme.cursorBlinkTime > 0) {
+      // check for cursor blink
       int64_t blinks = (win.lastPollTime() - _lastCursorUpdate)
         / int64_t(_theme.cursorBlinkTime);
       if (blinks > 0) {
@@ -240,9 +243,10 @@ void gx::Gui::processCharEvent(Window& win)
   }
 
   if (usedEvent) {
+    win.removeEvent(EVENT_CHAR);
+    // reset cursor blink state
     _lastCursorUpdate = win.lastPollTime();
     _cursorState = true;
-    win.removeEvent(EVENT_CHAR);
   }
 }
 
@@ -436,6 +440,8 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
       for (GuiElem& e : def.elems) { drawElem(dc, e, bstate); }
       break;
     case GUI_LABEL:
+      // TODO - use bstate to select different theme values
+      //    (i.e. hovering over a button causes label color change)
       dc.color(_theme.colorText);
       dc.text(*_theme.baseFont, def._x, def._y, ALIGN_TOP_LEFT,
                _theme.spacing, def.text);
