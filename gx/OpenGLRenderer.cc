@@ -362,7 +362,7 @@ void gx::OpenGLRenderer::setupBuffer()
   //  |/ |
   //  2--3
 
-  uint32_t color = 0xffffffff;
+  uint32_t color = 0;
   uint32_t modColor = 0xffffffff;
   TextureID tid = 0;
   float lw = 1.0f;

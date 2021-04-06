@@ -34,6 +34,8 @@ class gx::DrawContext
   void clear() { init(); _data->clear(); }
   void reserve(std::size_t n) { _data->reserve(n); }
   [[nodiscard]] std::size_t size() const { return _data->size(); }
+  void append(const DrawList& dl) {
+    _data->insert(_data->end(), dl.begin(), dl.end()); }
 
   // control/state change
   inline void color(float r, float g, float b, float a = 1.0f);
@@ -167,7 +169,7 @@ class gx::DrawContext
   ColorMode _colorMode;
 
   void init() {
-    _lastColor = 0xffffffff;
+    _lastColor = 0;
     _lastLineWidth = 1.0f;
     _lastTexID = 0;
     _tabStart = 0.0f;
