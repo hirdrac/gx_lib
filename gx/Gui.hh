@@ -162,18 +162,18 @@ class gx::Gui
   bool _needRedraw = false;
   bool _textChanged = false;
 
+  void processCharEvent(Window& win);
+  void setFocusID(int id);
   void init(GuiElem& def);
   void calcSize(GuiElem& def);
   void calcPos(GuiElem& def, float base_x, float base_y);
-  void drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate);
+  void drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate) const;
+  void drawRec(DrawContext& dc, const GuiElem& def, uint32_t col) const;
   GuiElem* findElem(float x, float y);
   GuiElem* findElem(int id);
   const GuiElem* findElem(int id) const;
   GuiElem* findNextElem(int id, GuiElemType type = GUI_NULL);
   GuiElem* findPrevElem(int id, GuiElemType type = GUI_NULL);
-  void drawRec(DrawContext& dc, const GuiElem& def, uint32_t col);
-  void processCharEvent(Window& win);
-  void setFocusID(int id);
 };
 
 

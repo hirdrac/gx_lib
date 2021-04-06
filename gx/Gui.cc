@@ -427,17 +427,17 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
   }
 }
 
-void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
+void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate) const
 {
   switch (def.type) {
     case GUI_HFRAME:
     case GUI_VFRAME:
-      for (GuiElem& e : def.elems) { drawElem(dc, e, bstate); }
+      for (auto& e : def.elems) { drawElem(dc, e, bstate); }
       break;
     case GUI_MENU_HFRAME:
     case GUI_MENU_VFRAME:
       drawRec(dc, def, _theme.colorMenuItem);
-      for (GuiElem& e : def.elems) { drawElem(dc, e, bstate); }
+      for (auto& e : def.elems) { drawElem(dc, e, bstate); }
       break;
     case GUI_LABEL:
       // TODO - use bstate to select different theme values
@@ -529,6 +529,22 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate)
     default:
       GX_LOG_ERROR("unknown type ", def.type);
       break;
+  }
+}
+
+void gx::Gui::drawRec(DrawContext& dc, const GuiElem& def, uint32_t col) const
+{
+  if (col != 0) {
+    dc.color(col);
+    dc.rectangle(def._x, def._y, def._w, def._h);
+  }
+
+  if (_theme.colorEdge != 0) {
+    dc.color(_theme.colorEdge);
+    dc.rectangle(def._x, def._y, def._w, 1);
+    dc.rectangle(def._x, def._y + def._h - 1, def._w, 1);
+    dc.rectangle(def._x, def._y, 1, def._h);
+    dc.rectangle(def._x + def._w - 1, def._y, 1, def._h);
   }
 }
 
@@ -629,21 +645,5 @@ gx::GuiElem* gx::Gui::findPrevElem(int id, GuiElemType type)
     if (stack.empty()) { return prev ? prev : last; }
     e = stack.back();
     stack.pop_back();
-  }
-}
-
-void gx::Gui::drawRec(DrawContext& dc, const GuiElem& def, uint32_t col)
-{
-  if (col != 0) {
-    dc.color(col);
-    dc.rectangle(def._x, def._y, def._w, def._h);
-  }
-
-  if (_theme.colorEdge != 0) {
-    dc.color(_theme.colorEdge);
-    dc.rectangle(def._x, def._y, def._w, 1);
-    dc.rectangle(def._x, def._y + def._h - 1, def._w, 1);
-    dc.rectangle(def._x, def._y, 1, def._h);
-    dc.rectangle(def._x + def._w - 1, def._y, 1, def._h);
   }
 }
