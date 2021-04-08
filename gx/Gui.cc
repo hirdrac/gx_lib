@@ -5,7 +5,6 @@
 
 // TODO - handle tab/enter/mouse select differently for entry
 // TODO - cursor movement for entry
-// TODO - group same draw types (rectangles,text) to reduce draw calls
 // TODO - separate pass for popup types to make sure they aren't covered
 // TODO - allow right button to open menus & select menu items
 
@@ -134,8 +133,10 @@ void gx::Gui::update(Window& win)
       if (type == GUI_MENU) {
         deactivate(_rootElem); // close open menus
         ptr->_active = true;
+        _needRender = true;
+      } else {
+        _needRender = (_pressedID != 0);
       }
-      _needRender = true;
     }
   } else {
     // update releasedID
@@ -175,10 +176,16 @@ void gx::Gui::update(Window& win)
 
   // redraw GUI if needed
   if (_needRender) {
-    _dl.clear();
-    DrawContext dc(_dl);
+    DrawList& dl = _dlm[0];
+    dl.clear();
+    DrawContext dc(dl);
+
+    DrawList& dl2 = _dlm[1];
+    dl2.clear();
+    DrawContext dc2(dl2);
+
     drawRec(dc, _rootElem, _theme.colorBackground);
-    drawElem(dc, _rootElem, BSTATE_NONE);
+    drawElem(dc, dc2, _rootElem, BSTATE_NONE);
     _needRender = false;
     _needRedraw = true;
   }
@@ -427,23 +434,24 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
   }
 }
 
-void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate) const
+void gx::Gui::drawElem(DrawContext& dc, DrawContext& dc2,
+                       const GuiElem& def, ButtonState bstate) const
 {
   switch (def.type) {
     case GUI_HFRAME:
     case GUI_VFRAME:
-      for (auto& e : def.elems) { drawElem(dc, e, bstate); }
+      for (auto& e : def.elems) { drawElem(dc, dc2, e, bstate); }
       break;
     case GUI_MENU_HFRAME:
     case GUI_MENU_VFRAME:
       drawRec(dc, def, _theme.colorMenuItem);
-      for (auto& e : def.elems) { drawElem(dc, e, bstate); }
+      for (auto& e : def.elems) { drawElem(dc, dc2, e, bstate); }
       break;
     case GUI_LABEL:
       // TODO - use bstate to select different theme values
       //    (i.e. hovering over a button causes label color change)
-      dc.color(_theme.colorText);
-      dc.text(*_theme.baseFont, def._x, def._y, ALIGN_TOP_LEFT,
+      dc2.color(_theme.colorText);
+      dc2.text(*_theme.baseFont, def._x, def._y, ALIGN_TOP_LEFT,
                _theme.spacing, def.text);
       break;
     case GUI_HLINE:
@@ -467,7 +475,7 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate) const
         drawRec(dc, def, _theme.colorButtonNormal);
         bstate = BSTATE_NORMAL;
       }
-      drawElem(dc, def.elems[0], bstate);
+      drawElem(dc, dc2, def.elems[0], bstate);
       break;
     case GUI_MENU:
       if (def.id == _heldID) {
@@ -480,14 +488,14 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate) const
         drawRec(dc, def, _theme.colorMenuNormal);
         bstate = BSTATE_NORMAL;
       }
-      drawElem(dc, def.elems[0], bstate);
-      if (def._active) { drawElem(dc, def.elems[1], bstate); }
+      drawElem(dc, dc2, def.elems[0], bstate);
+      if (def._active) { drawElem(dc, dc2, def.elems[1], bstate); }
       break;
     case GUI_MENU_ITEM:
       if (def.id == _hoverID) {
         drawRec(dc, def, _theme.colorMenuItemSelect);
       }
-      drawElem(dc, def.elems[0], bstate);
+      drawElem(dc, dc2, def.elems[0], bstate);
       break;
     case GUI_ENTRY: {
       const Font& fnt = *_theme.baseFont;
@@ -502,16 +510,16 @@ void gx::Gui::drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate) const
       if (tw > def._w) {
         // text doesn't fit in entry
         tx -= tw - def._w;
-        dc.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
-                     def._x + float(fnt.size() / 2), _theme.colorText);
-        dc.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
-                _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
+        dc2.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
+                      def._x + float(fnt.size() / 2), _theme.colorText);
+        dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
+                 _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
       } else {
-        dc.color(_theme.colorText);
-        dc.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing, def.text);
+        dc2.color(_theme.colorText);
+        dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing, def.text);
       }
-      dc.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
-              _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
+      dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
+               _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
       if (def.id == _focusID && _cursorState) {
         // draw cursor
         dc.color(_theme.colorCursor);

@@ -6,8 +6,10 @@
 #pragma once
 #include "DrawEntry.hh"
 #include <vector>
+#include <map>
 
 
 namespace gx {
   using DrawList = std::vector<DrawEntry>;
+  using DrawListMap = std::map<int,DrawList>;
 }

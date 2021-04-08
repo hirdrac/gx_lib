@@ -14,3 +14,12 @@ gx::Renderer::~Renderer()
     glfwDestroyWindow(_window);
   }
 }
+
+void gx::Renderer::clearFrame(int width, int height)
+{
+  _width = width;
+  _height = height;
+  _layers.clear();
+  _transforms.clear();
+  _changed = true;
+}

@@ -115,7 +115,7 @@ class gx::Gui
   void layout(const GuiTheme& theme, float x, float y, AlignEnum align);
   void update(Window& win);
 
-  [[nodiscard]] const DrawList& drawList() const { return _dl; }
+  [[nodiscard]] const DrawListMap& drawLists() const { return _dlm; }
   [[nodiscard]] float width() const { return _rootElem._w; }
   [[nodiscard]] float height() const { return _rootElem._h; }
 
@@ -145,7 +145,7 @@ class gx::Gui
  private:
   GuiElem _rootElem;
   GuiTheme _theme;
-  DrawList _dl;
+  DrawListMap _dlm;
   Vec2 _pt = {};
   int _hoverID = 0;
   int _heldID = 0;
@@ -167,7 +167,8 @@ class gx::Gui
   void init(GuiElem& def);
   void calcSize(GuiElem& def);
   void calcPos(GuiElem& def, float base_x, float base_y);
-  void drawElem(DrawContext& dc, GuiElem& def, ButtonState bstate) const;
+  void drawElem(DrawContext& dc, DrawContext& dc2,
+                const GuiElem& def, ButtonState bstate) const;
   void drawRec(DrawContext& dc, const GuiElem& def, uint32_t col) const;
   GuiElem* findElem(float x, float y);
   GuiElem* findElem(int id);

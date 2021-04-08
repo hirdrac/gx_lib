@@ -10,6 +10,8 @@
 #include "Color.hh"
 #include "DrawList.hh"
 #include "Types.hh"
+#include <map>
+#include <vector>
 
 
 struct GLFWwindow;
@@ -27,7 +29,6 @@ class gx::Renderer
   // setup methods
   virtual void setWindowHints(bool debug) = 0;
   virtual bool init(GLFWwindow* win) = 0;
-  virtual void setBGColor(float r, float g, float b) = 0;
 
   // texture methods
   virtual TextureID setTexture(TextureID id, const Image& img, int levels,
@@ -35,41 +36,44 @@ class gx::Renderer
   virtual void freeTexture(TextureID id) = 0;
 
   // draw methods
-  virtual void clearFrame(int width, int height) = 0;
   virtual void renderFrame() = 0;
 
 
-  // helper functions
-  void setBGColor(const Color& c) { setBGColor(c.r, c.g, c.b); }
+  // general functions
+  void clearFrame(int width, int height);
 
-  void setModColor(uint32_t c) {
-    _drawBuffer.push_back(CMD_modColor);
-    _drawBuffer.push_back(c);
+  void setBGColor(float r, float g, float b) { _bgColor.set(r,g,b); }
+  void setBGColor(const Color& c) { _bgColor.set(c.r, c.g, c.b); }
+
+  void setModColor(int layer, uint32_t c) {
+    _layers[layer].modColor = c; }
+  void setModColor(int layer, const Color& c) {
+    setModColor(layer, packRGBA8(c)); }
+
+  void setTransform(int layer, const Mat4& view, const Mat4& proj) {
+    _layers[layer].transformID = int(_transforms.size());
+    _transforms.push_back({view, proj});
   }
 
-  void setModColor(const Color& c) { setModColor(packRGBA8(c)); }
-
-  void setTransform(const Mat4& view, const Mat4& proj) {
-    _drawBuffer.reserve(_drawBuffer.size() + 33);
-    _drawBuffer.push_back(CMD_transform);
-    for (auto x : view) { _drawBuffer.push_back(x); }
-    for (auto x : proj) { _drawBuffer.push_back(x); }
-  }
-
-  void draw(const DrawEntry* data, std::size_t dataSize) {
-    if (_drawCap != _lastCap) {
-      _drawBuffer.push_back(CMD_capabilities);
-      _drawBuffer.push_back(_drawCap);
-      _lastCap = _drawCap;
+  void draw(int layer, const DrawEntry* data, std::size_t dataSize) {
+    if (dataSize != 0) {
+      DrawList& dl = _layers[layer].drawData;
+      dl.insert(dl.end(), data, data + dataSize);
+      _changed = true;
     }
-    _drawBuffer.insert(_drawBuffer.end(), data, data + dataSize);
-    _changed = true;
   }
 
-  void draw(const DrawList& dl) { draw(dl.data(), dl.size()); }
+  void draw(int layer, const DrawList& dl) {
+    draw(layer, dl.data(), dl.size()); }
+  void draw(const DrawList& dl) {
+    draw(0, dl.data(), dl.size()); }
+
+  void draw(int baseLayer, const DrawListMap& dlm) {
+    for (auto& [id,dl] : dlm) { draw(baseLayer + id, dl); } }
+  void draw(const DrawListMap& dlm) { draw(0, dlm); }
 
   template<typename Drawable>
-  void draw(const Drawable& d) { draw(d.drawList()); }
+  void draw(const Drawable& d) { draw(0, d.drawLists()); }
 
   // general accessors
   [[nodiscard]] GLFWwindow* window() { return _window; }
@@ -79,16 +83,24 @@ class gx::Renderer
   enum CapabilityEnum {
     BLEND = 1, DEPTH_TEST = 2 };
   static constexpr int INIT_CAPABILITIES = BLEND;
-
-  void enable(CapabilityEnum c) { _drawCap |= c; }
-  void disable(CapabilityEnum c) { _drawCap &= ~int(c); }
-  void setCapabilities(int c) { _drawCap = c; }
+  void setCapabilities(int layer, int c) {
+    _layers[layer].cap = c; }
 
  protected:
   GLFWwindow* _window = nullptr;
-  DrawList _drawBuffer;
   int _maxTextureSize = 0;
-  int _drawCap = INIT_CAPABILITIES;
-  int _lastCap = -1;
+  int _width = 0, _height = 0;
+  Vec3 _bgColor = {0,0,0};
   bool _changed = true;
+
+  struct Layer {
+    DrawList drawData;
+    int transformID = -1;
+    uint32_t modColor = 0xffffffff;
+    int cap = -1;
+  };
+  std::map<int,Layer> _layers;
+
+  struct TransformEntry { Mat4 view, proj; };
+  std::vector<TransformEntry> _transforms;
 };

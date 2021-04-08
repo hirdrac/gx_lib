@@ -10,10 +10,7 @@
 namespace gx {
   enum DrawCmd : uint32_t {
     // state / control commands
-    CMD_capabilities, // <cmd c> (2)
-    CMD_transform,    // <cmd view proj> (33)
     CMD_color,        // <cmd c> (2)
-    CMD_modColor,     // <cmd c> (2)
     CMD_texture,      // <cmd id> (2)
     CMD_lineWidth,    // <cmd w> (2)
 

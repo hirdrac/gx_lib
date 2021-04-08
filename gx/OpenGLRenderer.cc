@@ -276,69 +276,62 @@ gx::TextureID gx::OpenGLRenderer::setTexture(
   return id;
 }
 
-void gx::OpenGLRenderer::clearFrame(int width, int height)
-{
-  _width = width;
-  _height = height;
-  _drawBuffer.clear();
-  _lastCap = -1;
-  _changed = true;
-
-  Mat4 trans;
-  calcScreenOrthoProjection(float(width), float(height), trans);
-  _transforms.clear();
-  _transforms.push_back({Mat4Identity, trans});
-
-  _drawCalls.clear();
-}
-
 void gx::OpenGLRenderer::setupBuffer()
 {
-  const DrawEntry* data = _drawBuffer.data();
-  const DrawEntry* end  = data + _drawBuffer.size();
+  unsigned int vsize = 0; // vertices needed
+  for (auto& [no,layer] : _layers) {
+    const DrawEntry* data     = layer.drawData.data();
+    const DrawEntry* data_end = data + layer.drawData.size();
 
-  unsigned int size = 0; // vertices needed
-  for (const DrawEntry* itr = data; itr != end; ) {
-    DrawCmd cmd = itr->cmd;
-    switch (cmd) {
-      case CMD_capabilities: itr += 2; break;
-      case CMD_transform:    itr += 33; break;
-      case CMD_color:        itr += 2; break;
-      case CMD_modColor:     itr += 2; break;
-      case CMD_texture:      itr += 2; break;
-      case CMD_lineWidth:    itr += 2; break;
-      case CMD_line2:        itr += 5;  size += 2; break;
-      case CMD_line3:        itr += 7;  size += 2; break;
-      case CMD_triangle2:    itr += 7;  size += 3; break;
-      case CMD_triangle3:    itr += 10; size += 3; break;
-      case CMD_triangle2T:   itr += 13; size += 3; break;
-      case CMD_triangle3T:   itr += 16; size += 3; break;
-      case CMD_triangle2C:   itr += 10; size += 3; break;
-      case CMD_triangle3C:   itr += 13; size += 3; break;
-      case CMD_triangle2TC:  itr += 16; size += 3; break;
-      case CMD_triangle3TC:  itr += 19; size += 3; break;
-      case CMD_quad2:        itr += 9;  size += 6; break;
-      case CMD_quad3:        itr += 13; size += 6; break;
-      case CMD_quad2T:       itr += 17; size += 6; break;
-      case CMD_quad3T:       itr += 21; size += 6; break;
-      case CMD_quad2C:       itr += 13; size += 6; break;
-      case CMD_quad3C:       itr += 17; size += 6; break;
-      case CMD_quad2TC:      itr += 21; size += 6; break;
-      case CMD_quad3TC:      itr += 25; size += 6; break;
-      case CMD_rectangle:    itr += 5;  size += 6; break;
-      case CMD_rectangleT:   itr += 9;  size += 6; break;
+    const DrawEntry* d = data;
+    while (d < data_end) {
+      DrawCmd cmd = d->cmd;
+      switch (cmd) {
+        case CMD_color:        d += 2; break;
+        case CMD_texture:      d += 2; break;
+        case CMD_lineWidth:    d += 2; break;
+        case CMD_line2:        d += 5;  vsize += 2; break;
+        case CMD_line3:        d += 7;  vsize += 2; break;
+        case CMD_triangle2:    d += 7;  vsize += 3; break;
+        case CMD_triangle3:    d += 10; vsize += 3; break;
+        case CMD_triangle2T:   d += 13; vsize += 3; break;
+        case CMD_triangle3T:   d += 16; vsize += 3; break;
+        case CMD_triangle2C:   d += 10; vsize += 3; break;
+        case CMD_triangle3C:   d += 13; vsize += 3; break;
+        case CMD_triangle2TC:  d += 16; vsize += 3; break;
+        case CMD_triangle3TC:  d += 19; vsize += 3; break;
+        case CMD_quad2:        d += 9;  vsize += 6; break;
+        case CMD_quad3:        d += 13; vsize += 6; break;
+        case CMD_quad2T:       d += 17; vsize += 6; break;
+        case CMD_quad3T:       d += 21; vsize += 6; break;
+        case CMD_quad2C:       d += 13; vsize += 6; break;
+        case CMD_quad3C:       d += 17; vsize += 6; break;
+        case CMD_quad2TC:      d += 21; vsize += 6; break;
+        case CMD_quad3TC:      d += 25; vsize += 6; break;
+        case CMD_rectangle:    d += 5;  vsize += 6; break;
+        case CMD_rectangleT:   d += 9;  vsize += 6; break;
 
-      default:
-        itr = end; // stop reading at first invalid cmd
-        GX_LOG_ERROR("unknown DrawCmd value: ", int(cmd));
-	break;
+        default:
+          d = data_end; // stop reading at first invalid cmd
+          GX_LOG_ERROR("unknown DrawCmd value: ", int(cmd));
+          break;
+      }
     }
+
+    assert(d == data_end);
   }
 
-  if (size == 0) {
+  _drawCalls.clear();
+  if (vsize == 0) {
     _vbo = GLBuffer();
     _vao = GLVertexArray();
     return;
+  }
+
+  if (_transforms.empty()) {
+    Mat4 trans;
+    calcScreenOrthoProjection(float(_width), float(_height), trans);
+    _transforms.push_back({Mat4Identity, trans});
   }
 
   if (!_vbo) {
@@ -352,8 +345,8 @@ void gx::OpenGLRenderer::setupBuffer()
     _vao.setAttribI(2, _vbo, 20, 24, 1, GL_UNSIGNED_INT);
   }
 
-  _vbo.setData(GLsizei(size * sizeof(Vertex3TC)), nullptr, GL_STREAM_DRAW);
-  Vertex3TC* ptr = (Vertex3TC*)_vbo.map(GL_WRITE_ONLY);
+  _vbo.setData(GLsizei(vsize * sizeof(Vertex3TC)), nullptr, GL_STREAM_DRAW);
+  Vertex3TC* ptr = static_cast<Vertex3TC*>(_vbo.map(GL_WRITE_ONLY));
   assert(ptr != nullptr);
 
   // general triangle layout
@@ -362,268 +355,260 @@ void gx::OpenGLRenderer::setupBuffer()
   //  |/ |
   //  2--3
 
-  uint32_t color = 0;
-  uint32_t modColor = 0xffffffff;
-  TextureID tid = 0;
-  float lw = 1.0f;
-  int cap = 0;
+  int cap = INIT_CAPABILITIES;
+  int transID = 0;
 
-  for (const DrawEntry* itr = data; itr != end; ) {
-    DrawCmd cmd = (itr++)->cmd;
-    switch (cmd) {
-      case CMD_capabilities:
-        cap = ival(itr);
-        break;
+  for (auto& [no,layer] : _layers) {
+    uint32_t color = 0;
+    TextureID tid = 0;
+    float lw = 1.0f;
 
-      case CMD_transform: {
-        Mat4 view = mat4_val(itr), proj = mat4_val(itr);
-        if (!_transforms.empty()
-            && (_drawCalls.empty()
-                || _drawCalls.back().transformNo != (int(_transforms.size())-1)))
-        {
-          // last set transform not used for a draw call and can just be replaced
-          _transforms.back() = {view, proj};
-        } else {
-          // add new transform entry
-          _transforms.push_back({view, proj});
+    uint32_t modColor = layer.modColor;
+    if (layer.cap != -1) { cap = layer.cap; }
+    if (layer.transformID != -1) { transID = layer.transformID; }
+
+    const DrawEntry* data      = layer.drawData.data();
+    const DrawEntry* data_end  = data + layer.drawData.size();
+    for (const DrawEntry* d = data; d != data_end; ) {
+      DrawCmd cmd = (d++)->cmd;
+      switch (cmd) {
+        case CMD_color:     color = uval(d); break;
+        case CMD_texture:   tid   = uval(d); break;
+        case CMD_lineWidth: lw    = fval(d); break;
+
+        case CMD_line2: {
+          vertex(ptr, fval2(d), color);
+          vertex(ptr, fval2(d), color);
+          addDrawCall(2, GL_LINES, modColor, 0, lw, transID, cap);
+          break;
         }
-        break;
+        case CMD_line3: {
+          vertex(ptr, fval3(d), color);
+          vertex(ptr, fval3(d), color);
+          addDrawCall(2, GL_LINES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_triangle2: {
+          vertex(ptr, fval2(d), color);
+          vertex(ptr, fval2(d), color);
+          vertex(ptr, fval2(d), color);
+          addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_triangle3: {
+          vertex(ptr, fval3(d), color);
+          vertex(ptr, fval3(d), color);
+          vertex(ptr, fval3(d), color);
+          addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_triangle2T: {
+          Vec2 p0 = fval2(d), t0 = fval2(d);
+          Vec2 p1 = fval2(d), t1 = fval2(d);
+          Vec2 p2 = fval2(d), t2 = fval2(d);
+          vertex(ptr, p0, t0, color);
+          vertex(ptr, p1, t1, color);
+          vertex(ptr, p2, t2, color);
+          addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          break;
+        }
+        case CMD_triangle3T: {
+          Vec3 p0 = fval3(d); Vec2 t0 = fval2(d);
+          Vec3 p1 = fval3(d); Vec2 t1 = fval2(d);
+          Vec3 p2 = fval3(d); Vec2 t2 = fval2(d);
+          vertex(ptr, p0, t0, color);
+          vertex(ptr, p1, t1, color);
+          vertex(ptr, p2, t2, color);
+          addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          break;
+        }
+        case CMD_triangle2C: {
+          Vec2 p0 = fval2(d); uint32_t c0 = uval(d);
+          Vec2 p1 = fval2(d); uint32_t c1 = uval(d);
+          Vec2 p2 = fval2(d); uint32_t c2 = uval(d);
+          vertex(ptr, p0, c0);
+          vertex(ptr, p1, c1);
+          vertex(ptr, p2, c2);
+          addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_triangle3C: {
+          Vec3 p0 = fval3(d); uint32_t c0 = uval(d);
+          Vec3 p1 = fval3(d); uint32_t c1 = uval(d);
+          Vec3 p2 = fval3(d); uint32_t c2 = uval(d);
+          vertex(ptr, p0, c0);
+          vertex(ptr, p1, c1);
+          vertex(ptr, p2, c2);
+          addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_triangle2TC: {
+          Vec2 p0 = fval2(d), t0 = fval2(d); uint32_t c0 = uval(d);
+          Vec2 p1 = fval2(d), t1 = fval2(d); uint32_t c1 = uval(d);
+          Vec2 p2 = fval2(d), t2 = fval2(d); uint32_t c2 = uval(d);
+          vertex(ptr, p0, t0, c0);
+          vertex(ptr, p1, t1, c1);
+          vertex(ptr, p2, t2, c2);
+          addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          break;
+        }
+        case CMD_triangle3TC: {
+          Vec3 p0 = fval3(d); Vec2 t0 = fval2(d); uint32_t c0 = uval(d);
+          Vec3 p1 = fval3(d); Vec2 t1 = fval2(d); uint32_t c1 = uval(d);
+          Vec3 p2 = fval3(d); Vec2 t2 = fval2(d); uint32_t c2 = uval(d);
+          vertex(ptr, p0, t0, c0);
+          vertex(ptr, p1, t1, c1);
+          vertex(ptr, p2, t2, c2);
+          addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          break;
+        }
+        case CMD_quad2: {
+          Vec2 p0 = fval2(d), p1 = fval2(d);
+          Vec2 p2 = fval2(d), p3 = fval2(d);
+          vertex(ptr, p0, color);
+          vertex(ptr, p1, color);
+          vertex(ptr, p2, color);
+          vertex(ptr, p1, color);
+          vertex(ptr, p3, color);
+          vertex(ptr, p2, color);
+          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_quad3: {
+          Vec3 p0 = fval3(d), p1 = fval3(d);
+          Vec3 p2 = fval3(d), p3 = fval3(d);
+          vertex(ptr, p0, color);
+          vertex(ptr, p1, color);
+          vertex(ptr, p2, color);
+          vertex(ptr, p1, color);
+          vertex(ptr, p3, color);
+          vertex(ptr, p2, color);
+          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_quad2T: {
+          Vec2 p0 = fval2(d), t0 = fval2(d);
+          Vec2 p1 = fval2(d), t1 = fval2(d);
+          Vec2 p2 = fval2(d), t2 = fval2(d);
+          Vec2 p3 = fval2(d), t3 = fval2(d);
+          vertex(ptr, p0, t0, color);
+          vertex(ptr, p1, t1, color);
+          vertex(ptr, p2, t2, color);
+          vertex(ptr, p1, t1, color);
+          vertex(ptr, p3, t3, color);
+          vertex(ptr, p2, t2, color);
+          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          break;
+        }
+        case CMD_quad3T: {
+          Vec3 p0 = fval3(d); Vec2 t0 = fval2(d);
+          Vec3 p1 = fval3(d); Vec2 t1 = fval2(d);
+          Vec3 p2 = fval3(d); Vec2 t2 = fval2(d);
+          Vec3 p3 = fval3(d); Vec2 t3 = fval2(d);
+          vertex(ptr, p0, t0, color);
+          vertex(ptr, p1, t1, color);
+          vertex(ptr, p2, t2, color);
+          vertex(ptr, p1, t1, color);
+          vertex(ptr, p3, t3, color);
+          vertex(ptr, p2, t2, color);
+          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          break;
+        }
+        case CMD_quad2C: {
+          Vec2 p0 = fval2(d); uint32_t c0 = uval(d);
+          Vec2 p1 = fval2(d); uint32_t c1 = uval(d);
+          Vec2 p2 = fval2(d); uint32_t c2 = uval(d);
+          Vec2 p3 = fval2(d); uint32_t c3 = uval(d);
+          vertex(ptr, p0, c0);
+          vertex(ptr, p1, c1);
+          vertex(ptr, p2, c2);
+          vertex(ptr, p1, c1);
+          vertex(ptr, p3, c3);
+          vertex(ptr, p2, c2);
+          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_quad3C: {
+          Vec3 p0 = fval3(d); uint32_t c0 = uval(d);
+          Vec3 p1 = fval3(d); uint32_t c1 = uval(d);
+          Vec3 p2 = fval3(d); uint32_t c2 = uval(d);
+          Vec3 p3 = fval3(d); uint32_t c3 = uval(d);
+          vertex(ptr, p0, c0);
+          vertex(ptr, p1, c1);
+          vertex(ptr, p2, c2);
+          vertex(ptr, p1, c1);
+          vertex(ptr, p3, c3);
+          vertex(ptr, p2, c2);
+          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_quad2TC: {
+          Vec2 p0 = fval2(d), t0 = fval2(d); uint32_t c0 = uval(d);
+          Vec2 p1 = fval2(d), t1 = fval2(d); uint32_t c1 = uval(d);
+          Vec2 p2 = fval2(d), t2 = fval2(d); uint32_t c2 = uval(d);
+          Vec2 p3 = fval2(d), t3 = fval2(d); uint32_t c3 = uval(d);
+          vertex(ptr, p0, t0, c0);
+          vertex(ptr, p1, t1, c1);
+          vertex(ptr, p2, t2, c2);
+          vertex(ptr, p1, t1, c1);
+          vertex(ptr, p3, t3, c3);
+          vertex(ptr, p2, t2, c2);
+          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          break;
+        }
+        case CMD_quad3TC: {
+          Vec3 p0 = fval3(d); Vec2 t0 = fval2(d); uint32_t c0 = uval(d);
+          Vec3 p1 = fval3(d); Vec2 t1 = fval2(d); uint32_t c1 = uval(d);
+          Vec3 p2 = fval3(d); Vec2 t2 = fval2(d); uint32_t c2 = uval(d);
+          Vec3 p3 = fval3(d); Vec2 t3 = fval2(d); uint32_t c3 = uval(d);
+          vertex(ptr, p0, t0, c0);
+          vertex(ptr, p1, t1, c1);
+          vertex(ptr, p2, t2, c2);
+          vertex(ptr, p1, t1, c1);
+          vertex(ptr, p3, t3, c3);
+          vertex(ptr, p2, t2, c2);
+          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          break;
+        }
+        case CMD_rectangle: {
+          Vec2 p0 = fval2(d), p3 = fval2(d);
+          Vec2 p1 = {p3.x,p0.y}, p2 = {p0.x,p3.y};
+          vertex(ptr, p0, color);
+          vertex(ptr, p1, color);
+          vertex(ptr, p2, color);
+          vertex(ptr, p1, color);
+          vertex(ptr, p3, color);
+          vertex(ptr, p2, color);
+          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          break;
+        }
+        case CMD_rectangleT: {
+          Vec2 p0 = fval2(d), t0 = fval2(d);
+          Vec2 p3 = fval2(d), t3 = fval2(d);
+          Vec2 p1 = {p3.x,p0.y}, t1 = {t3.x,t0.y};
+          Vec2 p2 = {p0.x,p3.y}, t2 = {t0.x,t3.y};
+          vertex(ptr, p0, t0, color);
+          vertex(ptr, p1, t1, color);
+          vertex(ptr, p2, t2, color);
+          vertex(ptr, p1, t1, color);
+          vertex(ptr, p3, t3, color);
+          vertex(ptr, p2, t2, color);
+          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          break;
+        }
+        default:
+          d = data_end; // stop processing at first invalid cmd
+          break;
       }
-
-      case CMD_color:     color = uval(itr); break;
-      case CMD_modColor:  modColor = uval(itr); break;
-      case CMD_texture:   tid   = uval(itr); break;
-      case CMD_lineWidth: lw    = fval(itr); break;
-
-      case CMD_line2: {
-	vertex(ptr, fval2(itr), color);
-	vertex(ptr, fval2(itr), color);
-	addDrawCall(2, GL_LINES, modColor, 0, lw, cap);
-	break;
-      }
-      case CMD_line3: {
-        vertex(ptr, fval3(itr), color);
-        vertex(ptr, fval3(itr), color);
-	addDrawCall(2, GL_LINES, modColor, 0, lw, cap);
-        break;
-      }
-      case CMD_triangle2: {
-	vertex(ptr, fval2(itr), color);
-	vertex(ptr, fval2(itr), color);
-	vertex(ptr, fval2(itr), color);
-	addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, cap);
-	break;
-      }
-      case CMD_triangle3: {
-	vertex(ptr, fval3(itr), color);
-	vertex(ptr, fval3(itr), color);
-	vertex(ptr, fval3(itr), color);
-	addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, cap);
-	break;
-      }
-      case CMD_triangle2T: {
-        Vec2 p0 = fval2(itr), t0 = fval2(itr);
-        Vec2 p1 = fval2(itr), t1 = fval2(itr);
-        Vec2 p2 = fval2(itr), t2 = fval2(itr);
-        vertex(ptr, p0, t0, color);
-	vertex(ptr, p1, t1, color);
-	vertex(ptr, p2, t2, color);
-	addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, cap);
-        break;
-      }
-      case CMD_triangle3T: {
-        Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr);
-        Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr);
-        Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr);
-        vertex(ptr, p0, t0, color);
-	vertex(ptr, p1, t1, color);
-	vertex(ptr, p2, t2, color);
-	addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, cap);
-        break;
-      }
-      case CMD_triangle2C: {
-        Vec2 p0 = fval2(itr); uint32_t c0 = uval(itr);
-        Vec2 p1 = fval2(itr); uint32_t c1 = uval(itr);
-        Vec2 p2 = fval2(itr); uint32_t c2 = uval(itr);
-        vertex(ptr, p0, c0);
-	vertex(ptr, p1, c1);
-	vertex(ptr, p2, c2);
-	addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, cap);
-        break;
-      }
-      case CMD_triangle3C: {
-        Vec3 p0 = fval3(itr); uint32_t c0 = uval(itr);
-        Vec3 p1 = fval3(itr); uint32_t c1 = uval(itr);
-        Vec3 p2 = fval3(itr); uint32_t c2 = uval(itr);
-        vertex(ptr, p0, c0);
-	vertex(ptr, p1, c1);
-	vertex(ptr, p2, c2);
-	addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, cap);
-        break;
-      }
-      case CMD_triangle2TC: {
-        Vec2 p0 = fval2(itr), t0 = fval2(itr); uint32_t c0 = uval(itr);
-        Vec2 p1 = fval2(itr), t1 = fval2(itr); uint32_t c1 = uval(itr);
-        Vec2 p2 = fval2(itr), t2 = fval2(itr); uint32_t c2 = uval(itr);
-        vertex(ptr, p0, t0, c0);
-	vertex(ptr, p1, t1, c1);
-	vertex(ptr, p2, t2, c2);
-	addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, cap);
-        break;
-      }
-      case CMD_triangle3TC: {
-        Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr); uint32_t c0 = uval(itr);
-        Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr); uint32_t c1 = uval(itr);
-        Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr); uint32_t c2 = uval(itr);
-        vertex(ptr, p0, t0, c0);
-	vertex(ptr, p1, t1, c1);
-	vertex(ptr, p2, t2, c2);
-	addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, cap);
-        break;
-      }
-      case CMD_quad2: {
-        Vec2 p0 = fval2(itr), p1 = fval2(itr);
-        Vec2 p2 = fval2(itr), p3 = fval2(itr);
-	vertex(ptr, p0, color);
-	vertex(ptr, p1, color);
-	vertex(ptr, p2, color);
-        vertex(ptr, p1, color);
-        vertex(ptr, p3, color);
-        vertex(ptr, p2, color);
-	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
-        break;
-      }
-      case CMD_quad3: {
-        Vec3 p0 = fval3(itr), p1 = fval3(itr);
-        Vec3 p2 = fval3(itr), p3 = fval3(itr);
-	vertex(ptr, p0, color);
-	vertex(ptr, p1, color);
-	vertex(ptr, p2, color);
-        vertex(ptr, p1, color);
-        vertex(ptr, p3, color);
-        vertex(ptr, p2, color);
-	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
-        break;
-      }
-      case CMD_quad2T: {
-        Vec2 p0 = fval2(itr), t0 = fval2(itr);
-        Vec2 p1 = fval2(itr), t1 = fval2(itr);
-        Vec2 p2 = fval2(itr), t2 = fval2(itr);
-        Vec2 p3 = fval2(itr), t3 = fval2(itr);
-	vertex(ptr, p0, t0, color);
-	vertex(ptr, p1, t1, color);
-	vertex(ptr, p2, t2, color);
-        vertex(ptr, p1, t1, color);
-        vertex(ptr, p3, t3, color);
-        vertex(ptr, p2, t2, color);
-	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
-        break;
-      }
-      case CMD_quad3T: {
-        Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr);
-        Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr);
-        Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr);
-        Vec3 p3 = fval3(itr); Vec2 t3 = fval2(itr);
-	vertex(ptr, p0, t0, color);
-	vertex(ptr, p1, t1, color);
-	vertex(ptr, p2, t2, color);
-        vertex(ptr, p1, t1, color);
-        vertex(ptr, p3, t3, color);
-        vertex(ptr, p2, t2, color);
-	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
-        break;
-      }
-      case CMD_quad2C: {
-        Vec2 p0 = fval2(itr); uint32_t c0 = uval(itr);
-        Vec2 p1 = fval2(itr); uint32_t c1 = uval(itr);
-        Vec2 p2 = fval2(itr); uint32_t c2 = uval(itr);
-        Vec2 p3 = fval2(itr); uint32_t c3 = uval(itr);
-        vertex(ptr, p0, c0);
-	vertex(ptr, p1, c1);
-	vertex(ptr, p2, c2);
-	vertex(ptr, p1, c1);
-	vertex(ptr, p3, c3);
-	vertex(ptr, p2, c2);
-	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
-        break;
-      }
-      case CMD_quad3C: {
-        Vec3 p0 = fval3(itr); uint32_t c0 = uval(itr);
-        Vec3 p1 = fval3(itr); uint32_t c1 = uval(itr);
-        Vec3 p2 = fval3(itr); uint32_t c2 = uval(itr);
-        Vec3 p3 = fval3(itr); uint32_t c3 = uval(itr);
-        vertex(ptr, p0, c0);
-	vertex(ptr, p1, c1);
-	vertex(ptr, p2, c2);
-	vertex(ptr, p1, c1);
-	vertex(ptr, p3, c3);
-	vertex(ptr, p2, c2);
-	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
-        break;
-      }
-      case CMD_quad2TC: {
-        Vec2 p0 = fval2(itr), t0 = fval2(itr); uint32_t c0 = uval(itr);
-        Vec2 p1 = fval2(itr), t1 = fval2(itr); uint32_t c1 = uval(itr);
-        Vec2 p2 = fval2(itr), t2 = fval2(itr); uint32_t c2 = uval(itr);
-        Vec2 p3 = fval2(itr), t3 = fval2(itr); uint32_t c3 = uval(itr);
-	vertex(ptr, p0, t0, c0);
-	vertex(ptr, p1, t1, c1);
-	vertex(ptr, p2, t2, c2);
-	vertex(ptr, p1, t1, c1);
-	vertex(ptr, p3, t3, c3);
-	vertex(ptr, p2, t2, c2);
-	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
-        break;
-      }
-      case CMD_quad3TC: {
-        Vec3 p0 = fval3(itr); Vec2 t0 = fval2(itr); uint32_t c0 = uval(itr);
-        Vec3 p1 = fval3(itr); Vec2 t1 = fval2(itr); uint32_t c1 = uval(itr);
-        Vec3 p2 = fval3(itr); Vec2 t2 = fval2(itr); uint32_t c2 = uval(itr);
-        Vec3 p3 = fval3(itr); Vec2 t3 = fval2(itr); uint32_t c3 = uval(itr);
-	vertex(ptr, p0, t0, c0);
-	vertex(ptr, p1, t1, c1);
-	vertex(ptr, p2, t2, c2);
-	vertex(ptr, p1, t1, c1);
-	vertex(ptr, p3, t3, c3);
-	vertex(ptr, p2, t2, c2);
-	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
-        break;
-      }
-      case CMD_rectangle: {
-        Vec2 p0 = fval2(itr), p3 = fval2(itr);
-        Vec2 p1 = {p3.x,p0.y}, p2 = {p0.x,p3.y};
-	vertex(ptr, p0, color);
-	vertex(ptr, p1, color);
-	vertex(ptr, p2, color);
-	vertex(ptr, p1, color);
-	vertex(ptr, p3, color);
-	vertex(ptr, p2, color);
-	addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, cap);
-	break;
-      }
-      case CMD_rectangleT: {
-        Vec2 p0 = fval2(itr), t0 = fval2(itr);
-        Vec2 p3 = fval2(itr), t3 = fval2(itr);
-        Vec2 p1 = {p3.x,p0.y}, t1 = {t3.x,t0.y};
-        Vec2 p2 = {p0.x,p3.y}, t2 = {t0.x,t3.y};
-	vertex(ptr, p0, t0, color);
-	vertex(ptr, p1, t1, color);
-	vertex(ptr, p2, t2, color);
-	vertex(ptr, p1, t1, color);
-	vertex(ptr, p3, t3, color);
-	vertex(ptr, p2, t2, color);
-	addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, cap);
-	break;
-      }
-      default:
-        itr = end; // stop processing at first invalid cmd
-	break;
     }
   }
 
   _vbo.unmap();
+
 #if 0
-  println_err("drawBuffer:", _drawBuffer.size(), "  vertices:", size,
+  std::size_t dsize = 0;
+  for (auto& [no,layer] : _layers) { dsize += layer.drawData.size(); }
+  println_err("drawData:", dsize, "  vertices:", vsize,
               "  drawCalls:", _drawCalls.size());
 #endif
 }
@@ -677,9 +662,9 @@ void gx::OpenGLRenderer::renderFrame()
     }
 
     if (shader != lastShader) { _sp[shader].use(); }
-    if (dc.transformNo >= 0) {
-      const TransformEntry& t = _transforms[std::size_t(dc.transformNo)];
-      _sp_trans[shader].set(t.view * t.projection);
+    if (dc.transformID >= 0) {
+      const TransformEntry& t = _transforms[std::size_t(dc.transformID)];
+      _sp_trans[shader].set(t.view * t.proj);
     }
     _sp_modColor[shader].set(dc.modColor);
     if (_sp_texUnit[shader]) {_sp_texUnit[shader].set(texUnit); }
