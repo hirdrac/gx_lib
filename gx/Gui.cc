@@ -5,8 +5,8 @@
 
 // TODO - handle tab/enter/mouse select differently for entry
 // TODO - cursor movement for entry
-// TODO - separate pass for popup types to make sure they aren't covered
 // TODO - allow right button to open menus & select menu items
+// TODO - 'stay open' logic for menus (quick click/release on menu?)
 
 #include "Gui.hh"
 #include "Window.hh"
@@ -61,15 +61,41 @@ namespace {
     def._active = false;
     for (auto& e : def.elems) { deactivate(e); }
   }
+
+  [[nodiscard]] gx::GuiElem* findElemByXY(
+    gx::GuiElem& def, float x, float y, bool popup)
+  {
+    if (popup && def.type == gx::GUI_MENU) {
+      if (def._active) {
+        gx::GuiElem* e = findElemByXY(def.elems[1], x, y, false);
+        if (e) { return e; }
+      }
+      if (contains(def, x, y)) { return &def; }
+    }
+    else if (popup || contains(def, x, y))
+    {
+      if (!popup && def.id != 0) { return &def; }
+      for (gx::GuiElem& c : def.elems) {
+        gx::GuiElem* e = findElemByXY(c, x, y, popup);
+        if (e) { return e; }
+      }
+    }
+    return nullptr;
+  }
 }
 
 
-gx::Gui::Gui(const GuiElem& rootElem) : _rootElem(rootElem) { init(_rootElem); }
-gx::Gui::Gui(GuiElem&& rootElem) : _rootElem(std::move(rootElem)) { init(_rootElem); }
+gx::Gui::Gui(const GuiElem& rootElem)
+  : _rootElem(rootElem) { init(_rootElem); }
+
+gx::Gui::Gui(GuiElem&& rootElem)
+  : _rootElem(std::move(rootElem)) { init(_rootElem); }
 
 void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
 {
   _theme = theme;
+  assert(_theme.baseFont != nullptr);
+
   _pt.set(x, y);
   _rootElem.align = align;
   _needLayout = true;
@@ -100,7 +126,7 @@ void gx::Gui::update(Window& win)
   int id = 0;
   GuiElemType type = GUI_NULL;
   if (win.mouseIn() && win.focused()) {
-    ptr = findElem(win.mouseX(), win.mouseY());
+    ptr = findElemByXY(_rootElem, win.mouseX(), win.mouseY(), _popupActive);
     if (ptr) {
       id = ptr->id;
       type = ptr->type;
@@ -108,10 +134,13 @@ void gx::Gui::update(Window& win)
   }
 
   // update hoverID
-  if (_hoverID != id
-      && (!buttonDown || (_heldType == GUI_MENU && type == GUI_MENU_ITEM))) {
-    _hoverID = id;
-    _needRender = true;
+  if (_hoverID != id) {
+    int hid = id;
+    if (buttonDown && _heldType != GUI_MENU && id != _heldID) { hid = 0; }
+    if (_hoverID != hid) {
+      _hoverID = hid;
+      _needRender = true;
+    }
   }
 
   if (buttonDown) {
@@ -133,9 +162,10 @@ void gx::Gui::update(Window& win)
       if (type == GUI_MENU) {
         deactivate(_rootElem); // close open menus
         ptr->_active = true;
+        _popupActive = true;
         _needRender = true;
-      } else {
-        _needRender = (_pressedID != 0);
+      } else if (_pressedID != 0) {
+        _needRender = true;
       }
     }
   } else {
@@ -145,6 +175,7 @@ void gx::Gui::update(Window& win)
       _heldID = 0;
       _heldType = GUI_NULL;
       deactivate(_rootElem); // close open menus
+      _popupActive = false;
       _needRender = true;
     }
   }
@@ -176,16 +207,32 @@ void gx::Gui::update(Window& win)
 
   // redraw GUI if needed
   if (_needRender) {
-    DrawList& dl = _dlm[0];
-    dl.clear();
-    DrawContext dc(dl);
+    // layers:
+    // 0 - background/frames
+    // 1 - text
+    // 2 - popup background/frames
+    // 3 - popup text
 
-    DrawList& dl2 = _dlm[1];
-    dl2.clear();
-    DrawContext dc2(dl2);
+    DrawContext dc0(_dlm[0]), dc1(_dlm[1]);
+    dc0.clear();
+    dc1.clear();
 
-    drawRec(dc, _rootElem, _theme.colorBackground);
-    drawElem(dc, dc2, _rootElem, BSTATE_NONE);
+    drawRec(dc0, _rootElem, _theme.colorBackground);
+    drawElem(dc0, dc1, _rootElem, BSTATE_NONE, false);
+
+    if (_popupActive) {
+      DrawContext dc2(_dlm[2]), dc3(_dlm[3]);
+      dc2.clear();
+      dc3.clear();
+
+      drawElem(dc2, dc3, _rootElem, BSTATE_NONE, true);
+    } else {
+      auto itr = _dlm.find(2);
+      if (itr != _dlm.end()) { itr->second.clear(); }
+      itr = _dlm.find(3);
+      if (itr != _dlm.end()) { itr->second.clear(); }
+    }
+
     _needRender = false;
     _needRedraw = true;
   }
@@ -282,6 +329,21 @@ void gx::Gui::init(GuiElem& def)
   if (def.type == GUI_MENU) {
     def.id = _uniqueID--;
   }
+
+#ifndef NDEBUG
+  switch (def.type) {
+    case GUI_BUTTON:
+    case GUI_MENU_ITEM:
+      assert(def.elems.size() == 1);
+      break;
+    case GUI_MENU:
+      assert(def.elems.size() == 2);
+      break;
+    default:
+      break;
+  }
+#endif
+
   for (GuiElem& e : def.elems) { init(e); }
 }
 
@@ -319,7 +381,6 @@ void gx::Gui::calcSize(GuiElem& def)
       break;
     }
     case GUI_LABEL: {
-      assert(_theme.baseFont != nullptr);
       const Font& fnt = *_theme.baseFont;
       def._w = fnt.calcWidth(def.text);
       int lines = calcLines(def.text);
@@ -338,7 +399,6 @@ void gx::Gui::calcSize(GuiElem& def)
       break;
     case GUI_BUTTON:
     case GUI_MENU_ITEM: {
-      assert(def.elems.size() == 1);
       GuiElem& e = def.elems[0];
       calcSize(e);
       def._w = float(e._w + (_theme.border * 2));
@@ -346,7 +406,6 @@ void gx::Gui::calcSize(GuiElem& def)
       break;
     }
     case GUI_MENU: {
-      assert(def.elems.size() == 2);
       // menu button
       GuiElem& e = def.elems[0];
       calcSize(e);
@@ -357,7 +416,6 @@ void gx::Gui::calcSize(GuiElem& def)
       break;
     }
     case GUI_ENTRY: {
-      assert(_theme.baseFont != nullptr);
       const Font& fnt = *_theme.baseFont;
       def._w = def.entry.size * fnt.calcWidth("A");
       def._h = float(fnt.size());
@@ -434,109 +492,115 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
   }
 }
 
-void gx::Gui::drawElem(DrawContext& dc, DrawContext& dc2,
-                       const GuiElem& def, ButtonState bstate) const
+void gx::Gui::drawElem(DrawContext& dc, DrawContext& dc2, const GuiElem& def,
+                       ButtonState bstate, bool popup) const
 {
-  switch (def.type) {
-    case GUI_HFRAME:
-    case GUI_VFRAME:
-      for (auto& e : def.elems) { drawElem(dc, dc2, e, bstate); }
-      break;
-    case GUI_MENU_HFRAME:
-    case GUI_MENU_VFRAME:
-      drawRec(dc, def, _theme.colorMenuItem);
-      for (auto& e : def.elems) { drawElem(dc, dc2, e, bstate); }
-      break;
-    case GUI_LABEL:
-      // TODO - use bstate to select different theme values
-      //    (i.e. hovering over a button causes label color change)
-      dc2.color(_theme.colorText);
-      dc2.text(*_theme.baseFont, def._x, def._y, ALIGN_TOP_LEFT,
-               _theme.spacing, def.text);
-      break;
-    case GUI_HLINE:
-    case GUI_VLINE:
-      dc.color(_theme.colorText);
-      dc.rectangle(def._x + _theme.border, def._y + _theme.border, def._w - (_theme.border*2), def._h - (_theme.border*2));
-      break;
-    case GUI_BUTTON:
-      if (def.id == _heldID) {
-        if (def.id == _hoverID) {
-          drawRec(dc, def, _theme.colorButtonPressed);
-          bstate = BSTATE_PRESSED;
-        } else {
-          drawRec(dc, def, _theme.colorButtonHeldOnly);
-          bstate = BSTATE_HELD_ONLY;
-        }
-      } else if (def.id == _hoverID) {
-        drawRec(dc, def, _theme.colorButtonHover);
-        bstate = BSTATE_HOVER;
-      } else {
-        drawRec(dc, def, _theme.colorButtonNormal);
-        bstate = BSTATE_NORMAL;
-      }
-      drawElem(dc, dc2, def.elems[0], bstate);
-      break;
-    case GUI_MENU:
-      if (def.id == _heldID) {
-        drawRec(dc, def, _theme.colorMenuSelect);
-        bstate = BSTATE_HELD_ONLY;
-      } else if (def.id == _hoverID) {
-        drawRec(dc, def, _theme.colorMenuHover);
-        bstate = BSTATE_HOVER;
-      } else {
-        drawRec(dc, def, _theme.colorMenuNormal);
-        bstate = BSTATE_NORMAL;
-      }
-      drawElem(dc, dc2, def.elems[0], bstate);
-      if (def._active) { drawElem(dc, dc2, def.elems[1], bstate); }
-      break;
-    case GUI_MENU_ITEM:
-      if (def.id == _hoverID) {
-        drawRec(dc, def, _theme.colorMenuItemSelect);
-      }
-      drawElem(dc, dc2, def.elems[0], bstate);
-      break;
-    case GUI_ENTRY: {
-      const Font& fnt = *_theme.baseFont;
-      float tw = fnt.calcWidth(def.text);
-      if (def.id == _focusID) {
-        drawRec(dc, def, _theme.colorEntryFocus);
-        tw += float(1 + _theme.cursorWidth);
-      } else {
-        drawRec(dc, def, _theme.colorEntry);
-      }
-      float tx = def._x;
-      if (tw > def._w) {
-        // text doesn't fit in entry
-        tx -= tw - def._w;
-        dc2.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
-                      def._x + float(fnt.size() / 2), _theme.colorText);
-        dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
-                 _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
-      } else {
+  if (!popup) {
+    switch (def.type) {
+      case GUI_HFRAME:
+      case GUI_VFRAME:
+        break;
+      case GUI_LABEL:
+        // TODO - use bstate to select different theme values
+        //    (i.e. hovering over a button causes label color change)
         dc2.color(_theme.colorText);
-        dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing, def.text);
+        dc2.text(*_theme.baseFont, def._x, def._y, ALIGN_TOP_LEFT,
+                 _theme.spacing, def.text);
+        break;
+      case GUI_HLINE:
+      case GUI_VLINE:
+        dc.color(_theme.colorText);
+        dc.rectangle(def._x + _theme.border, def._y + _theme.border,
+                     def._w - (_theme.border*2), def._h - (_theme.border*2));
+        break;
+      case GUI_BUTTON:
+        if (def.id == _heldID) {
+          if (def.id == _hoverID) {
+            drawRec(dc, def, _theme.colorButtonPressed);
+            bstate = BSTATE_PRESSED;
+          } else {
+            drawRec(dc, def, _theme.colorButtonHeldOnly);
+            bstate = BSTATE_HELD_ONLY;
+          }
+        } else if (def.id == _hoverID) {
+          drawRec(dc, def, _theme.colorButtonHover);
+          bstate = BSTATE_HOVER;
+        } else {
+          drawRec(dc, def, _theme.colorButtonNormal);
+          bstate = BSTATE_NORMAL;
+        }
+        break;
+      case GUI_MENU:
+        if (def.id == _heldID) {
+          drawRec(dc, def, _theme.colorMenuSelect);
+          bstate = BSTATE_HELD_ONLY;
+        } else if (def.id == _hoverID) {
+          drawRec(dc, def, _theme.colorMenuHover);
+          bstate = BSTATE_HOVER;
+        } else {
+          drawRec(dc, def, _theme.colorMenuNormal);
+          bstate = BSTATE_NORMAL;
+        }
+        break;
+      case GUI_MENU_HFRAME:
+      case GUI_MENU_VFRAME:
+        drawRec(dc, def, _theme.colorMenuItem);
+        break;
+      case GUI_MENU_ITEM:
+        if (def.id == _hoverID) {
+          drawRec(dc, def, _theme.colorMenuItemSelect);
+        }
+        break;
+      case GUI_ENTRY: {
+        const Font& fnt = *_theme.baseFont;
+        float tw = fnt.calcWidth(def.text);
+        if (def.id == _focusID) {
+          drawRec(dc, def, _theme.colorEntryFocus);
+          tw += float(1 + _theme.cursorWidth);
+        } else {
+          drawRec(dc, def, _theme.colorEntry);
+        }
+        float tx = def._x;
+        if (tw > def._w) {
+          // text doesn't fit in entry
+          tx -= tw - def._w;
+          dc2.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
+                        def._x + float(fnt.size() / 2), _theme.colorText);
+          dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing,
+                   def.text, {def._x, def._y, def._w, def._h});
+        } else {
+          dc2.color(_theme.colorText);
+          dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing, def.text);
+        }
+        dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing,
+                 def.text, {def._x, def._y, def._w, def._h});
+        if (def.id == _focusID && _cursorState) {
+          // draw cursor
+          dc.color(_theme.colorCursor);
+          dc.rectangle(tx + tw - float(_theme.cursorWidth), def._y+1,
+                       float(_theme.cursorWidth), float(fnt.size()-2));
+        }
+        break;
       }
-      dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT,
-               _theme.spacing, def.text, {def._x, def._y, def._w, def._h});
-      if (def.id == _focusID && _cursorState) {
-        // draw cursor
-        dc.color(_theme.colorCursor);
-        dc.rectangle(tx + tw - float(_theme.cursorWidth), def._y+1,
-                     float(_theme.cursorWidth), float(fnt.size()-2));
-      }
-      break;
+      case GUI_IMAGE:
+        dc.texture(def.image.texId);
+        dc.rectangle(def._x + _theme.border, def._y + _theme.border,
+                     def.image.width, def.image.height,
+                     def.image.texCoord0, def.image.texCoord1);
+        break;
+      default:
+        GX_LOG_ERROR("unknown type ", def.type);
+        break;
     }
-    case GUI_IMAGE:
-      dc.texture(def.image.texId);
-      dc.rectangle(def._x + _theme.border, def._y + _theme.border,
-                   def.image.width, def.image.height,
-                   def.image.texCoord0, def.image.texCoord1);
-      break;
-    default:
-      GX_LOG_ERROR("unknown type ", def.type);
-      break;
+  }
+
+  // draw child elements
+  if (def.type != GUI_MENU) {
+    for (auto& e : def.elems) { drawElem(dc, dc2, e, bstate, popup); }
+  } else if (!popup) {
+    drawElem(dc, dc2, def.elems[0], bstate, popup);
+  } else if (def._active) {
+    drawElem(dc, dc2, def.elems[1], bstate, false);
   }
 }
 
@@ -554,25 +618,6 @@ void gx::Gui::drawRec(DrawContext& dc, const GuiElem& def, uint32_t col) const
     dc.rectangle(def._x, def._y, 1, def._h);
     dc.rectangle(def._x + def._w - 1, def._y, 1, def._h);
   }
-}
-
-gx::GuiElem* gx::Gui::findElem(float x, float y)
-{
-  // - full search through all elems needed because of popup elements
-  // - only GuiElem with an id can be found
-  std::vector<GuiElem*> stack;
-  GuiElem* e = &_rootElem;
-  while (e->id == 0 || !contains(*e, x, y)) {
-    if (e->type != GUI_MENU || e->_active) {
-      stack.reserve(stack.size() + e->elems.size());
-      for (GuiElem& c : e->elems) { stack.push_back(&c); }
-    }
-
-    if (stack.empty()) { return nullptr; }
-    e = stack.back();
-    stack.pop_back();
-  }
-  return e;
 }
 
 namespace {

@@ -45,17 +45,21 @@ int main(int argc, char* argv[])
   gui1.layout(theme, 100, 100, gx::ALIGN_TOP_LEFT);
 
   gx::Gui gui2(
-    gx::guiHFrame(
-      gx::guiMenu(
-        "File",
-        gx::guiMenuItem("Open...", 1),
-        gx::guiMenuItem("Save...", 2),
-        gx::guiHLine(),
-        gx::guiMenuItem("Quit", 99)),
-      gx::guiMenu(
-        "Help",
-        gx::guiMenuItem("Manual", 3),
-        gx::guiMenuItem("About", 4))));
+    gx::guiVFrame(
+      gx::guiHFrame(
+        gx::guiMenu(
+          "File",
+          gx::guiMenuItem("Open...", 1),
+          gx::guiMenuItem("Save...", 2),
+          gx::guiHLine(),
+          gx::guiMenuItem("Quit", 99)),
+        gx::guiMenu(
+          "Help",
+          gx::guiMenuItem("Manual", 3),
+          gx::guiMenuItem("About", 4))),
+      gx::guiHFrame(
+        gx::guiButton("B1", 77),
+        gx::guiButton("B2", 88))));
   gui2.layout(theme, 0, 0, gx::ALIGN_TOP_LEFT);
 
   gx::Gui gui3(
@@ -87,8 +91,8 @@ int main(int argc, char* argv[])
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
       ren.clearFrame(win.width(), win.height());
-      ren.draw(gui1);
       ren.draw(gui2);
+      ren.draw(gui1);
       ren.draw(gui3);
       needRedraw = false;
     }

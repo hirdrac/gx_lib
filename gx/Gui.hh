@@ -161,6 +161,7 @@ class gx::Gui
   bool _needRender = true;
   bool _needRedraw = false;
   bool _textChanged = false;
+  bool _popupActive = false;
 
   void processCharEvent(Window& win);
   void setFocusID(int id);
@@ -168,13 +169,13 @@ class gx::Gui
   void calcSize(GuiElem& def);
   void calcPos(GuiElem& def, float base_x, float base_y);
   void drawElem(DrawContext& dc, DrawContext& dc2,
-                const GuiElem& def, ButtonState bstate) const;
+                const GuiElem& def, ButtonState bstate, bool popup) const;
   void drawRec(DrawContext& dc, const GuiElem& def, uint32_t col) const;
-  GuiElem* findElem(float x, float y);
-  GuiElem* findElem(int id);
-  const GuiElem* findElem(int id) const;
-  GuiElem* findNextElem(int id, GuiElemType type = GUI_NULL);
-  GuiElem* findPrevElem(int id, GuiElemType type = GUI_NULL);
+
+  [[nodiscard]] GuiElem* findElem(int id);
+  [[nodiscard]] const GuiElem* findElem(int id) const;
+  [[nodiscard]] GuiElem* findNextElem(int id, GuiElemType type = GUI_NULL);
+  [[nodiscard]] GuiElem* findPrevElem(int id, GuiElemType type = GUI_NULL);
 };
 
 
