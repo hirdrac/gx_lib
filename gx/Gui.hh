@@ -10,6 +10,7 @@
 // TODO - list select (combo box)
 // TODO - control allowed char types for entry (numeric only, etc.)
 // TODO - theme text colors for button state & entry text
+// TODO - modal dialog
 
 #pragma once
 #include "DrawList.hh"
@@ -163,6 +164,7 @@ class gx::Gui
   bool _textChanged = false;
   bool _popupActive = false;
 
+  void processMouseEvent(Window& win);
   void processCharEvent(Window& win);
   void setFocusID(int id);
   void init(GuiElem& def);

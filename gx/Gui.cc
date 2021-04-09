@@ -119,13 +119,76 @@ void gx::Gui::update(Window& win)
     _needLayout = false;
   }
 
-  // button event & state update
+  // mouse movement/button handling
+  if (win.focused()
+      && (win.events() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_BUTTON1))) {
+    processMouseEvent(win);
+  }
+
+  // entry input handling & cursor update
+  if (_focusID != 0) {
+    if (win.events() & EVENT_CHAR) { processCharEvent(win); }
+
+    if (_pressedID != 0) {
+      // reset cursor blink state
+      _lastCursorUpdate = win.lastPollTime();
+      _cursorState = true;
+    } else if (_theme.cursorBlinkTime > 0) {
+      // check for cursor blink
+      int64_t blinks = (win.lastPollTime() - _lastCursorUpdate)
+        / int64_t(_theme.cursorBlinkTime);
+      if (blinks > 0) {
+        _lastCursorUpdate += blinks * _theme.cursorBlinkTime;
+        if (blinks & 1) { _cursorState = !_cursorState; }
+        _needRender = true;
+      }
+    }
+  }
+
+  // redraw GUI if needed
+  if (_needRender) {
+    // layers:
+    // 0 - background/frames
+    // 1 - text
+    // 2 - popup background/frames
+    // 3 - popup text
+
+    DrawContext dc0(_dlm[0]), dc1(_dlm[1]);
+    dc0.clear();
+    dc1.clear();
+
+    drawRec(dc0, _rootElem, _theme.colorBackground);
+    drawElem(dc0, dc1, _rootElem, BSTATE_NONE, false);
+
+    if (_popupActive) {
+      DrawContext dc2(_dlm[2]), dc3(_dlm[3]);
+      dc2.clear();
+      dc3.clear();
+
+      drawElem(dc2, dc3, _rootElem, BSTATE_NONE, true);
+    } else {
+      // clear popups
+      auto itr = _dlm.find(2);
+      if (itr != _dlm.end()) { itr->second.clear(); }
+      itr = _dlm.find(3);
+      if (itr != _dlm.end()) { itr->second.clear(); }
+    }
+
+    _needRender = false;
+    _needRedraw = true;
+  }
+}
+
+void gx::Gui::processMouseEvent(Window& win)
+{
   const bool buttonDown = win.buttons() & BUTTON1;
   const bool buttonEvent = win.events() & EVENT_MOUSE_BUTTON1;
+
+  // get elem at pointer
   GuiElem* ptr = nullptr;
   int id = 0;
   GuiElemType type = GUI_NULL;
-  if (win.mouseIn() && win.focused()) {
+  if (win.mouseIn()) {
     ptr = findElemByXY(_rootElem, win.mouseX(), win.mouseY(), _popupActive);
     if (ptr) {
       id = ptr->id;
@@ -160,7 +223,7 @@ void gx::Gui::update(Window& win)
       _heldID = id;
       _heldType = type;
       if (type == GUI_MENU) {
-        deactivate(_rootElem); // close open menus
+        if (_popupActive) { deactivate(_rootElem); } // close other open menu
         ptr->_active = true;
         _popupActive = true;
         _needRender = true;
@@ -172,29 +235,17 @@ void gx::Gui::update(Window& win)
     // update releasedID
     if (buttonEvent) {
       if ((_heldID == id) || (type == GUI_MENU_ITEM)) { _releasedID = id; }
-      _heldID = 0;
-      _heldType = GUI_NULL;
-      deactivate(_rootElem); // close open menus
-      _popupActive = false;
-      _needRender = true;
-    }
-  }
 
-  // entry input handling & cursor update
-  if (_focusID != 0) {
-    if (win.events() & EVENT_CHAR) { processCharEvent(win); }
+      if (_heldID != 0) {
+        _heldID = 0;
+        _heldType = GUI_NULL;
+        _needRender = true;
+      }
 
-    if (_pressedID != 0) {
-      // reset cursor blink state
-      _lastCursorUpdate = win.lastPollTime();
-      _cursorState = true;
-    } else if (_theme.cursorBlinkTime > 0) {
-      // check for cursor blink
-      int64_t blinks = (win.lastPollTime() - _lastCursorUpdate)
-        / int64_t(_theme.cursorBlinkTime);
-      if (blinks > 0) {
-        _lastCursorUpdate += blinks * _theme.cursorBlinkTime;
-        if (blinks & 1) { _cursorState = !_cursorState; }
+      if (_popupActive) {
+        // close open menus
+        deactivate(_rootElem);
+        _popupActive = false;
         _needRender = true;
       }
     }
@@ -203,38 +254,6 @@ void gx::Gui::update(Window& win)
   // clear button event if used by GUI
   if (buttonEvent && (_pressedID != 0 || _releasedID != 0)) {
     win.removeEvent(EVENT_MOUSE_BUTTON1);
-  }
-
-  // redraw GUI if needed
-  if (_needRender) {
-    // layers:
-    // 0 - background/frames
-    // 1 - text
-    // 2 - popup background/frames
-    // 3 - popup text
-
-    DrawContext dc0(_dlm[0]), dc1(_dlm[1]);
-    dc0.clear();
-    dc1.clear();
-
-    drawRec(dc0, _rootElem, _theme.colorBackground);
-    drawElem(dc0, dc1, _rootElem, BSTATE_NONE, false);
-
-    if (_popupActive) {
-      DrawContext dc2(_dlm[2]), dc3(_dlm[3]);
-      dc2.clear();
-      dc3.clear();
-
-      drawElem(dc2, dc3, _rootElem, BSTATE_NONE, true);
-    } else {
-      auto itr = _dlm.find(2);
-      if (itr != _dlm.end()) { itr->second.clear(); }
-      itr = _dlm.find(3);
-      if (itr != _dlm.end()) { itr->second.clear(); }
-    }
-
-    _needRender = false;
-    _needRedraw = true;
   }
 }
 
@@ -277,7 +296,7 @@ void gx::Gui::processCharEvent(Window& win)
       std::string_view line(cb.data(), cb.find('\n'));
       for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
         int code = itr.get();
-        if (code >= 32 && (e->entry.maxLength == 0 || len < e->entry.maxLength)) {
+        if (code > 31 && (e->entry.maxLength == 0 || len < e->entry.maxLength)) {
           e->text += toUTF8(code);
           ++len;
           _needRender = true;
