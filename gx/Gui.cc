@@ -208,9 +208,8 @@ void gx::Gui::processMouseEvent(Window& win)
 
   if (buttonDown) {
     // clear focus if button clicked in another GUI
-    if ((win.removedEvents() & EVENT_MOUSE_BUTTON1) && _focusID != 0) {
+    if (win.removedEvents() & EVENT_MOUSE_BUTTON1) {
       setFocusID(0);
-      _needRender = true;
     }
 
     // update pressedID
@@ -305,12 +304,10 @@ void gx::Gui::processCharEvent(Window& win)
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       GuiElem* next = findNextElem(_focusID, GUI_ENTRY);
       setFocusID(next ? next->id : 0);
-      _needRender = true;
       usedEvent = true;
     } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
       GuiElem* prev = findPrevElem(_focusID, GUI_ENTRY);
       setFocusID(prev ? prev->id : 0);
-      _needRender = true;
       usedEvent = true;
     }
   }
@@ -325,11 +322,13 @@ void gx::Gui::processCharEvent(Window& win)
 
 void gx::Gui::setFocusID(int id)
 {
-  if (_focusID != id && _textChanged) {
+  if (_focusID == id) { return; }
+  if ( _textChanged) {
     _textChanged = false;
     _entryID = _focusID;
   }
   _focusID = id;
+  _needRender = true;
 }
 
 bool gx::Gui::setText(int id, std::string_view text)
