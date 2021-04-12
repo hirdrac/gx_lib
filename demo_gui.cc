@@ -41,8 +41,11 @@ int main(int argc, char* argv[])
         gx::guiButton("B4", 4),
         gx::guiVLine(),
         gx::guiButton("B5", 5)),
+      gx::guiHFrame(
+        gx::guiButtonPress("PRESS", 77),
+        gx::guiButtonHold("HOLD", 88)),
       gx::guiButton(gx::ALIGN_RIGHT, "[QUIT]", 99)));
-  gui1.layout(theme, 100, 100, gx::ALIGN_TOP_LEFT);
+  gui1.layout(theme, 60, 80, gx::ALIGN_TOP_LEFT);
 
   gx::Gui gui2(
     gx::guiVFrame(
@@ -56,10 +59,7 @@ int main(int argc, char* argv[])
         gx::guiMenu(
           "Help",
           gx::guiMenuItem("Manual", 3),
-          gx::guiMenuItem("About", 4))),
-      gx::guiHFrame(
-        gx::guiButton("B1", 77),
-        gx::guiButton("B2", 88))));
+          gx::guiMenuItem("About", 4)))));
   gui2.layout(theme, 0, 0, gx::ALIGN_TOP_LEFT);
 
   gx::Gui gui3(
@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         gx::guiLabel(" B"), gx::guiEntry(3.5f,3,3)),
       gx::guiHLine(),
       gx::guiEntry(16.0f,100,10)));
-  gui3.layout(theme, 100, 300, gx::ALIGN_TOP_LEFT);
+  gui3.layout(theme, 60, 300, gx::ALIGN_TOP_LEFT);
 
   gx::Window win;
   win.setTitle("GUI demo");
@@ -112,23 +112,23 @@ int main(int argc, char* argv[])
     // update gui(s)
     gui1.update(win);
     needRedraw |= gui1.needRedraw();
-    if (gui1.releasedID() > 0) {
-      gx::println_err("GUI1 released:", gui1.releasedID());
-      if (gui1.releasedID() == 99) { running = false; }
+    if (gui1.eventID() > 0) {
+      gx::println_err("GUI1 event:", gui1.eventID());
+      if (gui1.eventID() == 99) { running = false; }
     }
 
     gui2.update(win);
     needRedraw |= gui2.needRedraw();
-    if (gui2.releasedID() > 0) {
-      gx::println_err("GUI2 released:", gui2.releasedID());
-      if (gui2.releasedID() == 99) { running = false; }
+    if (gui2.eventID() > 0) {
+      gx::println_err("GUI2 event:", gui2.eventID());
+      if (gui2.eventID() == 99) { running = false; }
     }
 
     gui3.update(win);
     needRedraw |= gui3.needRedraw();
-    if (gui3.entryID() > 0) {
-      gx::println_err("GUI3 entry", gui3.entryID(), ": ",
-                      gui3.getText(gui3.entryID()));
+    if (gui3.eventID() > 0) {
+      gx::println_err("GUI3 event:", gui3.eventID(), ": ",
+                      gui3.getText(gui3.eventID()));
     }
 
     //gx::println_err("time ", win.lastPollTime());

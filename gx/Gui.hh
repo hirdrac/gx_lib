@@ -31,9 +31,18 @@ namespace gx {
 
   enum GuiElemType {
     GUI_NULL = 0,
-    GUI_HFRAME, GUI_VFRAME, GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_BUTTON,
-    GUI_MENU, GUI_MENU_HFRAME, GUI_MENU_VFRAME, GUI_MENU_ITEM,
-    GUI_ENTRY, GUI_IMAGE
+
+    // layout/draw types
+    GUI_HFRAME, GUI_VFRAME,
+    GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_IMAGE,
+    GUI_MENU, GUI_MENU_HFRAME, GUI_MENU_VFRAME,
+
+    // event types
+    GUI_BUTTON,        // activated on release
+    GUI_BUTTON_PRESS,  // activated once on press
+    GUI_BUTTON_HOLD,   // activated continuously on hold&press
+    GUI_MENU_ITEM,     // activated on release
+    GUI_ENTRY,         // activated if changed on enter/tab/click-away
   };
 
   enum ButtonState {
@@ -120,19 +129,8 @@ class gx::Gui
   [[nodiscard]] float width() const { return _rootElem._w; }
   [[nodiscard]] float height() const { return _rootElem._h; }
 
-  [[nodiscard]] int hoverID() const { return _hoverID; }
-    // id of button mouse is over
-  [[nodiscard]] int heldID() const { return _heldID; }
-    // id of button last pressed, set until button is released
-  [[nodiscard]] int pressedID() const { return _pressedID; }
-    // id of button pressed, cleared on next update call
-  [[nodiscard]] int releasedID() const { return _releasedID; }
-    // id of button released, cleared on next update call
-    // (was previously pressed, button released while still over same button)
-  [[nodiscard]] int focusID() const { return _focusID; }
-    // id of active text entry
-  [[nodiscard]] int entryID() const { return _entryID; }
-    // id of text entry with value update (triggered with tab/enter)
+  [[nodiscard]] int eventID() const { return _eventID; }
+    // id of element triggering an event
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // true if GUI needs to be redrawn
 
@@ -151,9 +149,8 @@ class gx::Gui
   int _hoverID = 0;
   int _heldID = 0;
   int _pressedID = 0;
-  int _releasedID = 0;
   int _focusID = 0;
-  int _entryID = 0;
+  int _eventID = 0;
   GuiElemType _heldType = GUI_NULL;
   int64_t _lastCursorUpdate = 0;
   int _uniqueID = -1;
@@ -253,6 +250,7 @@ namespace gx {
   }
 
   // Button
+  // (triggered on button release)
   inline GuiElem guiButton(int eventID, const GuiElem& elem)
   {
     GuiElem e(GUI_BUTTON);
@@ -281,6 +279,82 @@ namespace gx {
   inline GuiElem guiButton(AlignEnum align, std::string_view text, int eventID)
   {
     GuiElem e(GUI_BUTTON);
+    e.elems.push_back(gx::guiLabel(text));
+    e.align = align;
+    e.id = eventID;
+    return e;
+  }
+
+  // ButtonPress
+  // (triggered on initial button press)
+  inline GuiElem guiButtonPress(int eventID, const GuiElem& elem)
+  {
+    GuiElem e(GUI_BUTTON_PRESS);
+    e.elems.push_back(elem);
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiButtonPress(
+    AlignEnum align, int eventID, const GuiElem& elem)
+  {
+    GuiElem e(GUI_BUTTON_PRESS);
+    e.elems.push_back(elem);
+    e.align = align;
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiButtonPress(std::string_view text, int eventID)
+  {
+    GuiElem e(GUI_BUTTON_PRESS);
+    e.elems.push_back(gx::guiLabel(text));
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiButtonPress(
+    AlignEnum align, std::string_view text, int eventID)
+  {
+    GuiElem e(GUI_BUTTON_PRESS);
+    e.elems.push_back(gx::guiLabel(text));
+    e.align = align;
+    e.id = eventID;
+    return e;
+  }
+
+  // ButtonHold
+  // (triggered repeatedly while held)
+  inline GuiElem guiButtonHold(int eventID, const GuiElem& elem)
+  {
+    GuiElem e(GUI_BUTTON_HOLD);
+    e.elems.push_back(elem);
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiButtonHold(
+    AlignEnum align, int eventID, const GuiElem& elem)
+  {
+    GuiElem e(GUI_BUTTON_HOLD);
+    e.elems.push_back(elem);
+    e.align = align;
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiButtonHold(std::string_view text, int eventID)
+  {
+    GuiElem e(GUI_BUTTON_HOLD);
+    e.elems.push_back(gx::guiLabel(text));
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiButtonHold(
+    AlignEnum align, std::string_view text, int eventID)
+  {
+    GuiElem e(GUI_BUTTON_HOLD);
     e.elems.push_back(gx::guiLabel(text));
     e.align = align;
     e.id = eventID;
