@@ -217,6 +217,7 @@ class gx::Window
   float _mouseX = 0, _mouseY = 0;
   float _scrollX = 0, _scrollY = 0;
   int _buttons = 0, _mods = 0;
+  int _buttonsPress = 0, _buttonsRelease = 0;
   bool _mouseIn = false, _iconified = false, _focused = true;
 
   void showWindow(GLFWwindow*);
