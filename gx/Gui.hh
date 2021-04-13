@@ -19,6 +19,7 @@
 #include "Types.hh"
 #include <string_view>
 #include <vector>
+#include <initializer_list>
 
 
 namespace gx {
@@ -87,6 +88,8 @@ struct gx::GuiElem
   bool _active = false;                 // popup/menu enabled
 
   GuiElem(GuiElemType t) : type(t) { }
+  GuiElem(GuiElemType t, std::initializer_list<GuiElem> x)
+    : elems(x), type(t) { }
 };
 
 struct gx::GuiTheme
@@ -185,16 +188,13 @@ namespace gx {
   template<typename... Elems>
   inline GuiElem guiHFrame(const Elems&... elems)
   {
-    GuiElem e(GUI_HFRAME);
-    e.elems = {elems...};
-    return e;
+    return GuiElem(GUI_HFRAME, {elems...});
   }
 
   template<typename... Elems>
   inline GuiElem guiHFrame(AlignEnum align, const Elems&... elems)
   {
-    GuiElem e(GUI_HFRAME);
-    e.elems = {elems...};
+    GuiElem e(GUI_HFRAME, {elems...});
     e.align = align;
     return e;
   }
@@ -203,16 +203,13 @@ namespace gx {
   template<typename... Elems>
   inline GuiElem guiVFrame(const Elems&... elems)
   {
-    GuiElem e(GUI_VFRAME);
-    e.elems = {elems...};
-    return e;
+    return GuiElem(GUI_VFRAME, {elems...});
   }
 
   template<typename... Elems>
   inline GuiElem guiVFrame(AlignEnum align, const Elems&... elems)
   {
-    GuiElem e(GUI_VFRAME);
-    e.elems = {elems...};
+    GuiElem e(GUI_VFRAME, {elems...});
     e.align = align;
     return e;
   }
@@ -253,16 +250,14 @@ namespace gx {
   // (triggered on button release)
   inline GuiElem guiButton(int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON);
-    e.elems.push_back(elem);
+    GuiElem e(GUI_BUTTON, {elem});
     e.id = eventID;
     return e;
   }
 
   inline GuiElem guiButton(AlignEnum align, int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON);
-    e.elems.push_back(elem);
+    GuiElem e(GUI_BUTTON, {elem});
     e.align = align;
     e.id = eventID;
     return e;
@@ -270,16 +265,14 @@ namespace gx {
 
   inline GuiElem guiButton(std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON);
-    e.elems.push_back(gx::guiLabel(text));
+    GuiElem e(GUI_BUTTON, {guiLabel(text)});
     e.id = eventID;
     return e;
   }
 
   inline GuiElem guiButton(AlignEnum align, std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON);
-    e.elems.push_back(gx::guiLabel(text));
+    GuiElem e(GUI_BUTTON, {guiLabel(text)});
     e.align = align;
     e.id = eventID;
     return e;
@@ -289,8 +282,7 @@ namespace gx {
   // (triggered on initial button press)
   inline GuiElem guiButtonPress(int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON_PRESS);
-    e.elems.push_back(elem);
+    GuiElem e(GUI_BUTTON_PRESS, {elem});
     e.id = eventID;
     return e;
   }
@@ -298,8 +290,7 @@ namespace gx {
   inline GuiElem guiButtonPress(
     AlignEnum align, int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON_PRESS);
-    e.elems.push_back(elem);
+    GuiElem e(GUI_BUTTON_PRESS, {elem});
     e.align = align;
     e.id = eventID;
     return e;
@@ -307,8 +298,7 @@ namespace gx {
 
   inline GuiElem guiButtonPress(std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON_PRESS);
-    e.elems.push_back(gx::guiLabel(text));
+    GuiElem e(GUI_BUTTON_PRESS, {guiLabel(text)});
     e.id = eventID;
     return e;
   }
@@ -316,8 +306,7 @@ namespace gx {
   inline GuiElem guiButtonPress(
     AlignEnum align, std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON_PRESS);
-    e.elems.push_back(gx::guiLabel(text));
+    GuiElem e(GUI_BUTTON_PRESS, {guiLabel(text)});
     e.align = align;
     e.id = eventID;
     return e;
@@ -327,8 +316,7 @@ namespace gx {
   // (triggered repeatedly while held)
   inline GuiElem guiButtonHold(int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON_HOLD);
-    e.elems.push_back(elem);
+    GuiElem e(GUI_BUTTON_HOLD, {elem});
     e.id = eventID;
     return e;
   }
@@ -336,8 +324,7 @@ namespace gx {
   inline GuiElem guiButtonHold(
     AlignEnum align, int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON_HOLD);
-    e.elems.push_back(elem);
+    GuiElem e(GUI_BUTTON_HOLD, {elem});
     e.align = align;
     e.id = eventID;
     return e;
@@ -345,8 +332,7 @@ namespace gx {
 
   inline GuiElem guiButtonHold(std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON_HOLD);
-    e.elems.push_back(gx::guiLabel(text));
+    GuiElem e(GUI_BUTTON_HOLD, {guiLabel(text)});
     e.id = eventID;
     return e;
   }
@@ -354,8 +340,7 @@ namespace gx {
   inline GuiElem guiButtonHold(
     AlignEnum align, std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON_HOLD);
-    e.elems.push_back(gx::guiLabel(text));
+    GuiElem e(GUI_BUTTON_HOLD, {guiLabel(text)});
     e.align = align;
     e.id = eventID;
     return e;
@@ -365,17 +350,13 @@ namespace gx {
   template<typename... Elems>
   inline GuiElem guiMenu(std::string_view text, const Elems&... items)
   {
-    GuiElem e(GUI_MENU);
-    e.elems.push_back(gx::guiLabel(text));
-    GuiElem& frame = e.elems.emplace_back(GUI_MENU_VFRAME);
-    frame.elems = {items...};
-    return e;
+    return GuiElem(GUI_MENU, {guiLabel(text),
+        GuiElem(GUI_MENU_VFRAME,{items...})});
   }
 
   inline GuiElem guiMenuItem(std::string_view text, int eventID)
   {
-    GuiElem e(GUI_MENU_ITEM);
-    e.elems.push_back(gx::guiLabel(text));
+    GuiElem e(GUI_MENU_ITEM, {guiLabel(text)});
     e.id = eventID;
     return e;
   }
