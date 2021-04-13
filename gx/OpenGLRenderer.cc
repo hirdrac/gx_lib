@@ -68,8 +68,6 @@ namespace {
   }
 
   // DrawEntry iterator reading helper functions
-  inline int32_t ival(const gx::DrawEntry*& ptr) {
-    return (ptr++)->ival; }
   inline uint32_t uval(const gx::DrawEntry*& ptr) {
     return (ptr++)->uval; }
   inline float fval(const gx::DrawEntry*& ptr) {
@@ -78,11 +76,17 @@ namespace {
     return {fval(ptr), fval(ptr)}; }
   inline gx::Vec3 fval3(const gx::DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
+
+#if 0
+  // unused for now
+  inline int32_t ival(const gx::DrawEntry*& ptr) {
+    return (ptr++)->ival; }
   inline gx::Mat4 mat4_val(const gx::DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr), fval(ptr),
             fval(ptr), fval(ptr), fval(ptr), fval(ptr),
             fval(ptr), fval(ptr), fval(ptr), fval(ptr),
             fval(ptr), fval(ptr), fval(ptr), fval(ptr)}; }
+#endif
 
   // vertex output functions
   inline void vertex(gx::Vertex3TC*& ptr, gx::Vec2 pt, uint32_t c) {
