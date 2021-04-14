@@ -20,7 +20,7 @@
 
 
 // functions
-bool gx::calcScreenOrthoProjection(float width, float height, Mat4& result)
+bool gx::calcOrthoProjection(float width, float height, Mat4& result)
 {
   // simple ortho projection for 2d rendering in screen coords
   //  x:[0 width] => x:[-1 1]

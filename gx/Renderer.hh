@@ -55,6 +55,9 @@ class gx::Renderer
     _transforms.push_back({view, proj});
   }
 
+  void setScreenOrthoProjection(int layer);
+  void setOrthoProjection(int layer, float width, float height);
+
   void draw(int layer, const DrawEntry* data, std::size_t dataSize) {
     if (dataSize != 0) {
       DrawList& dl = _layers[layer].drawData;

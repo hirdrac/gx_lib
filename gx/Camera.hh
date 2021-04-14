@@ -21,7 +21,7 @@ namespace gx {
 
 
   // functions
-  bool calcScreenOrthoProjection(float width, float height, Mat4& result);
+  bool calcOrthoProjection(float width, float height, Mat4& result);
     // simple orthogonal projection to work in screen coordinates
     // (0,0) upper left-hand corner, (width,height) lower right
 }
