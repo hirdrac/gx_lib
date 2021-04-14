@@ -334,7 +334,7 @@ void gx::OpenGLRenderer::setupBuffer()
 
   if (_transforms.empty()) {
     Mat4 trans;
-    calcScreenOrthoProjection(float(_width), float(_height), trans);
+    calcOrthoProjection(float(_width), float(_height), trans);
     _transforms.push_back({Mat4Identity, trans});
   }
 
