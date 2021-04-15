@@ -19,6 +19,11 @@ namespace gx {
   class Image;
   struct DrawEntry;
   class Renderer;
+
+  enum CapabilityEnum {
+    BLEND = 1,
+    DEPTH_TEST = 2
+  };
 }
 
 class gx::Renderer
@@ -83,8 +88,6 @@ class gx::Renderer
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
 
   // draw capabilities
-  enum CapabilityEnum {
-    BLEND = 1, DEPTH_TEST = 2 };
   static constexpr int INIT_CAPABILITIES = BLEND;
   void setCapabilities(int layer, int c) {
     _layers[layer].cap = c; }
