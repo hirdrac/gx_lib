@@ -4,6 +4,7 @@
 //
 
 #include "Camera.hh"
+#include "Logger.hh"
 
 
 // **** NOTES ****
@@ -40,7 +41,10 @@ bool gx::calcOrthoProjection(float width, float height, Mat4& result)
 bool gx::Camera::calcView(Mat4& result) const
 {
   float dot = DotProduct(_vnormal, _vup);
-  if (dot >= .99999) { return false; }
+  if (dot >= .99999) {
+    GX_LOG_ERROR("bad vup");
+    return false;
+  }
 
   Vec3 vtop = _vup - (_vnormal * dot);
   vtop.normalize();
@@ -65,15 +69,24 @@ bool gx::Camera::calcView(Mat4& result) const
 
 bool gx::Camera::calcProjection(int width, int height, Mat4& result) const
 {
-  if (IsZero(_zoom)) { return false; }
+  if (!IsPositive(_zoom)) {
+    GX_LOG_ERROR("bad zoom value: ", _zoom);
+    return false;
+  }
 
+  if (!IsPositive(_fov) || !IsLess(_fov,180.0f)) {
+    GX_LOG_ERROR("bad fov value: ", _fov);
+    return false;
+  }
+
+  float vlen = std::tan(DegToRad(_fov / 2.0f));  // fov:90 == 1.0
   float vwidth, vheight;
   if (width >= height) {
-    vwidth = float(width) / float(height);
-    vheight = 1.0f;
+    vwidth = vlen * (float(width) / float(height));
+    vheight = vlen;
   } else {
-    vwidth = 1.0f;
-    vheight = float(height) / float(width);
+    vwidth = vlen;
+    vheight = vlen * (float(height) / float(width));
   }
 
   float vsideL = vwidth / _zoom;
