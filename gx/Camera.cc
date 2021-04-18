@@ -38,7 +38,7 @@ bool gx::calcOrthoProjection(float width, float height, Mat4& result)
 }
 
 // Camera class
-bool gx::Camera::calcView(Mat4& result) const
+bool gx::Camera::updateView()
 {
   float dot = DotProduct(_vnormal, _vup);
   if (dot >= .99999) {
@@ -46,28 +46,32 @@ bool gx::Camera::calcView(Mat4& result) const
     return false;
   }
 
-  Vec3 vtop = _vup - (_vnormal * dot);
-  vtop.normalize();
+  _vtop = _vup - (_vnormal * dot);
+  _vtop.normalize();
 
-  Vec3 vside;
   if (_coordSystem == LEFT_HANDED) {
-    vside = CrossProduct(vtop, _vnormal);
+    _vside = CrossProduct(_vtop, _vnormal);
   } else {
-    vside = CrossProduct(_vnormal, vtop);
+    _vside = CrossProduct(_vnormal, _vtop);
   }
-  vside.normalize();
+  _vside.normalize();
+  return true;
+}
 
+bool gx::Camera::calcView(Mat4& result) const
+{
   result.setTranslation(-_pos.x, -_pos.y, -_pos.z);
   result *= { // 'lookAt' transform
-    vside.x, vtop.x, -_vnormal.x, 0,
-    vside.y, vtop.y, -_vnormal.y, 0,
-    vside.z, vtop.z, -_vnormal.z, 0,
-    0,       0,       0,          1.0f
+    _vside.x, _vtop.x, -_vnormal.x, 0,
+    _vside.y, _vtop.y, -_vnormal.y, 0,
+    _vside.z, _vtop.z, -_vnormal.z, 0,
+    0,        0,        0,          1.0f
   };
   return true;
 }
 
-bool gx::Camera::calcProjection(int width, int height, Mat4& result) const
+bool gx::Camera::calcProjection(
+  int screenWidth, int screenHeight, Mat4& result) const
 {
   if (!IsPositive(_zoom)) {
     GX_LOG_ERROR("bad zoom value: ", _zoom);
@@ -79,18 +83,16 @@ bool gx::Camera::calcProjection(int width, int height, Mat4& result) const
     return false;
   }
 
-  float vlen = std::tan(DegToRad(_fov / 2.0f));  // fov:90 == 1.0
-  float vwidth, vheight;
-  if (width >= height) {
-    vwidth = vlen * (float(width) / float(height));
-    vheight = vlen;
+  float vlen = std::tan(DegToRad(_fov / 2.0f)) / _zoom;
+    // fov:90 == 1.0
+
+  float vsideL = vlen, vtopL = vlen;
+  if (screenWidth >= screenHeight) {
+    vsideL *= float(screenWidth) / float(screenHeight);
   } else {
-    vwidth = vlen;
-    vheight = vlen * (float(height) / float(width));
+    vtopL *= float(screenHeight) / float(screenWidth);
   }
 
-  float vsideL = vwidth / _zoom;
-  float vtopL = vheight / _zoom;
   if (_projection == PERSPECTIVE) {
     float clipLen = _farClip - _nearClip;
     result = {
@@ -100,11 +102,37 @@ bool gx::Camera::calcProjection(int width, int height, Mat4& result) const
       0, 0, -(2.0f * _farClip * _nearClip) / clipLen, 0
     };
   } else {
+    // FIXME - verify camera orthogonal projection
     result = {
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,
       0, 0, 1.0f, 0,
       0, 0, 0, 1};
   }
+  return true;
+}
+
+bool gx::Camera::calcDirToScreenPt(
+  int screenWidth, int screenHeight,
+  float mouseX, float mouseY, Vec3& result) const
+{
+  float sw = float(screenWidth), sh = float(screenHeight);
+  float vlen = std::tan(DegToRad(_fov / 2.0f)) / _zoom;
+  Vec3 vx = _vside * vlen;
+  Vec3 vy = _vtop * vlen;
+  if (screenWidth >= screenHeight) {
+    vx *= sw / sh;
+  } else {
+    vy *= sh / sw;
+  }
+
+  float cx = sw / 2.0f;
+  float cy = sh / 2.0f;
+
+  // since we are calculating a direction, just assume eye is at origin
+  // and view plane center is just 1 away from eye (in direction of vnormal)
+  result = _vnormal
+    + (vx * ((mouseX - cx) / cx)) + (vy * -((mouseY - cy) / cy));
+  result.normalize();
   return true;
 }

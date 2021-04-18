@@ -43,15 +43,8 @@ class gx::Camera
   [[nodiscard]] CoordSystemType coordSystem() const { return _coordSystem; }
   [[nodiscard]] ProjectionType projection() const { return _projection; }
 
-  void setPos(const Vec3& pos) { _pos = pos; }
-  void setDir(const Vec3& dir) { _vnormal = dir; }
-  void setVUP(const Vec3& vup) { _vup = vup; }
-
-  inline void setViewByCOI(const Vec3& pos, const Vec3& coi);
-  inline void setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup);
-
-  inline void setViewByDir(const Vec3& pos, const Vec3& dir);
-  inline void setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup);
+  inline bool setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup);
+  inline bool setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup);
 
   void setClip(float near, float far) { _nearClip = near; _farClip = far; }
   void setZoom(float zoom) { _zoom = zoom; }
@@ -60,7 +53,12 @@ class gx::Camera
   void setProjection(ProjectionType pt) { _projection = pt; }
 
   bool calcView(Mat4& result) const;
-  bool calcProjection(int width, int height, Mat4& result) const;
+  bool calcProjection(int screenWidth, int screenHeight, Mat4& result) const;
+
+  bool calcDirToScreenPt(int screenWidth, int screenHeight,
+                         float mouseX, float mouseY, Vec3& result) const;
+    // eye to screen point direction calc
+    // use {eye, result} ray intersection for mouse selection calcs
 
  private:
   // view config
@@ -68,44 +66,34 @@ class gx::Camera
   Vec3 _pos = {0,0,0};
   Vec3 _vnormal = {0,0,1};
   Vec3 _vup = {0,1,0};
+  Vec3 _vtop = {0,1,0};
+  Vec3 _vside = {1,0,0};
 
   // projection config
   ProjectionType _projection = PERSPECTIVE;
   float _zoom = 1.0f, _fov = 90.0f;
   float _nearClip = 1.0f, _farClip = 1000.0f;
+
+  bool updateView();
 };
 
 
-void gx::Camera::setViewByCOI(const Vec3& pos, const Vec3& coi)
+bool gx::Camera::setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup)
 {
   _pos = pos;
-  _vnormal = coi;
-  _vnormal -= _pos;
-  _vnormal.normalize();
-}
-
-void gx::Camera::setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup)
-{
-  _pos = pos;
-  _vnormal = coi;
-  _vnormal -= _pos;
+  _vnormal = coi - pos;
   _vnormal.normalize();
   _vup = vup;
   _vup.normalize();
+  return updateView();
 }
 
-void gx::Camera::setViewByDir(const Vec3& pos, const Vec3& dir)
-{
-  _pos = pos;
-  _vnormal = dir;
-  _vnormal.normalize();
-}
-
-void gx::Camera::setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup)
+bool gx::Camera::setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup)
 {
   _pos = pos;
   _vnormal = dir;
   _vnormal.normalize();
   _vup = vup;
   _vup.normalize();
+  return updateView();
 }
