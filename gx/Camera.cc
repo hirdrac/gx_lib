@@ -73,12 +73,12 @@ bool gx::Camera::calcView(Mat4& result) const
 bool gx::Camera::calcProjection(
   int screenWidth, int screenHeight, Mat4& result) const
 {
-  if (!IsPositive(_zoom)) {
+  if (!IsPos(_zoom)) {
     GX_LOG_ERROR("bad zoom value: ", _zoom);
     return false;
   }
 
-  if (!IsPositive(_fov) || !IsLess(_fov,180.0f)) {
+  if (!IsPos(_fov) || IsGTE(_fov,180.0f)) {
     GX_LOG_ERROR("bad fov value: ", _fov);
     return false;
   }

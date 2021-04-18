@@ -96,7 +96,7 @@ namespace gx {
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsPositive(const fltType& x)
+  [[nodiscard]] constexpr bool IsPos(const fltType& x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
       return (x >= VERY_SMALL<fltType>);
@@ -106,7 +106,7 @@ namespace gx {
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsNegative(const fltType& x)
+  [[nodiscard]] constexpr bool IsNeg(const fltType& x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
       return (x <= -VERY_SMALL<fltType>);
@@ -116,7 +116,7 @@ namespace gx {
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsEqual(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool IsEq(const fltType& x, const fltType& y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
       return IsZero(x-y);
@@ -126,22 +126,42 @@ namespace gx {
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsLess(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool IsLT(const fltType& x, const fltType& y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
-      return IsNegative(x-y);
+      return IsNeg(x-y);
     } else {
       return (x < y);
     }
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsGreater(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool IsLTE(const fltType& x, const fltType& y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
-      return IsPositive(x-y);
+      return !IsPos(x-y);
+    } else {
+      return (x <= y);
+    }
+  }
+
+  template<typename fltType>
+  [[nodiscard]] constexpr bool IsGT(const fltType& x, const fltType& y)
+  {
+    if constexpr (std::is_floating_point_v<fltType>) {
+      return IsPos(x-y);
     } else {
       return (x > y);
+    }
+  }
+
+  template<typename fltType>
+  [[nodiscard]] constexpr bool IsGTE(const fltType& x, const fltType& y)
+  {
+    if constexpr (std::is_floating_point_v<fltType>) {
+      return !IsNeg(x-y);
+    } else {
+      return (x >= y);
     }
   }
 
