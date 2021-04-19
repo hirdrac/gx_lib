@@ -81,7 +81,7 @@ class gx::Vector2
   constexpr void set(T vx, T vy) { x = vx; y = vy; }
   constexpr void set(const T* v) { set(v[0], v[1]); }
   constexpr void invert() { x = -x; y = -y; }
-  constexpr void normalize() { operator*=(static_cast<T>(1) / length()); }
+  void normalize() { operator*=(static_cast<T>(1) / length()); }
 };
 
 
@@ -149,7 +149,7 @@ class gx::Vector3
   constexpr void set(T vx, T vy, T vz) { x = vx; y = vy; z = vz; }
   constexpr void set(const T* v) { set(v[0], v[1], v[2]); }
   constexpr void invert() { x = -x; y = -y; z = -z; }
-  constexpr void normalize() { operator*=(static_cast<T>(1) / length()); }
+  void normalize() { operator*=(static_cast<T>(1) / length()); }
 
   // Vector2 swizzle
   [[nodiscard]] constexpr Vector2<T>& xy() {
@@ -379,10 +379,40 @@ namespace gx {
   }
 
   template<typename T>
-  [[nodiscard]] constexpr Vector2<T> UnitVec(const Vector2<T>& v) {
+  [[nodiscard]] Vector2<T> UnitVec(const Vector2<T>& v) {
     return v * (static_cast<T>(1) / v.length()); }
 
   template<typename T>
-  [[nodiscard]] constexpr Vector3<T> UnitVec(const Vector3<T>& v) {
+  [[nodiscard]] Vector3<T> UnitVec(const Vector3<T>& v) {
     return v * (static_cast<T>(1) / v.length()); }
+
+
+  // Simplified vector rotation functions to avoid using a matrix
+  template<typename T>
+  [[nodiscard]] Vector2<T> Rotate(const Vector2<T>& v, float rad)
+  {
+    float c = std::cos(rad), s = std::sin(rad);
+    return Vector2<T>((v.x * c) - (v.y * s), (v.x * s) + (v.y * c));
+  }
+
+  template<typename T>
+  [[nodiscard]] Vector3<T> RotateX(const Vector3<T>& v, float rad)
+  {
+    float c = std::cos(rad), s = std::sin(rad);
+    return Vector3<T>(v.x, (v.y * c) - (v.z * s), (v.y * s) + (v.z * c));
+  }
+
+  template<typename T>
+  [[nodiscard]] Vector3<T> RotateY(const Vector3<T>& v, float rad)
+  {
+    float c = std::cos(rad), s = std::sin(rad);
+    return Vector3<T>((v.x * c) + (v.z * s), v.y, (v.z * c) - (v.x * s));
+  }
+
+  template<typename T>
+  [[nodiscard]] Vector3<T> RotateZ(const Vector3<T>& v, float rad)
+  {
+    float c = std::cos(rad), s = std::sin(rad);
+    return Vector3<T>((v.x * c) - (v.y * s), (v.x * s) + (v.y * c), v.z);
+  }
 }
