@@ -511,9 +511,9 @@ constexpr void gx::Matrix4x4<T,MOT>::transpose()
 
 namespace gx {
   // **** Template Functions ****
-  // MultPoint() - row vector * row major matrix
+  // multPoint() - row vector * row major matrix
   template<typename T>
-  [[nodiscard]] constexpr Vector3<T> MultPoint(
+  [[nodiscard]] constexpr Vector3<T> multPoint(
     const Vector3<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
     // assumptions: v.w = 1, m[3,7,11] = 0, m[15] = 1
@@ -522,9 +522,9 @@ namespace gx {
                       (v.x*m[2]) + (v.y*m[6]) + (v.z*m[10]) + m[14]);
   }
 
-  // MultPoint() - column major matrix * column vector
+  // multPoint() - column major matrix * column vector
   template<typename T>
-  [[nodiscard]] constexpr Vector3<T> MultPoint(
+  [[nodiscard]] constexpr Vector3<T> multPoint(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector3<T>& v)
   {
     // assumptions: v.w = 1, m[3,7,11] = 0, m[15] = 1
@@ -533,9 +533,9 @@ namespace gx {
                       (m[2]*v.x) + (m[6]*v.y) + (m[10]*v.z) + m[14]);
   }
 
-  // MultVector() - row vector * row major matrix
+  // multVector() - row vector * row major matrix
   template<typename T>
-  [[nodiscard]] constexpr Vector3<T> MultVector(
+  [[nodiscard]] constexpr Vector3<T> multVector(
     const Vector3<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
     // assumptions: v.w = 0, m[3,7,11] = 0, m[15] = 1
@@ -544,9 +544,9 @@ namespace gx {
                       (v.x*m[2]) + (v.y*m[6]) + (v.z*m[10]));
   }
 
-  // MultVector() - column major matrix * column vector
+  // multVector() - column major matrix * column vector
   template<typename T>
-  [[nodiscard]] constexpr Vector3<T> MultVector(
+  [[nodiscard]] constexpr Vector3<T> multVector(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector3<T>& v)
   {
     // assumptions: v.w = 0, m[3,7,11] = 0, m[15] = 1
@@ -555,9 +555,9 @@ namespace gx {
                       (m[2]*v.x) + (m[6]*v.y) + (m[10]*v.z));
   }
 
-  // MultVectorTrans - row vector * transpose(row major matrix)
+  // multVectorTrans - row vector * transpose(row major matrix)
   template<typename T>
-  [[nodiscard]] constexpr Vector3<T> MultVectorTrans(
+  [[nodiscard]] constexpr Vector3<T> multVectorTrans(
     const Vector3<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
     // assumptions: v.w = 0, m[12,13,14] = 0, m[15] = 1
@@ -566,9 +566,9 @@ namespace gx {
                       (v.x*m[8]) + (v.y*m[9]) + (v.z*m[10]));
   }
 
-  // MultVectorTrans() - transpose(column major matrix) * column vector
+  // multVectorTrans() - transpose(column major matrix) * column vector
   template<typename T>
-  [[nodiscard]] constexpr Vector3<T> MultVectorTrans(
+  [[nodiscard]] constexpr Vector3<T> multVectorTrans(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector3<T>& v)
   {
     // assumptions: v.w = 0, m[12,13,14] = 0, m[15] = 1
@@ -579,7 +579,7 @@ namespace gx {
 
   // Matrix Inversion
   template<typename T, MatrixOrderType MOT>
-  int InvertMatrix(const Matrix4x4<T,MOT>& m, Matrix4x4<T,MOT>& dst)
+  int invertMatrix(const Matrix4x4<T,MOT>& m, Matrix4x4<T,MOT>& dst)
   {
     // based off 'Streaming SIMD Extensions - Inverse of 4x4 Matrix'
     // (Intel document AP-928)

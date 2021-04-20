@@ -40,7 +40,7 @@ bool gx::calcOrthoProjection(float width, float height, Mat4& result)
 // Camera class
 bool gx::Camera::updateView()
 {
-  float dot = DotProduct(_vnormal, _vup);
+  float dot = dotProduct(_vnormal, _vup);
   if (dot >= .99999) {
     GX_LOG_ERROR("bad vup");
     return false;
@@ -50,9 +50,9 @@ bool gx::Camera::updateView()
   _vtop.normalize();
 
   if (_coordSystem == LEFT_HANDED) {
-    _vside = CrossProduct(_vtop, _vnormal);
+    _vside = crossProduct(_vtop, _vnormal);
   } else {
-    _vside = CrossProduct(_vnormal, _vtop);
+    _vside = crossProduct(_vnormal, _vtop);
   }
   _vside.normalize();
   return true;

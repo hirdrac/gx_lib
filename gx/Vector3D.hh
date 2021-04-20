@@ -347,31 +347,31 @@ namespace gx {
 
   // **** Template Functions ****
   template<typename T>
-  [[nodiscard]] constexpr T PointDistanceSqr(const Vector2<T>& a, const Vector2<T>& b) {
+  [[nodiscard]] constexpr T pointDistanceSqr(const Vector2<T>& a, const Vector2<T>& b) {
     return sqr(a.x - b.x) + sqr(a.y - b.y); }
 
   template<typename T>
-  [[nodiscard]] constexpr T PointDistanceSqr(const Vector3<T>& a, const Vector3<T>& b) {
+  [[nodiscard]] constexpr T pointDistanceSqr(const Vector3<T>& a, const Vector3<T>& b) {
     return sqr(a.x - b.x) + sqr(a.y - b.y) + sqr(a.z - b.z); }
 
   template<typename T>
-  [[nodiscard]] T PointDistance(const Vector2<T>& a, const Vector2<T>& b) {
+  [[nodiscard]] T pointDistance(const Vector2<T>& a, const Vector2<T>& b) {
     return std::sqrt(PointDistanceSqr(a, b)); }
 
   template<typename T>
-  [[nodiscard]] T PointDistance(const Vector3<T>& a, const Vector3<T>& b) {
+  [[nodiscard]] T pointDistance(const Vector3<T>& a, const Vector3<T>& b) {
     return std::sqrt(PointDistanceSqr(a, b)); }
 
   template<typename T>
-  [[nodiscard]] constexpr T DotProduct(const Vector2<T>& a, const Vector2<T>& b) {
+  [[nodiscard]] constexpr T dotProduct(const Vector2<T>& a, const Vector2<T>& b) {
     return (a.x * b.x) + (a.y * b.y); }
 
   template<typename T>
-  [[nodiscard]] constexpr T DotProduct(const Vector3<T>& a, const Vector3<T>& b) {
+  [[nodiscard]] constexpr T dotProduct(const Vector3<T>& a, const Vector3<T>& b) {
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z); }
 
   template<typename T>
-  [[nodiscard]] constexpr Vector3<T> CrossProduct(const Vector3<T>& a, const Vector3<T>& b)
+  [[nodiscard]] constexpr Vector3<T> crossProduct(const Vector3<T>& a, const Vector3<T>& b)
   {
     return Vector3<T>((a.y * b.z) - (a.z * b.y),
                       (a.z * b.x) - (a.x * b.z),
@@ -379,38 +379,38 @@ namespace gx {
   }
 
   template<typename T>
-  [[nodiscard]] Vector2<T> UnitVec(const Vector2<T>& v) {
+  [[nodiscard]] Vector2<T> unitVec(const Vector2<T>& v) {
     return v * (static_cast<T>(1) / v.length()); }
 
   template<typename T>
-  [[nodiscard]] Vector3<T> UnitVec(const Vector3<T>& v) {
+  [[nodiscard]] Vector3<T> unitVec(const Vector3<T>& v) {
     return v * (static_cast<T>(1) / v.length()); }
 
 
   // Simplified vector rotation functions to avoid using a matrix
   template<typename T>
-  [[nodiscard]] Vector2<T> Rotate(const Vector2<T>& v, float rad)
+  [[nodiscard]] Vector2<T> rotate(const Vector2<T>& v, float rad)
   {
     float c = std::cos(rad), s = std::sin(rad);
     return Vector2<T>((v.x * c) - (v.y * s), (v.x * s) + (v.y * c));
   }
 
   template<typename T>
-  [[nodiscard]] Vector3<T> RotateX(const Vector3<T>& v, float rad)
+  [[nodiscard]] Vector3<T> rotateX(const Vector3<T>& v, float rad)
   {
     float c = std::cos(rad), s = std::sin(rad);
     return Vector3<T>(v.x, (v.y * c) - (v.z * s), (v.y * s) + (v.z * c));
   }
 
   template<typename T>
-  [[nodiscard]] Vector3<T> RotateY(const Vector3<T>& v, float rad)
+  [[nodiscard]] Vector3<T> rotateY(const Vector3<T>& v, float rad)
   {
     float c = std::cos(rad), s = std::sin(rad);
     return Vector3<T>((v.x * c) + (v.z * s), v.y, (v.z * c) - (v.x * s));
   }
 
   template<typename T>
-  [[nodiscard]] Vector3<T> RotateZ(const Vector3<T>& v, float rad)
+  [[nodiscard]] Vector3<T> rotateZ(const Vector3<T>& v, float rad)
   {
     float c = std::cos(rad), s = std::sin(rad);
     return Vector3<T>((v.x * c) - (v.y * s), (v.x * s) + (v.y * c), v.z);
