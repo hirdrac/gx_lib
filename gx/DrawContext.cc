@@ -204,8 +204,8 @@ void gx::DrawContext::circleSector(
   while (endAngle <= startAngle) { endAngle += 360.0f; }
   endAngle = std::min(endAngle, startAngle + 360.0f);
 
-  const float angle0 = DegToRad(startAngle);
-  const float angle1 = DegToRad(endAngle);
+  const float angle0 = degToRad(startAngle);
+  const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
 
   const Vec2 v0 {center.x, center.y};
@@ -237,8 +237,8 @@ void gx::DrawContext::circleSector(
   while (endAngle <= startAngle) { endAngle += 360.0f; }
   endAngle = std::min(endAngle, startAngle + 360.0f);
 
-  const float angle0 = DegToRad(startAngle);
-  const float angle1 = DegToRad(endAngle);
+  const float angle0 = degToRad(startAngle);
+  const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
 
   const Vertex2C v0 {center.x, center.y, color0};

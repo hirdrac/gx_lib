@@ -10,6 +10,11 @@
 #include <type_traits>
 #include <cmath>
 
+// basic type assumptions
+static_assert(sizeof(char) == 1);
+static_assert(sizeof(short) == 2);
+static_assert(sizeof(int) == 4);
+
 
 #if defined(__GNUC__) && !defined(__clang__)
 #  ifndef __has_builtin
@@ -61,21 +66,21 @@ namespace gx {
 
   // **** Functions ****
   template<typename fltType>
-  [[nodiscard]] constexpr fltType DegToRad(const fltType& deg)
+  [[nodiscard]] constexpr fltType degToRad(fltType deg)
   {
     static_assert(std::is_floating_point_v<fltType>);
     return deg * DEG_TO_RAD<fltType>;
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr fltType RadToDeg(const fltType& rad)
+  [[nodiscard]] constexpr fltType radToDeg(fltType rad)
   {
     static_assert(std::is_floating_point_v<fltType>);
     return rad * RAD_TO_DEG<fltType>;
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsZero(const fltType& x)
+  [[nodiscard]] constexpr bool isZero(fltType x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
       return (x > -VERY_SMALL<fltType>) && (x < VERY_SMALL<fltType>);
@@ -85,7 +90,7 @@ namespace gx {
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsOne(const fltType& x)
+  [[nodiscard]] constexpr bool isOne(fltType x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
       return (x > (static_cast<fltType>(1) - VERY_SMALL<fltType>))
@@ -96,7 +101,7 @@ namespace gx {
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsPos(const fltType& x)
+  [[nodiscard]] constexpr bool isPos(fltType x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
       return (x >= VERY_SMALL<fltType>);
@@ -106,7 +111,7 @@ namespace gx {
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsNeg(const fltType& x)
+  [[nodiscard]] constexpr bool isNeg(fltType x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
       return (x <= -VERY_SMALL<fltType>);
@@ -116,65 +121,64 @@ namespace gx {
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsEq(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool isEq(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
-      return IsZero(x-y);
+      return isZero(x-y);
     } else {
       return (x == y);
     }
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsLT(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool isLT(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
-      return IsNeg(x-y);
+      return isNeg(x-y);
     } else {
       return (x < y);
     }
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsLTE(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool isLTE(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
-      return !IsPos(x-y);
+      return !isPos(x-y);
     } else {
       return (x <= y);
     }
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsGT(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool isGT(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
-      return IsPos(x-y);
+      return isPos(x-y);
     } else {
       return (x > y);
     }
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr bool IsGTE(const fltType& x, const fltType& y)
+  [[nodiscard]] constexpr bool isGTE(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
-      return !IsNeg(x-y);
+      return !isNeg(x-y);
     } else {
       return (x >= y);
     }
   }
 
   template<typename intType>
-  [[nodiscard]] constexpr bool IsPowerOf2(const intType& x)
+  [[nodiscard]] constexpr bool isPowerOf2(intType x)
   {
     static_assert(std::is_integral_v<intType>);
     return (x & (x - 1)) == 0;
   }
 
   template<typename fltType>
-  [[nodiscard]] constexpr fltType Lerp(
-    const fltType& a, const fltType& b, const fltType& s)
+  [[nodiscard]] constexpr fltType lerp(fltType a, fltType b, fltType s)
   {
     // use std::lerp() for C++20
     static_assert(std::is_floating_point_v<fltType>);
@@ -188,10 +192,10 @@ namespace gx {
   }
 
   template<typename numType>
-  [[nodiscard]] constexpr numType Sqr(const numType& x) { return x * x; }
+  [[nodiscard]] constexpr numType sqr(numType x) { return x * x; }
 
   template<typename numType>
-  [[nodiscard]] constexpr numType iPow(numType x, int y)
+  [[nodiscard]] constexpr numType ipow(numType x, int y)
   {
     if (y < 0) { return 0; }
 
@@ -206,48 +210,64 @@ namespace gx {
   }
 
   template<typename numType>
-  [[nodiscard]] constexpr int Sgn(const numType& x)
+  [[nodiscard]] constexpr int sgn(numType x)
   {
-    return (x < 0) ? -1 : ((x > 0) ? 1 : 0);
+    if constexpr (std::is_signed_v<numType>) {
+      return int(x > 0) - int(x < 0);
+    } else {
+      return int(x > 0);
+    }
   }
 
+  // return type promoted to int for small types
+  [[nodiscard]] constexpr int abs(signed char x) {
+    return (x < 0) ? -int(x) : int(x); }
+  [[nodiscard]] constexpr int abs(short x) {
+    return (x < 0) ? -int(x) : int(x); }
+
+  // template for all other types
   template<typename numType>
-  [[nodiscard]] constexpr numType Abs(const numType& x)
+  [[nodiscard]] constexpr numType abs(numType x)
   {
-    // constexpr version of std::abs
-    // NOTE: Abs(-MAX_INT) is undefined
-    return (x < 0) ? -x : x;
+    if constexpr (std::is_signed_v<numType>) {
+      // constexpr version of std::abs
+      // NOTE: Abs(-MAX_INT) is undefined
+      return (x < 0) ? -x : x;
+    } else {
+      return x;
+    }
   }
+
 
 #if defined(__GNUC__) && !defined(__clang__)
   // constexpr versions of sqrt,cos,sin
-  [[nodiscard]] constexpr float Sqrt(float x) {
+  [[nodiscard]] constexpr float sqrt(float x) {
     return __builtin_sqrtf(x); }
-  [[nodiscard]] constexpr double Sqrt(double x) {
+  [[nodiscard]] constexpr double sqrt(double x) {
     return __builtin_sqrt(x); }
-  [[nodiscard]] constexpr long double Sqrt(long double x) {
+  [[nodiscard]] constexpr long double sqrt(long double x) {
     return __builtin_sqrtl(x); }
 
-  [[nodiscard]] constexpr float Cos(float x) {
+  [[nodiscard]] constexpr float cos(float x) {
     return __builtin_cosf(x); }
-  [[nodiscard]] constexpr double Cos(double x) {
+  [[nodiscard]] constexpr double cos(double x) {
     return __builtin_cos(x); }
-  [[nodiscard]] constexpr long double Cos(long double x) {
+  [[nodiscard]] constexpr long double cos(long double x) {
     return __builtin_cosl(x); }
 
-  [[nodiscard]] constexpr float Sin(float x) {
+  [[nodiscard]] constexpr float sin(float x) {
     return __builtin_sinf(x); }
-  [[nodiscard]] constexpr double Sin(double x) {
+  [[nodiscard]] constexpr double sin(double x) {
     return __builtin_sin(x); }
-  [[nodiscard]] constexpr long double Sin(long double x) {
+  [[nodiscard]] constexpr long double sin(long double x) {
     return __builtin_sinl(x); }
 #else
   // __builtin functions aren't constexpr for clang
   template<typename T>
-  [[nodiscard]] T Sqrt(const T& x) { return std::sqrt(x); }
+  [[nodiscard]] T sqrt(T x) { return std::sqrt(x); }
   template<typename T>
-  [[nodiscard]] T Cos(const T& x) { return std::cos(x); }
+  [[nodiscard]] T cos(T x) { return std::cos(x); }
   template<typename T>
-  [[nodiscard]] T Sin(const T& x) { return std::sin(x); }
+  [[nodiscard]] T sin(T x) { return std::sin(x); }
 #endif
 }

@@ -73,17 +73,17 @@ bool gx::Camera::calcView(Mat4& result) const
 bool gx::Camera::calcProjection(
   int screenWidth, int screenHeight, Mat4& result) const
 {
-  if (!IsPos(_zoom)) {
+  if (!isPos(_zoom)) {
     GX_LOG_ERROR("bad zoom value: ", _zoom);
     return false;
   }
 
-  if (!IsPos(_fov) || IsGTE(_fov,180.0f)) {
+  if (!isPos(_fov) || isGTE(_fov,180.0f)) {
     GX_LOG_ERROR("bad fov value: ", _fov);
     return false;
   }
 
-  float vlen = std::tan(DegToRad(_fov / 2.0f)) / _zoom;
+  float vlen = std::tan(degToRad(_fov / 2.0f)) / _zoom;
     // fov:90 == 1.0
 
   float vsideL = vlen, vtopL = vlen;
@@ -117,7 +117,7 @@ bool gx::Camera::calcDirToScreenPt(
   float mouseX, float mouseY, Vec3& result) const
 {
   float sw = float(screenWidth), sh = float(screenHeight);
-  float vlen = std::tan(DegToRad(_fov / 2.0f)) / _zoom;
+  float vlen = std::tan(degToRad(_fov / 2.0f)) / _zoom;
   Vec3 vx = _vside * vlen;
   Vec3 vy = _vtop * vlen;
   if (screenWidth >= screenHeight) {

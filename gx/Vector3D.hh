@@ -74,7 +74,7 @@ class gx::Vector2
   [[nodiscard]] constexpr T* data() noexcept { return _val; }
   [[nodiscard]] constexpr const T* data() const noexcept { return _val; }
 
-  [[nodiscard]] constexpr T lengthSqr() const { return Sqr(x)+Sqr(y); }
+  [[nodiscard]] constexpr T lengthSqr() const { return sqr(x)+sqr(y); }
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
   [[nodiscard]] constexpr bool isUnit() const { return IsOne(lengthSqr()); }
 
@@ -142,7 +142,7 @@ class gx::Vector3
   [[nodiscard]] constexpr T* data() noexcept { return _val; }
   [[nodiscard]] constexpr const T* data() const noexcept { return _val; }
 
-  [[nodiscard]] constexpr T lengthSqr() const { return Sqr(x)+Sqr(y)+Sqr(z); }
+  [[nodiscard]] constexpr T lengthSqr() const { return sqr(x)+sqr(y)+sqr(z); }
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
   [[nodiscard]] constexpr bool isUnit() const { return IsOne(lengthSqr()); }
 
@@ -348,11 +348,11 @@ namespace gx {
   // **** Template Functions ****
   template<typename T>
   [[nodiscard]] constexpr T PointDistanceSqr(const Vector2<T>& a, const Vector2<T>& b) {
-    return Sqr(a.x - b.x) + Sqr(a.y - b.y); }
+    return sqr(a.x - b.x) + sqr(a.y - b.y); }
 
   template<typename T>
   [[nodiscard]] constexpr T PointDistanceSqr(const Vector3<T>& a, const Vector3<T>& b) {
-    return Sqr(a.x - b.x) + Sqr(a.y - b.y) + Sqr(a.z - b.z); }
+    return sqr(a.x - b.x) + sqr(a.y - b.y) + sqr(a.z - b.z); }
 
   template<typename T>
   [[nodiscard]] T PointDistance(const Vector2<T>& a, const Vector2<T>& b) {
