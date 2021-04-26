@@ -80,6 +80,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   int _currentGLCap = -1; // current GL capability state
   void setGLCapabilities(int cap);
+  static void setCullFace(int cap);
   void setupBuffer();
 
   // prevent copy/assignment

@@ -627,6 +627,7 @@ void gx::OpenGLRenderer::renderFrame()
   _currentGLCap = -1; // force all capabilities to be set at first drawcall
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
+  GX_GLCALL(glFrontFace, GL_CW);
 
   // vbo/vao setup & draw call generation
   if (_changed) {
@@ -691,11 +692,19 @@ void gx::OpenGLRenderer::renderFrame()
 
 void gx::OpenGLRenderer::setGLCapabilities(int cap)
 {
+  constexpr int CULL = CULL_CW | CULL_CCW;
+
   if (_currentGLCap < 0)
   {
     // don't assume current state - enable/disable all values
     GX_GLCALL((cap & BLEND)      ? glEnable : glDisable, GL_BLEND);
     GX_GLCALL((cap & DEPTH_TEST) ? glEnable : glDisable, GL_DEPTH_TEST);
+    if (cap & CULL) {
+      GX_GLCALL(glEnable, GL_CULL_FACE);
+      setCullFace(cap);
+    } else {
+      GX_GLCALL(glDisable, GL_CULL_FACE);
+    }
   }
   else
   {
@@ -711,7 +720,31 @@ void gx::OpenGLRenderer::setGLCapabilities(int cap)
     } else if ((_currentGLCap & DEPTH_TEST) && !(cap & DEPTH_TEST)) {
       GX_GLCALL(glDisable, GL_DEPTH_TEST);
     }
+
+    if (!(_currentGLCap & CULL) && (cap & CULL)) {
+      GX_GLCALL(glEnable, GL_CULL_FACE);
+    } else if ((_currentGLCap & CULL) && !(cap & CULL)) {
+      GX_GLCALL(glDisable, GL_CULL_FACE);
+    }
+
+    if ((cap & CULL) && ((_currentGLCap & CULL) != (cap & CULL))) {
+      setCullFace(cap);
+    }
   }
 
   _currentGLCap = cap;
+}
+
+void gx::OpenGLRenderer::setCullFace(int cap)
+{
+  bool cw = cap & CULL_CW;
+  bool ccw = cap & CULL_CCW;
+  // front face set to clockwise in renderFrame()
+  if (cw && ccw) {
+    GX_GLCALL(glCullFace, GL_FRONT_AND_BACK);
+  } else if (cw) {
+    GX_GLCALL(glCullFace, GL_FRONT);
+  } else if (ccw) {
+    GX_GLCALL(glCullFace, GL_BACK);
+  }
 }

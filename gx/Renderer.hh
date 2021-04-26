@@ -4,7 +4,9 @@
 //
 
 // TODO - texture wrap settings
-// TODO - frame stats (draw calls, buffer size)
+// TODO - frame stats (draw calls, buffer size, layers)
+// TODO - optional clear depth for layer
+// TODO - clear draw data from single layer/layer range
 
 #pragma once
 #include "Color.hh"
@@ -22,7 +24,9 @@ namespace gx {
 
   enum CapabilityEnum {
     BLEND = 1,
-    DEPTH_TEST = 2
+    DEPTH_TEST = 2,
+    CULL_CW = 4,
+    CULL_CCW = 8,
   };
 }
 
