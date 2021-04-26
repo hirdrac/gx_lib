@@ -129,7 +129,7 @@ bool gx::Window::open(int flags)
   const bool decorated = flags & (WINDOW_DECORATED | WINDOW_RESIZABLE);
   const bool resizable = flags & WINDOW_RESIZABLE;
   const bool doubleBuffer = true;
-  const bool fixedAspectRatio = false;
+  const bool fixedAspectRatio = flags & WINDOW_FIXED_ASPECT_RATIO;
   const bool debug = flags & WINDOW_DEBUG;
 
   initStartTime();
@@ -185,15 +185,14 @@ bool gx::Window::open(int flags)
   _renderer = std::move(ren);
 
   glfwSetWindowUserPointer(win, this);
-  if (fixedAspectRatio) {
-    glfwSetWindowAspectRatio(win, width, height);
-  } else {
-    glfwSetWindowAspectRatio(win, GLFW_DONT_CARE, GLFW_DONT_CARE);
-  }
-
   glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
   if (resizable) {
     glfwSetWindowSizeLimits(win, _minWidth, _minHeight, _maxWidth, _maxHeight);
+    if (fixedAspectRatio) {
+      glfwSetWindowAspectRatio(win, width, height);
+    } else {
+      glfwSetWindowAspectRatio(win, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    }
   }
 
   _events = EVENT_SIZE; // always generate a resize event initially

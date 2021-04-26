@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
   const int lastNo = int(entries.size()) - 1;
   gx::Window win;
   win.setSize(entries[0].img.width(), entries[0].img.height(), false);
-  if (!win.open()) {
+  if (!win.open(gx::WINDOW_RESIZABLE | gx::WINDOW_FIXED_ASPECT_RATIO)) {
     gx::println_err("failed to open window");
     return -1;
   }

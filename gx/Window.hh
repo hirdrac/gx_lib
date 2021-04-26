@@ -112,9 +112,10 @@ namespace gx {
 
   // Setting values
   enum {
-    WINDOW_DECORATED = 1, // ignored for fullscreen
-    WINDOW_RESIZABLE = 2, // decorated implied
-    WINDOW_DEBUG     = 4, // enable OpenGL debug context
+    WINDOW_DECORATED          = 1, // ignored for fullscreen
+    WINDOW_RESIZABLE          = 2, // decorated implied
+    WINDOW_FIXED_ASPECT_RATIO = 4, // ignored if not resizable
+    WINDOW_DEBUG              = 8, // enable OpenGL debug context
   };
 
   enum MouseModeEnum {
@@ -145,7 +146,7 @@ class gx::Window
   void setSize(int width, int height, bool fullScreen);
   void setMouseMode(MouseModeEnum mode);
   void setMousePos(float x, float y);
-  bool open(int flags = WINDOW_RESIZABLE | WINDOW_DECORATED);
+  bool open(int flags = WINDOW_RESIZABLE);
 
   [[nodiscard]] int width() const { return _width; }
   [[nodiscard]] int height() const { return _height; }
