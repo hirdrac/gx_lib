@@ -5,7 +5,6 @@
 // encapsulation of core graphics output & user input
 //
 
-// TODO - settings for resizable,decorated,fixedAspectRatio
 // TODO - setting for min/max width/height on resizable windows
 
 #pragma once
