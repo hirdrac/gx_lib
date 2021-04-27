@@ -16,6 +16,8 @@
 
 
 namespace {
+  static_assert(GLFW_DONT_CARE == -1);
+
   // **** Time global & support functions ****
   using clock = std::chrono::steady_clock;
   clock::time_point startTime;
@@ -66,6 +68,23 @@ void gx::Window::setTitle(std::string_view title)
 
 void gx::Window::setSize(int width, int height, bool fullScreen)
 {
+  assert(width > 0 || fullScreen);
+  assert(height > 0 || fullScreen);
+
+  if (!fullScreen) {
+    // update size limits if needed
+    bool newLimits = false;
+    if (width < _minWidth) { _minWidth = width; newLimits = true; }
+    if (height < _minHeight) { _minHeight = height; newLimits = true; }
+    if (_maxWidth > 0 && width > _maxWidth) {
+      _maxWidth = width; newLimits = true; }
+    if (_maxHeight > 0 && height > _maxHeight) {
+      _maxHeight = height; newLimits = true; }
+    if (newLimits) {
+      setSizeLimits(_minWidth, _minHeight, _maxWidth, _maxHeight);
+    }
+  }
+
   if (_renderer) {
     assert(isMainThread());
     GLFWwindow* win = _renderer->window();
@@ -94,6 +113,20 @@ void gx::Window::setSize(int width, int height, bool fullScreen)
 
   _sizeSet = true;
   _fullScreen = fullScreen;
+}
+
+void gx::Window::setSizeLimits(
+  int minWidth, int minHeight, int maxWidth, int maxHeight)
+{
+  _minWidth = (minWidth < 0) ? -1 : minWidth;
+  _minHeight = (minHeight < 0) ? -1 : minHeight;
+  _maxWidth = (maxWidth < 0) ? -1 : maxWidth;
+  _maxHeight = (maxHeight < 0) ? -1 : maxHeight;
+  if (_renderer) {
+    assert(isMainThread());
+    glfwSetWindowSizeLimits(_renderer->window(), _minWidth, _minHeight,
+                            _maxWidth, _maxHeight);
+  }
 }
 
 void gx::Window::setMouseMode(MouseModeEnum mode)
@@ -187,6 +220,14 @@ bool gx::Window::open(int flags)
   glfwSetWindowUserPointer(win, this);
   glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
   if (resizable) {
+    if (flags & WINDOW_LIMIT_MIN_SIZE) {
+      _minWidth = width;
+      _minHeight = height;
+    }
+    if (flags & WINDOW_LIMIT_MAX_SIZE) {
+      _maxWidth = width;
+      _maxHeight = height;
+    }
     glfwSetWindowSizeLimits(win, _minWidth, _minHeight, _maxWidth, _maxHeight);
     if (fixedAspectRatio) {
       glfwSetWindowAspectRatio(win, width, height);

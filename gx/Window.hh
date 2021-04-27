@@ -5,8 +5,6 @@
 // encapsulation of core graphics output & user input
 //
 
-// TODO - setting for min/max width/height on resizable windows
-
 #pragma once
 #include "RendererPtr.hh"
 #include <string_view>
@@ -111,10 +109,22 @@ namespace gx {
 
   // Setting values
   enum {
-    WINDOW_DECORATED          = 1, // ignored for fullscreen
-    WINDOW_RESIZABLE          = 2, // decorated implied
-    WINDOW_FIXED_ASPECT_RATIO = 4, // ignored if not resizable
-    WINDOW_DEBUG              = 8, // enable OpenGL debug context
+    WINDOW_DECORATED = 1,
+      // use decorations when not fullscreen
+
+    // resizing flags
+    WINDOW_RESIZABLE = 2,
+      // can be resized when not fullscreen (decorated implied)
+    WINDOW_FIXED_ASPECT_RATIO = 4,
+      // set resize aspect ratio based on initial size
+    WINDOW_LIMIT_MIN_SIZE = 8,
+      // use initial size as min resize limit
+    WINDOW_LIMIT_MAX_SIZE = 16,
+      // use initial size as max resize limit
+
+    // context flags
+    WINDOW_DEBUG = 32,
+      // enable OpenGL debug context
   };
 
   enum MouseModeEnum {
@@ -143,6 +153,7 @@ class gx::Window
   //// Display Management ////
   void setTitle(std::string_view title);
   void setSize(int width, int height, bool fullScreen);
+  void setSizeLimits(int minWidth, int minHeight, int maxWidth, int maxHeight);
   void setMouseMode(MouseModeEnum mode);
   void setMousePos(float x, float y);
   bool open(int flags = WINDOW_RESIZABLE);
