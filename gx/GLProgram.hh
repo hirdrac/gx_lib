@@ -58,6 +58,8 @@ class GLProgram
     return glGetUniformBlockIndex(_prog, blockName); }
   void setUniformBlockBinding(GLuint blockIndex, GLuint blockBinding) {
     GX_GLCALL(glUniformBlockBinding, _prog, blockIndex, blockBinding); }
+  void setUniformBlockBinding(const char* blockName, GLuint blockBinding) {
+    setUniformBlockBinding(getUniformBlockIndex(blockName), blockBinding); }
 
   void use() { GX_GLCALL(glUseProgram, _prog); }
 
