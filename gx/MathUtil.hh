@@ -64,7 +64,7 @@ namespace gx {
   constexpr T VERY_SMALL = static_cast<T>(1.0e-12);
 
   template<>
-  constexpr float VERY_SMALL = 1.0e-7f;
+  constexpr float VERY_SMALL<float> = 1.0e-7f;
 
 
   // **** Functions ****
