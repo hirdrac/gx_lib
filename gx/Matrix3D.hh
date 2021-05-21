@@ -43,7 +43,7 @@ class gx::Matrix4x4
 
   // Operators
   [[nodiscard]] constexpr T& operator[](size_type i) { return _val[i]; }
-  [[nodiscard]] constexpr const T& operator[](size_type i) const { return _val[i]; }
+  [[nodiscard]] constexpr T  operator[](size_type i) const { return _val[i]; }
 
   template<unsigned int N>
   constexpr self_type& operator=(const T (&vals)[N]) {
@@ -205,26 +205,26 @@ namespace gx {
   // **** Template Stream Operators ****
   template<typename T>
   inline std::ostream& operator<<(
-    std::ostream& out, const Matrix4x4<T,ROW_MAJOR>& m)
+    std::ostream& os, const Matrix4x4<T,ROW_MAJOR>& m)
   {
     for (unsigned int i = 0; i != 16; i += 4) {
-      out << '[' << m[i] << '\t' << m[i+1] << '\t' << m[i+2]
-          << '\t'	<< m[i+3] << "\t]\n";
+      os << '[' << m[i] << '\t' << m[i+1] << '\t' << m[i+2]
+         << '\t' << m[i+3] << "\t]\n";
     }
 
-    return out;
+    return os;
   }
 
   template<typename T>
   inline std::ostream& operator<<(
-    std::ostream& out, const Matrix4x4<T,COLUMN_MAJOR>& m)
+    std::ostream& os, const Matrix4x4<T,COLUMN_MAJOR>& m)
   {
     for (unsigned int i = 0; i != 4; ++i) {
-      out << '[' << m[i] << '\t' << m[i+4] << '\t' << m[i+8]
-          << '\t'	<< m[i+12] << "\t]\n";
+      os << '[' << m[i] << '\t' << m[i+4] << '\t' << m[i+8]
+         << '\t' << m[i+12] << "\t]\n";
     }
 
-    return out;
+    return os;
   }
 }
 

@@ -39,7 +39,7 @@ class gx::Vector2
 
   // Operators
   [[nodiscard]] constexpr T& operator[](size_type i) { return _val[i]; }
-  [[nodiscard]] constexpr const T& operator[](size_type i) const { return _val[i]; }
+  [[nodiscard]] constexpr T  operator[](size_type i) const { return _val[i]; }
 
   constexpr type& operator+=(const type& v) {
     x += v.x; y += v.y; return *this; }
@@ -107,7 +107,7 @@ class gx::Vector3
 
   // Operators
   [[nodiscard]] constexpr T& operator[](size_type i) { return _val[i]; }
-  [[nodiscard]] constexpr const T& operator[](size_type i) const { return _val[i]; }
+  [[nodiscard]] constexpr T  operator[](size_type i) const { return _val[i]; }
 
   constexpr type& operator+=(const type& v) {
     x += v.x; y += v.y; z += v.z; return *this; }
@@ -188,7 +188,7 @@ class gx::Vector4
 
   // Operators
   [[nodiscard]] constexpr T& operator[](size_type i) { return _val[i]; }
-  [[nodiscard]] constexpr const T& operator[](size_type i) const { return _val[i]; }
+  [[nodiscard]] constexpr T  operator[](size_type i) const { return _val[i]; }
 
   constexpr type& operator+=(const type& v) {
     x += v.x; y += v.y; z += v.z; w += v.w; return *this; }
@@ -333,16 +333,16 @@ namespace gx {
 
   // **** Template Stream Operators ****
   template<typename T>
-  inline std::ostream& operator<<(std::ostream& out, const Vector2<T>& v) {
-    return out << '[' << v.x << ' ' << v.y << ']'; }
+  inline std::ostream& operator<<(std::ostream& os, const Vector2<T>& v) {
+    return os << '[' << v.x << ' ' << v.y << ']'; }
 
   template<typename T>
-  inline std::ostream& operator<<(std::ostream& out, const Vector3<T>& v) {
-    return out << '[' << v.x << ' ' << v.y << ' ' << v.z << ']'; }
+  inline std::ostream& operator<<(std::ostream& os, const Vector3<T>& v) {
+    return os << '[' << v.x << ' ' << v.y << ' ' << v.z << ']'; }
 
   template<typename T>
-  inline std::ostream& operator<<(std::ostream& out, const Vector4<T>& v) {
-    return out << '[' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ']'; }
+  inline std::ostream& operator<<(std::ostream& os, const Vector4<T>& v) {
+    return os << '[' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ']'; }
 
 
   // **** Template Functions ****
@@ -389,30 +389,30 @@ namespace gx {
 
   // Simplified vector rotation functions to avoid using a matrix
   template<typename T>
-  [[nodiscard]] Vector2<T> rotate(const Vector2<T>& v, float rad)
+  [[nodiscard]] Vector2<T> rotate(const Vector2<T>& v, T rad)
   {
-    float c = std::cos(rad), s = std::sin(rad);
+    T c = std::cos(rad), s = std::sin(rad);
     return Vector2<T>((v.x * c) - (v.y * s), (v.x * s) + (v.y * c));
   }
 
   template<typename T>
-  [[nodiscard]] Vector3<T> rotateX(const Vector3<T>& v, float rad)
+  [[nodiscard]] Vector3<T> rotateX(const Vector3<T>& v, T rad)
   {
-    float c = std::cos(rad), s = std::sin(rad);
+    T c = std::cos(rad), s = std::sin(rad);
     return Vector3<T>(v.x, (v.y * c) - (v.z * s), (v.y * s) + (v.z * c));
   }
 
   template<typename T>
-  [[nodiscard]] Vector3<T> rotateY(const Vector3<T>& v, float rad)
+  [[nodiscard]] Vector3<T> rotateY(const Vector3<T>& v, T rad)
   {
-    float c = std::cos(rad), s = std::sin(rad);
+    T c = std::cos(rad), s = std::sin(rad);
     return Vector3<T>((v.x * c) + (v.z * s), v.y, (v.z * c) - (v.x * s));
   }
 
   template<typename T>
-  [[nodiscard]] Vector3<T> rotateZ(const Vector3<T>& v, float rad)
+  [[nodiscard]] Vector3<T> rotateZ(const Vector3<T>& v, T rad)
   {
-    float c = std::cos(rad), s = std::sin(rad);
+    T c = std::cos(rad), s = std::sin(rad);
     return Vector3<T>((v.x * c) - (v.y * s), (v.x * s) + (v.y * c), v.z);
   }
 }
