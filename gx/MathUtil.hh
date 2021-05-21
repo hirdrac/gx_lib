@@ -61,7 +61,10 @@ namespace gx {
   constexpr T RAD_TO_DEG = static_cast<T>(180) / PI<T>;
 
   template<class T>
-  constexpr T VERY_SMALL = static_cast<T>(1.0e-7);
+  constexpr T VERY_SMALL = static_cast<T>(1.0e-12);
+
+  template<>
+  constexpr float VERY_SMALL = 1.0e-7f;
 
 
   // **** Functions ****
