@@ -68,21 +68,21 @@ namespace gx {
 
 
   // **** Functions ****
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr fltType degToRad(fltType deg)
   {
     static_assert(std::is_floating_point_v<fltType>);
     return deg * DEG_TO_RAD<fltType>;
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr fltType radToDeg(fltType rad)
   {
     static_assert(std::is_floating_point_v<fltType>);
     return rad * RAD_TO_DEG<fltType>;
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr bool isZero(fltType x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
@@ -92,7 +92,7 @@ namespace gx {
     }
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr bool isOne(fltType x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
@@ -103,7 +103,7 @@ namespace gx {
     }
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr bool isPos(fltType x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
@@ -113,7 +113,7 @@ namespace gx {
     }
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr bool isNeg(fltType x)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
@@ -123,7 +123,7 @@ namespace gx {
     }
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr bool isEq(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
@@ -133,7 +133,7 @@ namespace gx {
     }
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr bool isLT(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
@@ -143,7 +143,7 @@ namespace gx {
     }
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr bool isLTE(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
@@ -153,7 +153,7 @@ namespace gx {
     }
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr bool isGT(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
@@ -163,7 +163,7 @@ namespace gx {
     }
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr bool isGTE(fltType x, fltType y)
   {
     if constexpr (std::is_floating_point_v<fltType>) {
@@ -173,14 +173,14 @@ namespace gx {
     }
   }
 
-  template<typename intType>
+  template<class intType>
   [[nodiscard]] constexpr bool isPowerOf2(intType x)
   {
     static_assert(std::is_integral_v<intType>);
     return (x & (x - 1)) == 0;
   }
 
-  template<typename fltType>
+  template<class fltType>
   [[nodiscard]] constexpr fltType lerp(fltType a, fltType b, fltType s)
   {
     // use std::lerp() for C++20
@@ -194,15 +194,15 @@ namespace gx {
     }
   }
 
-  template<typename numType>
+  template<class numType>
   [[nodiscard]] constexpr numType sqr(numType x) { return x * x; }
 
-  template<typename numType>
+  template<class numType>
   [[nodiscard]] constexpr numType ipow(numType x, int y)
   {
     if (y < 0) { return 0; }
 
-    numType val = 1;
+    numType val = static_cast<numType>(1);
     while (y) {
       if (y & 1) { val *= x; }
       y >>= 1;
@@ -212,7 +212,7 @@ namespace gx {
     return val;
   }
 
-  template<typename numType>
+  template<class numType>
   [[nodiscard]] constexpr int sgn(numType x)
   {
     if constexpr (std::is_signed_v<numType>) {
@@ -229,7 +229,7 @@ namespace gx {
     return (x < 0) ? -int(x) : int(x); }
 
   // template for all other types
-  template<typename numType>
+  template<class numType>
   [[nodiscard]] constexpr numType abs(numType x)
   {
     if constexpr (std::is_signed_v<numType>) {
@@ -266,11 +266,11 @@ namespace gx {
     return __builtin_sinl(x); }
 #else
   // __builtin functions aren't constexpr for clang
-  template<typename T>
+  template<class T>
   [[nodiscard]] T sqrt(T x) { return std::sqrt(x); }
-  template<typename T>
+  template<class T>
   [[nodiscard]] T cos(T x) { return std::cos(x); }
-  template<typename T>
+  template<class T>
   [[nodiscard]] T sin(T x) { return std::sin(x); }
 #endif
 }
