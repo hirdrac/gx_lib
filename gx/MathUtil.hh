@@ -35,36 +35,36 @@ namespace gx {
   // **** Constants ****
   template<class T>
 #ifndef M_PI
-  constexpr T PI = static_cast<T>(3.14159265358979323846);
+  inline constexpr T PI = static_cast<T>(3.14159265358979323846);
 #else
-  constexpr T PI = static_cast<T>(M_PI);
+  inline constexpr T PI = static_cast<T>(M_PI);
 #endif
 
   template<class T>
 #ifndef M_PI_2
-  constexpr T PI_2 = static_cast<T>(1.57079632679489661923);
+  inline constexpr T PI_2 = static_cast<T>(1.57079632679489661923);
 #else
-  constexpr T PI_2 = static_cast<T>(M_PI_2);  // pi/2
+  inline constexpr T PI_2 = static_cast<T>(M_PI_2);  // pi/2
 #endif
 
   template<class T>
 #ifndef M_PI_4
-  constexpr T PI_4 = static_cast<T>(0.78539816339744830962);
+  inline constexpr T PI_4 = static_cast<T>(0.78539816339744830962);
 #else
-  constexpr T PI_4 = static_cast<T>(M_PI_4);  // pi/4
+  inline constexpr T PI_4 = static_cast<T>(M_PI_4);  // pi/4
 #endif
 
   template<class T>
-  constexpr T DEG_TO_RAD = PI<T> / static_cast<T>(180);
+  inline constexpr T DEG_TO_RAD = PI<T> / static_cast<T>(180);
 
   template<class T>
-  constexpr T RAD_TO_DEG = static_cast<T>(180) / PI<T>;
+  inline constexpr T RAD_TO_DEG = static_cast<T>(180) / PI<T>;
 
   template<class T>
-  constexpr T VERY_SMALL = static_cast<T>(1.0e-12);
+  inline constexpr T VERY_SMALL = static_cast<T>(1.0e-12);
 
   template<>
-  constexpr float VERY_SMALL<float> = 1.0e-7f;
+  inline constexpr float VERY_SMALL<float> = 1.0e-7f;
 
 
   // **** Functions ****
