@@ -1,6 +1,6 @@
 #
-# Makefile.mk - revision 41 (2020/12/27)
-# Copyright (C) 2020 Richard Bradley
+# Makefile.mk - revision 42 (2021/5/29)
+# Copyright (C) 2021 Richard Bradley
 #
 # Additional contributions from:
 #   Stafford Horne (github:stffrdhrn)
@@ -126,6 +126,7 @@
 #    A value of '-' can be used to clear the setting for the target
 #
 #  Filename wildcard '*' supported for .SRC,.DEPS,.OBJS settings
+#  Wildcard '**' (directory hierarchy search) supported for .SRC
 #
 #  <X>.LIBS/<X>.OBJS can accept LIB labels of library targets. Library
 #    LIBS/PACKAGES/binary will automatically be used in target building.
@@ -168,8 +169,9 @@ STANDARD ?=
 OPT_LEVEL ?= 3
 OPT_LEVEL_DEBUG ?= g
 ifndef WARN
-  WARN = all extra no-unused-parameter non-virtual-dtor overloaded-virtual $(_$(COMPILER)_warn)
-  WARN_C ?= all extra no-unused-parameter write-strings $(_$(COMPILER)_warn)
+  override _common_warn := all extra missing-include-dirs no-unused-parameter
+  WARN = $(_common_warn) non-virtual-dtor overloaded-virtual $(_$(COMPILER)_warn)
+  WARN_C ?= $(_common_warn) write-strings $(_$(COMPILER)_warn)
 else
   WARN_C ?= $(WARN)
 endif
@@ -303,7 +305,7 @@ override _c_ptrn := %.c
 override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x
 override _asm_ptrn := %.s %.S %.sx
 override _cxx_ptrn := %.cc %.cp %.cxx %.cpp %.CPP %.c++ %.C
-override _cxx_stds := c++98 gnu++98 c++03 gnu++03 c++11 gnu++11 c++14 gnu++14 c++17 gnu++17 c++2a gnu++2a c++20 gnu++20
+override _cxx_stds := c++98 gnu++98 c++03 gnu++03 c++11 gnu++11 c++14 gnu++14 c++17 gnu++17 c++2a gnu++2a c++20 gnu++20 c++2b gnu++2b c++23 gnu++23
 
 override define _check_standard  # <1:standard var> <2:set prefix>
 override $2_cxx_std := $$(addprefix -std=,$$(filter $$($1),$$(_cxx_stds)))
@@ -711,7 +713,12 @@ else ifneq ($(_build_env),)
     override _src_path_$$(ENV)-$1 := $$(or $$(_$1_source_dir),$$(_src_path))
   endif
 
-  override _$1_src := $$(foreach x,$$($1.SRC),$$(if $$(findstring *,$$x),$$(patsubst $$(_src_path_$$(ENV)-$1)%,%,$$(wildcard $$(_src_path_$$(ENV)-$1)$$x)),$$x))
+  override _$1_src := $$(strip $$(foreach x,$$($1.SRC),\
+    $$(if $$(findstring **,$$(notdir $$x)),\
+      $$(patsubst $$(_src_path_$$(ENV)-$1)%,%,\
+        $$(patsubst ./%,%,$$(shell find $$(_src_path_$$(ENV)-$1)$$(filter-out ./,$$(dir $$x)) -name '$$(notdir $$x)'))),\
+      $$(if $$(findstring *,$$x),\
+        $$(patsubst $$(_src_path_$$(ENV)-$1)%,%,$$(wildcard $$(_src_path_$$(ENV)-$1)$$x)),$$x))))
   ifeq ($$(strip $$($1.SRC)),)
     $$(error $$(_msgErr)$1.SRC: no source files specified$$(_end))
   else ifeq ($$(strip $$(_$1_src)),)
@@ -861,7 +868,7 @@ else ifneq ($(_build_env),)
   # determine LDFLAGS value for each entry
   $(foreach x,$(_shared_lib_labels) $(_bin_labels) $(_test_labels),\
     $(eval override _$x_ldflags :=\
-      -Wl$(_comma)--as-needed -L$(or $(_$(ENV)_ldir),.)\
+      -Wl$(_comma)--as-needed$(_comma)--gc-sections -L$(or $(_$(ENV)_ldir),.)\
       $(if $(_$x_soname),-Wl$(_comma)-h$(_comma)'$(_$x_soname)')\
       $(if $(_$x_implib),-Wl$(_comma)--out-implib$(_comma)'$(_$x_implib)')\
       $(if $(_$x_subsystem),-Wl$(_comma)$--subsystem$(_comma)$(_$x_subsystem))\
