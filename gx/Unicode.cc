@@ -16,7 +16,7 @@
 //   0b10xxxxxx
 
 namespace {
-  [[nodiscard]] inline bool isMultiChar(int ch) {
+  [[nodiscard]] constexpr bool isMultiChar(int ch) {
     return (ch & 0b11000000) == 0b10000000;
   }
 }
@@ -54,8 +54,7 @@ std::string gx::toUTF8(int32_t num)
 int gx::lengthUTF8(std::string_view sv)
 {
   int len = 0;
-  UTF8Iterator itr(sv);
-  while (itr.next()) { ++len; }
+  for (char ch : sv) { len += int(!isMultiChar(uint8_t(ch))); }
   return len;
 }
 
