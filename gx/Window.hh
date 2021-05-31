@@ -206,8 +206,9 @@ class gx::Window
     return _chars; }
 
   // renderer access methods
-  const RendererPtr& rendererPtr() { return _renderer; }
-  Renderer& renderer() { assert(_renderer != nullptr); return *_renderer; }
+  [[nodiscard]] const RendererPtr& rendererPtr() { return _renderer; }
+  [[nodiscard]] Renderer& renderer() {
+    assert(_renderer != nullptr); return *_renderer; }
 
  private:
   RendererPtr _renderer;

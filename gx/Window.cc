@@ -16,7 +16,16 @@
 
 
 namespace {
+  // assumed GLFW constant values
   static_assert(GLFW_DONT_CARE == -1);
+  static_assert(GLFW_MOUSE_BUTTON_1 == 0);
+  static_assert(GLFW_MOUSE_BUTTON_2 == 1);
+  static_assert(GLFW_MOUSE_BUTTON_3 == 2);
+  static_assert(GLFW_MOUSE_BUTTON_4 == 3);
+  static_assert(GLFW_MOUSE_BUTTON_5 == 4);
+  static_assert(GLFW_MOUSE_BUTTON_6 == 5);
+  static_assert(GLFW_MOUSE_BUTTON_7 == 6);
+  static_assert(GLFW_MOUSE_BUTTON_8 == 7);
 
   // **** Time global & support functions ****
   using clock = std::chrono::steady_clock;
@@ -305,64 +314,26 @@ int gx::Window::pollEvents()
     // callbacks will set event values
 
   // button event pressing
-  if (_buttonsPress != 0) {
-    if (_buttonsPress & BUTTON1) { _events |= EVENT_MOUSE_BUTTON1; }
-    if (_buttonsPress & BUTTON2) { _events |= EVENT_MOUSE_BUTTON2; }
-    if (_buttonsPress & BUTTON3) { _events |= EVENT_MOUSE_BUTTON3; }
-    if (_buttonsPress & BUTTON4) { _events |= EVENT_MOUSE_BUTTON4; }
-    if (_buttonsPress & BUTTON5) { _events |= EVENT_MOUSE_BUTTON5; }
-    if (_buttonsPress & BUTTON6) { _events |= EVENT_MOUSE_BUTTON6; }
-    if (_buttonsPress & BUTTON7) { _events |= EVENT_MOUSE_BUTTON7; }
-    if (_buttonsPress & BUTTON8) { _events |= EVENT_MOUSE_BUTTON8; }
+  if (_buttonsPress != 0 || _buttonsRelease != 0) {
+    for (int b = 0; b < 8; ++b) {
+      const int bVal = BUTTON1<<b;
+      const int bEvent = EVENT_MOUSE_BUTTON1<<b;
+
+      if (_buttonsPress & bVal) {
+        _events |= bEvent;
+      } else if (_buttonsRelease & bVal) {
+        // button release event is delayed to next update if it happened in the same
+        //  event poll as the press event
+        _events |= bEvent;
+        _buttonsRelease &= ~bVal;
+        _buttons &= ~bVal;
+      }
+    }
+
     _buttons |= _buttonsPress;
+    _buttonsPress = 0;
   }
 
-  if (_buttonsRelease != 0) {
-    // delay button release event to next update if it happened in the same
-    //  event poll as the press event
-    if ((_buttonsRelease & BUTTON1) && !(_buttonsPress & BUTTON1)) {
-      _events |= EVENT_MOUSE_BUTTON1;
-      _buttonsRelease &= ~BUTTON1;
-      _buttons &= ~BUTTON1;
-    }
-    if ((_buttonsRelease & BUTTON2) && !(_buttonsPress & BUTTON2)) {
-      _events |= EVENT_MOUSE_BUTTON2;
-      _buttonsRelease &= ~BUTTON2;
-      _buttons &= ~BUTTON2;
-    }
-    if ((_buttonsRelease & BUTTON3) && !(_buttonsPress & BUTTON3)) {
-      _events |= EVENT_MOUSE_BUTTON3;
-      _buttonsRelease &= ~BUTTON3;
-      _buttons &= ~BUTTON3;
-    }
-    if ((_buttonsRelease & BUTTON4) && !(_buttonsPress & BUTTON4)) {
-      _events |= EVENT_MOUSE_BUTTON4;
-      _buttonsRelease &= ~BUTTON4;
-      _buttons &= ~BUTTON4;
-    }
-    if ((_buttonsRelease & BUTTON5) && !(_buttonsPress & BUTTON5)) {
-      _events |= EVENT_MOUSE_BUTTON5;
-      _buttonsRelease &= ~BUTTON5;
-      _buttons &= ~BUTTON5;
-    }
-    if ((_buttonsRelease & BUTTON6) && !(_buttonsPress & BUTTON6)) {
-      _events |= EVENT_MOUSE_BUTTON6;
-      _buttonsRelease &= ~BUTTON6;
-      _buttons &= ~BUTTON6;
-    }
-    if ((_buttonsRelease & BUTTON7) && !(_buttonsPress & BUTTON7)) {
-      _events |= EVENT_MOUSE_BUTTON7;
-      _buttonsRelease &= ~BUTTON7;
-      _buttons &= ~BUTTON7;
-    }
-    if ((_buttonsRelease & BUTTON8) && !(_buttonsPress & BUTTON8)) {
-      _events |= EVENT_MOUSE_BUTTON8;
-      _buttonsRelease &= ~BUTTON8;
-      _buttons &= ~BUTTON8;
-    }
-  }
-
-  _buttonsPress = 0;
   _lastPollTime = usecSinceStart();
   return _events;
 }
@@ -388,7 +359,7 @@ void gx::Window::closeCB(GLFWwindow* win)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    GX_LOG_ERROR("unknown close window event");
+    GX_LOG_ERROR("unknown close event");
     return;
   }
 
@@ -465,7 +436,7 @@ void gx::Window::charCB(GLFWwindow* win, unsigned int codepoint)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    GX_LOG_ERROR("charmod event for unknown display");
+    GX_LOG_ERROR("unknown char event");
     return;
   }
 
@@ -479,7 +450,7 @@ void gx::Window::cursorEnterCB(GLFWwindow* win, int entered)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    GX_LOG_ERROR("unknown cursor event");
+    GX_LOG_ERROR("unknown cursor enter event");
     return;
   }
 
@@ -493,7 +464,7 @@ void gx::Window::cursorPosCB(GLFWwindow* win, double xpos, double ypos)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    GX_LOG_ERROR("unknown cursor event");
+    GX_LOG_ERROR("unknown cursor pos event");
     return;
   }
 
@@ -514,27 +485,20 @@ void gx::Window::mouseButtonCB(GLFWwindow* win, int button, int action, int mods
 
   auto& e = *static_cast<Window*>(ePtr);
   //println("mouse button event: ", button, ' ', action, ' ', mods);
-  int b = 0; // bitfield value for button
-  switch (button) {
-    case GLFW_MOUSE_BUTTON_1: b = BUTTON1; break;
-    case GLFW_MOUSE_BUTTON_2: b = BUTTON2; break;
-    case GLFW_MOUSE_BUTTON_3: b = BUTTON3; break;
-    case GLFW_MOUSE_BUTTON_4: b = BUTTON4; break;
-    case GLFW_MOUSE_BUTTON_5: b = BUTTON5; break;
-    case GLFW_MOUSE_BUTTON_6: b = BUTTON6; break;
-    case GLFW_MOUSE_BUTTON_7: b = BUTTON7; break;
-    case GLFW_MOUSE_BUTTON_8: b = BUTTON8; break;
-    default:
-      GX_LOG_ERROR("unknown mouse button ", button);
-      return;
+  if (button < GLFW_MOUSE_BUTTON_1 || button > GLFW_MOUSE_BUTTON_8) {
+    GX_LOG_ERROR("unknown mouse button ", button);
+    return;
   }
+
+  // bitfield value for button
+  const int bVal = BUTTON1<<button;
 
   e._mods = mods;
   if (action == GLFW_PRESS) {
-    e._buttonsPress |= b;
+    e._buttonsPress |= bVal;
     //gx::println("button press:", int(b));
   } else if (action == GLFW_RELEASE) {
-    e._buttonsRelease |= b;
+    e._buttonsRelease |= bVal;
     //gx::println("button release:", int(b));
   }
 }
@@ -543,7 +507,7 @@ void gx::Window::scrollCB(GLFWwindow* win, double xoffset, double yoffset)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
-    GX_LOG_ERROR("unknown mouse button event");
+    GX_LOG_ERROR("unknown scroll event");
     return;
   }
 
