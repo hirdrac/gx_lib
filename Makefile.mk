@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 42 (2021/5/29)
+# Makefile.mk - revision 42 (2021/6/1)
 # Copyright (C) 2021 Richard Bradley
 #
 # Additional contributions from:
@@ -38,6 +38,7 @@
 #  clobber         deletes build directory & built binaries/libraries/files
 #  tests           run all tests for DEFAULT_ENV
 #  info            prints summary of defined build targets
+#  .gitignore      prints a sample .gitignore file for all targets
 #  help            prints command summary
 #
 # Makefile Parameters:
@@ -218,6 +219,7 @@ override _linux := $(filter linux%,$(_uname))
 override _pic_flag := $(if $(_windows),,-fPIC)
 override _libprefix := $(if $(filter cygwin%,$(_uname)),cyg,$(if $(filter msys%,$(_uname)),msys-,lib))
 override _libext := .$(if $(_windows),dll,so)
+override _binext := $(if $(_windows),.exe)
 ifneq ($(_windows),)
   $(foreach x,$(filter WINDOWS.%,$(.VARIABLES)),\
     $(eval override $(patsubst WINDOWS.%,%,$x) = $(value $x)))
@@ -453,7 +455,7 @@ override _test_labels := $(strip $(_test_labels1) $(_test_labels2))
 override _src_labels := $(strip $(_lib_labels) $(_bin_labels) $(_test_labels))
 override _all_labels := $(strip $(_src_labels) $(_file_labels))
 override _subdir_targets := $(foreach e,$(_env_names),$e tests_$e clean_$e) clobber install install-strip
-override _base_targets := all tests info help clean $(_subdir_targets)
+override _base_targets := all tests info help .gitignore clean $(_subdir_targets)
 
 # strip extra spaces from all names
 $(foreach x,$(_all_labels),$(if $($x),$(eval override $x = $(strip $(value $x)))))
@@ -552,8 +554,8 @@ override _src_path := $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
 override _symlinks := $(addprefix $(_src_path),$(SYMLINKS))
 
 # output target name generation macros - <1:build env> <2:label>
-override _gen_bin_name = $(_$1_bdir)$($2)$(_$1_bsfx)
-override _gen_bin_aliases = $(if $(_$1_bdir),$($2)$(_$1_sfx))
+override _gen_bin_name = $(_$1_bdir)$($2)$(_$1_bsfx)$(_binext)
+override _gen_bin_aliases = $(if $(_$1_bdir),$($2)$(_$1_sfx)) $(if $(_binext),$(_$1_bdir)$($2)$(_$1_bsfx))
 override _gen_static_lib_name = $(_$1_ldir)$($2)$(_$1_lsfx).a
 override _gen_static_lib_aliases = $($2)$(_$1_sfx) $(if $(_$1_ldir),$($2)$(_$1_sfx).a)
 override _gen_implib_name = $(_$1_ldir)$($2)$(_$1_lsfx).dll.a
@@ -921,8 +923,14 @@ help:
 	@echo '$(_bold)make clobber$(_end)       as clean, but also removes made binaries/libraries'
 	@echo '$(_bold)make tests$(_end)         builds/runs all tests'
 	@echo '$(_bold)make info$(_end)          prints build target summary'
+	@echo '$(_bold)make .gitignore$(_end)    prints a sample .gitignore file for all targets'
 	@echo '$(_bold)make help$(_end)          prints this information'
 	@echo
+
+.gitignore:
+	@echo '$(BUILD_DIR)/'
+	@for X in $(sort $(filter-out $(BUILD_DIR)/%,$(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_file_targets)))); do\
+	  echo "$$X"; done
 
 override define _setup_env_targets  # <1:build env>
 $1: $$(_$1_build_targets)
