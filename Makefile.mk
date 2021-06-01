@@ -133,7 +133,13 @@
 #    LIBS/PACKAGES/binary will automatically be used in target building.
 #    LIBS will perfer shared library for linking if available, OBJS will only
 #    allow linking with static libraries.
-#    (ex.: BIN1.LIBS = LIB1)
+#    ex.: BIN1.LIBS = LIB1
+#
+#  <X>.DEPS can accept BIN labels of binary targets.  This can be used to make
+#    sure a binary is built before a file target command (that requires the
+#    binary) is executed.
+#    ex.: FILE1.DEPS = BIN1 data_file.txt
+#         FILE1.CMD = ./$(DEP1) $(DEP2)
 #
 # Output Variables:
 #  ENV             current build environment
@@ -703,9 +709,11 @@ else ifneq ($(_build_env),)
   $(if $(_windows),$(foreach x,$(_shared_lib_labels),\
     $(eval override _$x_implib := $(call _gen_implib_name,$(ENV),$x))))
 
-  # .DEPS wildcard translation
+  # .DEPS wildcard & BIN label translation
   $(foreach x,$(_all_labels),\
-    $(eval override _$x_deps := $(foreach d,$($x.DEPS),$(if $(findstring *,$d),$(wildcard $d),$d))))
+    $(eval override _$x_deps := $(foreach d,$($x.DEPS),\
+      $(if $(findstring *,$d),$(wildcard $d),\
+        $(if $(filter $d,$(_bin_labels)),$(call _gen_bin_name,$(ENV),$d),$d)))))
 
   ## general entry setting parsing (pre)
   override define _build_entry1  # <1:label>
@@ -880,9 +888,9 @@ else ifneq ($(_build_env),)
   # file entry command evaluation
   $(foreach x,$(_file_labels),\
     $(eval override OUT = $($x))\
-    $(eval override DEPS = $(or $($x.DEPS),$$(error $$(_msgErr)Cannot use DEPS if $x.DEPS is not set$$(_end))))\
-    $(foreach n,$(wordlist 1,$(words $($x.DEPS)),$(_1-99)),\
-      $(eval override DEP$n = $(word $n,$($x.DEPS))))\
+    $(eval override DEPS = $(or $(_$x_deps),$$(error $$(_msgErr)Cannot use DEPS if $x.DEPS is not set$$(_end))))\
+    $(foreach n,$(wordlist 1,$(words $(_$x_deps)),$(_1-99)),\
+      $(eval override DEP$n = $(word $n,$(_$x_deps))))\
     $(eval override _$x_command := $(value $x.CMD)))
 
   # binaries depend on lib goals to make sure libs are built first
