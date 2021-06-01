@@ -10,11 +10,11 @@ BIN_embed.SOURCE_DIR = gx
 
 # embeded font data generation
 FILE1 = $(BUILD_TMP)/FixedWidthFontData.cc
-FILE1.DEPS = $(BIN_embed) data/LiberationMono-Regular.ttf
+FILE1.DEPS = BIN_embed data/LiberationMono-Regular.ttf
 FILE1.CMD = ./$(DEP1) $(DEP2) FixedWidthFontData >$(OUT)
 
 FILE2 = $(BUILD_TMP)/VariableWidthFontData.cc
-FILE2.DEPS = $(BIN_embed) data/FreeSans.ttf
+FILE2.DEPS = BIN_embed data/FreeSans.ttf
 FILE2.CMD = ./$(DEP1) $(DEP2) VariableWidthFontData >$(OUT)
 
 
