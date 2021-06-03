@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 42 (2021/6/1)
+# Makefile.mk - revision 42 (2021/6/3)
 # Copyright (C) 2021 Richard Bradley
 #
 # Additional contributions from:
@@ -126,8 +126,8 @@
 #    to override global values (ex.: BIN1.FLAGS = -pthread).
 #    A value of '-' can be used to clear the setting for the target
 #
-#  Filename wildcard '*' supported for .SRC,.DEPS,.OBJS settings
-#  Wildcard '**' (directory hierarchy search) supported for .SRC
+#  Filename wildcards '*' or '**'(directory hierarchy search) supported
+#    for .SRC,.DEPS,.OBJS settings
 #
 #  <X>.LIBS/<X>.OBJS can accept LIB labels of library targets. Library
 #    LIBS/PACKAGES/binary will automatically be used in target building.
@@ -639,6 +639,11 @@ override _format_target_libs = $(foreach x,$1,\
 $(if $(filter $x,$(_lib_labels)),$(or $(call _format_lib_name,$(_$x_shared_name)),$(_$x_name)),\
 $(call _format_lib_arg,$x)))
 
+# _do_wildcard: <1:file> <2:basedir>
+override _do_wildcard = $(if $(findstring **,$(notdir $1)),\
+$(patsubst $(or $2,./)%,%,$(shell find $2$(filter-out ./,$(dir $1)) -name '$(notdir $1)')),\
+$(if $(findstring *,$1),$(patsubst $2%,%,$(wildcard $2$1)),$1))
+
 # build environment detection
 override _build_env := $(strip $(foreach e,$(_env_names),$(if $(_$e_goals),$e)))
 ifeq ($(filter 0 1,$(words $(_build_env))),)
@@ -710,10 +715,8 @@ else ifneq ($(_build_env),)
     $(eval override _$x_implib := $(call _gen_implib_name,$(ENV),$x))))
 
   # .DEPS wildcard & BIN label translation
-  $(foreach x,$(_all_labels),\
-    $(eval override _$x_deps := $(foreach d,$($x.DEPS),\
-      $(if $(findstring *,$d),$(wildcard $d),\
-        $(if $(filter $d,$(_bin_labels)),$(call _gen_bin_name,$(ENV),$d),$d)))))
+  $(foreach x,$(_all_labels),$(eval override _$x_deps := $(foreach d,$($x.DEPS),\
+    $(if $(filter $d,$(_bin_labels)),$(call _gen_bin_name,$(ENV),$d),$(call _do_wildcard,$d,)))))
 
   ## general entry setting parsing (pre)
   override define _build_entry1  # <1:label>
@@ -723,12 +726,7 @@ else ifneq ($(_build_env),)
     override _src_path_$$(ENV)-$1 := $$(or $$(_$1_source_dir),$$(_src_path))
   endif
 
-  override _$1_src := $$(strip $$(foreach x,$$($1.SRC),\
-    $$(if $$(findstring **,$$(notdir $$x)),\
-      $$(patsubst $$(_src_path_$$(ENV)-$1)%,%,\
-        $$(patsubst ./%,%,$$(shell find $$(_src_path_$$(ENV)-$1)$$(filter-out ./,$$(dir $$x)) -name '$$(notdir $$x)'))),\
-      $$(if $$(findstring *,$$x),\
-        $$(patsubst $$(_src_path_$$(ENV)-$1)%,%,$$(wildcard $$(_src_path_$$(ENV)-$1)$$x)),$$x))))
+  override _$1_src := $$(strip $$(foreach x,$$($1.SRC),$$(call _do_wildcard,$$x,$$(_src_path_$$(ENV)-$1))))
   ifeq ($$(strip $$($1.SRC)),)
     $$(error $$(_msgErr)$1.SRC: no source files specified$$(_end))
   else ifeq ($$(strip $$(_$1_src)),)
@@ -743,9 +741,8 @@ else ifneq ($(_build_env),)
   override _$1_src_objs := $$(addsuffix .o,$$(call _src_bname,$$(_$1_src)))
 
   ifneq ($$(strip $$($1.OBJS)),-)
-    override _$1_other_objs := $$(foreach x,$$($1.OBJS),\
-      $$(if $$(findstring *,$$x),$$(wildcard $$x),\
-        $$(if $$(filter $$x,$$(_lib_labels)),$$(or $$(_$$x_name),$$(error $$(_msgErr)$1.OBJS: static type required for library '$$x'$$(_end))),$$x)))
+    override _$1_other_objs := $$(foreach x,$$($1.OBJS),$$(if $$(filter $$x,$$(_lib_labels)),\
+      $$(or $$(_$$x_name),$$(error $$(_msgErr)$1.OBJS: static type required for library '$$x'$$(_end))),$$(call _do_wildcard,$$x,)))
   endif
 
   ifneq ($$(strip $$($1.SUBSYSTEM)),-)
