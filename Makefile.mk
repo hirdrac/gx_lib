@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 42 (2021/6/3)
+# Makefile.mk - revision 42 (2021/6/4)
 # Copyright (C) 2021 Richard Bradley
 #
 # Additional contributions from:
@@ -489,6 +489,9 @@ override _test_ptrn := %.ARGS $(_bin_ptrn)
 override define _check_bin_entry  # <1:bin label>
 $$(foreach x,$$(filter-out $$(_bin_ptrn),$$(filter $1.%,$$(.VARIABLES))),\
   $$(warning $$(_msgWarn)Unknown binary parameter '$$x'$$(_end)))
+ifneq ($$(filter %.exe,$$($1)),)
+  $$(error $$(_msgErr)$1: binary name should not be specified with an extension$$(_end))
+endif
 endef
 $(foreach x,$(_bin_labels),$(eval $(call _check_bin_entry,$x)))
 
@@ -497,7 +500,7 @@ override define _check_lib_entry  # <1:lib label>
 $$(foreach x,$$(filter-out $$(_lib_ptrn),$$(filter $1.%,$$(.VARIABLES))),\
   $$(warning $$(_msgWarn)Unknown library parameter '$$x'$$(_end)))
 ifneq ($$(filter %.a %.so %.dll,$$($1)),)
-  $$(error $$(_msgErr)$1: library names should not be specified with an extension$$(_end))
+  $$(error $$(_msgErr)$1: library name should not be specified with an extension$$(_end))
 else ifneq ($$(filter-out static shared,$$($1.TYPE)),)
   $$(error $$(_msgErr)$1.TYPE: only 'static' and/or 'shared' allowed$$(_end))
 endif
