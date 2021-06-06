@@ -46,7 +46,7 @@ STANDARD = c++17
 OPTIONS = lto modern_c++
 # NOTE: lto doesn't work for clang on MINGW64/MSys2
 DEFINE = GX_DEBUG_GL
-WARN_EXTRA = extra-semi fatal-errors conversion
+WARN_EXTRA = extra-semi fatal-errors conversion cast-align cast-qual
 #FLAGS_RELEASE = -DNDEBUG
 
 include Makefile.mk
