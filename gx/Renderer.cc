@@ -7,6 +7,7 @@
 #include "System.hh"
 #include "Camera.hh"
 #include <GLFW/glfw3.h>
+#include <atomic>
 
 
 gx::Renderer::~Renderer()
@@ -37,4 +38,12 @@ void gx::Renderer::setOrthoProjection(int layer, float width, float height)
   Mat4 orthoT;
   calcOrthoProjection(width, height, orthoT);
   setTransform(layer, Mat4Identity, orthoT);
+}
+
+
+// Static Methods
+gx::TextureID gx::Renderer::newTextureID()
+{
+  static std::atomic<TextureID> _lastID = 0;
+  return ++_lastID;
 }

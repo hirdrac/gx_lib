@@ -3,8 +3,6 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// FIXME - make TextureID unique across all Renderer instances
-
 #pragma once
 #include "Renderer.hh"
 #include "GLProgram.hh"
@@ -50,7 +48,6 @@ class gx::OpenGLRenderer final : public gx::Renderer
     int shader = 0; // 1-mono, 2-color
   };
   std::unordered_map<TextureID,TextureEntry> _textures;
-  TextureID _lastTexID = 0;
 
   struct DrawCall {
     GLsizei count;

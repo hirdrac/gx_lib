@@ -228,8 +228,8 @@ gx::TextureID gx::OpenGLRenderer::setTexture(
   TextureEntry* ePtr;
   if (id <= 0) {
     // new texture entry
-    ePtr = &_textures[++_lastTexID];
-    id = _lastTexID;
+    id = newTextureID();
+    ePtr = &_textures[id];
   } else {
     // update existing entry
     auto itr = _textures.find(id);
@@ -609,7 +609,7 @@ void gx::OpenGLRenderer::setupBuffer()
 
   _vbo.unmap();
 
-#if 0
+#if 1
   std::size_t dsize = 0;
   for (auto& [no,layer] : _layers) { dsize += layer.drawData.size(); }
   println_err("drawData:", dsize, "  vertices:", vsize,

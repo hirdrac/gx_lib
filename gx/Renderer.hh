@@ -5,8 +5,11 @@
 
 // TODO - texture wrap settings
 // TODO - frame stats (draw calls, buffer size, layers)
+// TODO - additional mem stats (textures, combinded texture size)
 // TODO - optional clear depth for layer
 // TODO - clear draw data from single layer/layer range
+// TODO - make freeTexture() a static/non-virtual function so RenderPtr doesn't
+//        need to be stored by Texture object
 
 #pragma once
 #include "Color.hh"
@@ -113,4 +116,6 @@ class gx::Renderer
 
   struct TransformEntry { Mat4 view, proj; };
   std::vector<TransformEntry> _transforms;
+
+  static TextureID newTextureID();
 };
