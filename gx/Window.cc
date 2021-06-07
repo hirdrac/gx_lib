@@ -57,6 +57,9 @@ namespace {
 }
 
 
+// **** Window class ****
+gx::Window::Window() = default;
+
 gx::Window::~Window()
 {
   if (_renderer && glfwInitStatus()) {

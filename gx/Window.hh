@@ -142,7 +142,7 @@ namespace gx {
 class gx::Window
 {
  public:
-  Window() = default;
+  Window();
   ~Window();
 
   Window(const Window&) = delete;
