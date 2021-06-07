@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 
   gx::Renderer& ren = win.renderer();
   ren.setBGColor(.2f,.2f,.5f);
-  fnt.makeAtlas(win);
+  fnt.makeAtlas(ren);
 
   for (;;) {
     // draw frame

@@ -175,7 +175,7 @@ bool gx::Window::open(int flags)
   const bool debug = flags & WINDOW_DEBUG;
 
   initStartTime();
-  auto ren = std::make_shared<OpenGLRenderer>();
+  auto ren = std::make_unique<OpenGLRenderer>();
   // TODO - replace with factory constructor when multiple renderers
   //   are supported
 

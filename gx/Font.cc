@@ -7,7 +7,6 @@
 
 #include "Font.hh"
 #include "Image.hh"
-#include "Window.hh"
 #include "Renderer.hh"
 #include "Logger.hh"
 #include <string>
@@ -138,7 +137,7 @@ bool gx::Font::initFromData(
   return true;
 }
 
-bool gx::Font::makeAtlas(Window& win)
+bool gx::Font::makeAtlas(Renderer& ren)
 {
   if (_tex && !_changed) {
     return true; // atlas already set
@@ -154,7 +153,7 @@ bool gx::Font::makeAtlas(Window& win)
   }
 
   // calculate texture size
-  int maxSize = win.renderer().maxTextureSize();
+  int maxSize = ren.maxTextureSize();
   int texW, texH;
   int rows = 0;
   do {
@@ -195,7 +194,7 @@ bool gx::Font::makeAtlas(Window& win)
   if (_tex) {
     _tex.update(atlas);
   } else {
-    _tex.init(win, atlas);
+    _tex.init(ren, atlas);
   }
 
   _changed = false;

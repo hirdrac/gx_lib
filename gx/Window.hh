@@ -6,10 +6,11 @@
 //
 
 #pragma once
-#include "RendererPtr.hh"
+#include "Types.hh"
 #include <string_view>
 #include <string>
 #include <vector>
+#include <memory>
 #include <cassert>
 
 
@@ -150,6 +151,7 @@ class gx::Window
   Window(Window&&) noexcept = default;
   Window& operator=(Window&&) noexcept = default;
 
+
   //// Display Management ////
   void setTitle(std::string_view title);
   void setSize(int width, int height, bool fullScreen);
@@ -206,12 +208,13 @@ class gx::Window
     return _chars; }
 
   // renderer access methods
-  [[nodiscard]] const RendererPtr& rendererPtr() { return _renderer; }
   [[nodiscard]] Renderer& renderer() {
     assert(_renderer != nullptr); return *_renderer; }
+    // NOTE: Renderer is available once open() is called and will be available
+    //   until the Window is destroyed.
 
  private:
-  RendererPtr _renderer;
+  std::unique_ptr<Renderer> _renderer;
   int _width = 0, _height = 0;
   int _fsWidth = 0, _fsHeight = 0;
   int _minWidth = -1, _minHeight = -1;

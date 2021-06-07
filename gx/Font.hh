@@ -22,7 +22,7 @@ namespace gx {
 
   class Image;
   class Font;
-  class Window;
+  class Renderer;
 }
 
 class gx::Font
@@ -41,7 +41,7 @@ class gx::Font
   bool initFromData(const GlyphStaticData* data, int glyphs, int fontSize);
     // init from static glyph data
 
-  bool makeAtlas(Window& win);
+  bool makeAtlas(Renderer& ren);
 
   [[nodiscard]] int size() const { return _size; }
     // font pixel size

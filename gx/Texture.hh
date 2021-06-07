@@ -4,13 +4,12 @@
 //
 
 #pragma once
-#include "RendererPtr.hh"
 #include "Types.hh"
-#include <utility>
+#include <utility>  // for std::exchange()
 
 namespace gx {
   class Texture;
-  class Window;
+  class Renderer;
   class Image;
 }
 
@@ -18,10 +17,10 @@ class gx::Texture
 {
  public:
   Texture();
-  Texture(Window& win, const Image& img, int levels = 1,
+  Texture(Renderer& ren, const Image& img, int levels = 1,
           FilterType minFilter = FILTER_NEAREST,
           FilterType magFilter = FILTER_NEAREST) {
-    init(win, img, levels, minFilter, magFilter); }
+    init(ren, img, levels, minFilter, magFilter); }
   ~Texture() { cleanup(); }
 
   Texture(const Texture&) = delete;
@@ -34,7 +33,7 @@ class gx::Texture
 
   [[nodiscard]] explicit operator bool() const { return _texID != 0; }
 
-  bool init(Window& win, const Image& img, int levels = 1,
+  bool init(Renderer& ren, const Image& img, int levels = 1,
             FilterType minFilter = FILTER_NEAREST,
             FilterType magFilter = FILTER_NEAREST);
   bool update(const Image& img);
@@ -47,7 +46,6 @@ class gx::Texture
   [[nodiscard]] FilterType magFilter() const { return _magFilter; }
 
  private:
-  RendererPtr _renderer;
   TextureID _texID = 0;
   int _width = 0, _height = 0;
   int _levels = 1; // mipmap levels

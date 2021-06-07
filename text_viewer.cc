@@ -79,7 +79,7 @@ int main(int argc, char** argv)
 
   gx::Renderer& ren = win.renderer();
   ren.setBGColor(.2f,.2f,.2f);
-  fnt.makeAtlas(win);
+  fnt.makeAtlas(ren);
 
   constexpr int spacing = 0;
   const int lineHeight = fnt.size() + spacing;

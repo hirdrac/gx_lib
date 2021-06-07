@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 
   gx::Renderer& ren = win.renderer();
   ren.setBGColor(.1f,.3f,.1f);
-  fnt.makeAtlas(win);
+  fnt.makeAtlas(ren);
   bool running = true;
   bool needRedraw = true;
 

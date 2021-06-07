@@ -8,8 +8,6 @@
 // TODO - additional mem stats (textures, combinded texture size)
 // TODO - optional clear depth for layer
 // TODO - clear draw data from single layer/layer range
-// TODO - make freeTexture() a static/non-virtual function so RenderPtr doesn't
-//        need to be stored by Texture object
 
 #pragma once
 #include "Color.hh"
@@ -119,3 +117,11 @@ class gx::Renderer
 
   static TextureID newTextureID();
 };
+
+
+namespace gx {
+  void registerTextureOwner(TextureID tid, Renderer* rPtr);
+  bool updateTexture(TextureID id, const Image& img, int levels,
+                     FilterType minFilter, FilterType magFilter);
+  void freeTexture(TextureID tid);
+}

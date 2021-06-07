@@ -82,13 +82,14 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  int entryNo = 0;
-  for (Entry& e : entries) {
-    e.tex.init(win, e.img, 3, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
-  }
-
   gx::Renderer& ren = win.renderer();
   ren.setBGColor(gx::BLACK);
+
+  int entryNo = 0;
+  for (Entry& e : entries) {
+    e.tex.init(ren, e.img, 3, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
+  }
+
   gx::DrawList dl;
   gx::DrawContext dc(dl);
   bool refresh = true;
