@@ -113,7 +113,7 @@ class gx::Matrix4x4
   constexpr void setScaling(T sx, T sy, T sz);
   constexpr void setScaling(const Vector3<T>& v) { setScaling(v.x, v.y, v.z); }
   constexpr void scale(T sx, T sy, T sz);
-  constexpr void scale(const Vector3<T>& v) { setScaling(v.x, v.y, v.z); }
+  constexpr void scale(const Vector3<T>& v) { scale(v.x, v.y, v.z); }
 
   constexpr void transpose();
 
