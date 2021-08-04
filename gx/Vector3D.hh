@@ -32,9 +32,8 @@ class gx::Vector2
   using size_type = unsigned int;
 
 
-  // Constructors
   Vector2() = default;
-  constexpr Vector2(T vx, T vy) : x(vx), y(vy) { }
+  constexpr Vector2(T vx, T vy) : x{vx}, y{vy} { }
 
 
   // Operators
@@ -76,12 +75,11 @@ class gx::Vector2
 
   [[nodiscard]] constexpr T lengthSqr() const { return sqr(x)+sqr(y); }
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
+  [[nodiscard]] T lengthInv() const { return T{1} / length(); }
   [[nodiscard]] constexpr bool isUnit() const { return IsOne(lengthSqr()); }
 
   constexpr void set(T vx, T vy) { x = vx; y = vy; }
   constexpr void set(const T* v) { set(v[0], v[1]); }
-  constexpr void invert() { x = -x; y = -y; }
-  void normalize() { operator*=(static_cast<T>(1) / length()); }
 };
 
 
@@ -100,9 +98,8 @@ class gx::Vector3
   using size_type = unsigned int;
 
 
-  // Constructors
   Vector3() = default;
-  constexpr Vector3(T vx, T vy, T vz) : x(vx), y(vy), z(vz) { }
+  constexpr Vector3(T vx, T vy, T vz) : x{vx}, y{vy}, z{vz} { }
 
 
   // Operators
@@ -144,12 +141,11 @@ class gx::Vector3
 
   [[nodiscard]] constexpr T lengthSqr() const { return sqr(x)+sqr(y)+sqr(z); }
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
+  [[nodiscard]] T lengthInv() const { return T{1} / length(); }
   [[nodiscard]] constexpr bool isUnit() const { return IsOne(lengthSqr()); }
 
   constexpr void set(T vx, T vy, T vz) { x = vx; y = vy; z = vz; }
   constexpr void set(const T* v) { set(v[0], v[1], v[2]); }
-  constexpr void invert() { x = -x; y = -y; z = -z; }
-  void normalize() { operator*=(static_cast<T>(1) / length()); }
 
   // Vector2 swizzle
   [[nodiscard]] constexpr Vector2<T>& xy() {
@@ -179,11 +175,10 @@ class gx::Vector4
   using size_type = unsigned int;
 
 
-  // Constructors
   Vector4() = default;
-  constexpr Vector4(T vx, T vy, T vz, T vw) : x(vx), y(vy), z(vz), w(vw) { }
+  constexpr Vector4(T vx, T vy, T vz, T vw) : x{vx}, y{vy}, z{vz}, w{vw} { }
   constexpr Vector4(const Vector3<T>& v, T vw)
-    : Vector4(v.x, v.y, v.z, vw) { }
+    : Vector4{v.x, v.y, v.z, vw} { }
 
 
   // Operators
@@ -227,7 +222,6 @@ class gx::Vector4
   constexpr void set(const T* v) { set(v[0], v[1], v[2], v[3]); }
   constexpr void set(const T* v, T vw) { set(v[0], v[1], v[2], vw); }
   constexpr void set(const Vector3<T>& v, T vw) { set(v.x, v.y, v.z, vw); }
-  constexpr void invert() { x = -x; y = -y; z = -z; w = -w; }
 
   // Vector2 swizzle
   [[nodiscard]] constexpr Vector2<T>& xy() {
@@ -267,68 +261,68 @@ namespace gx {
   // **** Unary Operators ****
   template<typename T>
   [[nodiscard]] constexpr Vector2<T> operator-(const Vector2<T>& v) {
-    return Vector2<T>(-v.x, -v.y); }
+    return Vector2<T>{-v.x, -v.y}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector3<T> operator-(const Vector3<T>& v) {
-    return Vector3<T>(-v.x, -v.y, -v.z); }
+    return Vector3<T>{-v.x, -v.y, -v.z}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector4<T> operator-(const Vector4<T>& v) {
-    return Vector4<T>(-v.x, -v.y, -v.z, -v.w); }
+    return Vector4<T>{-v.x, -v.y, -v.z, -v.w}; }
 
 
   // **** Binary Operators ****
   template<typename T>
   [[nodiscard]] constexpr Vector2<T> operator+(const Vector2<T>& a, const Vector2<T>& b) {
-    return Vector2<T>(a.x + b.x, a.y + b.y); }
+    return Vector2<T>{a.x + b.x, a.y + b.y}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector3<T> operator+(const Vector3<T>& a, const Vector3<T>& b) {
-    return Vector3<T>(a.x + b.x, a.y + b.y, a.z + b.z); }
+    return Vector3<T>{a.x + b.x, a.y + b.y, a.z + b.z}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector4<T> operator+(const Vector4<T>& a, const Vector4<T>& b) {
-    return Vector4<T>(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w); }
+    return Vector4<T>{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}; }
 
 
   template<typename T>
   [[nodiscard]] constexpr Vector2<T> operator-(const Vector2<T>& a, const Vector2<T>& b) {
-    return Vector2<T>(a.x - b.x, a.y - b.y); }
+    return Vector2<T>{a.x - b.x, a.y - b.y}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector3<T> operator-(const Vector3<T>& a, const Vector3<T>& b) {
-    return Vector3<T>(a.x - b.x, a.y - b.y, a.z - b.z); }
+    return Vector3<T>{a.x - b.x, a.y - b.y, a.z - b.z}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector4<T> operator-(const Vector4<T>& a, const Vector4<T>& b) {
-    return Vector4<T>(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w); }
+    return Vector4<T>{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}; }
 
 
   template<typename T>
   [[nodiscard]] constexpr Vector2<T> operator*(const Vector2<T>& a, T b) {
-    return Vector2<T>(a.x * b, a.y * b); }
+    return Vector2<T>{a.x * b, a.y * b}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector3<T> operator*(const Vector3<T>& a, T b) {
-    return Vector3<T>(a.x * b, a.y * b, a.z * b); }
+    return Vector3<T>{a.x * b, a.y * b, a.z * b}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector4<T> operator*(const Vector4<T>& a, T b) {
-    return Vector4<T>(a.x * b, a.y * b, a.z * b, a.w * b); }
+    return Vector4<T>{a.x * b, a.y * b, a.z * b, a.w * b}; }
 
 
   template<typename T>
   [[nodiscard]] constexpr Vector2<T> operator/(const Vector2<T>& a, T b) {
-    return Vector2<T>(a.x / b, a.y / b); }
+    return Vector2<T>{a.x / b, a.y / b}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector3<T> operator/(const Vector3<T>& a, T b) {
-    return Vector3<T>(a.x / b, a.y / b, a.z / b); }
+    return Vector3<T>{a.x / b, a.y / b, a.z / b}; }
 
   template<typename T>
   [[nodiscard]] constexpr Vector4<T> operator/(const Vector4<T>& a, T b) {
-    return Vector4<T>(a.x / b, a.y / b, a.z / b, a.w / b); }
+    return Vector4<T>{a.x / b, a.y / b, a.z / b, a.w / b}; }
 
 
   // **** Template Stream Operators ****
@@ -373,46 +367,46 @@ namespace gx {
   template<typename T>
   [[nodiscard]] constexpr Vector3<T> crossProduct(const Vector3<T>& a, const Vector3<T>& b)
   {
-    return Vector3<T>((a.y * b.z) - (a.z * b.y),
+    return Vector3<T>{(a.y * b.z) - (a.z * b.y),
                       (a.z * b.x) - (a.x * b.z),
-                      (a.x * b.y) - (a.y * b.x));
+                      (a.x * b.y) - (a.y * b.x)};
   }
 
   template<typename T>
   [[nodiscard]] Vector2<T> unitVec(const Vector2<T>& v) {
-    return v * (static_cast<T>(1) / v.length()); }
+    return v * v.lengthInv(); }
 
   template<typename T>
   [[nodiscard]] Vector3<T> unitVec(const Vector3<T>& v) {
-    return v * (static_cast<T>(1) / v.length()); }
+    return v * v.lengthInv(); }
 
 
   // Simplified vector rotation functions to avoid using a matrix
   template<typename T>
   [[nodiscard]] Vector2<T> rotate(const Vector2<T>& v, T rad)
   {
-    T c = std::cos(rad), s = std::sin(rad);
-    return Vector2<T>((v.x * c) - (v.y * s), (v.x * s) + (v.y * c));
+    const T c = std::cos(rad), s = std::sin(rad);
+    return Vector2<T>{(v.x * c) - (v.y * s), (v.x * s) + (v.y * c)};
   }
 
   template<typename T>
   [[nodiscard]] Vector3<T> rotateX(const Vector3<T>& v, T rad)
   {
-    T c = std::cos(rad), s = std::sin(rad);
-    return Vector3<T>(v.x, (v.y * c) - (v.z * s), (v.y * s) + (v.z * c));
+    const T c = std::cos(rad), s = std::sin(rad);
+    return Vector3<T>{v.x, (v.y * c) - (v.z * s), (v.y * s) + (v.z * c)};
   }
 
   template<typename T>
   [[nodiscard]] Vector3<T> rotateY(const Vector3<T>& v, T rad)
   {
-    T c = std::cos(rad), s = std::sin(rad);
-    return Vector3<T>((v.x * c) + (v.z * s), v.y, (v.z * c) - (v.x * s));
+    const T c = std::cos(rad), s = std::sin(rad);
+    return Vector3<T>{(v.x * c) + (v.z * s), v.y, (v.z * c) - (v.x * s)};
   }
 
   template<typename T>
   [[nodiscard]] Vector3<T> rotateZ(const Vector3<T>& v, T rad)
   {
-    T c = std::cos(rad), s = std::sin(rad);
-    return Vector3<T>((v.x * c) - (v.y * s), (v.x * s) + (v.y * c), v.z);
+    const T c = std::cos(rad), s = std::sin(rad);
+    return Vector3<T>{(v.x * c) - (v.y * s), (v.x * s) + (v.y * c), v.z};
   }
 }

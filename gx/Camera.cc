@@ -46,15 +46,11 @@ bool gx::Camera::updateView()
     return false;
   }
 
-  _vtop = _vup - (_vnormal * dot);
-  _vtop.normalize();
+  _vtop = unitVec(_vup - (_vnormal * dot));
+  _vside = unitVec(
+    (_coordSystem == LEFT_HANDED)
+    ? crossProduct(_vtop, _vnormal) : crossProduct(_vnormal, _vtop));
 
-  if (_coordSystem == LEFT_HANDED) {
-    _vside = crossProduct(_vtop, _vnormal);
-  } else {
-    _vside = crossProduct(_vnormal, _vtop);
-  }
-  _vside.normalize();
   return true;
 }
 
@@ -131,8 +127,7 @@ bool gx::Camera::calcDirToScreenPt(
 
   // since we are calculating a direction, just assume eye is at origin
   // and view plane center is just 1 away from eye (in direction of vnormal)
-  result = _vnormal
-    + (vx * ((mouseX - cx) / cx)) + (vy * -((mouseY - cy) / cy));
-  result.normalize();
+  result = unitVec(
+    _vnormal + (vx * ((mouseX - cx) / cx)) + (vy * -((mouseY - cy) / cy)));
   return true;
 }

@@ -81,19 +81,15 @@ class gx::Camera
 bool gx::Camera::setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup)
 {
   _pos = pos;
-  _vnormal = coi - pos;
-  _vnormal.normalize();
-  _vup = vup;
-  _vup.normalize();
+  _vnormal = unitVec(coi - pos);
+  _vup = unitVec(vup);
   return updateView();
 }
 
 bool gx::Camera::setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup)
 {
   _pos = pos;
-  _vnormal = dir;
-  _vnormal.normalize();
-  _vup = vup;
-  _vup.normalize();
+  _vnormal = unitVec(dir);
+  _vup = unitVec(vup);
   return updateView();
 }
