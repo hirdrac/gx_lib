@@ -223,6 +223,7 @@ class gx::Window
   MouseModeEnum _mouseMode = MOUSE_NORMAL;
   bool _sizeSet = false;
   bool _fullScreen = false;
+  bool _fixedAspectRatio = false;
 
   // event state
   int64_t _lastPollTime = 0;

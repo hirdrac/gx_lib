@@ -117,6 +117,7 @@ void gx::Window::setSize(int width, int height, bool fullScreen)
     glfwSetWindowMonitor(win, monitor, wx, wy, width, height, mode->refreshRate);
     _width = width;
     _height = height;
+    if (_fixedAspectRatio) { glfwSetWindowAspectRatio(win, width, height); }
     if (!_sizeSet) { showWindow(win); }
   } else {
     _width = width;
@@ -241,6 +242,7 @@ bool gx::Window::open(int flags)
       _maxHeight = height;
     }
     glfwSetWindowSizeLimits(win, _minWidth, _minHeight, _maxWidth, _maxHeight);
+    _fixedAspectRatio = fixedAspectRatio;
     if (fixedAspectRatio) {
       glfwSetWindowAspectRatio(win, width, height);
     } else {
