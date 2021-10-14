@@ -609,7 +609,7 @@ void gx::OpenGLRenderer::setupBuffer()
 
   _vbo.unmap();
 
-#if 1
+#if 0
   std::size_t dsize = 0;
   for (auto& [no,layer] : _layers) { dsize += layer.drawData.size(); }
   println_err("drawData:", dsize, "  vertices:", vsize,
