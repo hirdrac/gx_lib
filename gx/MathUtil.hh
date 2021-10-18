@@ -55,10 +55,10 @@ namespace gx {
 #endif
 
   template<class T>
-  inline constexpr T DEG_TO_RAD = PI<T> / static_cast<T>(180);
+  inline constexpr T DEG_TO_RAD = PI<T> / T{180};
 
   template<class T>
-  inline constexpr T RAD_TO_DEG = static_cast<T>(180) / PI<T>;
+  inline constexpr T RAD_TO_DEG = T{180} / PI<T>;
 
   template<class T>
   inline constexpr T VERY_SMALL = static_cast<T>(1.0e-12);
@@ -82,91 +82,91 @@ namespace gx {
     return rad * RAD_TO_DEG<fltType>;
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr bool isZero(fltType x)
+  template<class numType>
+  [[nodiscard]] constexpr bool isZero(numType x)
   {
-    if constexpr (std::is_floating_point_v<fltType>) {
-      return (x > -VERY_SMALL<fltType>) && (x < VERY_SMALL<fltType>);
+    if constexpr (std::is_floating_point_v<numType>) {
+      return (x > -VERY_SMALL<numType>) && (x < VERY_SMALL<numType>);
     } else {
       return (x == 0);
     }
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr bool isOne(fltType x)
+  template<class numType>
+  [[nodiscard]] constexpr bool isOne(numType x)
   {
-    if constexpr (std::is_floating_point_v<fltType>) {
-      return (x > (static_cast<fltType>(1) - VERY_SMALL<fltType>))
-        && (x < (static_cast<fltType>(1) + VERY_SMALL<fltType>));
+    if constexpr (std::is_floating_point_v<numType>) {
+      return (x > (numType{1} - VERY_SMALL<numType>))
+        && (x < (numType{1} + VERY_SMALL<numType>));
     } else {
       return (x == 1);
     }
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr bool isPos(fltType x)
+  template<class numType>
+  [[nodiscard]] constexpr bool isPos(numType x)
   {
-    if constexpr (std::is_floating_point_v<fltType>) {
-      return (x >= VERY_SMALL<fltType>);
+    if constexpr (std::is_floating_point_v<numType>) {
+      return (x >= VERY_SMALL<numType>);
     } else {
       return (x > 0);
     }
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr bool isNeg(fltType x)
+  template<class numType>
+  [[nodiscard]] constexpr bool isNeg(numType x)
   {
-    if constexpr (std::is_floating_point_v<fltType>) {
-      return (x <= -VERY_SMALL<fltType>);
+    if constexpr (std::is_floating_point_v<numType>) {
+      return (x <= -VERY_SMALL<numType>);
     } else {
       return (x < 0);
     }
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr bool isEq(fltType x, fltType y)
+  template<class numType>
+  [[nodiscard]] constexpr bool isEq(numType x, numType y)
   {
-    if constexpr (std::is_floating_point_v<fltType>) {
+    if constexpr (std::is_floating_point_v<numType>) {
       return isZero(x-y);
     } else {
       return (x == y);
     }
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr bool isLT(fltType x, fltType y)
+  template<class numType>
+  [[nodiscard]] constexpr bool isLT(numType x, numType y)
   {
-    if constexpr (std::is_floating_point_v<fltType>) {
+    if constexpr (std::is_floating_point_v<numType>) {
       return isNeg(x-y);
     } else {
       return (x < y);
     }
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr bool isLTE(fltType x, fltType y)
+  template<class numType>
+  [[nodiscard]] constexpr bool isLTE(numType x, numType y)
   {
-    if constexpr (std::is_floating_point_v<fltType>) {
+    if constexpr (std::is_floating_point_v<numType>) {
       return !isPos(x-y);
     } else {
       return (x <= y);
     }
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr bool isGT(fltType x, fltType y)
+  template<class numType>
+  [[nodiscard]] constexpr bool isGT(numType x, numType y)
   {
-    if constexpr (std::is_floating_point_v<fltType>) {
+    if constexpr (std::is_floating_point_v<numType>) {
       return isPos(x-y);
     } else {
       return (x > y);
     }
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr bool isGTE(fltType x, fltType y)
+  template<class numType>
+  [[nodiscard]] constexpr bool isGTE(numType x, numType y)
   {
-    if constexpr (std::is_floating_point_v<fltType>) {
+    if constexpr (std::is_floating_point_v<numType>) {
       return !isNeg(x-y);
     } else {
       return (x >= y);
