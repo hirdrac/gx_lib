@@ -27,7 +27,7 @@ namespace gx {
   constexpr Color GRAY75 {0.75f, 0.75f, 0.75f, 1.0f};
 
   // functions
-  constexpr uint32_t packRGBA8(float r, float g, float b, float a)
+  [[nodiscard]] constexpr uint32_t packRGBA8(float r, float g, float b, float a)
   {
     return uint32_t(std::clamp(r, 0.0f, 1.0f) * 255.0f)
       | (uint32_t(std::clamp(g, 0.0f, 1.0f) * 255.0f) << 8)
@@ -35,17 +35,17 @@ namespace gx {
       | (uint32_t(std::clamp(a, 0.0f, 1.0f) * 255.0f) << 24);
   }
 
-  constexpr uint32_t packRGBA8(const Color& c) {
+  [[nodiscard]] constexpr uint32_t packRGBA8(const Color& c) {
     return packRGBA8(c.x, c.y, c.z, c.w);
   }
 
-  constexpr float unpackRed(uint32_t c) {
+  [[nodiscard]] constexpr float unpackRed(uint32_t c) {
     return float(c & 255) / 255.0f; }
-  constexpr float unpackGreen(uint32_t c) {
+  [[nodiscard]] constexpr float unpackGreen(uint32_t c) {
     return float((c >> 8) & 255) / 255.0f; }
-  constexpr float unpackBlue(uint32_t c) {
+  [[nodiscard]] constexpr float unpackBlue(uint32_t c) {
     return float((c >> 16) & 255) / 255.0f; }
-  constexpr float unpackAlpha(uint32_t c) {
+  [[nodiscard]] constexpr float unpackAlpha(uint32_t c) {
     return float((c >> 24) & 255) / 255.0f; }
 
   constexpr void unpackRGBA8(uint32_t c, float& r, float& g, float& b, float& a)
@@ -56,7 +56,7 @@ namespace gx {
     a = unpackAlpha(c);
   }
 
-  constexpr Color unpackRGBA8(uint32_t c) {
+  [[nodiscard]] constexpr Color unpackRGBA8(uint32_t c) {
     return {unpackRed(c), unpackGreen(c), unpackBlue(c), unpackAlpha(c)};
   }
 }

@@ -38,9 +38,9 @@ namespace gx {
   };
 
   // **** Functions ****
-  constexpr AlignEnum VAlign(AlignEnum a) {
+  [[nodiscard]] constexpr AlignEnum VAlign(AlignEnum a) {
     return AlignEnum(a & (ALIGN_TOP | ALIGN_BOTTOM | ALIGN_VJUSTIFY)); }
 
-  constexpr AlignEnum HAlign(AlignEnum a) {
+  [[nodiscard]] constexpr AlignEnum HAlign(AlignEnum a) {
     return AlignEnum(a & (ALIGN_LEFT | ALIGN_RIGHT | ALIGN_HJUSTIFY)); }
 }

@@ -9,7 +9,7 @@
 
 
 namespace gx {
-  bool isMainThread();
+  [[nodiscard]] bool isMainThread();
 
   bool initGLFW();
     // initialized library & setup error logging
