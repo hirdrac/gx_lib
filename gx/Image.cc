@@ -9,6 +9,7 @@
 #include "3rd/stb_image.h"
 
 #include <limits>
+#include <cstring>
 #include <cassert>
 
 

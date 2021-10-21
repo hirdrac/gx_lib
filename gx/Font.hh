@@ -29,8 +29,13 @@ class gx::Font
 {
  public:
   Font() = default;
+
+  // prevent copy but allow move
+  Font(const Font&) = delete;
+  Font& operator=(const Font&) = delete;
   Font(Font&&) noexcept = default;
   Font& operator=(Font&&) noexcept = default;
+
 
   bool load(const char* fileName, int fontSize);
   bool load(const std::string& fn, int fontSize) {
@@ -86,8 +91,4 @@ class gx::Font
 
   Glyph& newGlyph(int code, int width, int height, float left, float top,
 		  float advX, float advY);
-
-  // prevent copy/assignment
-  Font(const Font&) = delete;
-  Font& operator=(const Font&) = delete;
 };

@@ -9,8 +9,8 @@
 #include "Image.hh"
 #include "Renderer.hh"
 #include "Logger.hh"
-#include <string>
 #include <cstdlib>
+#include <cstring>
 #include <cassert>
 
 #include <ft2build.h>

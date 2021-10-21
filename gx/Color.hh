@@ -7,7 +7,6 @@
 #pragma once
 #include "Types.hh"
 #include <algorithm>
-#include <cstdint>
 
 #if __has_include(<endian.h>)
 #include <endian.h>

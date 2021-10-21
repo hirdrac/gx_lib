@@ -8,8 +8,6 @@
 #include "Types.hh"
 #include <string>
 #include <memory>
-#include <cstdint>
-#include <cstring>
 
 
 namespace gx {
@@ -21,8 +19,13 @@ class gx::Image
 {
  public:
   Image() = default;
+
+  // prevent copy but allow move
+  Image(const Image&) = delete;
+  Image& operator=(const Image&) = delete;
   Image(Image&&) noexcept = default;
   Image& operator=(Image&&) noexcept = default;
+
 
   bool init(int width, int height, int channels);
   bool init(int width, int height, int channels,
@@ -50,7 +53,4 @@ class gx::Image
   const uint8_t* _data;
   std::unique_ptr<uint8_t[]> _storage;
   int _width, _height, _channels;
-
-  Image(const Image&) = delete;
-  Image& operator=(const Image&) = delete;
 };
