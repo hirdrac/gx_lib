@@ -17,7 +17,6 @@
 
 // TODO
 // - fullscreen zoom w/ mouse wheel
-// - fixed aspect ratio for window resize
 // - mouse drag of image when zoomed
 // - multiple image support
 //   - background loading after 1st image loaded
@@ -46,7 +45,7 @@ std::pair<int,int> calcSize(const gx::Window& win, const gx::Image& img)
       ih = int(float(img.height()) * w_ratio);
     }
   }
-  return std::pair(iw,ih);
+  return {iw,ih};
 }
 
 int main(int argc, char* argv[])
@@ -78,7 +77,7 @@ int main(int argc, char* argv[])
   gx::Window win;
   win.setSize(entries[0].img.width(), entries[0].img.height(), false);
   if (!win.open(gx::WINDOW_RESIZABLE | gx::WINDOW_FIXED_ASPECT_RATIO)) {
-    gx::println_err("failed to open window");
+    gx::println_err("Failed to open window");
     return -1;
   }
 
@@ -99,8 +98,13 @@ int main(int argc, char* argv[])
   for (;;) {
     const Entry& e = entries[std::size_t(entryNo)];
     if (win.resized() || refresh) {
-      win.setTitle(gx::concat(e.file, " - ", e.img.width(), 'x', e.img.height(),
-                              'x', e.img.channels()));
+      if (refresh) {
+        win.setTitle(
+          gx::concat(e.file, " - ", e.img.width(), 'x', e.img.height(),
+                     'x', e.img.channels()));
+        refresh = false;
+      }
+
       auto [iw,ih] = calcSize(win, e.img);
       int ix = int(float(win.width() - iw) / 2.0f);
       int iy = int(float(win.height() - ih) / 2.0f);
@@ -142,7 +146,6 @@ int main(int argc, char* argv[])
 
       ren.clearFrame(win.width(), win.height());
       ren.draw(dl);
-      refresh = false;
     }
 
     ren.renderFrame();
