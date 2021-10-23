@@ -21,7 +21,7 @@ namespace gx {
 
 
   // functions
-  bool calcOrthoProjection(float width, float height, Mat4& result);
+  constexpr Mat4 orthoProjection(float width, float height);
     // simple orthogonal projection to work in screen coordinates
     // (0,0) upper left-hand corner, (width,height) lower right
 }
@@ -92,4 +92,21 @@ bool gx::Camera::setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup)
   _vnormal = unitVec(dir);
   _vup = unitVec(vup);
   return updateView();
+}
+
+
+// Inline Implementations
+constexpr gx::Mat4 gx::orthoProjection(float width, float height)
+{
+  // simple ortho projection for 2d rendering in screen coords
+  //  x:[0 width] => x:[-1 1]
+  //  y:[0 height]   y:[-1 1]
+  // origin in upper left corner
+  return {
+    2.0f / width, 0, 0, 0,
+    0, -2.0f / height, 0, 0,
+    // negative value flips vertial direction for OpenGL
+    // FIXME: handle vertial flip inside OpenGLRenderer in the future
+    0, 0, 1, 0,
+    -1, 1, 0, 1};
 }

@@ -82,16 +82,13 @@ void gx::Renderer::clearFrame(int width, int height)
 
 void gx::Renderer::setScreenOrthoProjection(int layer)
 {
-  Mat4 orthoT;
-  calcOrthoProjection(float(_width), float(_height), orthoT);
-  setTransform(layer, Mat4Identity, orthoT);
+  setTransform(
+    layer, Mat4Identity, orthoProjection(float(_width), float(_height)));
 }
 
 void gx::Renderer::setOrthoProjection(int layer, float width, float height)
 {
-  Mat4 orthoT;
-  calcOrthoProjection(width, height, orthoT);
-  setTransform(layer, Mat4Identity, orthoT);
+  setTransform(layer, Mat4Identity, orthoProjection(width, height));
 }
 
 

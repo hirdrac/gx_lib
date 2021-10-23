@@ -20,23 +20,6 @@
 //   Z coord: 0 to 1
 
 
-// functions
-bool gx::calcOrthoProjection(float width, float height, Mat4& result)
-{
-  // simple ortho projection for 2d rendering in screen coords
-  //  x:[0 width] => x:[-1 1]
-  //  y:[0 height]   y:[-1 1]
-  // origin in upper left corner
-  result = {
-    2.0f / width, 0, 0, 0,
-    0, -2.0f / height, 0, 0,
-    //  negative value flips vertial direction for OpenGL
-    0, 0, 1, 0,
-    -1, 1, 0, 1 };
-
-  return true;
-}
-
 // Camera class
 bool gx::Camera::updateView()
 {
