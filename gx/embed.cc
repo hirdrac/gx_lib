@@ -30,7 +30,12 @@ int main(int argc, char** argv)
     return -1;
   }
 
+  std::size_t x = file.rfind('/');
+  std::string name = (x == std::string::npos) ? file : file.substr(x+1);
+
   gx::println("// generated from '", file, "'\n");
+  gx::println("char ", outVar, "Name[] = \"", name, "\";");
+  gx::println("char ", outVar, "File[] = \"", file, "\";");
   gx::print("unsigned char ", outVar, "[] = {");
   for (;;) {
     char val[ROW_SIZE];
