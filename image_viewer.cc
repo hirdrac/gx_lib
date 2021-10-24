@@ -15,15 +15,13 @@
 #include <vector>
 
 
-// TODO
-// - fullscreen zoom w/ mouse wheel
-// - mouse drag of image when zoomed
-// - multiple image support
-//   - background loading after 1st image loaded
-//   - multiple image display in fullscreen (horizontal/vertical)
-//   - smooth scrolling when moving to next image
-//   - don't scroll if all images can fit on screen?
-// - make texture mag filter configurable? ('smooth' mode would use linear)
+// TODO: fullscreen zoom w/ mouse wheel
+// TODO: mouse drag of image when zoomed
+// TODO: background loading of images after 1st image loaded
+// TODO: multiple image display in fullscreen (horizontal/vertical)
+// TODO: smooth scrolling when moving to next image
+// TODO: don't scroll if all images can fit on screen?
+// TODO: make texture mag filter configurable? ('smooth' mode would use linear)
 
 struct Entry
 {
