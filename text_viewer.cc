@@ -4,12 +4,11 @@
 //
 
 // TODO - smooth scrolling
-// TODO - line wrap (with indicator)
-// TODO - embed default font file, configurable alternate font
+// TODO - left/right scroll with cursor keys to see long lines
+// TODO - optional line wrap (with indicator)
 // TODO - status bar with filename, current line
 // TODO - line number on left side?  (instead of just current line)
 // TODO - small text display on side with current view hi-lighted (like VS code)
-// TODO - configurable text size
 // TODO - goto line GUI
 
 #include "gx/Window.hh"
@@ -18,6 +17,7 @@
 #include "gx/Font.hh"
 #include "gx/Logger.hh"
 #include "gx/Print.hh"
+#include "gx/CmdLineParser.hh"
 
 #include <fstream>
 #include <string>
@@ -27,29 +27,84 @@
 
 constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
+constexpr int DEFAULT_FONT_SIZE = 20;
+constexpr int DEFAULT_LINE_SPACING = 0;
 
-constexpr int FONT_SIZE = 20;
 constexpr int TAB_SIZE = 8;
 constexpr int SCROLL_STEP = 3;
 
 // font data from FixedWidthFontData.cc
+extern char FixedWidthFontDataName[];
 extern unsigned char FixedWidthFontData[];
 extern unsigned long FixedWidthFontDataSize;
 
 
+int showUsage(char** argv)
+{
+  gx::println("Usage: ", argv[0], " [options] <text file>");
+  gx::println("Options:");
+  gx::println("  -f,--font  Font file (defaults to embeded '", FixedWidthFontDataName ,"')");
+  gx::println("  -s,--size  Font size (defaults to ", DEFAULT_FONT_SIZE, ")");
+  gx::println("  -l,--line  Line spacing (defaults to ", DEFAULT_LINE_SPACING, ")");
+  gx::println("  -h,--help  Show usage");
+  return 0;
+}
+
+int errorUsage(char** argv)
+{
+  gx::println_err("Try '", argv[0], " --help' for more information.");
+  return -1;
+}
+
 int main(int argc, char** argv)
 {
   if (argc < 2) {
-    gx::println_err("Usage: ", argv[0], " <text file>");
-    return -1;
+    return showUsage(argv);
   }
 
-  std::string file = argv[1];
   gx::defaultLogger().disable();
+
+  std::string file;
+  std::string fontName;
+  int fontSize = DEFAULT_FONT_SIZE;
+  int lineSpacing = DEFAULT_LINE_SPACING;
+
+  for (gx::CmdLineParser p(argc, argv); p; ++p) {
+    if (p.option()) {
+      if (p.option('h',"help")) {
+        return showUsage(argv);
+      } else if (p.option('f',"font", fontName)) {
+        if (fontName.empty()) {
+          gx::println_err("ERROR: Empty font name");
+          return errorUsage(argv);
+        }
+      } else if (p.option('s',"size", fontSize)) {
+        if (fontSize < 1) {
+          gx::println_err("ERROR: Bad font size");
+          return errorUsage(argv);
+        }
+      } else if (p.option('l',"line", lineSpacing)) {
+        // no lineSpacing value checking currently
+      } else {
+        gx::println_err("ERROR: Bad option '", p.arg(), "'");
+        return errorUsage(argv);
+      }
+    } else if (file.empty()) {
+      p.get(file);
+    } else {
+      gx::println_err("ERROR: Multiple files not supported");
+      return errorUsage(argv);
+    }
+  }
+
+  if (file.empty()) {
+    gx::println_err("ERROR: File name required");
+    return errorUsage(argv);
+  }
 
   std::ifstream fs(file);
   if (!fs) {
-    gx::println_err("Can't read file '", file, "'");
+    gx::println_err("ERROR: Can't read file '", file, "'");
     return -1;
   }
 
@@ -64,8 +119,13 @@ int main(int argc, char** argv)
   if (text.empty()) { text.push_back("* FILE EMPTY *"); }
 
   gx::Font fnt;
-  if (!fnt.loadFromMemory(FixedWidthFontData, FixedWidthFontDataSize, FONT_SIZE)) {
-    gx::println_err("failed to load font");
+  if (fontName.empty()) {
+    if (!fnt.loadFromMemory(FixedWidthFontData, FixedWidthFontDataSize, fontSize)) {
+      gx::println_err("ERROR: Failed to load embeded font");
+      return -1;
+    }
+  } else if (!fnt.load(fontName, fontSize)) {
+    gx::println_err("ERROR: Failed to load font '", fontName, "'");
     return -1;
   }
 
@@ -73,7 +133,7 @@ int main(int argc, char** argv)
   win.setTitle(file);
   win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
   if (!win.open()) {
-    gx::println_err("failed to open window");
+    gx::println_err("ERROR: Failed to open window");
     return -1;
   }
 
@@ -81,8 +141,7 @@ int main(int argc, char** argv)
   ren.setBGColor(.2f,.2f,.2f);
   fnt.makeAtlas(ren);
 
-  constexpr int spacing = 0;
-  const int lineHeight = fnt.size() + spacing;
+  const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
   const float tabWidth = fnt.calcWidth(" ") * TAB_SIZE;
   int topLine = 0;
 
@@ -105,7 +164,7 @@ int main(int argc, char** argv)
       int pos = topLine;
       while (pos < int(text.size()) && ty < float(win.height())) {
         if (pos >= 0) {
-          dc.text(fnt, 0.0f, ty, gx::ALIGN_TOP_LEFT, spacing, text[std::size_t(pos)]);
+          dc.text(fnt, 0.0f, ty, gx::ALIGN_TOP_LEFT, 0, text[std::size_t(pos)]);
         }
         ty += float(lineHeight);
         ++pos;
