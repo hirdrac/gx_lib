@@ -298,17 +298,17 @@ bool gx::Window::open(int flags)
 
 void gx::Window::showWindow(GLFWwindow* w)
 {
-  glfwShowWindow(w);
-
-  // unmaximize if window started out maximized
-  // (glfwShowWindow() does this if window is too large to fit on screen)
-  glfwRestoreWindow(w);
-
   if (!_fullScreen) {
     // center window initially
     // FIXME - doesn't account for decoration size
     glfwSetWindowPos(w, (_fsWidth - _width) / 2, (_fsHeight - _height) / 2);
   }
+
+  glfwShowWindow(w);
+
+  // unmaximize if window started out maximized
+  // (glfwShowWindow() does this if window is too large to fit on screen)
+  glfwRestoreWindow(w);
 
   // set initial mouse event state
   // (initial button state not supported by GLFW)
