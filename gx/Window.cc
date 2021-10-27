@@ -134,8 +134,20 @@ void gx::Window::setSize(int width, int height, bool fullScreen)
     glfwSetWindowMonitor(win, monitor, wx, wy, width, height, mode->refreshRate);
     _width = width;
     _height = height;
+    if (!_sizeSet) {
+      showWindow(win);
+    } else {
+      // ** WORK-AROUND **
+      // (needed for version 3.3.4, recheck for newer versions)
+      // extra restore/setWindow are to work around a bug where if the window
+      // starts out fullscreen then is changed to windowed mode, it will
+      // always be maximized
+      glfwRestoreWindow(win);
+      glfwSetWindowMonitor(
+        win, monitor, wx, wy, width, height, mode->refreshRate);
+    }
+
     if (_fixedAspectRatio) { glfwSetWindowAspectRatio(win, width, height); }
-    if (!_sizeSet) { showWindow(win); }
   } else {
     _width = width;
     _height = height;
@@ -238,9 +250,6 @@ bool gx::Window::open(int flags)
     return false;
   }
 
-  // FIXME: window is starting off as maximized if width/height are greater
-  // than screen size when created
-
   glfwGetFramebufferSize(win, &_width, &_height);
   //println("new window size: ", _width, " x ", _height);
   bool status = ren->init(win);
@@ -289,13 +298,18 @@ bool gx::Window::open(int flags)
 
 void gx::Window::showWindow(GLFWwindow* w)
 {
+  glfwShowWindow(w);
+
+  // unmaximize if window started out maximized
+  // (glfwShowWindow() does this if window is too large to fit on screen)
+  glfwRestoreWindow(w);
+
   if (!_fullScreen) {
     // center window initially
     // FIXME - doesn't account for decoration size
     glfwSetWindowPos(w, (_fsWidth - _width) / 2, (_fsHeight - _height) / 2);
   }
 
-  glfwShowWindow(w);
   // set initial mouse event state
   // (initial button state not supported by GLFW)
   updateMouseState(w);
