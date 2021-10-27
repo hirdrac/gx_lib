@@ -17,7 +17,6 @@
 #include "OpenGL.hh"
 #include "Print.hh"
 #include <GLFW/glfw3.h>
-#include <cstdlib>
 #include <cassert>
 
 namespace {
@@ -97,14 +96,6 @@ namespace {
     *ptr++ = {pt.x,pt.y,0.0f, tx.x,tx.y, c}; }
   inline void vertex(gx::Vertex3TC*& ptr, gx::Vec3 pt, gx::Vec2 tx, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, tx.x,tx.y, c}; }
-
-
-  // **** Callbacks ****
-  void CleanUpOpenGL()
-  {
-    // flag is checked by GL class destructors
-    GLInitialized = false;
-  }
 }
 
 void gx::OpenGLRenderer::setWindowHints(bool debug)
@@ -119,12 +110,6 @@ void gx::OpenGLRenderer::setWindowHints(bool debug)
 
 bool gx::OpenGLRenderer::init(GLFWwindow* win)
 {
-  static bool init_done = false;
-  if (!init_done) {
-    init_done = true;
-    std::atexit(CleanUpOpenGL);
-  }
-
   _window = win;
   setCurrentContext(win);
   if (!GLSetupContext(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {

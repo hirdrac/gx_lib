@@ -5,6 +5,7 @@
 
 #include "OpenGL.hh"
 #include "Logger.hh"
+#include <cstdlib>
 
 
 inline namespace GX_GLNAMESPACE {
@@ -20,6 +21,13 @@ GLuint GLLastTextureBind = 0;
 
 
 // **** Callbacks ****
+static void GLCleanUp()
+{
+  // flag is checked by GL class destructors to prevent the calling of OpenGL
+  // functions at process shutdown when a context no long exists
+  GLInitialized = false;
+}
+
 #ifndef GX_GL33
 static void APIENTRY GLDebugCB(
   GLenum source, GLenum type, GLuint id, GLenum severity,
@@ -77,6 +85,8 @@ bool GLSetupContext(GLADloadproc loadProc)
       GX_LOG_ERROR("failed to setup GL context");
       return false;
     }
+
+    std::atexit(GLCleanUp);
     GLInitialized = true;
   }
 
