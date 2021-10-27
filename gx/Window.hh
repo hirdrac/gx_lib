@@ -167,10 +167,11 @@ class gx::Window
 
 
   //// Event Handling ////
-  int pollEvents();
-    // updates event state, returns current event mask
+  static int pollEvents();
+    // updates event state for all windows, returns combined event mask
+    // (each window should be checked for events if returned value is non-zero)
 
-  [[nodiscard]] int64_t lastPollTime() const { return _lastPollTime; }
+  [[nodiscard]] static int64_t lastPollTime() { return _lastPollTime; }
     // time of last pollEvents()
     // (in microseconds since first window open)
 
@@ -226,7 +227,6 @@ class gx::Window
   bool _fixedAspectRatio = false;
 
   // event state
-  int64_t _lastPollTime = 0;
   int _events = 0, _removedEvents = 0;
   std::vector<KeyState> _keyStates;
   std::vector<CharInfo> _chars;
@@ -238,6 +238,11 @@ class gx::Window
 
   void showWindow(GLFWwindow*);
   void updateMouseState(GLFWwindow*);
+
+  void resetEventState();
+  void finalizeEventState();
+
+  static int64_t _lastPollTime;
 
   // GLFW event callbacks
   static void closeCB(GLFWwindow*);

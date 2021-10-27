@@ -10,6 +10,8 @@
 //#include "Print.hh"
 #include <algorithm>
 #include <chrono>
+#include <mutex>
+#include <set>
 #include <cassert>
 
 #include <GLFW/glfw3.h>
@@ -54,14 +56,29 @@ namespace {
       default:                return -1;
     }
   }
+
+  // **** Window Instance Tracking ****
+  std::set<gx::Window*> allWindows;
+  std::mutex allWindowsMutex;
 }
 
 
 // **** Window class ****
-gx::Window::Window() = default;
+int64_t gx::Window::_lastPollTime = 0;
+
+gx::Window::Window()
+{
+  std::lock_guard lg{allWindowsMutex};
+  allWindows.insert(this);
+}
 
 gx::Window::~Window()
 {
+  {
+    std::lock_guard lg{allWindowsMutex};
+    allWindows.erase(this);
+  }
+
   if (_renderer && glfwInitStatus()) {
     assert(isMainThread());
     glfwHideWindow(_renderer->window());
@@ -221,6 +238,9 @@ bool gx::Window::open(int flags)
     return false;
   }
 
+  // FIXME: window is starting off as maximized if width/height are greater
+  // than screen size when created
+
   glfwGetFramebufferSize(win, &_width, &_height);
   //println("new window size: ", _width, " x ", _height);
   bool status = ren->init(win);
@@ -290,11 +310,8 @@ void gx::Window::updateMouseState(GLFWwindow* w)
   _mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
 }
 
-int gx::Window::pollEvents()
+void gx::Window::resetEventState()
 {
-  assert(isMainThread());
-
-  // reset event state
   _events = 0;
   _removedEvents = 0;
   _scrollX = 0;
@@ -309,15 +326,10 @@ int gx::Window::pollEvents()
       i = _keyStates.erase(i);
     }
   }
+}
 
-  // TODO - multi window support
-  // - make function static
-  // - reset event state for all windows
-  // - return indicator for which window(s) received events?
-
-  glfwPollEvents();
-    // callbacks will set event values
-
+void gx::Window::finalizeEventState()
+{
   // button event pressing
   if (_buttonsPress != 0 || _buttonsRelease != 0) {
     for (int b = 0; b < 8; ++b) {
@@ -327,8 +339,8 @@ int gx::Window::pollEvents()
       if (_buttonsPress & bVal) {
         _events |= bEvent;
       } else if (_buttonsRelease & bVal) {
-        // button release event is delayed to next update if it happened in the same
-        //  event poll as the press event
+        // button release event is delayed to next update if it happened in the
+        // same event poll as the press event
         _events |= bEvent;
         _buttonsRelease &= ~bVal;
         _buttons &= ~bVal;
@@ -338,9 +350,30 @@ int gx::Window::pollEvents()
     _buttons |= _buttonsPress;
     _buttonsPress = 0;
   }
+}
+
+int gx::Window::pollEvents()
+{
+  assert(isMainThread());
+  int e = 0;
+
+  {
+    std::lock_guard lg{allWindowsMutex};
+    for (auto w : allWindows) {
+      w->resetEventState();
+    }
+
+    glfwPollEvents();
+      // callbacks will set event values
+
+    for (auto w : allWindows) {
+      w->finalizeEventState();
+      e |= w->_events;
+    }
+  }
 
   _lastPollTime = usecSinceStart();
-  return _events;
+  return e;
 }
 
 bool gx::Window::keyPressed(int key) const
