@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
 
     ren.renderFrame();
 
-    win.pollEvents();
+    gx::Window::pollEvents();
     if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }
     if (win.keyPressCount(gx::KEY_F11, false)) {
       if (win.fullScreen()) {

@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
     ren.renderFrame();
 
     // handle events
-    win.pollEvents();
+    gx::Window::pollEvents();
     if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }
     if (win.keyPressCount(gx::KEY_F11, false)) {
       if (win.fullScreen()) {
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
                       gui3.getText(gui3.eventID()));
     }
 
-    //gx::println_err("time ", win.lastPollTime());
+    //gx::println_err("time ", gx::Window::lastPollTime());
   }
 
   return 0;

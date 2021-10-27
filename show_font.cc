@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     }
 
     ren.renderFrame();
-    win.pollEvents();
+    gx::Window::pollEvents();
     if (win.mouseIn() && (win.events() & gx::EVENT_MOUSE_MOVE)) {
       const float tx = win.mouseX() / float(win.width());
       const float ty = win.mouseY() / float(win.height());
