@@ -43,19 +43,8 @@ class gx::Matrix4x4
   [[nodiscard]] constexpr T& operator[](size_type i) { return _val[i]; }
   [[nodiscard]] constexpr T  operator[](size_type i) const { return _val[i]; }
 
-  template<unsigned int N>
-  constexpr self_type& operator=(const T (&vals)[N]) {
-    // NOTE: required by clang for 'Matrix m = {...}'
-    static_assert(N == size());
-    for (size_type i = 0; i != size(); ++i) { _val[i] = vals[i]; }
-    return *this;
-  }
-
-  constexpr self_type& operator=(const self_type&) = default;
-    // NOTE: required by clang for operator*= below
-
   constexpr self_type& operator*=(const self_type& m) {
-    return operator=(*this * m); }
+    return *this = (*this * m); }
 
 
   // Iterators
