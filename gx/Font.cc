@@ -4,6 +4,7 @@
 //
 // TODO - investigate using stb_truetype.h
 // TODO - use signed distance fields for font texture
+//        (FT_RENDER_MODE_SDF available in freetype 2.11)
 
 #include "Font.hh"
 #include "Image.hh"
@@ -216,16 +217,6 @@ void gx::Font::addGlyph(
     g.bitmap_copy.reset(nullptr);
     g.bitmap = bitmap;
   }
-}
-
-void gx::Font::addGlyph(
-  int code, int width, int height, float left, float top,
-  float advX, float advY, std::unique_ptr<uint8_t[]>&& bitmap)
-{
-  _changed = true;
-  Glyph& g = newGlyph(code, width, height, left, top, advX, advY);
-  g.bitmap_copy = std::move(bitmap);
-  g.bitmap = g.bitmap_copy.get();
 }
 
 gx::Glyph& gx::Font::newGlyph(

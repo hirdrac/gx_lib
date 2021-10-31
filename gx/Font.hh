@@ -79,8 +79,6 @@ class gx::Font
 
   void addGlyph(int code, int width, int height, float left, float top,
 		float advX, float advY, const uint8_t* bitmap, bool copy);
-  void addGlyph(int code, int width, int height, float left, float top,
-                float advX, float advY, std::unique_ptr<uint8_t[]>&& bitmap);
 
  private:
   std::map<int,Glyph> _glyphs;
