@@ -3,11 +3,15 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - continuous lines [lineX <vertex count> <v1> <v2> ...]
-// TODO - text vertical/horizontal scaling
-// TODO - text rotation
+// TODO - text vertical/horizontal scaling & rotation
+//        * need X/Y basis (used for scale,angle,slant of glyph quads)
+//        * not sure how to support clipping or color gradiants
 // TODO - support color gradiant for primitives other than rectangle
 // TODO - textured roundedRectangle()
+// TODO - continuous lines [lineX <vertex count> <v1> <v2> ...]
+// TODO - lines as quads:
+//        * any width supported
+//        * multi-line corner types: squared, angled, rounded
 
 #pragma once
 #include "DrawList.hh"
@@ -28,7 +32,7 @@ namespace gx {
 class gx::DrawContext
 {
  public:
-  DrawContext(DrawList& dl) : _data(&dl) { init(); }
+  DrawContext(DrawList& dl) : _data{&dl} { init(); }
 
   // Low-level data entry
   void clear() { init(); _data->clear(); }

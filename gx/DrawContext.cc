@@ -15,24 +15,31 @@ void gx::DrawContext::rectangle(float x, float y, float w, float h)
   const float y0 = y;
   const float x1 = x + w;
   const float y1 = y + h;
-  if (_colorMode == CM_HGRADIANT) {
-    const uint32_t c0 = gradiantColor(x0);
-    const uint32_t c1 = gradiantColor(x1);
-    add(CMD_quad2C,
-        x0, y0, c0,
-        x1, y0, c1,
-        x0, y1, c0,
-        x1, y1, c1);
-  } else if (_colorMode == CM_VGRADIANT) {
-    const uint32_t c0 = gradiantColor(y0);
-    const uint32_t c1 = gradiantColor(y1);
-    add(CMD_quad2C,
-        x0, y0, c0,
-        x1, y0, c0,
-        x0, y1, c1,
-        x1, y1, c1);
-  } else {
-    add(CMD_rectangle, x0, y0, x1, y1);
+  switch (_colorMode) {
+    default: {
+      add(CMD_rectangle, x0, y0, x1, y1);
+      break;
+    }
+    case CM_HGRADIANT: {
+      const uint32_t c0 = gradiantColor(x0);
+      const uint32_t c1 = gradiantColor(x1);
+      add(CMD_quad2C,
+          x0, y0, c0,
+          x1, y0, c1,
+          x0, y1, c0,
+          x1, y1, c1);
+      break;
+    }
+    case CM_VGRADIANT: {
+      const uint32_t c0 = gradiantColor(y0);
+      const uint32_t c1 = gradiantColor(y1);
+      add(CMD_quad2C,
+          x0, y0, c0,
+          x1, y0, c0,
+          x0, y1, c1,
+          x1, y1, c1);
+      break;
+    }
   }
 }
 
@@ -43,24 +50,31 @@ void gx::DrawContext::rectangle(
   const float y0 = y;
   const float x1 = x + w;
   const float y1 = y + h;
-  if (_colorMode == CM_HGRADIANT) {
-    const uint32_t c0 = gradiantColor(x0);
-    const uint32_t c1 = gradiantColor(x1);
-    add(CMD_quad2TC,
-        x0, y0, t0.x, t0.y, c0,
-        x1, y0, t1.x, t0.y, c1,
-        x0, y1, t0.x, t1.y, c0,
-        x1, y1, t1.x, t1.y, c1);
-  } else if (_colorMode == CM_VGRADIANT) {
-    const uint32_t c0 = gradiantColor(y0);
-    const uint32_t c1 = gradiantColor(y1);
-    add(CMD_quad2TC,
-        x0, y0, t0.x, t0.y, c0,
-        x1, y0, t1.x, t0.y, c0,
-        x0, y1, t0.x, t1.y, c1,
-        x1, y1, t1.x, t1.y, c1);
-  } else {
-    add(CMD_rectangleT, x0, y0, t0.x, t0.y, x1, y1, t1.x, t1.y);
+  switch (_colorMode) {
+    default: {
+      add(CMD_rectangleT, x0, y0, t0.x, t0.y, x1, y1, t1.x, t1.y);
+      break;
+    }
+    case CM_HGRADIANT: {
+      const uint32_t c0 = gradiantColor(x0);
+      const uint32_t c1 = gradiantColor(x1);
+      add(CMD_quad2TC,
+          x0, y0, t0.x, t0.y, c0,
+          x1, y0, t1.x, t0.y, c1,
+          x0, y1, t0.x, t1.y, c0,
+          x1, y1, t1.x, t1.y, c1);
+      break;
+    }
+    case CM_VGRADIANT: {
+      const uint32_t c0 = gradiantColor(y0);
+      const uint32_t c1 = gradiantColor(y1);
+      add(CMD_quad2TC,
+          x0, y0, t0.x, t0.y, c0,
+          x1, y0, t1.x, t0.y, c0,
+          x0, y1, t0.x, t1.y, c1,
+          x1, y1, t1.x, t1.y, c1);
+      break;
+    }
   }
 }
 
@@ -81,45 +95,52 @@ void gx::DrawContext::rectangle(
   }
 
   float tx0 = t0.x;
-  float ty0 = t0.y;
   float tx1 = t1.x;
-  float ty1 = t1.y;
-
   if (x0 < cx0) { // left edge clipped
     tx0 = tx1 - ((tx1 - tx0) * ((x1 - cx0) / (x1 - x0)));
     x0 = cx0;
   }
-  if (y0 < cy0) { // top clipped
-    ty0 = ty1 - ((ty1 - ty0) * ((y1 - cy0) / (y1 - y0)));
-    y0 = cy0;
-  }
   if (x1 > cx1) { // right edge clipped
     tx1 = tx0 + ((tx1 - tx0) * ((cx1 - x0) / (x1 - x0)));
     x1 = cx1;
+  }
+
+  float ty0 = t0.y;
+  float ty1 = t1.y;
+  if (y0 < cy0) { // top clipped
+    ty0 = ty1 - ((ty1 - ty0) * ((y1 - cy0) / (y1 - y0)));
+    y0 = cy0;
   }
   if (y1 > cy1) { // bottom clipped
     ty1 = ty0 + ((ty1 - ty0) * ((cy1 - y0) / (y1 - y0)));
     y1 = cy1;
   }
 
-  if (_colorMode == CM_HGRADIANT) {
-    const uint32_t c0 = gradiantColor(x0);
-    const uint32_t c1 = gradiantColor(x1);
-    add(CMD_quad2TC,
-        x0, y0, tx0, ty0, c0,
-        x1, y0, tx1, ty0, c1,
-        x0, y1, tx0, ty1, c0,
-        x1, y1, tx1, ty1, c1);
-  } else if (_colorMode == CM_VGRADIANT) {
-    const uint32_t c0 = gradiantColor(y0);
-    const uint32_t c1 = gradiantColor(y1);
-    add(CMD_quad2TC,
-        x0, y0, tx0, ty0, c0,
-        x1, y0, tx1, ty0, c0,
-        x0, y1, tx0, ty1, c1,
-        x1, y1, tx1, ty1, c1);
-  } else {
-    add(CMD_rectangleT, x0, y0, tx0, ty0, x1, y1, tx1, ty1);
+  switch (_colorMode) {
+    default: {
+      add(CMD_rectangleT, x0, y0, tx0, ty0, x1, y1, tx1, ty1);
+      break;
+    }
+    case CM_HGRADIANT: {
+      const uint32_t c0 = gradiantColor(x0);
+      const uint32_t c1 = gradiantColor(x1);
+      add(CMD_quad2TC,
+          x0, y0, tx0, ty0, c0,
+          x1, y0, tx1, ty0, c1,
+          x0, y1, tx0, ty1, c0,
+          x1, y1, tx1, ty1, c1);
+      break;
+    }
+    case CM_VGRADIANT: {
+      const uint32_t c0 = gradiantColor(y0);
+      const uint32_t c1 = gradiantColor(y1);
+      add(CMD_quad2TC,
+          x0, y0, tx0, ty0, c0,
+          x1, y0, tx1, ty0, c0,
+          x0, y1, tx0, ty1, c1,
+          x1, y1, tx1, ty1, c1);
+      break;
+    }
   }
 }
 
@@ -133,16 +154,16 @@ void gx::DrawContext::_text(
   const AlignEnum h_align = HAlign(align);
   const AlignEnum v_align = VAlign(align);
 
-  float cursorY;
+  float cursorY = y;
   if (v_align == ALIGN_TOP) {
-    cursorY = y + f.ymax();
+    cursorY += f.ymax();
   } else {
     int nl = 0;
-    for (char ch : text) { if (ch == '\n') { ++nl; } }
+    for (char ch : text) { nl += int(ch == '\n'); }
     if (v_align == ALIGN_BOTTOM) {
-      cursorY = y + f.ymin() - (fs*float(nl));
+      cursorY += f.ymin() - (fs*float(nl));
     } else { // ALIGN_VCENTER
-      cursorY = y + (f.ymax() - (fs*float(nl))) / 2.0f;
+      cursorY += (f.ymax() - (fs*float(nl))) * .5f;
     }
   }
 
@@ -151,17 +172,17 @@ void gx::DrawContext::_text(
   float cursorX = x;
 
   for (;;) {
-    std::size_t pos = (h_align == ALIGN_LEFT)
+    const std::size_t pos = (h_align == ALIGN_LEFT)
       ? text.find_first_of("\t\n", lineStart) : text.find('\n', lineStart);
-    int endChar = (pos != std::string_view::npos) ? text[pos] : '\0';
+    const int endChar = (pos != std::string_view::npos) ? text[pos] : '\0';
 
-    std::string_view line = text.substr(
+    const std::string_view line = text.substr(
       lineStart, (pos != std::string_view::npos) ? (pos - lineStart) : pos);
 
     if (!line.empty()) {
       if (h_align != ALIGN_LEFT) {
-        float tw = f.calcWidth(line);
-        cursorX -= (h_align == ALIGN_RIGHT) ? tw : (tw / 2.0f);
+        const float tw = f.calcWidth(line);
+        cursorX -= (h_align == ALIGN_RIGHT) ? tw : (tw * .5f);
       }
 
       for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
@@ -170,7 +191,7 @@ void gx::DrawContext::_text(
         const Glyph* g = f.findGlyph(ch);
         if (!g) { continue; }
 
-        if (g->width > 0 && g->height > 0) {
+        if (g->bitmap) {
           // convert x,y to int to make sure text is pixel aligned
           const float gx = float(int(cursorX + g->left));
           const float gy = float(int(cursorY - g->top));
@@ -189,7 +210,7 @@ void gx::DrawContext::_text(
     lineStart = pos + 1;
     if (endChar == '\t') {
       // adjust cursorX for tab (only for left alignment)
-      float t = std::floor((cursorX - _tabStart) / _tabWidth) + 1.0f;
+      const float t = std::floor((cursorX - _tabStart) / _tabWidth) + 1.0f;
       cursorX = _tabStart + (t * _tabWidth);
     } else if (endChar == '\n') {
       // move to start of next line
@@ -269,8 +290,8 @@ void gx::DrawContext::circleSector(
 void gx::DrawContext::roundedRectangle(
   float x, float y, float w, float h, float curveRadius, int curveSegments)
 {
-  const float half_w = w / 2.0f;
-  const float half_h = h / 2.0f;
+  const float half_w = w * .5f;
+  const float half_h = h * .5f;
   const float r = std::min(curveRadius, std::min(half_w, half_h));
 
   // corners
@@ -282,9 +303,10 @@ void gx::DrawContext::roundedRectangle(
   // borders/center
   if (r == curveRadius) {
     // can fit all borders
-    _rect(x+r, y, w - (r*2.0f), r);
-    _rect(x, y+r, w, h - (r*2.0f));
-    _rect(x+r, y+h-r, w - (r*2.0f), r);
+    const float rr = r * 2.0f;
+    _rect(x+r, y, w - rr, r);
+    _rect(x, y+r, w, h - rr);
+    _rect(x+r, y+h-r, w - rr, r);
   } else if (r < half_w) {
     // can only fit top/bottom borders
     _rect(x+r, y, w - (r*2.0f), h);
