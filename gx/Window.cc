@@ -194,6 +194,12 @@ void gx::Window::setMousePos(float x, float y)
   }
 }
 
+void gx::Window::setSamples(int samples)
+{
+  _samples = std::max(0, samples);
+  // FIXME: no effect if window has already been opened
+}
+
 bool gx::Window::open(int flags)
 {
   assert(isMainThread());
@@ -215,7 +221,7 @@ bool gx::Window::open(int flags)
   glfwDefaultWindowHints();
   glfwWindowHint(GLFW_DECORATED, glfwBool(decorated));
   glfwWindowHint(GLFW_RESIZABLE, glfwBool(resizable));
-  //glfwWindowHint(GLFW_SAMPLES, 0);
+  glfwWindowHint(GLFW_SAMPLES, _samples);
   glfwWindowHint(GLFW_DOUBLEBUFFER, glfwBool(doubleBuffer));
   glfwWindowHint(GLFW_VISIBLE, glfwBool(false));
   //glfwWindowHint(GLFW_FOCUSED, glfwBool(false));

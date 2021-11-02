@@ -158,6 +158,7 @@ class gx::Window
   void setSizeLimits(int minWidth, int minHeight, int maxWidth, int maxHeight);
   void setMouseMode(MouseModeEnum mode);
   void setMousePos(float x, float y);
+  void setSamples(int samples);
   bool open(int flags = WINDOW_RESIZABLE);
 
   [[nodiscard]] int width() const { return _width; }
@@ -220,6 +221,7 @@ class gx::Window
   int _fsWidth = 0, _fsHeight = 0;
   int _minWidth = -1, _minHeight = -1;
   int _maxWidth = -1, _maxHeight = -1;
+  int _samples = 4; // for MSAA, 0 disables multi-sampling
   std::string _title;
   MouseModeEnum _mouseMode = MOUSE_NORMAL;
   bool _sizeSet = false;
