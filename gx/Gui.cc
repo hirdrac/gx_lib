@@ -607,13 +607,10 @@ void gx::Gui::drawElem(
         if (tw > def._w) {
           // text doesn't fit in entry
           tx -= tw - def._w;
-          dc2.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
+          dc2.hgradiant(def._x + 1.0f, _theme.colorText & 0x00ffffff,
                         def._x + float(fnt.size() / 2), _theme.colorText);
-          dc2.text(fnt, tf, tx, def._y, ALIGN_TOP_LEFT, def.text,
-                   {def._x, def._y, def._w, def._h});
         } else {
           dc2.color(_theme.colorText);
-          dc2.text(fnt, tf, tx, def._y, ALIGN_TOP_LEFT, def.text);
         }
         dc2.text(fnt, tf, tx, def._y, ALIGN_TOP_LEFT, def.text,
                  {def._x, def._y, def._w, def._h});
