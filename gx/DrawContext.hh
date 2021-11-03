@@ -45,8 +45,11 @@ class gx::DrawContext
   inline void color(float r, float g, float b, float a = 1.0f);
   inline void color(const Color& c);
   inline void color(uint32_t c);
+
   inline void hgradiant(float x0, uint32_t c0, float x1, uint32_t c1);
+  inline void hgradiant(float x0, const Color& c0, float x1, const Color& c1);
   inline void vgradiant(float y0, uint32_t c0, float y1, uint32_t c1);
+  inline void vgradiant(float y0, const Color& c0, float y1, const Color& c1);
 
   inline void lineWidth(float w);
 
@@ -218,32 +221,48 @@ void gx::DrawContext::color(uint32_t c)
 
 void gx::DrawContext::hgradiant(float x0, uint32_t c0, float x1, uint32_t c1)
 {
-  if (c0 == c1) {
-    color(c0);
-  } else {
-    _colorMode = CM_HGRADIANT;
-    _g0 = x0;
-    _c0 = c0;
-    _color0 = unpackRGBA8(c0);
-    _g1 = x1;
-    _c1 = c1;
-    _color1 = unpackRGBA8(c1);
-  }
+  _colorMode = CM_HGRADIANT;
+  _g0 = x0;
+  _c0 = c0;
+  _color0 = unpackRGBA8(c0);
+  _g1 = x1;
+  _c1 = c1;
+  _color1 = unpackRGBA8(c1);
+}
+
+void gx::DrawContext::hgradiant(
+  float x0, const Color& c0, float x1, const Color& c1)
+{
+  _colorMode = CM_HGRADIANT;
+  _g0 = x0;
+  _c0 = packRGBA8(c0);
+  _color0 = c0;
+  _g1 = x1;
+  _c1 = packRGBA8(c1);
+  _color1 = c1;
 }
 
 void gx::DrawContext::vgradiant(float y0, uint32_t c0, float y1, uint32_t c1)
 {
-  if (c0 == c1) {
-    color(c0);
-  } else {
-    _colorMode = CM_HGRADIANT;
-    _g0 = y0;
-    _c0 = c0;
-    _color0 = unpackRGBA8(c0);
-    _g1 = y1;
-    _c1 = c1;
-    _color1 = unpackRGBA8(c1);
-  }
+  _colorMode = CM_HGRADIANT;
+  _g0 = y0;
+  _c0 = c0;
+  _color0 = unpackRGBA8(c0);
+  _g1 = y1;
+  _c1 = c1;
+  _color1 = unpackRGBA8(c1);
+}
+
+void gx::DrawContext::vgradiant(
+  float y0, const Color& c0, float y1, const Color& c1)
+{
+  _colorMode = CM_HGRADIANT;
+  _g0 = y0;
+  _c0 = packRGBA8(c0);
+  _color0 = c0;
+  _g1 = y1;
+  _c1 = packRGBA8(c1);
+  _color1 = c1;
 }
 
 void gx::DrawContext::lineWidth(float w)
