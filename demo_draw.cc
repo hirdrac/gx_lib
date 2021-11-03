@@ -107,6 +107,8 @@ int main(int argc, char** argv)
   ren.setBGColor(.2f,.2f,.5f);
   fnt.makeAtlas(ren);
 
+  gx::TextFormatting tf{};
+
   for (;;) {
     // draw frame
     if (win.resized()) {
@@ -124,7 +126,7 @@ int main(int argc, char** argv)
       dc.color(gx::WHITE);
       x = y = 0;
       for (auto& [desc,fn] : functions) {
-        dc.text(fnt, x+(ITEM_WIDTH/2), y+6, gx::ALIGN_TOP_CENTER, 2, desc);
+        dc.text(fnt, tf, x+(ITEM_WIDTH/2), y+6, gx::ALIGN_TOP_CENTER, desc);
         x += ITEM_WIDTH;
         if (x > float(win.width() - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }

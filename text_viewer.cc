@@ -142,11 +142,15 @@ int main(int argc, char** argv)
   fnt.makeAtlas(ren);
 
   const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
-  const float tabWidth = fnt.calcWidth(" ") * TAB_SIZE;
   int topLine = 0;
 
   gx::DrawList dl;
   gx::DrawContext dc(dl);
+
+  gx::TextFormatting tf{};
+  tf.tabStart = 0.0f;
+  tf.tabWidth = fnt.calcWidth(" ") * TAB_SIZE;
+  tf.spacing = 0;
 
   // main loop
   bool redraw = true;
@@ -158,13 +162,12 @@ int main(int argc, char** argv)
     if (win.resized() || redraw) {
       dc.clear();
       dc.color(gx::WHITE);
-      dc.tabSize(0.0f, tabWidth);
 
       float ty = 0.0;
       int pos = topLine;
       while (pos < int(text.size()) && ty < float(win.height())) {
         if (pos >= 0) {
-          dc.text(fnt, 0.0f, ty, gx::ALIGN_TOP_LEFT, 0, text[std::size_t(pos)]);
+          dc.text(fnt, tf, 0.0f, ty, gx::ALIGN_TOP_LEFT, text[std::size_t(pos)]);
         }
         ty += float(lineHeight);
         ++pos;

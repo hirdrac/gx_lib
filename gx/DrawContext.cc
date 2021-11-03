@@ -145,12 +145,12 @@ void gx::DrawContext::rectangle(
 }
 
 void gx::DrawContext::_text(
-  const Font& f, float x, float y, AlignEnum align, int spacing,
+  const Font& f, const TextFormatting& tf, float x, float y, AlignEnum align,
   std::string_view text, const Rect* clipPtr)
 {
   if (text.empty()) { return; }
 
-  const float fs = float(f.size() + spacing);
+  const float fs = float(f.size() + tf.spacing);
   const AlignEnum h_align = HAlign(align);
   const AlignEnum v_align = VAlign(align);
 
@@ -210,8 +210,8 @@ void gx::DrawContext::_text(
     lineStart = pos + 1;
     if (endChar == '\t') {
       // adjust cursorX for tab (only for left alignment)
-      const float t = std::floor((cursorX - _tabStart) / _tabWidth) + 1.0f;
-      cursorX = _tabStart + (t * _tabWidth);
+      const float t = std::floor((cursorX - tf.tabStart) / tf.tabWidth) + 1.0f;
+      cursorX = tf.tabStart + (t * tf.tabWidth);
     } else if (endChar == '\n') {
       // move to start of next line
       cursorX = x; cursorY += fs;

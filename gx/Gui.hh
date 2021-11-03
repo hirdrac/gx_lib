@@ -25,6 +25,7 @@
 namespace gx {
   class Window;
   class DrawContext;
+  struct TextFormatting;
   class Font;
   class Gui;
   struct GuiElem;
@@ -170,7 +171,7 @@ class gx::Gui
   void init(GuiElem& def);
   void calcSize(GuiElem& def);
   void calcPos(GuiElem& def, float base_x, float base_y);
-  void drawElem(DrawContext& dc, DrawContext& dc2,
+  void drawElem(DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
                 const GuiElem& def, ButtonState bstate, bool popup) const;
   void drawRec(DrawContext& dc, const GuiElem& def, uint32_t col) const;
 

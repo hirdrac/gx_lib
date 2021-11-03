@@ -26,8 +26,15 @@
 namespace gx {
   class Font;
   class DrawContext;
+  struct TextFormatting;
 }
 
+struct gx::TextFormatting
+{
+  float tabStart = 0.0f;
+  float tabWidth = 100.0f;
+  int spacing = 0;
+};
 
 class gx::DrawContext
 {
@@ -55,9 +62,6 @@ class gx::DrawContext
 
   inline void texture(TextureID tid);
   void texture(const Texture& t) { texture(t.id()); }
-
-  void tabSize(float start, float width) {
-    _tabStart = start; _tabWidth = width; }
 
   // line drawing
   void line(Vec2 a, Vec2 b) {
@@ -139,12 +143,12 @@ class gx::DrawContext
     rectangle(r.x, r.y, r.w, r.h, t0, t1, clip); }
 
   // High-level data entry
-  void text(const Font& f, float x, float y, AlignEnum align, int spacing,
-	    std::string_view text) {
-    _text(f, x, y, align, spacing, text, nullptr); }
-  void text(const Font& f, float x, float y, AlignEnum align, int spacing,
-            std::string_view text, const Rect& clip) {
-    _text(f, x, y, align, spacing, text, &clip); }
+  void text(const Font& f, const TextFormatting& tf, float x, float y,
+            AlignEnum align, std::string_view text) {
+    _text(f, tf, x, y, align, text, nullptr); }
+  void text(const Font& f, const TextFormatting& tf, float x, float y,
+            AlignEnum align, std::string_view text, const Rect& clip) {
+    _text(f, tf, x, y, align, text, &clip); }
 
   void circleSector(
     Vec2 center, float radius, float startAngle, float endAngle, int segments);
@@ -163,24 +167,24 @@ class gx::DrawContext
 
  private:
   DrawList* _data = nullptr;
-  uint32_t _lastColor;
-  float _lastLineWidth;
-  TextureID _lastTexID;
-  float _tabStart, _tabWidth;
 
+  // general properties
+  TextureID _lastTexID;
+  float _lastLineWidth;
+
+  // color/gradiant properties
   float _g0, _g1;         // x or y gradiant coords
   uint32_t _c0, _c1;      // gradiant colors (packed)
   Color _color0, _color1; // gradiant colors (full)
-
+  uint32_t _lastColor;
   enum ColorMode { CM_SOLID, CM_HGRADIANT, CM_VGRADIANT };
   ColorMode _colorMode;
 
+
   void init() {
-    _lastColor = 0;
-    _lastLineWidth = 1.0f;
     _lastTexID = 0;
-    _tabStart = 0.0f;
-    _tabWidth = 100.0f;
+    _lastLineWidth = 1.0f;
+    _lastColor = 0;
     _colorMode = CM_SOLID;
   }
 
@@ -190,8 +194,8 @@ class gx::DrawContext
     _data->insert(_data->end(), x.begin(), x.end());
   }
 
-  void _text(const Font& f, float x, float y, AlignEnum align, int spacing,
-             std::string_view text, const Rect* clipPtr);
+  void _text(const Font& f, const TextFormatting& tf, float x, float y,
+             AlignEnum align, std::string_view text, const Rect* clipPtr);
   void _rect(float x, float y, float w, float h) {
     add(CMD_rectangle, x, y, x + w, y + h); }
 

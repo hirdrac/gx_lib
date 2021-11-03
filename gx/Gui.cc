@@ -156,19 +156,22 @@ void gx::Gui::update(Window& win)
     // 2 - popup background/frames
     // 3 - popup text
 
+    TextFormatting tf{};
+    tf.spacing = _theme.spacing;
+
     DrawContext dc0(_dlm[0]), dc1(_dlm[1]);
     dc0.clear();
     dc1.clear();
 
     drawRec(dc0, _rootElem, _theme.colorBackground);
-    drawElem(dc0, dc1, _rootElem, BSTATE_NONE, false);
+    drawElem(dc0, dc1, tf, _rootElem, BSTATE_NONE, false);
 
     if (_popupActive) {
       DrawContext dc2(_dlm[2]), dc3(_dlm[3]);
       dc2.clear();
       dc3.clear();
 
-      drawElem(dc2, dc3, _rootElem, BSTATE_NONE, true);
+      drawElem(dc2, dc3, tf, _rootElem, BSTATE_NONE, true);
     } else {
       // clear popups
       auto itr = _dlm.find(2);
@@ -529,8 +532,9 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
   }
 }
 
-void gx::Gui::drawElem(DrawContext& dc, DrawContext& dc2, const GuiElem& def,
-                       ButtonState bstate, bool popup) const
+void gx::Gui::drawElem(
+  DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
+  const GuiElem& def, ButtonState bstate, bool popup) const
 {
   if (!popup) {
     switch (def.type) {
@@ -541,8 +545,8 @@ void gx::Gui::drawElem(DrawContext& dc, DrawContext& dc2, const GuiElem& def,
         // TODO - use bstate to select different theme values
         //    (i.e. hovering over a button causes label color change)
         dc2.color(_theme.colorText);
-        dc2.text(*_theme.baseFont, def._x, def._y, ALIGN_TOP_LEFT,
-                 _theme.spacing, def.text);
+        dc2.text(*_theme.baseFont, tf, def._x, def._y, ALIGN_TOP_LEFT,
+                 def.text);
         break;
       case GUI_HLINE:
       case GUI_VLINE:
@@ -605,14 +609,14 @@ void gx::Gui::drawElem(DrawContext& dc, DrawContext& dc2, const GuiElem& def,
           tx -= tw - def._w;
           dc2.hgradiant(def._x + 1.0f, _theme.colorText &  0x00ffffff,
                         def._x + float(fnt.size() / 2), _theme.colorText);
-          dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing,
-                   def.text, {def._x, def._y, def._w, def._h});
+          dc2.text(fnt, tf, tx, def._y, ALIGN_TOP_LEFT, def.text,
+                   {def._x, def._y, def._w, def._h});
         } else {
           dc2.color(_theme.colorText);
-          dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing, def.text);
+          dc2.text(fnt, tf, tx, def._y, ALIGN_TOP_LEFT, def.text);
         }
-        dc2.text(fnt, tx, def._y, ALIGN_TOP_LEFT, _theme.spacing,
-                 def.text, {def._x, def._y, def._w, def._h});
+        dc2.text(fnt, tf, tx, def._y, ALIGN_TOP_LEFT, def.text,
+                 {def._x, def._y, def._w, def._h});
         if (def.id == _focusID && _cursorState) {
           // draw cursor
           dc.color(_theme.colorCursor);
@@ -635,11 +639,11 @@ void gx::Gui::drawElem(DrawContext& dc, DrawContext& dc2, const GuiElem& def,
 
   // draw child elements
   if (def.type != GUI_MENU) {
-    for (auto& e : def.elems) { drawElem(dc, dc2, e, bstate, popup); }
+    for (auto& e : def.elems) { drawElem(dc, dc2, tf, e, bstate, popup); }
   } else if (!popup) {
-    drawElem(dc, dc2, def.elems[0], bstate, popup);
+    drawElem(dc, dc2, tf, def.elems[0], bstate, popup);
   } else if (def._active) {
-    drawElem(dc, dc2, def.elems[1], bstate, false);
+    drawElem(dc, dc2, tf, def.elems[1], bstate, false);
   }
 }
 
