@@ -11,70 +11,36 @@
 
 void gx::DrawContext::rectangle(float x, float y, float w, float h)
 {
-  const float x0 = x;
-  const float y0 = y;
-  const float x1 = x + w;
-  const float y1 = y + h;
-  switch (_colorMode) {
-    default: {
-      add(CMD_rectangle, x0, y0, x1, y1);
-      break;
-    }
-    case CM_HGRADIANT: {
-      const uint32_t c0 = gradiantColor(x0);
-      const uint32_t c1 = gradiantColor(x1);
-      add(CMD_quad2C,
-          x0, y0, c0,
-          x1, y0, c1,
-          x0, y1, c0,
-          x1, y1, c1);
-      break;
-    }
-    case CM_VGRADIANT: {
-      const uint32_t c0 = gradiantColor(y0);
-      const uint32_t c1 = gradiantColor(y1);
-      add(CMD_quad2C,
-          x0, y0, c0,
-          x1, y0, c0,
-          x0, y1, c1,
-          x1, y1, c1);
-      break;
-    }
+  if (_colorMode == CM_SOLID) {
+    _rect(x, y, w, h);
+  } else {
+    const Vec2 A = {x,y};
+    const Vec2 B = {x+w,y};
+    const Vec2 C = {x,y+h};
+    const Vec2 D = {x+w,y+h};
+    add(CMD_quad2C,
+        A.x, A.y, pointColor(A),
+        B.x, B.y, pointColor(B),
+        C.x, C.y, pointColor(C),
+        D.x, D.y, pointColor(D));
   }
 }
 
 void gx::DrawContext::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1)
 {
-  const float x0 = x;
-  const float y0 = y;
-  const float x1 = x + w;
-  const float y1 = y + h;
-  switch (_colorMode) {
-    default: {
-      add(CMD_rectangleT, x0, y0, t0.x, t0.y, x1, y1, t1.x, t1.y);
-      break;
-    }
-    case CM_HGRADIANT: {
-      const uint32_t c0 = gradiantColor(x0);
-      const uint32_t c1 = gradiantColor(x1);
-      add(CMD_quad2TC,
-          x0, y0, t0.x, t0.y, c0,
-          x1, y0, t1.x, t0.y, c1,
-          x0, y1, t0.x, t1.y, c0,
-          x1, y1, t1.x, t1.y, c1);
-      break;
-    }
-    case CM_VGRADIANT: {
-      const uint32_t c0 = gradiantColor(y0);
-      const uint32_t c1 = gradiantColor(y1);
-      add(CMD_quad2TC,
-          x0, y0, t0.x, t0.y, c0,
-          x1, y0, t1.x, t0.y, c0,
-          x0, y1, t0.x, t1.y, c1,
-          x1, y1, t1.x, t1.y, c1);
-      break;
-    }
+  if (_colorMode == CM_SOLID) {
+    add(CMD_rectangleT, x, y, t0.x, t0.y, x+w, y+h, t1.x, t1.y);
+  } else {
+    const Vec2 A = {x,y};
+    const Vec2 B = {x+w,y};
+    const Vec2 C = {x,y+h};
+    const Vec2 D = {x+w,y+h};
+    add(CMD_quad2TC,
+        A.x, A.y, t0.x, t0.y, pointColor(A),
+        B.x, B.y, t1.x, t0.y, pointColor(B),
+        C.x, C.y, t0.x, t1.y, pointColor(C),
+        D.x, D.y, t1.x, t1.y, pointColor(D));
   }
 }
 
@@ -97,50 +63,33 @@ void gx::DrawContext::rectangle(
   float tx0 = t0.x;
   float tx1 = t1.x;
   if (x0 < cx0) { // left edge clipped
-    tx0 = tx1 - ((tx1 - tx0) * ((x1 - cx0) / (x1 - x0)));
+    tx0 += (tx1 - tx0) * ((cx0 - x0) / (x1 - x0));
     x0 = cx0;
   }
   if (x1 > cx1) { // right edge clipped
-    tx1 = tx0 + ((tx1 - tx0) * ((cx1 - x0) / (x1 - x0)));
+    tx1 -= (tx1 - tx0) * ((x1 - cx1) / (x1 - x0));
     x1 = cx1;
   }
 
   float ty0 = t0.y;
   float ty1 = t1.y;
   if (y0 < cy0) { // top clipped
-    ty0 = ty1 - ((ty1 - ty0) * ((y1 - cy0) / (y1 - y0)));
+    ty0 += (ty1 - ty0) * ((cy0 - y0) / (y1 - y0));
     y0 = cy0;
   }
   if (y1 > cy1) { // bottom clipped
-    ty1 = ty0 + ((ty1 - ty0) * ((cy1 - y0) / (y1 - y0)));
+    ty1 -= (ty1 - ty0) * ((y1 - cy1) / (y1 - y0));
     y1 = cy1;
   }
 
-  switch (_colorMode) {
-    default: {
-      add(CMD_rectangleT, x0, y0, tx0, ty0, x1, y1, tx1, ty1);
-      break;
-    }
-    case CM_HGRADIANT: {
-      const uint32_t c0 = gradiantColor(x0);
-      const uint32_t c1 = gradiantColor(x1);
-      add(CMD_quad2TC,
-          x0, y0, tx0, ty0, c0,
-          x1, y0, tx1, ty0, c1,
-          x0, y1, tx0, ty1, c0,
-          x1, y1, tx1, ty1, c1);
-      break;
-    }
-    case CM_VGRADIANT: {
-      const uint32_t c0 = gradiantColor(y0);
-      const uint32_t c1 = gradiantColor(y1);
-      add(CMD_quad2TC,
-          x0, y0, tx0, ty0, c0,
-          x1, y0, tx1, ty0, c0,
-          x0, y1, tx0, ty1, c1,
-          x1, y1, tx1, ty1, c1);
-      break;
-    }
+  if (_colorMode == CM_SOLID) {
+    add(CMD_rectangleT, x0, y0, tx0, ty0, x1, y1, tx1, ty1);
+  } else {
+    add(CMD_quad2TC,
+        x0, y0, tx0, ty0, pointColor({x0,y0}),
+        x1, y0, tx1, ty0, pointColor({x1,y0}),
+        x0, y1, tx0, ty1, pointColor({x0,y1}),
+        x1, y1, tx1, ty1, pointColor({x1,y1}));
   }
 }
 

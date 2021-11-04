@@ -198,6 +198,14 @@ class gx::DrawContext
     add(CMD_rectangle, x, y, x + w, y + h); }
 
   [[nodiscard]] inline uint32_t gradiantColor(float g) const;
+
+  [[nodiscard]] uint32_t pointColor(Vec2 pt) const {
+    switch (_colorMode) {
+      default:           return _lastColor;
+      case CM_HGRADIANT: return gradiantColor(pt.x);
+      case CM_VGRADIANT: return gradiantColor(pt.y);
+    }
+  }
 };
 
 
