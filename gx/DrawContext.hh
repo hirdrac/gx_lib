@@ -31,9 +31,7 @@ namespace gx {
 
 struct gx::TextFormatting
 {
-  float tabStart = 0.0f;
-  float tabWidth = 100.0f;
-  int spacing = 0;
+  float spacing = 0;
 };
 
 class gx::DrawContext

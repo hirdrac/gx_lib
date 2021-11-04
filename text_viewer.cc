@@ -21,6 +21,7 @@
 
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <algorithm>
 
@@ -141,16 +142,13 @@ int main(int argc, char** argv)
   ren.setBGColor(.2f,.2f,.2f);
   fnt.makeAtlas(ren);
 
+  const float tabWidth = fnt.calcWidth(" ") * TAB_SIZE;
   const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
   int topLine = 0;
 
   gx::DrawList dl;
-  gx::DrawContext dc(dl);
-
+  gx::DrawContext dc{dl};
   gx::TextFormatting tf{};
-  tf.tabStart = 0.0f;
-  tf.tabWidth = fnt.calcWidth(" ") * TAB_SIZE;
-  tf.spacing = 0;
 
   // main loop
   bool redraw = true;
@@ -163,14 +161,28 @@ int main(int argc, char** argv)
       dc.clear();
       dc.color(gx::WHITE);
 
-      float ty = 0.0;
-      int pos = topLine;
-      while (pos < int(text.size()) && ty < float(win.height())) {
-        if (pos >= 0) {
-          dc.text(fnt, tf, 0.0f, ty, gx::ALIGN_TOP_LEFT, text[std::size_t(pos)]);
+      float ty = 0;
+      int lineNo = topLine;
+      while (lineNo < int(text.size()) && ty < float(win.height())) {
+        if (lineNo >= 0) {
+          const std::string_view line = text[std::size_t(lineNo)];
+          float tx = 0;
+          std::size_t i = 0;
+          while (i < line.size()) {
+            const std::size_t tabPos = line.find('\t',i);
+            const std::size_t count =
+              (tabPos == std::string_view::npos) ? tabPos : tabPos - i;
+            const std::string_view segment = line.substr(i,count);
+            dc.text(fnt, tf, tx, ty, gx::ALIGN_TOP_LEFT, segment);
+            i += segment.size() + 1;
+            if (tabPos != std::string_view::npos) {
+              const float tx2 = tx + fnt.calcWidth(segment);
+              tx = (std::floor(tx2 / tabWidth) + 1.0f) * tabWidth;
+            }
+          }
         }
         ty += float(lineHeight);
-        ++pos;
+        ++lineNo;
       }
 
       ren.clearFrame(win.width(), win.height());

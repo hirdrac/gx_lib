@@ -150,7 +150,7 @@ void gx::DrawContext::_text(
 {
   if (text.empty()) { return; }
 
-  const float fs = float(f.size() + tf.spacing);
+  const float fs = float(f.size()) + tf.spacing;
   const AlignEnum h_align = HAlign(align);
   const AlignEnum v_align = VAlign(align);
 
@@ -172,10 +172,7 @@ void gx::DrawContext::_text(
   float cursorX = x;
 
   for (;;) {
-    const std::size_t pos = (h_align == ALIGN_LEFT)
-      ? text.find_first_of("\t\n", lineStart) : text.find('\n', lineStart);
-    const int endChar = (pos != std::string_view::npos) ? text[pos] : '\0';
-
+    const std::size_t pos = text.find('\n', lineStart);
     const std::string_view line = text.substr(
       lineStart, (pos != std::string_view::npos) ? (pos - lineStart) : pos);
 
@@ -205,17 +202,11 @@ void gx::DrawContext::_text(
       }
     }
 
-    if (!endChar) { break; }
+    if (pos == std::string_view::npos) { break; }
 
+    // move to start of next line
     lineStart = pos + 1;
-    if (endChar == '\t') {
-      // adjust cursorX for tab (only for left alignment)
-      const float t = std::floor((cursorX - tf.tabStart) / tf.tabWidth) + 1.0f;
-      cursorX = tf.tabStart + (t * tf.tabWidth);
-    } else if (endChar == '\n') {
-      // move to start of next line
-      cursorX = x; cursorY += fs;
-    }
+    cursorX = x; cursorY += fs;
   }
 }
 
