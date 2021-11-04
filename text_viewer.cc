@@ -10,6 +10,8 @@
 // TODO - line number on left side?  (instead of just current line)
 // TODO - small text display on side with current view hi-lighted (like VS code)
 // TODO - goto line GUI
+// TODO - option to show gfx for space/tab/newline characters
+// TODO - allow drag (button1 down, mouse move) to scroll text
 
 #include "gx/Window.hh"
 #include "gx/Renderer.hh"
@@ -30,8 +32,8 @@ constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
 constexpr int DEFAULT_FONT_SIZE = 20;
 constexpr int DEFAULT_LINE_SPACING = 0;
+constexpr int DEFAULT_TAB_SIZE = 8;
 
-constexpr int TAB_SIZE = 8;
 constexpr int SCROLL_STEP = 3;
 
 // font data from FixedWidthFontData.cc
@@ -44,10 +46,11 @@ int showUsage(char** argv)
 {
   gx::println("Usage: ", argv[0], " [options] <text file>");
   gx::println("Options:");
-  gx::println("  -f,--font  Font file (defaults to embeded '", FixedWidthFontDataName ,"')");
-  gx::println("  -s,--size  Font size (defaults to ", DEFAULT_FONT_SIZE, ")");
-  gx::println("  -l,--line  Line spacing (defaults to ", DEFAULT_LINE_SPACING, ")");
-  gx::println("  -h,--help  Show usage");
+  gx::println("  -f,--font=[]  Font file (defaults to embeded ", FixedWidthFontDataName ,")");
+  gx::println("  -s,--size=[]  Font size (default ", DEFAULT_FONT_SIZE, ")");
+  gx::println("  -l,--line=[]  Line spacing (default ", DEFAULT_LINE_SPACING, ")");
+  gx::println("  -t,--tab=[]   Tab size (default 8)");
+  gx::println("  -h,--help     Show usage");
   return 0;
 }
 
@@ -69,6 +72,7 @@ int main(int argc, char** argv)
   std::string fontName;
   int fontSize = DEFAULT_FONT_SIZE;
   int lineSpacing = DEFAULT_LINE_SPACING;
+  int tabSize = DEFAULT_TAB_SIZE;
 
   for (gx::CmdLineParser p(argc, argv); p; ++p) {
     if (p.option()) {
@@ -86,6 +90,8 @@ int main(int argc, char** argv)
         }
       } else if (p.option('l',"line", lineSpacing)) {
         // no lineSpacing value checking currently
+      } else if (p.option('t',"tab", tabSize)) {
+        // no tabSize value checking currently
       } else {
         gx::println_err("ERROR: Bad option '", p.arg(), "'");
         return errorUsage(argv);
@@ -142,7 +148,7 @@ int main(int argc, char** argv)
   ren.setBGColor(.2f,.2f,.2f);
   fnt.makeAtlas(ren);
 
-  const float tabWidth = fnt.calcWidth(" ") * TAB_SIZE;
+  const float tabWidth = fnt.calcWidth(" ") * float(tabSize);
   const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
   int topLine = 0;
 
