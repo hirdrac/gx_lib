@@ -42,6 +42,10 @@ BIN11.SRC = demo_draw.cc
 BIN11.LIBS = LIB_gx
 
 
+# unit tests
+TEST_MathUtil.SRC = tests/MathUtilTest.cc
+
+
 STANDARD = c++17
 OPTIONS = lto modern_c++
 # NOTE: lto doesn't work for clang on MINGW64/MSys2
