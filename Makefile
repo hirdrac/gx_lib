@@ -43,8 +43,9 @@ BIN11.LIBS = LIB_gx
 
 
 # unit tests
-FLAGS_TEST = -I.
+FLAGS_TEST = -I. -UNDEBUG
 TEST_MathUtil.SRC = tests/MathUtilTest.cc
+TEST_StringUtil.SRC = tests/StringUtilTest.cc
 
 
 STANDARD = c++17
