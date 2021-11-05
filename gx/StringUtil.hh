@@ -35,7 +35,7 @@ namespace gx
     } else if (n == std::numeric_limits<IntType>::min()) {
       v = uint64_t{std::numeric_limits<IntType>::max()} + 1;
     } else {
-      v = (n<0) ? -n : n;
+      v = static_cast<uint64_t>((n<0) ? -n : n);
     }
 
     char tmp[32];
@@ -44,7 +44,7 @@ namespace gx
 
     int i = 0;
     for (; v > 0; v /= 10) {
-      *(--ptr) = '0' + (v % 10);
+      *(--ptr) = char('0' + (v % 10));
       if (v >= 10 && (++i % 3) == 0) { *(--ptr) = separator; }
     }
 
