@@ -3,6 +3,14 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
+// TODO - fullscreen zoom w/ mouse wheel
+// TODO - mouse drag of image when zoomed
+// TODO - background loading of images after 1st image loaded
+// TODO - multiple image display in fullscreen (horizontal/vertical)
+// TODO - smooth scrolling when moving to next image
+// TODO - don't scroll if all images can fit on screen?
+// TODO - make texture mag filter configurable? ('smooth' mode would use linear)
+
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
 #include "gx/Window.hh"
@@ -14,14 +22,6 @@
 #include "gx/StringUtil.hh"
 #include <vector>
 
-
-// TODO: fullscreen zoom w/ mouse wheel
-// TODO: mouse drag of image when zoomed
-// TODO: background loading of images after 1st image loaded
-// TODO: multiple image display in fullscreen (horizontal/vertical)
-// TODO: smooth scrolling when moving to next image
-// TODO: don't scroll if all images can fit on screen?
-// TODO: make texture mag filter configurable? ('smooth' mode would use linear)
 
 struct Entry
 {
