@@ -43,6 +43,7 @@ BIN11.LIBS = LIB_gx
 
 
 # unit tests
+FLAGS_TEST = -I.
 TEST_MathUtil.SRC = tests/MathUtilTest.cc
 
 

@@ -3,7 +3,7 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-#include "../gx/MathUtil.hh"
+#include "gx/MathUtil.hh"
 #include <cassert>
 
 
