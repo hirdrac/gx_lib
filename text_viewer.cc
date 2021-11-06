@@ -2,6 +2,8 @@
 // text_viewer.cc
 // Copyright (C) 2021 Richard Bradley
 //
+// gx_lib example program for text rendering & basic event handling
+//
 
 // TODO - smooth scrolling
 // TODO - left/right scroll with cursor keys to see long lines
@@ -9,9 +11,11 @@
 // TODO - status bar with filename, current line
 // TODO - line number on left side?  (instead of just current line)
 // TODO - small text display on side with current view hi-lighted (like VS code)
-// TODO - goto line GUI
+// TODO - goto line GUI (control-g)
 // TODO - option to show gfx for space/tab/newline characters
-// TODO - allow drag (button1 down, mouse move) to scroll text
+// TODO - allow drag (button2/3 down, mouse move) to scroll text
+// TODO - text selection and copy (button1 w/ mouse, control-C to copy)
+// TODO - find GUI (control-f)
 
 #include "gx/Window.hh"
 #include "gx/Renderer.hh"
@@ -46,7 +50,7 @@ int showUsage(char** argv)
 {
   gx::println("Usage: ", argv[0], " [options] <text file>");
   gx::println("Options:");
-  gx::println("  -f,--font=[]  Font file (defaults to embeded ", FixedWidthFontDataName ,")");
+  gx::println("  -f,--font=[]  Font file (defaults to embedded ", FixedWidthFontDataName ,")");
   gx::println("  -s,--size=[]  Font size (default ", DEFAULT_FONT_SIZE, ")");
   gx::println("  -l,--line=[]  Line spacing (default ", DEFAULT_LINE_SPACING, ")");
   gx::println("  -t,--tab=[]   Tab size (default 8)");
@@ -128,7 +132,7 @@ int main(int argc, char** argv)
   gx::Font fnt;
   if (fontName.empty()) {
     if (!fnt.loadFromMemory(FixedWidthFontData, FixedWidthFontDataSize, fontSize)) {
-      gx::println_err("ERROR: Failed to load embeded font");
+      gx::println_err("ERROR: Failed to load embedded font");
       return -1;
     }
   } else if (!fnt.load(fontName, fontSize)) {
