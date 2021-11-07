@@ -9,6 +9,24 @@
 #include "MathUtil.hh"
 
 
+namespace {
+  [[nodiscard]] constexpr float min4(float a, float b, float c, float d) {
+    return std::min(std::min(a,b),std::min(c,d));
+  }
+
+  [[nodiscard]] constexpr float max4(float a, float b, float c, float d) {
+    return std::max(std::max(a,b),std::max(c,d));
+  }
+
+  using gx::Vec2;
+  [[nodiscard]] constexpr float triangleArea(Vec2 a, Vec2 b, Vec2 c) {
+    // triangle_area = len(cross(B-A,C-A)) / 2
+    Vec2 ba = b-a, ca = c-a;
+    return gx::abs((ba.x * ca.y) - (ba.y * ca.x)) * .5f;
+  }
+}
+
+
 void gx::DrawContext::rectangle(float x, float y, float w, float h)
 {
   if (_colorMode == CM_SOLID) {
@@ -102,23 +120,23 @@ void gx::DrawContext::_text(
   const float fs = float(f.size()) + tf.spacing;
   const AlignEnum h_align = HAlign(align);
   const AlignEnum v_align = VAlign(align);
+  Vec2 cursor = {x,y};
 
-  float cursorY = y;
   if (v_align == ALIGN_TOP) {
-    cursorY += f.ymax();
+    cursor += tf.advY * f.ymax();
   } else {
     int nl = 0;
     for (char ch : text) { nl += int(ch == '\n'); }
     if (v_align == ALIGN_BOTTOM) {
-      cursorY += f.ymin() - (fs*float(nl));
+      cursor += tf.advY * (f.ymin() - (fs*float(nl)));
     } else { // ALIGN_VCENTER
-      cursorY += (f.ymax() - (fs*float(nl))) * .5f;
+      cursor += tf.advY * ((f.ymax() - (fs*float(nl))) * .5f);
     }
   }
 
   texture(f.tex());
   std::size_t lineStart = 0;
-  float cursorX = x;
+  Vec2 startCursor = cursor;
 
   for (;;) {
     const std::size_t pos = text.find('\n', lineStart);
@@ -128,26 +146,17 @@ void gx::DrawContext::_text(
     if (!line.empty()) {
       if (h_align != ALIGN_LEFT) {
         const float tw = f.calcWidth(line);
-        cursorX -= (h_align == ALIGN_RIGHT) ? tw : (tw * .5f);
+        cursor -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
       }
 
       for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
         int ch = itr.get();
         if (ch == '\t') { ch = ' '; }
         const Glyph* g = f.findGlyph(ch);
-        if (!g) { continue; }
-
-        if (g->bitmap) {
-          // convert x,y to int to make sure text is pixel aligned
-          const float gx = float(int(cursorX + g->left));
-          const float gy = float(int(cursorY - g->top));
-          if (clipPtr) {
-            rectangle(gx, gy, g->width, g->height, g->t0, g->t1, *clipPtr);
-          } else {
-            rectangle(gx, gy, g->width, g->height, g->t0, g->t1);
-          }
+        if (g) {
+          if (g->bitmap) { _glyph(*g, tf, cursor, clipPtr); }
+          cursor += tf.advX * g->advX;
         }
-        cursorX += g->advX;
       }
     }
 
@@ -155,7 +164,109 @@ void gx::DrawContext::_text(
 
     // move to start of next line
     lineStart = pos + 1;
-    cursorX = x; cursorY += fs;
+    startCursor += tf.advY * fs;
+    cursor = startCursor;
+  }
+}
+
+void gx::DrawContext::_glyph(
+  const Glyph& g, const TextFormatting& tf, Vec2 cursor, const Rect* clipPtr)
+{
+  const Vec2 gx = tf.glyphX * float(g.width);
+  const Vec2 gy = tf.glyphY * float(g.height);
+
+  // quad: A-B
+  //       |/|
+  //       C-D
+
+  Vec2 A = cursor + (tf.glyphX * g.left) - (tf.glyphY * g.top);
+  Vec2 B = A + gx;
+  Vec2 C = A + gy;
+  Vec2 D = C + gx;
+
+  Vec2 At = {g.t0.x, g.t0.y};
+  Vec2 Bt = {g.t1.x, g.t0.y};
+  Vec2 Ct = {g.t0.x, g.t1.y};
+  Vec2 Dt = {g.t1.x, g.t1.y};
+
+  if (clipPtr) {
+    const float cx0 = clipPtr->x;
+    const float cy0 = clipPtr->y;
+    const float cx1 = cx0 + clipPtr->w;
+    const float cy1 = cy0 + clipPtr->h;
+
+    // discard check
+    if (max4(A.x, B.x, C.x, D.x) <= cx0
+        || min4(A.x, B.x, C.x, D.x) >= cx1
+        || max4(A.y, B.y, C.y, D.y) <= cy0
+        || min4(A.y, B.y, C.y, D.y) >= cy1) { return; }
+
+    // (overly) simplified clipping of quad
+    // note that too much can be clipped if quad is not at a
+    // 0/90/180/270 degree rotation since no new triangles are
+    // created as part of the clipping
+
+    const Vec2 newA = {std::clamp(A.x,cx0,cx1), std::clamp(A.y,cy0,cy1)};
+    const Vec2 newB = {std::clamp(B.x,cx0,cx1), std::clamp(B.y,cy0,cy1)};
+    const Vec2 newC = {std::clamp(C.x,cx0,cx1), std::clamp(C.y,cy0,cy1)};
+    const Vec2 newD = {std::clamp(D.x,cx0,cx1), std::clamp(D.y,cy0,cy1)};
+    Vec2 newAt = At, newBt = Bt, newCt = Ct, newDt = Dt;
+
+    // use barycentric coordinates to update texture coords
+    // P = uA + vB + wC
+    // u = triangle_BCP_area / triangle_ABC_area
+    // v = triangle_CAP_area / triangle_ABC_area
+    // w = triangle_ABP_area / triangle_ABC_area
+    //     (if inside triangle, w = 1 - u - v)
+
+    if (A != newA) {
+      const float area = triangleArea(A,B,C);
+      const float u = triangleArea(B,C,newA) / area;
+      const float v = triangleArea(C,A,newA) / area;
+      const float w = 1.0f - u - v; // A,B,newA
+      newAt = At*u + Bt*v + Ct*w;
+    }
+
+    if (B != newB) {
+      const float area = triangleArea(B,D,A);
+      const float u = triangleArea(D,A,newB) / area;
+      const float v = triangleArea(C,B,newB) / area;
+      const float w = 1.0f - u - v; // B,D,newB
+      newBt = Bt*u + Dt*v + A*w;
+    }
+
+    if (C != newC) {
+      const float area = triangleArea(C,A,D);
+      const float u = triangleArea(A,D,newC) / area;
+      const float v = triangleArea(D,C,newC) / area;
+      const float w = 1.0f - u - v; // C,A,newC
+      newCt = Ct*u + At*v + Dt*w;
+    }
+
+    if (D != newD) {
+      const float area = triangleArea(D,C,B);
+      const float u = triangleArea(C,B,newD) / area;
+      const float v = triangleArea(B,D,newD) / area;
+      const float w = 1.0f - u - v; // D,C,newD
+      newDt = Dt*u + Ct*v + Bt*w;
+    }
+
+    A = newA; B = newB; C = newC; D = newD;
+    At = newAt; Bt = newBt; Ct = newCt; Dt = newDt;
+  }
+
+  if (_colorMode == CM_SOLID) {
+    add(CMD_quad2T,
+        A.x, A.y, At.x, At.y,
+        B.x, B.y, Bt.x, Bt.y,
+        C.x, C.y, Ct.x, Ct.y,
+        D.x, D.y, Dt.x, Dt.y);
+  } else {
+    add(CMD_quad2TC,
+        A.x, A.y, At.x, At.y, pointColor(A),
+        B.x, B.y, Bt.x, Bt.y, pointColor(B),
+        C.x, C.y, Ct.x, Ct.y, pointColor(C),
+        D.x, D.y, Dt.x, Dt.y, pointColor(D));
   }
 }
 

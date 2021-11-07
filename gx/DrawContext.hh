@@ -3,9 +3,6 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - text vertical/horizontal scaling & rotation
-//        * need X/Y basis (used for scale,angle,slant of glyph quads)
-//        * not sure how to support clipping or color gradiants
 // TODO - support color gradiant for primitives other than rectangle
 // TODO - textured roundedRectangle()
 // TODO - continuous lines [lineX <vertex count> <v1> <v2> ...]
@@ -25,6 +22,7 @@
 
 namespace gx {
   class Font;
+  struct Glyph;
   class DrawContext;
   struct TextFormatting;
 }
@@ -32,6 +30,10 @@ namespace gx {
 struct gx::TextFormatting
 {
   float spacing = 0;
+  Vec2 advX = {1,0};    // dir of next character
+  Vec2 advY = {0,1};    // dir of next line
+  Vec2 glyphX = {1,0};  // glyph quad sides
+  Vec2 glyphY = {0,1};
 };
 
 class gx::DrawContext
@@ -194,6 +196,8 @@ class gx::DrawContext
 
   void _text(const Font& f, const TextFormatting& tf, float x, float y,
              AlignEnum align, std::string_view text, const Rect* clipPtr);
+  void _glyph(const Glyph& g, const TextFormatting& tf, Vec2 cursor,
+              const Rect* clipPtr);
   void _rect(float x, float y, float w, float h) {
     add(CMD_rectangle, x, y, x + w, y + h); }
 
