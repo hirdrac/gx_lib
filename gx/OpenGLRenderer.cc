@@ -15,7 +15,7 @@
 #include "Camera.hh"
 #include "Logger.hh"
 #include "OpenGL.hh"
-#include "Print.hh"
+//#include "Print.hh"
 #include <GLFW/glfw3.h>
 #include <cassert>
 
@@ -101,6 +101,7 @@ namespace {
 void gx::OpenGLRenderer::setWindowHints(bool debug)
 {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+  //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -274,7 +275,7 @@ void gx::OpenGLRenderer::setupBuffer()
 
     const DrawEntry* d = data;
     while (d < data_end) {
-      DrawCmd cmd = d->cmd;
+      const DrawCmd cmd = d->cmd;
       switch (cmd) {
         case CMD_color:        d += 2; break;
         case CMD_texture:      d += 2; break;
@@ -351,14 +352,14 @@ void gx::OpenGLRenderer::setupBuffer()
     TextureID tid = 0;
     float lw = 1.0f;
 
-    uint32_t modColor = layer.modColor;
+    const uint32_t modColor = layer.modColor;
     if (layer.cap != -1) { cap = layer.cap; }
     if (layer.transformID != -1) { transID = layer.transformID; }
 
     const DrawEntry* data      = layer.drawData.data();
     const DrawEntry* data_end  = data + layer.drawData.size();
     for (const DrawEntry* d = data; d != data_end; ) {
-      DrawCmd cmd = (d++)->cmd;
+      const DrawCmd cmd = (d++)->cmd;
       switch (cmd) {
         case CMD_color:     color = uval(d); break;
         case CMD_texture:   tid   = uval(d); break;
@@ -721,8 +722,8 @@ void gx::OpenGLRenderer::setGLCapabilities(int cap)
 
 void gx::OpenGLRenderer::setCullFace(int cap)
 {
-  bool cw = cap & CULL_CW;
-  bool ccw = cap & CULL_CCW;
+  const bool cw = cap & CULL_CW;
+  const bool ccw = cap & CULL_CCW;
   // front face set to clockwise in renderFrame()
   if (cw && ccw) {
     GX_GLCALL(glCullFace, GL_FRONT_AND_BACK);
