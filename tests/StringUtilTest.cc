@@ -36,6 +36,9 @@ void test_formatInt()
   assert(gx::formatInt(-123456789) == "-123,456,789");
   assert(gx::formatInt(-1234567890) == "-1,234,567,890");
   assert(gx::formatInt(-12345678901) == "-12,345,678,901");
+
+  assert(gx::formatInt(123456789,'.') == "123.456.789");
+  assert(gx::formatInt(-123456789,'_') == "-123_456_789");
 }
 
 int main(int argc, char** argv)
