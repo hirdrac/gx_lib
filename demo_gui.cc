@@ -65,11 +65,11 @@ int main(int argc, char* argv[])
   gx::Gui gui3(
     gx::guiVFrame(
       gx::guiHFrame(
-        gx::guiLabel("R"), gx::guiEntry(3.5f,3,1),
-        gx::guiLabel(" G"), gx::guiEntry(3.5f,3,2),
-        gx::guiLabel(" B"), gx::guiEntry(3.5f,3,3)),
+        gx::guiLabel("R"), gx::guiCardinalEntry(3.5f,3,1),
+        gx::guiLabel(" G"), gx::guiCardinalEntry(3.5f,3,2),
+        gx::guiLabel(" B"), gx::guiCardinalEntry(3.5f,3,3)),
       gx::guiHLine(),
-      gx::guiEntry(16.0f,100,10)));
+      gx::guiTextEntry(16.0f,100,10)));
   gui3.layout(theme, 60, 300, gx::ALIGN_TOP_LEFT);
 
   gx::Window win;

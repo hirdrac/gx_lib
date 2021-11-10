@@ -3,10 +3,10 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - handle tab/enter/mouse select differently for entry
-// TODO - cursor movement for entry
-// TODO - allow right button to open menus & select menu items
-// TODO - 'stay open' logic for menus (quick click/release on menu?)
+// TODO: handle tab/enter/mouse select differently for entry
+// TODO: cursor movement for entry
+// TODO: allow right button to open menus & select menu items
+// TODO: 'stay open' logic for menus (quick click/release on menu?)
 
 #include "Gui.hh"
 #include "Window.hh"
@@ -81,6 +81,40 @@ namespace {
       }
     }
     return nullptr;
+  }
+
+  bool addEntryChar(gx::GuiElem& e, int32_t codepoint)
+  {
+    assert(e.type == gx::GUI_ENTRY);
+
+    if (e.entry.maxLength != 0
+        && gx::lengthUTF8(e.text) >= e.entry.maxLength) {
+      return false; // no space for character
+    }
+
+    switch (e.entry.type) {
+      default: // ENTRY_TEXT, ENTRY_PASSWORD
+        if (codepoint <= 31) { return false; }
+        break;
+      case gx::ENTRY_CARDINAL:
+        if (!std::isdigit(codepoint)) { return false; }
+        // TODO: remove preceeding zeros if additional numbers are entered
+        break;
+      case gx::ENTRY_INTEGER:
+        if (!std::isdigit(codepoint) && codepoint != '-') { return false; }
+        if (codepoint == '-' && !e.text.empty()) { return false; }
+        // TODO: remove preceeding zeros if additional numbers are entered
+        break;
+      case gx::ENTRY_FLOAT:
+        if (!std::isdigit(codepoint) && codepoint != '-'
+            && codepoint != '.' ) { return false; }
+        if (codepoint == '-' && !e.text.empty()) { return false; }
+        // TODO: prevent multiple '.'
+        break;
+    }
+
+    e.text += gx::toUTF8(codepoint);
+    return true;
   }
 }
 
@@ -279,26 +313,22 @@ void gx::Gui::processCharEvent(Window& win)
   assert(e->type == GUI_ENTRY);
 
   bool usedEvent = false;
-  int len = lengthUTF8(e->text);
   for (const CharInfo& c : win.charData()) {
     if (c.codepoint) {
-      usedEvent = true;
-      if (e->entry.maxLength == 0 || len < e->entry.maxLength) {
-        e->text += toUTF8(c.codepoint);
-        ++len;
+      if (addEntryChar(*e, c.codepoint)) {
+        usedEvent = true;
         _needRender = true;
         _textChanged = true;
         //println("char: ", c.codepoint);
       }
+      // TODO: flash 'error' color if char isn't added
     } else if (c.key == KEY_BACKSPACE) {
       usedEvent = true;
       if (!e->text.empty()) {
         if (c.mods == MOD_ALT) {
           e->text.clear();
-          len = 0;
         } else {
           popbackUTF8(e->text);
-          --len;
         }
         _needRender = true;
         _textChanged = true;
@@ -309,14 +339,12 @@ void gx::Gui::processCharEvent(Window& win)
       usedEvent = true;
       std::string cb = getClipboard();
       std::string_view line(cb.data(), cb.find('\n'));
+      bool added = false;
       for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
-        int code = itr.get();
-        if (code > 31 && (e->entry.maxLength == 0 || len < e->entry.maxLength)) {
-          e->text += toUTF8(code);
-          ++len;
-          _needRender = true;
-        }
+        added |= addEntryChar(*e, itr.get());
       }
+      _needRender |= added;
+      _textChanged |= added;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       GuiElem* next = findNextElem(_focusID, GUI_ENTRY);
       setFocusID(next ? next->id : 0);
@@ -326,12 +354,14 @@ void gx::Gui::processCharEvent(Window& win)
       setFocusID(prev ? prev->id : 0);
       usedEvent = true;
     }
+    // TODO: handle KEY_LEFT, KEY_RIGHT for cursor movement
   }
 
   if (usedEvent) {
     win.removeEvent(EVENT_CHAR);
     // reset cursor blink state
     _lastCursorUpdate = win.lastPollTime();
+    _needRender |= !_cursorState;
     _cursorState = true;
   }
 }
@@ -542,7 +572,7 @@ void gx::Gui::drawElem(
       case GUI_VFRAME:
         break;
       case GUI_LABEL:
-        // TODO - use bstate to select different theme values
+        // TODO: use bstate to select different theme values
         //    (i.e. hovering over a button causes label color change)
         dc2.color(_theme.colorText);
         dc2.text(*_theme.baseFont, tf, def._x, def._y, ALIGN_TOP_LEFT,
@@ -600,6 +630,7 @@ void gx::Gui::drawElem(
         if (def.id == _focusID) {
           drawRec(dc, def, _theme.colorEntryFocus);
           tw += float(1 + _theme.cursorWidth);
+          // TODO: handle variable cursor position
         } else {
           drawRec(dc, def, _theme.colorEntry);
         }
@@ -609,11 +640,14 @@ void gx::Gui::drawElem(
           tx -= tw - def._w;
           dc2.hgradiant(def._x + 1.0f, _theme.colorText & 0x00ffffff,
                         def._x + float(fnt.size() / 2), _theme.colorText);
+          // TODO: gradiant dim at both ends if moving cursor in long string
+          // TODO: left margin for start of entry text
         } else {
           dc2.color(_theme.colorText);
         }
         dc2.text(fnt, tf, tx, def._y, ALIGN_TOP_LEFT, def.text,
                  {def._x, def._y, def._w, def._h});
+        // TODO: draw all characters as '*' for password entries
         if (def.id == _focusID && _cursorState) {
           // draw cursor
           dc.color(_theme.colorCursor);
@@ -635,12 +669,16 @@ void gx::Gui::drawElem(
   }
 
   // draw child elements
-  if (def.type != GUI_MENU) {
+  if (def.type == GUI_MENU) {
+    if (!popup) {
+      // menu label
+      drawElem(dc, dc2, tf, def.elems[0], bstate, false);
+    } else if (def._active) {
+      // menu items
+      drawElem(dc, dc2, tf, def.elems[1], bstate, false);
+    }
+  } else {
     for (auto& e : def.elems) { drawElem(dc, dc2, tf, e, bstate, popup); }
-  } else if (!popup) {
-    drawElem(dc, dc2, tf, def.elems[0], bstate, popup);
-  } else if (def._active) {
-    drawElem(dc, dc2, tf, def.elems[1], bstate, false);
   }
 }
 

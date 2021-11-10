@@ -5,12 +5,11 @@
 // Graphical user interface rendering & event handling
 //
 
-// TODO - sub menus
-// TODO - menu item key short-cuts
-// TODO - list select (combo box)
-// TODO - control allowed char types for entry (numeric only, etc.)
-// TODO - theme text colors for button state & entry text
-// TODO - modal dialog
+// TODO: sub menus
+// TODO: menu item key short-cuts
+// TODO: list select (combo box)
+// TODO: theme text colors for button state & entry text
+// TODO: modal dialog
 
 #pragma once
 #include "DrawList.hh"
@@ -55,6 +54,14 @@ namespace gx {
     BSTATE_HELD_ONLY  // previously pressed & mouse left button still held
                       //   but pointer not over button
   };
+
+  enum EntryType {
+    ENTRY_TEXT,     // all characters valid
+    ENTRY_CARDINAL, // positive integer
+    ENTRY_INTEGER,  // positive/negitive integer
+    ENTRY_FLOAT,    // floating point number
+    ENTRY_PASSWORD  // all characters valid w/ output hidden
+  };
 }
 
 
@@ -71,6 +78,7 @@ struct gx::GuiElem
   struct EntryProps {
     float size; // width in characters
     int maxLength;
+    EntryType type;
   };
 
   struct ImageProps {
@@ -88,9 +96,9 @@ struct gx::GuiElem
   float _x = 0, _y = 0, _w = 0, _h = 0; // layout position/size
   bool _active = false;                 // popup/menu enabled
 
-  GuiElem(GuiElemType t) : type(t) { }
+  GuiElem(GuiElemType t) : type{t} { }
   GuiElem(GuiElemType t, std::initializer_list<GuiElem> x)
-    : elems(x), type(t) { }
+    : elems{x}, type{t} { }
 };
 
 struct gx::GuiTheme
@@ -189,13 +197,13 @@ namespace gx {
   template<typename... Elems>
   inline GuiElem guiHFrame(const Elems&... elems)
   {
-    return GuiElem(GUI_HFRAME, {elems...});
+    return GuiElem{GUI_HFRAME, {elems...}};
   }
 
   template<typename... Elems>
   inline GuiElem guiHFrame(AlignEnum align, const Elems&... elems)
   {
-    GuiElem e(GUI_HFRAME, {elems...});
+    GuiElem e{GUI_HFRAME, {elems...}};
     e.align = align;
     return e;
   }
@@ -204,13 +212,13 @@ namespace gx {
   template<typename... Elems>
   inline GuiElem guiVFrame(const Elems&... elems)
   {
-    return GuiElem(GUI_VFRAME, {elems...});
+    return GuiElem{GUI_VFRAME, {elems...}};
   }
 
   template<typename... Elems>
   inline GuiElem guiVFrame(AlignEnum align, const Elems&... elems)
   {
-    GuiElem e(GUI_VFRAME, {elems...});
+    GuiElem e{GUI_VFRAME, {elems...}};
     e.align = align;
     return e;
   }
@@ -218,14 +226,14 @@ namespace gx {
   // Label
   inline GuiElem guiLabel(std::string_view text)
   {
-    GuiElem e(GUI_LABEL);
+    GuiElem e{GUI_LABEL};
     e.text = text;
     return e;
   }
 
   inline GuiElem guiLabel(AlignEnum align, std::string_view text)
   {
-    GuiElem e(GUI_LABEL);
+    GuiElem e{GUI_LABEL};
     e.text = text;
     e.align = align;
     return e;
@@ -234,7 +242,7 @@ namespace gx {
   // HLine
   inline GuiElem guiHLine()
   {
-    GuiElem e(GUI_HLINE);
+    GuiElem e{GUI_HLINE};
     e.align = ALIGN_HCENTER;
     return e;
   }
@@ -242,7 +250,7 @@ namespace gx {
   // VLine
   inline GuiElem guiVLine()
   {
-    GuiElem e(GUI_VLINE);
+    GuiElem e{GUI_VLINE};
     e.align = ALIGN_VCENTER;
     return e;
   }
@@ -251,14 +259,14 @@ namespace gx {
   // (triggered on button release)
   inline GuiElem guiButton(int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON, {elem});
+    GuiElem e{GUI_BUTTON, {elem}};
     e.id = eventID;
     return e;
   }
 
   inline GuiElem guiButton(AlignEnum align, int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON, {elem});
+    GuiElem e{GUI_BUTTON, {elem}};
     e.align = align;
     e.id = eventID;
     return e;
@@ -266,14 +274,14 @@ namespace gx {
 
   inline GuiElem guiButton(std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON, {guiLabel(text)});
+    GuiElem e{GUI_BUTTON, {guiLabel(text)}};
     e.id = eventID;
     return e;
   }
 
   inline GuiElem guiButton(AlignEnum align, std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON, {guiLabel(text)});
+    GuiElem e{GUI_BUTTON, {guiLabel(text)}};
     e.align = align;
     e.id = eventID;
     return e;
@@ -283,7 +291,7 @@ namespace gx {
   // (triggered on initial button press)
   inline GuiElem guiButtonPress(int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON_PRESS, {elem});
+    GuiElem e{GUI_BUTTON_PRESS, {elem}};
     e.id = eventID;
     return e;
   }
@@ -291,7 +299,7 @@ namespace gx {
   inline GuiElem guiButtonPress(
     AlignEnum align, int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON_PRESS, {elem});
+    GuiElem e{GUI_BUTTON_PRESS, {elem}};
     e.align = align;
     e.id = eventID;
     return e;
@@ -299,7 +307,7 @@ namespace gx {
 
   inline GuiElem guiButtonPress(std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON_PRESS, {guiLabel(text)});
+    GuiElem e{GUI_BUTTON_PRESS, {guiLabel(text)}};
     e.id = eventID;
     return e;
   }
@@ -307,7 +315,7 @@ namespace gx {
   inline GuiElem guiButtonPress(
     AlignEnum align, std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON_PRESS, {guiLabel(text)});
+    GuiElem e{GUI_BUTTON_PRESS, {guiLabel(text)}};
     e.align = align;
     e.id = eventID;
     return e;
@@ -317,7 +325,7 @@ namespace gx {
   // (triggered repeatedly while held)
   inline GuiElem guiButtonHold(int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON_HOLD, {elem});
+    GuiElem e{GUI_BUTTON_HOLD, {elem}};
     e.id = eventID;
     return e;
   }
@@ -325,7 +333,7 @@ namespace gx {
   inline GuiElem guiButtonHold(
     AlignEnum align, int eventID, const GuiElem& elem)
   {
-    GuiElem e(GUI_BUTTON_HOLD, {elem});
+    GuiElem e{GUI_BUTTON_HOLD, {elem}};
     e.align = align;
     e.id = eventID;
     return e;
@@ -333,7 +341,7 @@ namespace gx {
 
   inline GuiElem guiButtonHold(std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON_HOLD, {guiLabel(text)});
+    GuiElem e{GUI_BUTTON_HOLD, {guiLabel(text)}};
     e.id = eventID;
     return e;
   }
@@ -341,7 +349,7 @@ namespace gx {
   inline GuiElem guiButtonHold(
     AlignEnum align, std::string_view text, int eventID)
   {
-    GuiElem e(GUI_BUTTON_HOLD, {guiLabel(text)});
+    GuiElem e{GUI_BUTTON_HOLD, {guiLabel(text)}};
     e.align = align;
     e.id = eventID;
     return e;
@@ -351,23 +359,64 @@ namespace gx {
   template<typename... Elems>
   inline GuiElem guiMenu(std::string_view text, const Elems&... items)
   {
-    return GuiElem(GUI_MENU, {guiLabel(text),
-        GuiElem(GUI_MENU_VFRAME,{items...})});
+    return GuiElem{GUI_MENU, {guiLabel(text),
+        GuiElem{GUI_MENU_VFRAME,{items...}}}};
   }
 
   inline GuiElem guiMenuItem(std::string_view text, int eventID)
   {
-    GuiElem e(GUI_MENU_ITEM, {guiLabel(text)});
+    GuiElem e{GUI_MENU_ITEM, {guiLabel(text)}};
     e.id = eventID;
     return e;
   }
 
   // Entry
-  inline GuiElem guiEntry(float size, int maxLength, int eventID)
+  inline GuiElem guiTextEntry(float size, int maxLength, int eventID)
   {
-    GuiElem e(GUI_ENTRY);
+    GuiElem e{GUI_ENTRY};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
+    e.entry.type = ENTRY_TEXT;
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiCardinalEntry(float size, int maxLength, int eventID)
+  {
+    GuiElem e{GUI_ENTRY};
+    e.entry.size = size;
+    e.entry.maxLength = maxLength;
+    e.entry.type = ENTRY_CARDINAL;
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiIntegerEntry(float size, int maxLength, int eventID)
+  {
+    GuiElem e{GUI_ENTRY};
+    e.entry.size = size;
+    e.entry.maxLength = maxLength;
+    e.entry.type = ENTRY_INTEGER;
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiFloatEntry(float size, int maxLength, int eventID)
+  {
+    GuiElem e{GUI_ENTRY};
+    e.entry.size = size;
+    e.entry.maxLength = maxLength;
+    e.entry.type = ENTRY_FLOAT;
+    e.id = eventID;
+    return e;
+  }
+
+  inline GuiElem guiPasswordEntry(float size, int maxLength, int eventID)
+  {
+    GuiElem e{GUI_ENTRY};
+    e.entry.size = size;
+    e.entry.maxLength = maxLength;
+    e.entry.type = ENTRY_PASSWORD;
     e.id = eventID;
     return e;
   }
@@ -375,7 +424,7 @@ namespace gx {
   // Image
   inline GuiElem guiImage(float w, float h, TextureID tid, Vec2 t0, Vec2 t1)
   {
-    GuiElem e(GUI_IMAGE);
+    GuiElem e{GUI_IMAGE};
     e.image.width = w;
     e.image.height = h;
     e.image.texId = tid;
