@@ -5,11 +5,15 @@
 // command line tool to generate source with a file's contents as a static
 // array (useful for embeding default font/image data into a binary so it's
 // always available for use)
+//
 
-// TODO - add option to encode as 2/4/8 byte values
+// TODO: add option to encode as 2/4/8 byte values
+// TODO: 'const' & 'constexpr' options to add const/constexpr to definitions
+// TODO: 'alignas' option for adding alignas to data array definition
 
 #include "Print.hh"
 #include <fstream>
+
 
 constexpr int ROW_SIZE = 16;
 
@@ -48,7 +52,7 @@ int main(int argc, char** argv)
 
     gx::println();
     for (int i = 0; i < len; ++i) {
-      uint8_t v = uint8_t(val[i]);
+      const auto v = uint8_t(val[i]);
       gx::print(uint32_t(v), ",");
     }
   }
