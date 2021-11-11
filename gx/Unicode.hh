@@ -35,14 +35,14 @@ class gx::UTF8Iterator
 {
  public:
   // constructors
-  constexpr UTF8Iterator(const char* s) noexcept
-    : _itr(s), _end(nullptr) { }
-  constexpr UTF8Iterator(const char* s, const char* e) noexcept
-    : _itr(s), _end(e) { }
+  UTF8Iterator(const char* s) noexcept
+    : _itr{s}, _end{nullptr} { }
+  UTF8Iterator(const char* s, const char* e) noexcept
+    : _itr{s}, _end{e} { }
 
   template<class T>
   explicit UTF8Iterator(const T& s)
-    : _itr(std::data(s)), _end(std::data(s) + std::size(s)) { }
+    : _itr{std::data(s)}, _end{_itr + std::size(s)} { }
 
 
   // member functions
@@ -55,6 +55,7 @@ class gx::UTF8Iterator
 
   [[nodiscard]] int32_t get() const;
     // return current unicode character
+    // (returns -1 for an invalid encoding or at the end of the string)
 
  private:
   const char* _itr;

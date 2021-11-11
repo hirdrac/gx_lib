@@ -48,7 +48,7 @@ std::string gx::toUTF8(int32_t num)
     *ptr++ = char(0b11000000);
     *ptr++ = char(0b10000000);
   }
-  return std::string(str, ptr);
+  return std::string{str, ptr};
 }
 
 int gx::lengthUTF8(std::string_view sv)
@@ -61,7 +61,7 @@ int gx::lengthUTF8(std::string_view sv)
 void gx::popbackUTF8(std::string& str)
 {
   while (!str.empty()) {
-    int ch = uint8_t(str.back());
+    const int ch = uint8_t(str.back());
     str.pop_back();
 
     // stop pop back if char isn't the 2/3/4 char in a multi-char encoding
