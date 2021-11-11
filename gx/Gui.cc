@@ -97,19 +97,28 @@ namespace {
         if (codepoint <= 31) { return false; }
         break;
       case gx::ENTRY_CARDINAL:
-        if (!std::isdigit(codepoint)) { return false; }
-        // TODO: remove preceeding zeros if additional numbers are entered
+        if (!std::isdigit(codepoint)
+            || (e.text == "0" && codepoint == '0')) { return false; }
+        if (e.text == "0") { e.text.clear(); }
         break;
       case gx::ENTRY_INTEGER:
-        if (!std::isdigit(codepoint) && codepoint != '-') { return false; }
-        if (codepoint == '-' && !e.text.empty()) { return false; }
-        // TODO: remove preceeding zeros if additional numbers are entered
+        if ((!std::isdigit(codepoint) && codepoint != '-')
+            || (codepoint == '-' && !e.text.empty() && e.text != "0")
+            || (codepoint == '0' && (e.text == "0" || e.text == "-"))) {
+          return false; }
+        if (e.text == "0") { e.text.clear(); }
         break;
       case gx::ENTRY_FLOAT:
-        if (!std::isdigit(codepoint) && codepoint != '-'
-            && codepoint != '.' ) { return false; }
-        if (codepoint == '-' && !e.text.empty()) { return false; }
-        // TODO: prevent multiple '.'
+        if ((!std::isdigit(codepoint) && codepoint != '-' && codepoint != '.')
+            || (codepoint == '-' && !e.text.empty() && e.text != "0")
+            || (codepoint == '0' && (e.text == "0" || e.text == "-0"))) {
+          return false;
+        } else if (codepoint == '.') {
+          int count = 0;
+          for (char ch : e.text) { count += int(ch == '.'); }
+          if (count > 0) { return false; }
+        }
+        if (e.text == "0" && codepoint != '.') { e.text.clear(); }
         break;
     }
 
@@ -636,9 +645,9 @@ void gx::Gui::drawElem(
         } else {
           drawRec(dc, def, _theme.colorEntry);
         }
-        float tx = def._x + _theme.entryLeftMargin;;
-        float maxWidth = def._w
+        const float maxWidth = def._w
           - _theme.entryLeftMargin - _theme.entryRightMargin;
+        float tx = def._x + _theme.entryLeftMargin;;
         if (tw > maxWidth) {
           // text doesn't fit in entry
           tx -= tw - maxWidth;
