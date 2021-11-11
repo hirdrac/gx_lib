@@ -125,6 +125,10 @@ struct gx::GuiTheme
   uint16_t cursorWidth = 3;
   uint16_t spacing = 2;
   uint16_t border = 4;
+  uint16_t entryLeftMargin = 4;
+  uint16_t entryRightMargin = 4;
+  uint16_t entryTopMargin = 2;
+  uint16_t entryBottomMargin = 2;
 };
 
 

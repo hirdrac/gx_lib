@@ -249,7 +249,7 @@ void gx::Gui::processMouseEvent(Window& win)
     if (_heldType == GUI_BUTTON_PRESS || _heldType == GUI_BUTTON_HOLD) {
       _heldID = 0;
       _heldType = GUI_NULL;
-      // FIXME - alternatively, lock pointer in place until button release
+      // FIXME: alternatively, lock pointer in place until button release
     }
   }
 
@@ -452,7 +452,7 @@ void gx::Gui::calcSize(GuiElem& def)
       int lines = calcLines(def.text);
       def._h = float(
         (fnt.size() - 1) * lines + (_theme.spacing * std::max(lines - 1, 0)));
-      // FIXME - improve line height calc (based on font ymax/ymin?)
+      // FIXME: improve line height calc (based on font ymax/ymin?)
       break;
     }
     case GUI_HLINE:
@@ -485,9 +485,11 @@ void gx::Gui::calcSize(GuiElem& def)
     }
     case GUI_ENTRY: {
       const Font& fnt = *_theme.baseFont;
-      def._w = def.entry.size * fnt.calcWidth("A");
-      def._h = float(fnt.size());
-      // FIXME - use better width value than capital A * size
+      def._w = def.entry.size * fnt.calcWidth("A")
+        + _theme.entryLeftMargin + _theme.entryRightMargin;
+      def._h = float(fnt.size() - 1)
+        + _theme.entryTopMargin + _theme.entryBottomMargin;
+      // FIXME: use better width value than capital A * size
       break;
     }
     case GUI_IMAGE:
@@ -546,7 +548,7 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
       break;
     case GUI_MENU:
       calcPos(def.elems[0], base_x + _theme.border, base_y + _theme.border);
-      // FIXME - menu items always directly under button for now
+      // FIXME: menu items always directly under button for now
       calcPos(def.elems[1], base_x, base_y + def._h);
       break;
     case GUI_LABEL:
@@ -634,25 +636,27 @@ void gx::Gui::drawElem(
         } else {
           drawRec(dc, def, _theme.colorEntry);
         }
-        float tx = def._x;
-        if (tw > def._w) {
+        float tx = def._x + _theme.entryLeftMargin;;
+        float maxWidth = def._w
+          - _theme.entryLeftMargin - _theme.entryRightMargin;
+        if (tw > maxWidth) {
           // text doesn't fit in entry
-          tx -= tw - def._w;
+          tx -= tw - maxWidth;
           dc2.hgradiant(def._x + 1.0f, _theme.colorText & 0x00ffffff,
                         def._x + float(fnt.size() / 2), _theme.colorText);
           // TODO: gradiant dim at both ends if moving cursor in long string
-          // TODO: left margin for start of entry text
         } else {
           dc2.color(_theme.colorText);
         }
-        dc2.text(fnt, tf, tx, def._y, ALIGN_TOP_LEFT, def.text,
-                 {def._x, def._y, def._w, def._h});
+        dc2.text(fnt, tf, tx, def._y + _theme.entryTopMargin, ALIGN_TOP_LEFT,
+                 def.text, {def._x, def._y, def._w, def._h});
         // TODO: draw all characters as '*' for password entries
         if (def.id == _focusID && _cursorState) {
           // draw cursor
           dc.color(_theme.colorCursor);
-          dc.rectangle(tx + tw - float(_theme.cursorWidth), def._y+1,
-                       float(_theme.cursorWidth), float(fnt.size()-2));
+          dc.rectangle(
+            tx + tw - float(_theme.cursorWidth), def._y + _theme.entryTopMargin,
+            float(_theme.cursorWidth), float(fnt.size()-1));
         }
         break;
       }
