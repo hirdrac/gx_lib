@@ -315,7 +315,7 @@ void gx::Gui::processCharEvent(Window& win)
   bool usedEvent = false;
   for (const CharInfo& c : win.charData()) {
     if (c.codepoint) {
-      if (addEntryChar(*e, c.codepoint)) {
+      if (addEntryChar(*e, int32_t(c.codepoint))) {
         usedEvent = true;
         _needRender = true;
         _textChanged = true;
