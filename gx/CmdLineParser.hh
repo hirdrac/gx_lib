@@ -50,15 +50,14 @@ class gx::CmdLineParser
 
   [[nodiscard]] bool option(char shortName, std::string_view longName) const {
     if (!_optionsDone) {
-      if (_arg.size() == 2 && _arg[0] == '-' && _arg[1] == shortName) {
-        return true; // short name option match (-x)
-      }
+      // short name option check (-x)
+      if (shortName != '\0' && _arg.size() == 2 && _arg[0] == '-'
+          && _arg[1] == shortName) { return true; }
 
+      // long name option check (--xxx)
       const std::size_t len = longName.size() + 2;
-      if (_arg.size() == len && _arg.substr(0,2) == "--"
-          && _arg.substr(2) == longName) {
-        return true; // long name option match (--xxx)
-      }
+      if (!longName.empty() && _arg.size() == len && _arg.substr(0,2) == "--"
+          && _arg.substr(2) == longName) { return true; }
     }
     return false;
   }
@@ -69,13 +68,14 @@ class gx::CmdLineParser
   {
     if (!option()) { return false; }
 
-    if (_arg.size() > 2 && _arg[1] == shortName && _arg[2] == '=') {
+    if (shortName != '\0' && _arg.size() > 2
+        && _arg[1] == shortName && _arg[2] == '=') {
       // short name option with value in same arg string (-x=...)
       return convertVal(_arg.substr(3), value);
     }
 
     const std::size_t len = longName.size() + 2;
-    if (_arg.size() > len && _arg[1] == '-'
+    if (!longName.empty() && _arg.size() > len && _arg[1] == '-'
         && _arg.substr(2,len-2) == longName && _arg[len] == '=') {
       // long name option with value in same arg string (--xxx=...)
       return convertVal(_arg.substr(len+1), value);
