@@ -11,6 +11,7 @@
 ## Libraries/APIs Used
 * GLFW - window/event support
 * OpenGL 3.3/4.5 - graphics rendering
+* Glad - OpenGL library loading
 * FreeType2 - TTF font rendering
 * stb_image - image loading
 
