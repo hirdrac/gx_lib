@@ -1,5 +1,5 @@
 //
-// Camera.cc
+// gx/Camera.cc
 // Copyright (C) 2021 Richard Bradley
 //
 
@@ -23,7 +23,7 @@
 // Camera class
 bool gx::Camera::updateView()
 {
-  float dot = dotProduct(_vnormal, _vup);
+  const float dot = dotProduct(_vnormal, _vup);
   if (dot >= .99999) {
     GX_LOG_ERROR("bad vup");
     return false;
@@ -62,7 +62,7 @@ bool gx::Camera::calcProjection(
     return false;
   }
 
-  float vlen = std::tan(degToRad(_fov / 2.0f)) / _zoom;
+  const float vlen = std::tan(degToRad(_fov / 2.0f)) / _zoom;
     // fov:90 == 1.0
 
   float vsideL = vlen, vtopL = vlen;
@@ -73,7 +73,7 @@ bool gx::Camera::calcProjection(
   }
 
   if (_projection == PERSPECTIVE) {
-    float clipLen = _farClip - _nearClip;
+    const float clipLen = _farClip - _nearClip;
     result = {
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,
@@ -95,8 +95,8 @@ bool gx::Camera::calcDirToScreenPt(
   int screenWidth, int screenHeight,
   float mouseX, float mouseY, Vec3& result) const
 {
-  float sw = float(screenWidth), sh = float(screenHeight);
-  float vlen = std::tan(degToRad(_fov / 2.0f)) / _zoom;
+  const float sw = float(screenWidth), sh = float(screenHeight);
+  const float vlen = std::tan(degToRad(_fov / 2.0f)) / _zoom;
   Vec3 vx = _vside * vlen;
   Vec3 vy = _vtop * vlen;
   if (screenWidth >= screenHeight) {
@@ -105,8 +105,8 @@ bool gx::Camera::calcDirToScreenPt(
     vy *= sh / sw;
   }
 
-  float cx = sw / 2.0f;
-  float cy = sh / 2.0f;
+  const float cx = sw / 2.0f;
+  const float cy = sh / 2.0f;
 
   // since we are calculating a direction, just assume eye is at origin
   // and view plane center is just 1 away from eye (in direction of vnormal)

@@ -1,5 +1,5 @@
 //
-// Camera.hh
+// gx/Camera.hh
 // Copyright (C) 2021 Richard Bradley
 //
 
