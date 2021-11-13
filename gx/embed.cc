@@ -9,8 +9,8 @@
 
 // TODO: add option to encode as 2/4/8 byte values
 // TODO: 'const' & 'constexpr' options to add const/constexpr to definitions
-// TODO: 'alignas' option for adding alignas to data array definition
 
+#include "CmdLineParser.hh"
 #include "Print.hh"
 #include <fstream>
 
@@ -18,28 +18,60 @@
 constexpr int ROW_SIZE = 16;
 
 
+int showUsage(char** argv)
+{
+  gx::println("Usage: ", argv[0], " [options] <input file> <array name>");
+  gx::println("Options:");
+  gx::println("  -a,--alignas=[]  Alignment for data array");
+  gx::println("  -h,--help        Show usage");
+  return 0;
+}
+
+int errorUsage(char** argv)
+{
+  gx::println_err("Try '", argv[0], " --help' for more information.");
+  return -1;
+}
+
 int main(int argc, char** argv)
 {
-  if (argc < 3) {
-    gx::println_err("Usage: ", argv[0], " <input file> <array name>");
-    return 0;
+  std::string file, outVar;
+  unsigned int alignVal = 0;
+
+  for (gx::CmdLineParser p(argc, argv); p; ++p) {
+    if (p.option()) {
+      if (p.option('h',"help")) {
+        return showUsage(argv);
+      } else if (p.option('a',"alignas", alignVal)) {
+        // TODO: verify alignas is power of 2
+      } else {
+        gx::println_err("ERROR: bad option '", p.arg(), "'");
+        return errorUsage(argv);
+      }
+    } else if (file.empty()) {
+      p.get(file);
+    } else if (outVar.empty()) {
+      p.get(outVar);
+    }
   }
 
-  std::string file = argv[1];
-  std::string outVar = argv[2];
+  if (file.empty() || outVar.empty()) {
+    return errorUsage(argv);
+  }
 
-  std::ifstream fs(file, std::ios_base::binary);
+  std::ifstream fs{file, std::ios_base::binary};
   if (!fs) {
     gx::println_err("Can't read file '", file, "'");
     return -1;
   }
 
-  std::size_t x = file.rfind('/');
+  const std::size_t x = file.rfind('/');
   std::string name = (x == std::string::npos) ? file : file.substr(x+1);
 
   gx::println("// generated from '", file, "'\n");
   gx::println("char ", outVar, "Name[] = \"", name, "\";");
   gx::println("char ", outVar, "File[] = \"", file, "\";");
+  if (alignVal > 0) { gx::print("alignas(", alignVal, ") "); }
   gx::print("unsigned char ", outVar, "[] = {");
   for (;;) {
     char val[ROW_SIZE];
@@ -56,6 +88,7 @@ int main(int argc, char** argv)
       gx::print(uint32_t(v), ",");
     }
   }
+
   gx::println("\n};");
   gx::println("unsigned long ", outVar, "Size = sizeof(", outVar, ");");
   return 0;
