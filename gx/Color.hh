@@ -28,10 +28,10 @@ namespace gx {
   // functions
   [[nodiscard]] constexpr uint32_t packRGBA8(float r, float g, float b, float a)
   {
-    return uint32_t(std::clamp(r, 0.0f, 1.0f) * 255.0f)
-      | (uint32_t(std::clamp(g, 0.0f, 1.0f) * 255.0f) << 8)
-      | (uint32_t(std::clamp(b, 0.0f, 1.0f) * 255.0f) << 16)
-      | (uint32_t(std::clamp(a, 0.0f, 1.0f) * 255.0f) << 24);
+    return uint32_t(std::clamp(r * 256.0f, 0.0f, 255.0f))
+      | (uint32_t(std::clamp(g * 256.0f, 0.0f, 255.0f)) << 8)
+      | (uint32_t(std::clamp(b * 256.0f, 0.0f, 255.0f)) << 16)
+      | (uint32_t(std::clamp(a * 256.0f, 0.0f, 255.0f)) << 24);
   }
 
   [[nodiscard]] constexpr uint32_t packRGBA8(const Color& c) {
