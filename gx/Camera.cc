@@ -81,7 +81,7 @@ bool gx::Camera::calcProjection(
       0, 0, -(2.0f * _farClip * _nearClip) / clipLen, 0
     };
   } else {
-    // FIXME - verify camera orthogonal projection
+    // FIXME: verify camera orthogonal projection
     result = {
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,

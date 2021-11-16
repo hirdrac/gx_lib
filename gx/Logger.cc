@@ -3,11 +3,11 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - threaded support
-//   * IO operations handled on dedicated thread
-//   * message string creation, time capture on calling thread
-// TODO - naming threads
-//   * at thread creation, thread ID given short name that is
+// TODO: threaded support
+//   - IO operations handled on dedicated thread
+//   - message string creation, time capture on calling thread
+// TODO: naming threads
+//   - at thread creation, thread ID given short name that is
 //     used for logging instead of ID (main, render, log)
 
 #include "Logger.hh"

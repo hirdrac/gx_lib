@@ -1,5 +1,5 @@
 //
-// CmdLineParser.hh
+// gx/CmdLineParser.hh
 // Copyright (C) 2021 Richard Bradley
 //
 // Helper class for parsing command line arguments.

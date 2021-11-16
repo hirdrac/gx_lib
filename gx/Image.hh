@@ -2,7 +2,8 @@
 // gx/Image.hh
 // Copyright (C) 2021 Richard Bradley
 //
-// TODO - save to file
+
+// TODO: save to file
 
 #pragma once
 #include "Types.hh"

@@ -215,8 +215,8 @@ bool gx::Window::open(int flags)
 
   initStartTime();
   auto ren = std::make_unique<OpenGLRenderer>();
-  // TODO - replace with factory constructor when multiple renderers
-  //   are supported
+  // TODO: factory constructor for Renderer instance
+  //  (when multiple APIs are available, most likely vulkan next)
 
   glfwDefaultWindowHints();
   glfwWindowHint(GLFW_DECORATED, glfwBool(decorated));
@@ -306,7 +306,7 @@ void gx::Window::showWindow(GLFWwindow* w)
 {
   if (!_fullScreen) {
     // center window initially
-    // FIXME - doesn't account for decoration size
+    // FIXME: doesn't account for decoration size
     glfwSetWindowPos(w, (_fsWidth - _width) / 2, (_fsHeight - _height) / 2);
   }
 

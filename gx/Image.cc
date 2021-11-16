@@ -97,7 +97,7 @@ bool gx::Image::stamp(int x, int y, const Image& sub_image)
 {
   assert(canEdit());
   assert(_channels == sub_image.channels());
-  // FIXME - check for out-of-bounds setting
+  // FIXME: check for out-of-bounds setting
 
   uint8_t* dst = _storage.get() + (((y * _width) + x) * _channels);
   const uint8_t* src = sub_image.data();

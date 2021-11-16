@@ -2,9 +2,9 @@
 // gx/Font.cc
 // Copyright (C) 2021 Richard Bradley
 //
-// TODO - investigate using stb_truetype.h
-// TODO - use signed distance fields for font texture
-//        (FT_RENDER_MODE_SDF available in freetype 2.11)
+// TODO: investigate using stb_truetype.h
+// TODO: use signed distance fields for font texture
+//       (FT_RENDER_MODE_SDF available in freetype 2.11)
 
 #include "Font.hh"
 #include "Image.hh"

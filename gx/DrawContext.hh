@@ -3,12 +3,13 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - support color gradiant for primitives other than rectangle
-// TODO - textured roundedRectangle()
-// TODO - continuous lines [lineX <vertex count> <v1> <v2> ...]
-// TODO - lines as quads:
-//        * any width supported
-//        * multi-line corner types: squared, angled, rounded
+// TODO: support color gradiant for primitives other than rectangle
+// TODO: textured roundedRectangle()
+// TODO: continuous lines [lineX <vertex count> <v1> <v2> ...]
+// TODO: lines as quads
+//   - any width supported
+//   - multi-line corner types: squared, angled, rounded
+// TODO: gradiant function instead of set gradiant/color points
 
 #pragma once
 #include "DrawList.hh"

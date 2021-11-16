@@ -3,11 +3,11 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - texture wrap settings
-// TODO - frame stats (draw calls, buffer size, layers)
-// TODO - additional mem stats (textures, combinded texture size)
-// TODO - optional clear depth for layer
-// TODO - clear draw data from single layer/layer range
+// TODO: texture wrap settings
+// TODO: frame stats (draw calls, buffer size, layers)
+// TODO: additional mem stats (textures, combinded texture size)
+// TODO: optional clear depth for layer
+// TODO: clear draw data from single layer/layer range
 
 #pragma once
 #include "Color.hh"

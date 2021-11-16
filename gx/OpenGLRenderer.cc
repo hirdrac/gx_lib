@@ -3,9 +3,9 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - add blur transparency shader
-// TODO - render thread:
-//   * thread for OpenGL, glfwMakeContextCurrent(), glfwGetProcAddress(),
+// TODO: add blur transparency shader
+// TODO: render thread
+//   - thread for OpenGL, glfwMakeContextCurrent(), glfwGetProcAddress(),
 //     glfwSwapInterval(), glfwSwapBuffers() calls
 
 #include "OpenGLRenderer.hh"
@@ -23,7 +23,7 @@ namespace {
   // **** Helper Functions ****
   void setCurrentContext(GLFWwindow* win)
   {
-    // TODO - add lastThreadID check in debug
+    // TODO: add lastThreadID check in debug
     // - if window hasn't changed, it must always be the same thread
     // - if window changes and threadID changes, call
     //   glfwMakeContextCurrent(nullptr) first to flush last context
@@ -235,7 +235,7 @@ gx::TextureID gx::OpenGLRenderer::setTexture(
     0, 0, 0, img.width(), img.height(), imgformat, img.data());
   if (levels > 1) { t.generateMipmap(); }
 
-  // TODO - make these configurable
+  // TODO: make texture wrap params configurable
   t.setParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   t.setParameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     // GL_CLAMP_TO_EDGE
@@ -638,7 +638,7 @@ void gx::OpenGLRenderer::renderFrame()
     int shader = 0; // solid color shader
     if (dc.texID > 0) {
       // shader uses texture - determine texture unit & bind if neccessary
-      // (FIXME - no max texture units check currently)
+      // (FIXME: no max texture units check currently)
       auto itr = _textures.find(dc.texID);
       if (itr != _textures.end()) {
 	auto& [id,entry] = *itr;

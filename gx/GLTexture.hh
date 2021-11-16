@@ -322,17 +322,13 @@ GLuint GLTextureT<TARGET>::init(
   return _tex;
 }
 
-// TODO - init for GL_TEXTURE_2D_MULTISAMPLE
-//   3.3 -
-//     glTexImage2DMultisample
-//   4.5 -
-//     glTextureStorage2DMultisample
+// TODO: init for GL_TEXTURE_2D_MULTISAMPLE
+//   3.3 - glTexImage2DMultisample
+//   4.5 - glTextureStorage2DMultisample
 
-// TODO - init for GL_TEXTURE_2D_MULTISAMPLE_ARRAY
-//   3.3 -
-//     glTexImage3DMultisample
-//   4.5 -
-//     glTextureStorage3DMultisample
+// TODO: init for GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+//   3.3 - glTexImage3DMultisample
+//   4.5 - glTextureStorage3DMultisample
 
 template<GLenum TARGET>
 GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
