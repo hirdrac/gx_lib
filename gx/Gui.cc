@@ -500,12 +500,12 @@ void gx::Gui::calcSize(GuiElem& def)
         def._w = def.entry.size * fnt.digitWidth();
       } else {
         def._w = def.entry.size * fnt.calcWidth("A");
+        // FIXME: use better width value than capital A * size
       }
-      def._w += _theme.entryLeftMargin + _theme.entryRightMargin
-        + _theme.cursorWidth + 1;
+      def._w += float(_theme.entryLeftMargin + _theme.entryRightMargin
+                      + _theme.cursorWidth + 1);
       def._h = float(fnt.size() - 1)
         + _theme.entryTopMargin + _theme.entryBottomMargin;
-      // FIXME: use better width value than capital A * size
       break;
     }
     case GUI_IMAGE:
