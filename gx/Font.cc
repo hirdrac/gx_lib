@@ -94,7 +94,7 @@ bool gx::Font::load(const char* fileName, int fontSize)
   }
 
   // read font glyph data
-  _size = fontSize;
+  init(fontSize);
   bool status = genGlyphs(*this, face);
   FT_Done_Face(face);
   return status;
@@ -119,16 +119,16 @@ bool gx::Font::loadFromMemory(
   }
 
   // read font glyph data
-  _size = fontSize;
+  init(fontSize);
   bool status = genGlyphs(*this, face);
   FT_Done_Face(face);
   return status;
 }
 
-bool gx::Font::initFromData(
+bool gx::Font::loadFromData(
   const GlyphStaticData* data, int glyphs, int fontSize)
 {
-  _size = fontSize;
+  init(fontSize);
   for (int i = 0; i < glyphs; ++i) {
     const auto& d = data[i];
     addGlyph(d.code, d.width, d.height, d.left, d.top, d.advX, d.advY,
@@ -219,6 +219,15 @@ void gx::Font::addGlyph(
   }
 }
 
+void gx::Font::init(int fontSize)
+{
+  _size = fontSize;
+  _ymin = 0;
+  _ymax = 0;
+  _digitWidth = 0;
+  _glyphs.clear();
+}
+
 gx::Glyph& gx::Font::newGlyph(
   int code, int width, int height, float left, float top, float advX, float advY)
 {
@@ -239,6 +248,10 @@ gx::Glyph& gx::Font::newGlyph(
     if (yt > _ymax) { _ymax = yt; }
     float yb = top - float(height);
     if (yb < _ymin) { _ymin = yb; }
+  }
+
+  if (std::isdigit(code) || code == '.' || code == '-') {
+    _digitWidth = std::max(_digitWidth, std::max(float(g.width), g.advX));
   }
 
   return g;

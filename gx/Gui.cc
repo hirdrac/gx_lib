@@ -494,8 +494,15 @@ void gx::Gui::calcSize(GuiElem& def)
     }
     case GUI_ENTRY: {
       const Font& fnt = *_theme.baseFont;
-      def._w = def.entry.size * fnt.calcWidth("A")
-        + _theme.entryLeftMargin + _theme.entryRightMargin;
+      if (def.entry.type == ENTRY_CARDINAL
+          || def.entry.type == ENTRY_INTEGER
+          || def.entry.type == ENTRY_FLOAT) {
+        def._w = def.entry.size * fnt.digitWidth();
+      } else {
+        def._w = def.entry.size * fnt.calcWidth("A");
+      }
+      def._w += _theme.entryLeftMargin + _theme.entryRightMargin
+        + _theme.cursorWidth + 1;
       def._h = float(fnt.size() - 1)
         + _theme.entryTopMargin + _theme.entryBottomMargin;
       // FIXME: use better width value than capital A * size

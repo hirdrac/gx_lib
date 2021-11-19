@@ -43,8 +43,8 @@ class gx::Font
   bool loadFromMemory(const void* mem, std::size_t memSize, int fontSize);
     // load TTF file
 
-  bool initFromData(const GlyphStaticData* data, int glyphs, int fontSize);
-    // init from static glyph data
+  bool loadFromData(const GlyphStaticData* data, int glyphs, int fontSize);
+    // load from static glyph data
 
   bool makeAtlas(Renderer& ren);
 
@@ -55,6 +55,9 @@ class gx::Font
   [[nodiscard]] float ymax() const { return _ymax; }
     // min/max y values relative to origin for baseline calculation
     // (only ascii alpha-numeric values used for calc)
+
+  [[nodiscard]] float digitWidth() const { return _digitWidth; }
+    // max width of 0123456789-. characters
 
   [[nodiscard]] const Texture& tex() const { return _tex; }
     // texture atlas created by engine
@@ -85,8 +88,10 @@ class gx::Font
   Texture _tex;
   int _size = 0;
   float _ymin = 0, _ymax = 0;
+  float _digitWidth = 0;
   bool _changed = false; // change since last atlas creation
 
+  void init(int fontSize);
   Glyph& newGlyph(int code, int width, int height, float left, float top,
 		  float advX, float advY);
 };
