@@ -7,6 +7,7 @@
 // TODO: cursor movement for entry
 // TODO: allow right button to open menus & select menu items
 // TODO: 'stay open' logic for menus (quick click/release on menu?)
+// TODO: button/entry specific edge theme support
 
 #include "Gui.hh"
 #include "Window.hh"
@@ -124,6 +125,39 @@ namespace {
 
     e.text += gx::toUTF8(codepoint);
     return true;
+  }
+
+  [[nodiscard]] uint32_t colorText(
+    const gx::GuiTheme& theme, gx::ButtonState bs)
+  {
+    switch (bs) {
+      default:                   return theme.colorText;
+      case gx::BSTATE_HOVER:     return theme.colorTextHover;
+      case gx::BSTATE_PRESSED:   return theme.colorTextPressed;
+      case gx::BSTATE_HELD_ONLY: return theme.colorTextHeldOnly;
+    }
+  }
+
+  [[nodiscard]] uint32_t colorButton(
+    const gx::GuiTheme& theme, gx::ButtonState bs)
+  {
+    switch (bs) {
+      default:                   return theme.colorButton;
+      case gx::BSTATE_HOVER:     return theme.colorButtonHover;
+      case gx::BSTATE_PRESSED:   return theme.colorButtonPressed;
+      case gx::BSTATE_HELD_ONLY: return theme.colorButtonHeldOnly;
+    }
+  }
+
+  [[nodiscard]] uint32_t colorMenu(
+    const gx::GuiTheme& theme, gx::ButtonState bs)
+  {
+    switch (bs) {
+      default:                   return theme.colorMenu;
+      case gx::BSTATE_HOVER:     return theme.colorMenuHover;
+      case gx::BSTATE_PRESSED:
+      case gx::BSTATE_HELD_ONLY: return theme.colorMenuSelect;
+    }
   }
 }
 
@@ -465,12 +499,12 @@ void gx::Gui::calcSize(GuiElem& def)
       break;
     }
     case GUI_HLINE:
-      def._w = float(32 + _theme.border*2);
-      def._h = float(1 + _theme.border*2);
+      def._w = float(32 + _theme.border * 2);
+      def._h = float(1 + _theme.border * 2);
       break;
     case GUI_VLINE:
-      def._w = float(1 + _theme.border*2);
-      def._h = float(32 + _theme.border*2);
+      def._w = float(1 + _theme.border * 2);
+      def._h = float(32 + _theme.border * 2);
       break;
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
@@ -590,15 +624,13 @@ void gx::Gui::drawElem(
       case GUI_VFRAME:
         break;
       case GUI_LABEL:
-        // TODO: use bstate to select different theme values
-        //    (i.e. hovering over a button causes label color change)
-        dc2.color(_theme.colorText);
+        dc2.color(colorText(_theme, bstate));
         dc2.text(*_theme.baseFont, tf, def._x, def._y, ALIGN_TOP_LEFT,
                  def.text);
         break;
       case GUI_HLINE:
       case GUI_VLINE:
-        dc.color(_theme.colorText);
+        dc.color(colorText(_theme, bstate));
         dc.rectangle(def._x + _theme.border, def._y + _theme.border,
                      def._w - (_theme.border*2), def._h - (_theme.border*2));
         break;
@@ -606,32 +638,17 @@ void gx::Gui::drawElem(
       case GUI_BUTTON_PRESS:
       case GUI_BUTTON_HOLD:
         if (def.id == _heldID) {
-          if (def.id == _hoverID || def.type != GUI_BUTTON) {
-            drawRec(dc, def, _theme.colorButtonPressed);
-            bstate = BSTATE_PRESSED;
-          } else {
-            drawRec(dc, def, _theme.colorButtonHeldOnly);
-            bstate = BSTATE_HELD_ONLY;
-          }
-        } else if (def.id == _hoverID) {
-          drawRec(dc, def, _theme.colorButtonHover);
-          bstate = BSTATE_HOVER;
+          bstate = (def.id == _hoverID || def.type != GUI_BUTTON)
+            ? BSTATE_PRESSED : BSTATE_HELD_ONLY;
         } else {
-          drawRec(dc, def, _theme.colorButtonNormal);
-          bstate = BSTATE_NORMAL;
+          bstate = (def.id == _hoverID) ? BSTATE_HOVER : BSTATE_NORMAL;
         }
+        drawRec(dc, def, colorButton(_theme, bstate));
         break;
       case GUI_MENU:
-        if (def.id == _heldID) {
-          drawRec(dc, def, _theme.colorMenuSelect);
-          bstate = BSTATE_HELD_ONLY;
-        } else if (def.id == _hoverID) {
-          drawRec(dc, def, _theme.colorMenuHover);
-          bstate = BSTATE_HOVER;
-        } else {
-          drawRec(dc, def, _theme.colorMenuNormal);
-          bstate = BSTATE_NORMAL;
-        }
+        bstate = (def.id == _heldID) ? BSTATE_HELD_ONLY
+          : ((def.id == _hoverID) ? BSTATE_HOVER : BSTATE_NORMAL);
+        drawRec(dc, def, colorMenu(_theme, bstate));
         break;
       case GUI_MENU_HFRAME:
       case GUI_MENU_VFRAME:
