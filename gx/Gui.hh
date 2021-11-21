@@ -103,38 +103,40 @@ struct gx::GuiElem
 
 struct gx::GuiTheme
 {
+  struct RecColor { uint32_t bg, edge; };
+
   const Font* baseFont = nullptr;
+  RecColor guiRec = {packRGBA8(.2f,.2f,.2f,1.0f), 0};
 
-  uint32_t colorBackground = packRGBA8(.2f,.2f,.2f,1.0f);
-  uint32_t colorEdge = 0;
+  uint32_t textColor = packRGBA8(1.0f,1.0f,1.0f,1.0f);
+  uint32_t textHoverColor = packRGBA8(1.0f,1.0f,1.0f,1.0f);
+  uint32_t textPressColor = packRGBA8(1.0f,1.0f,1.0f,1.0f);
+  uint32_t textHoldColor = packRGBA8(1.0f,1.0f,1.0f,1.0f);
 
-  uint32_t colorText = packRGBA8(1.0f,1.0f,1.0f,1.0f);
-  uint32_t colorTextHover = packRGBA8(1.0f,1.0f,1.0f,1.0f);
-  uint32_t colorTextPressed = packRGBA8(1.0f,1.0f,1.0f,1.0f);
-  uint32_t colorTextHeldOnly = packRGBA8(1.0f,1.0f,1.0f,1.0f);
+  RecColor buttonRec = {packRGBA8(.4f,.4f,.4f,1.0f), 0};
+  RecColor buttonHoverRec = {packRGBA8(.8f,.4f,.4f,1.0f), 0};
+  RecColor buttonPressRec = {packRGBA8(.8f,.8f,.8f,1.0f), 0};
+  RecColor buttonHoldRec = {packRGBA8(.6f,.6f,.6f,1.0f), 0};
 
-  uint32_t colorButton = packRGBA8(.4f,.4f,.4f,1.0f);
-  uint32_t colorButtonHover = packRGBA8(.8f,.4f,.4f,1.0f);
-  uint32_t colorButtonPressed = packRGBA8(.8f,.8f,.8f,1.0f);
-  uint32_t colorButtonHeldOnly = packRGBA8(.6f,.6f,.6f,1.0f);
+  RecColor menuButtonRec = {0, 0};
+  RecColor menuButtonHoverRec = {packRGBA8(.8f,.4f,.4f,1.0f), 0};
+  RecColor menuButtonOpenRec = {packRGBA8(.6f,.6f,.6f,1.0f), 0};
+  RecColor menuFrameRec = {packRGBA8(0.0f,0.0f,0.0f,1.0f), 0};
+  RecColor menuItemSelectRec = {packRGBA8(.8f,.8f,.8f,1.0f), 0};
 
-  uint32_t colorMenu = 0;
-  uint32_t colorMenuHover = packRGBA8(.8f,.4f,.4f,1.0f);
-  uint32_t colorMenuSelect = packRGBA8(.6f,.6f,.6f,1.0f);
-  uint32_t colorMenuItem = packRGBA8(0.0f,0.0f,0.0f,1.0f);
-  uint32_t colorMenuItemSelect = packRGBA8(.8f,.8f,.8f,1.0f);
-  uint32_t colorEntry = packRGBA8(0.0f,0.0f,.2f,1.0f);
-  uint32_t colorEntryFocus = packRGBA8(.1f,.1f,.3f,1.0f);
-  uint32_t colorCursor = packRGBA8(1.0f,1.0f,.6f,1.0f);
-
-  uint32_t cursorBlinkTime = 400000; // 1 sec
-  uint16_t cursorWidth = 3;
-  uint16_t spacing = 2;
-  uint16_t border = 4;
+  RecColor entryRec = {packRGBA8(0.0f,0.0f,.2f,1.0f), 0};
+  RecColor entryFocusRec = {packRGBA8(.1f,.1f,.3f,1.0f), 0};
   uint16_t entryLeftMargin = 4;
   uint16_t entryRightMargin = 4;
   uint16_t entryTopMargin = 2;
   uint16_t entryBottomMargin = 2;
+
+  uint32_t cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
+  uint32_t cursorBlinkTime = 400000; // 1 sec
+  uint16_t cursorWidth = 3;
+
+  uint16_t spacing = 2;
+  uint16_t border = 4;
 };
 
 
@@ -191,7 +193,6 @@ class gx::Gui
   void calcPos(GuiElem& def, float base_x, float base_y);
   void drawElem(DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
                 const GuiElem& def, ButtonState bstate, bool popup) const;
-  void drawRec(DrawContext& dc, const GuiElem& def, uint32_t col) const;
 
   [[nodiscard]] GuiElem* findElem(int id);
   [[nodiscard]] const GuiElem* findElem(int id) const;

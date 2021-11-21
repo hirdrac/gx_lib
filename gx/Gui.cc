@@ -131,32 +131,51 @@ namespace {
     const gx::GuiTheme& theme, gx::ButtonState bs)
   {
     switch (bs) {
-      default:                   return theme.colorText;
-      case gx::BSTATE_HOVER:     return theme.colorTextHover;
-      case gx::BSTATE_PRESSED:   return theme.colorTextPressed;
-      case gx::BSTATE_HELD_ONLY: return theme.colorTextHeldOnly;
+      default:                   return theme.textColor;
+      case gx::BSTATE_HOVER:     return theme.textHoverColor;
+      case gx::BSTATE_PRESSED:   return theme.textPressColor;
+      case gx::BSTATE_HELD_ONLY: return theme.textHoldColor;
     }
   }
 
-  [[nodiscard]] uint32_t colorButton(
+  using RecColor = gx::GuiTheme::RecColor;
+
+  [[nodiscard]] RecColor colorButton(
     const gx::GuiTheme& theme, gx::ButtonState bs)
   {
     switch (bs) {
-      default:                   return theme.colorButton;
-      case gx::BSTATE_HOVER:     return theme.colorButtonHover;
-      case gx::BSTATE_PRESSED:   return theme.colorButtonPressed;
-      case gx::BSTATE_HELD_ONLY: return theme.colorButtonHeldOnly;
+      default:                   return theme.buttonRec;
+      case gx::BSTATE_HOVER:     return theme.buttonHoverRec;
+      case gx::BSTATE_PRESSED:   return theme.buttonPressRec;
+      case gx::BSTATE_HELD_ONLY: return theme.buttonHoldRec;
     }
   }
 
-  [[nodiscard]] uint32_t colorMenu(
+  [[nodiscard]] RecColor colorMenuButton(
     const gx::GuiTheme& theme, gx::ButtonState bs)
   {
     switch (bs) {
-      default:                   return theme.colorMenu;
-      case gx::BSTATE_HOVER:     return theme.colorMenuHover;
+      default:                   return theme.menuButtonRec;
+      case gx::BSTATE_HOVER:     return theme.menuButtonHoverRec;
       case gx::BSTATE_PRESSED:
-      case gx::BSTATE_HELD_ONLY: return theme.colorMenuSelect;
+      case gx::BSTATE_HELD_ONLY: return theme.menuButtonOpenRec;
+    }
+  }
+
+  void drawRec(gx::DrawContext& dc, const gx::GuiElem& def,
+               const gx::GuiTheme::RecColor& col)
+  {
+    if (col.bg != 0) {
+      dc.color(col.bg);
+      dc.rectangle(def._x, def._y, def._w, def._h);
+    }
+
+    if (col.edge != 0) {
+      dc.color(col.edge);
+      dc.rectangle(def._x, def._y, def._w, 1);
+      dc.rectangle(def._x, def._y + def._h - 1, def._w, 1);
+      dc.rectangle(def._x, def._y, 1, def._h);
+      dc.rectangle(def._x + def._w - 1, def._y, 1, def._h);
     }
   }
 }
@@ -240,7 +259,7 @@ void gx::Gui::update(Window& win)
     dc0.clear();
     dc1.clear();
 
-    drawRec(dc0, _rootElem, _theme.colorBackground);
+    drawRec(dc0, _rootElem, _theme.guiRec);
     drawElem(dc0, dc1, tf, _rootElem, BSTATE_NONE, false);
 
     if (_popupActive) {
@@ -648,26 +667,26 @@ void gx::Gui::drawElem(
       case GUI_MENU:
         bstate = (def.id == _heldID) ? BSTATE_HELD_ONLY
           : ((def.id == _hoverID) ? BSTATE_HOVER : BSTATE_NORMAL);
-        drawRec(dc, def, colorMenu(_theme, bstate));
+        drawRec(dc, def, colorMenuButton(_theme, bstate));
         break;
       case GUI_MENU_HFRAME:
       case GUI_MENU_VFRAME:
-        drawRec(dc, def, _theme.colorMenuItem);
+        drawRec(dc, def, _theme.menuFrameRec);
         break;
       case GUI_MENU_ITEM:
         if (def.id == _hoverID) {
-          drawRec(dc, def, _theme.colorMenuItemSelect);
+          drawRec(dc, def, _theme.menuItemSelectRec);
         }
         break;
       case GUI_ENTRY: {
         const Font& fnt = *_theme.baseFont;
         float tw = fnt.calcWidth(def.text);
         if (def.id == _focusID) {
-          drawRec(dc, def, _theme.colorEntryFocus);
+          drawRec(dc, def, _theme.entryFocusRec);
           tw += float(1 + _theme.cursorWidth);
           // TODO: handle variable cursor position
         } else {
-          drawRec(dc, def, _theme.colorEntry);
+          drawRec(dc, def, _theme.entryRec);
         }
         const float maxWidth = def._w
           - _theme.entryLeftMargin - _theme.entryRightMargin;
@@ -675,18 +694,18 @@ void gx::Gui::drawElem(
         if (tw > maxWidth) {
           // text doesn't fit in entry
           tx -= tw - maxWidth;
-          dc2.hgradiant(def._x + 1.0f, _theme.colorText & 0x00ffffff,
-                        def._x + float(fnt.size() / 2), _theme.colorText);
+          dc2.hgradiant(def._x + 1.0f, _theme.textColor & 0x00ffffff,
+                        def._x + float(fnt.size() / 2), _theme.textColor);
           // TODO: gradiant dim at both ends if moving cursor in long string
         } else {
-          dc2.color(_theme.colorText);
+          dc2.color(_theme.textColor);
         }
         dc2.text(fnt, tf, tx, def._y + _theme.entryTopMargin, ALIGN_TOP_LEFT,
                  def.text, {def._x, def._y, def._w, def._h});
         // TODO: draw all characters as '*' for password entries
         if (def.id == _focusID && _cursorState) {
           // draw cursor
-          dc.color(_theme.colorCursor);
+          dc.color(_theme.cursorColor);
           dc.rectangle(
             tx + tw - float(_theme.cursorWidth), def._y + _theme.entryTopMargin,
             float(_theme.cursorWidth), float(fnt.size()-1));
@@ -716,22 +735,6 @@ void gx::Gui::drawElem(
     }
   } else {
     for (auto& e : def.elems) { drawElem(dc, dc2, tf, e, bstate, popup); }
-  }
-}
-
-void gx::Gui::drawRec(DrawContext& dc, const GuiElem& def, uint32_t col) const
-{
-  if (col != 0) {
-    dc.color(col);
-    dc.rectangle(def._x, def._y, def._w, def._h);
-  }
-
-  if (_theme.colorEdge != 0) {
-    dc.color(_theme.colorEdge);
-    dc.rectangle(def._x, def._y, def._w, 1);
-    dc.rectangle(def._x, def._y + def._h - 1, def._w, 1);
-    dc.rectangle(def._x, def._y, 1, def._h);
-    dc.rectangle(def._x + def._w - 1, def._y, 1, def._h);
   }
 }
 
