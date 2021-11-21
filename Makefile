@@ -51,7 +51,11 @@ TEST_StringUtil.SRC = tests/StringUtilTest.cc
 STANDARD = c++17
 OPTIONS = lto modern_c++
 # NOTE: lto doesn't work for clang on MINGW64/MSys2
+
 DEFINE = GX_DEBUG_GL
+#DEFINE += GX_GL33
+# uncomment this line if OpenGL4.5 isn't available
+
 WARN_EXTRA = extra-semi fatal-errors conversion cast-align cast-qual
 #FLAGS_RELEASE = -DNDEBUG
 
