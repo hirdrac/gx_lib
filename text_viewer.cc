@@ -5,17 +5,17 @@
 // gx_lib example program for text rendering & basic event handling
 //
 
-// TODO - smooth scrolling
-// TODO - left/right scroll with cursor keys to see long lines
-// TODO - optional line wrap (with indicator)
-// TODO - status bar with filename, current line
-// TODO - line number on left side?  (instead of just current line)
-// TODO - small text display on side with current view hi-lighted (like VS code)
-// TODO - goto line GUI (control-g)
-// TODO - option to show gfx for space/tab/newline characters
-// TODO - allow drag (button2/3 down, mouse move) to scroll text
-// TODO - text selection and copy (button1 w/ mouse, control-C to copy)
-// TODO - find GUI (control-f)
+// TODO: smooth scrolling
+// TODO: left/right scroll with cursor keys to see long lines
+// TODO: optional line wrap (with indicator)
+// TODO: status bar with filename, current line
+// TODO: line number on left side?  (instead of just current line)
+// TODO: small text display on side with current view hi-lighted (like VS code)
+// TODO: goto line GUI (control-g)
+// TODO: option to show gfx for space/tab/newline characters
+// TODO: allow drag (button2/3 down, mouse move) to scroll text
+// TODO: text selection and copy (button1 w/ mouse, control-C to copy)
+// TODO: find GUI (control-f)
 
 #include "gx/Window.hh"
 #include "gx/Renderer.hh"
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
 
   gx::DrawList dl;
   gx::DrawContext dc{dl};
-  gx::TextFormatting tf{};
+  gx::TextFormatting tf{&fnt};
 
   // main loop
   bool redraw = true;
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
             const std::size_t count =
               (tabPos == std::string_view::npos) ? tabPos : tabPos - i;
             const std::string_view segment = line.substr(i,count);
-            dc.text(fnt, tf, tx, ty, gx::ALIGN_TOP_LEFT, segment);
+            dc.text(tf, tx, ty, gx::ALIGN_TOP_LEFT, segment);
             i += segment.size() + 1;
             if (tabPos != std::string_view::npos) {
               const float tx2 = tx + fnt.calcWidth(segment);

@@ -30,6 +30,7 @@ namespace gx {
 
 struct gx::TextFormatting
 {
+  const Font* font = nullptr;
   float spacing = 0;
   Vec2 advX = {1,0};    // dir of next character
   Vec2 advY = {0,1};    // dir of next line
@@ -144,12 +145,12 @@ class gx::DrawContext
     rectangle(r.x, r.y, r.w, r.h, t0, t1, clip); }
 
   // High-level data entry
-  void text(const Font& f, const TextFormatting& tf, float x, float y,
-            AlignEnum align, std::string_view text) {
-    _text(f, tf, x, y, align, text, nullptr); }
-  void text(const Font& f, const TextFormatting& tf, float x, float y,
-            AlignEnum align, std::string_view text, const Rect& clip) {
-    _text(f, tf, x, y, align, text, &clip); }
+  void text(const TextFormatting& tf, float x, float y, AlignEnum align,
+            std::string_view text) {
+    _text(tf, x, y, align, text, nullptr); }
+  void text(const TextFormatting& tf, float x, float y, AlignEnum align,
+            std::string_view text, const Rect& clip) {
+    _text(tf, x, y, align, text, &clip); }
 
   void circleSector(
     Vec2 center, float radius, float startAngle, float endAngle, int segments);
@@ -195,8 +196,8 @@ class gx::DrawContext
     _data->insert(_data->end(), x.begin(), x.end());
   }
 
-  void _text(const Font& f, const TextFormatting& tf, float x, float y,
-             AlignEnum align, std::string_view text, const Rect* clipPtr);
+  void _text(const TextFormatting& tf, float x, float y, AlignEnum align,
+             std::string_view text, const Rect* clipPtr);
   void _glyph(const Glyph& g, const TextFormatting& tf, Vec2 cursor,
               const Rect* clipPtr);
   void _rect(float x, float y, float w, float h) {

@@ -3,7 +3,7 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - next/previous page when all items don't fit in window
+// TODO: next/previous page when all items don't fit in window
 
 #include "gx/Window.hh"
 #include "gx/Renderer.hh"
@@ -107,7 +107,7 @@ int main(int argc, char** argv)
   ren.setBGColor(.2f,.2f,.5f);
   fnt.makeAtlas(ren);
 
-  gx::TextFormatting tf{};
+  gx::TextFormatting tf{&fnt};
 
   for (;;) {
     // draw frame
@@ -126,7 +126,7 @@ int main(int argc, char** argv)
       dc.color(gx::WHITE);
       x = y = 0;
       for (auto& [desc,fn] : functions) {
-        dc.text(fnt, tf, x+(ITEM_WIDTH/2), y+6, gx::ALIGN_TOP_CENTER, desc);
+        dc.text(tf, x+(ITEM_WIDTH/2), y+6, gx::ALIGN_TOP_CENTER, desc);
         x += ITEM_WIDTH;
         if (x > float(win.width() - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }

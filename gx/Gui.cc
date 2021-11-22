@@ -216,7 +216,7 @@ void gx::Gui::update(Window& win)
     // 2 - popup background/frames
     // 3 - popup text
 
-    TextFormatting tf{};
+    TextFormatting tf{_theme.font};
     tf.spacing = _theme.spacing;
 
     DrawContext dc0{_dlm[0]}, dc1{_dlm[1]};
@@ -609,7 +609,7 @@ void gx::Gui::drawElem(
         break;
       case GUI_LABEL:
         dc2.color(style->textColor);
-        dc2.text(*_theme.font, tf, def._x, def._y, ALIGN_TOP_LEFT, def.text);
+        dc2.text(tf, def._x, def._y, ALIGN_TOP_LEFT, def.text);
         break;
       case GUI_HLINE:
       case GUI_VLINE:
@@ -647,7 +647,7 @@ void gx::Gui::drawElem(
         }
         break;
       case GUI_ENTRY: {
-        const Font& fnt = *_theme.font;
+        const Font& fnt = *tf.font;
         float tw = fnt.calcWidth(def.text);
         if (def.id == _focusID) {
           style = &_theme.entryFocus;
@@ -670,7 +670,7 @@ void gx::Gui::drawElem(
         } else {
           dc2.color(textColor);
         }
-        dc2.text(fnt, tf, tx, def._y + _theme.entryTopMargin, ALIGN_TOP_LEFT,
+        dc2.text(tf, tx, def._y + _theme.entryTopMargin, ALIGN_TOP_LEFT,
                  def.text, {def._x, def._y, def._w, def._h});
         // TODO: draw all characters as '*' for password entries
         if (def.id == _focusID && _cursorState) {

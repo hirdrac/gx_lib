@@ -7,6 +7,7 @@
 #include "Font.hh"
 #include "Unicode.hh"
 #include "MathUtil.hh"
+#include <cassert>
 
 
 namespace {
@@ -112,11 +113,13 @@ void gx::DrawContext::rectangle(
 }
 
 void gx::DrawContext::_text(
-  const Font& f, const TextFormatting& tf, float x, float y, AlignEnum align,
+  const TextFormatting& tf, float x, float y, AlignEnum align,
   std::string_view text, const Rect* clipPtr)
 {
   if (text.empty()) { return; }
 
+  assert(tf.font != nullptr);
+  const Font& f = *tf.font;
   const float fs = float(f.size()) + tf.spacing;
   const AlignEnum h_align = HAlign(align);
   const AlignEnum v_align = VAlign(align);
