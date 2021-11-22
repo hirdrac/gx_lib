@@ -94,9 +94,9 @@ struct gx::GuiElem
 struct gx::GuiTheme
 {
   struct Style {
-    uint32_t textColor;
-    uint32_t backgroundColor;
-    uint32_t edgeColor;
+    RGBA8 textColor;
+    RGBA8 backgroundColor;
+    RGBA8 edgeColor;
   };
 
   const Font* font = nullptr;
@@ -133,7 +133,7 @@ struct gx::GuiTheme
   uint16_t entryTopMargin = 2;
   uint16_t entryBottomMargin = 2;
 
-  uint32_t cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
+  RGBA8 cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
   uint32_t cursorBlinkTime = 400000; // 1 sec
   uint16_t cursorWidth = 3;
 

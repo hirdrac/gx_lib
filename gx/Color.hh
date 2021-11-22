@@ -3,6 +3,7 @@
 // Copyright (C) 2021 Richard Bradley
 //
 // Color types & utility functions
+//
 
 #pragma once
 #include "Types.hh"
@@ -17,6 +18,7 @@ static_assert(__BYTE_ORDER == __LITTLE_ENDIAN);
 namespace gx {
   // types
   using Color = Vec4;
+  using RGBA8 = uint32_t;
 
   // color constants
   constexpr Color WHITE  {1.0f, 1.0f, 1.0f, 1.0f};
@@ -26,36 +28,27 @@ namespace gx {
   constexpr Color GRAY75 {0.75f, 0.75f, 0.75f, 1.0f};
 
   // functions
-  [[nodiscard]] constexpr uint32_t packRGBA8(float r, float g, float b, float a)
-  {
-    return uint32_t(std::clamp(r * 256.0f, 0.0f, 255.0f))
-      | (uint32_t(std::clamp(g * 256.0f, 0.0f, 255.0f)) << 8)
-      | (uint32_t(std::clamp(b * 256.0f, 0.0f, 255.0f)) << 16)
-      | (uint32_t(std::clamp(a * 256.0f, 0.0f, 255.0f)) << 24);
+  [[nodiscard]] constexpr RGBA8 packRGBA8(float r, float g, float b, float a) {
+    return RGBA8(std::clamp(r * 256.0f, 0.0f, 255.0f))
+      | (RGBA8(std::clamp(g * 256.0f, 0.0f, 255.0f)) << 8)
+      | (RGBA8(std::clamp(b * 256.0f, 0.0f, 255.0f)) << 16)
+      | (RGBA8(std::clamp(a * 256.0f, 0.0f, 255.0f)) << 24);
   }
 
-  [[nodiscard]] constexpr uint32_t packRGBA8(const Color& c) {
+  [[nodiscard]] constexpr RGBA8 packRGBA8(const Color& c) {
     return packRGBA8(c.x, c.y, c.z, c.w);
   }
 
-  [[nodiscard]] constexpr float unpackRed(uint32_t c) {
+  [[nodiscard]] constexpr float unpackRed(RGBA8 c) {
     return float(c & 255) / 255.0f; }
-  [[nodiscard]] constexpr float unpackGreen(uint32_t c) {
+  [[nodiscard]] constexpr float unpackGreen(RGBA8 c) {
     return float((c >> 8) & 255) / 255.0f; }
-  [[nodiscard]] constexpr float unpackBlue(uint32_t c) {
+  [[nodiscard]] constexpr float unpackBlue(RGBA8 c) {
     return float((c >> 16) & 255) / 255.0f; }
-  [[nodiscard]] constexpr float unpackAlpha(uint32_t c) {
+  [[nodiscard]] constexpr float unpackAlpha(RGBA8 c) {
     return float((c >> 24) & 255) / 255.0f; }
 
-  constexpr void unpackRGBA8(uint32_t c, float& r, float& g, float& b, float& a)
-  {
-    r = unpackRed(c);
-    g = unpackGreen(c);
-    b = unpackBlue(c);
-    a = unpackAlpha(c);
-  }
-
-  [[nodiscard]] constexpr Color unpackRGBA8(uint32_t c) {
+  [[nodiscard]] constexpr Color unpackRGBA8(RGBA8 c) {
     return {unpackRed(c), unpackGreen(c), unpackBlue(c), unpackAlpha(c)};
   }
 }

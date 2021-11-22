@@ -19,10 +19,10 @@ constexpr int FONT_SIZE = 20;
 constexpr int ITEM_WIDTH = 400;
 constexpr int ITEM_HEIGHT = 360;
 
-constexpr uint32_t WHITE = gx::packRGBA8(gx::WHITE);
-constexpr uint32_t GRAY50 = gx::packRGBA8(gx::GRAY50);
-constexpr uint32_t BLACK = gx::packRGBA8(gx::BLACK);
-constexpr uint32_t RED = gx::packRGBA8(1.0f, 0, 0, 1.0f);
+constexpr auto WHITE = gx::packRGBA8(gx::WHITE);
+constexpr auto GRAY50 = gx::packRGBA8(gx::GRAY50);
+constexpr auto BLACK = gx::packRGBA8(gx::BLACK);
+constexpr auto RED = gx::packRGBA8(1.0f, 0, 0, 1.0f);
 
 
 // **** Draw Functions ****
@@ -123,7 +123,7 @@ int main(int argc, char** argv)
         if (x > float(win.width() - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }
 
-      dc.color(gx::WHITE);
+      dc.color(WHITE);
       x = y = 0;
       for (auto& [desc,fn] : functions) {
         dc.text(tf, x+(ITEM_WIDTH/2), y+6, gx::ALIGN_TOP_CENTER, desc);

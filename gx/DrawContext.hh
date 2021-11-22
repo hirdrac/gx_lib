@@ -53,11 +53,11 @@ class gx::DrawContext
   // control/state change
   inline void color(float r, float g, float b, float a = 1.0f);
   inline void color(const Color& c);
-  inline void color(uint32_t c);
+  inline void color(RGBA8 c);
 
-  inline void hgradiant(float x0, uint32_t c0, float x1, uint32_t c1);
+  inline void hgradiant(float x0, RGBA8 c0, float x1, RGBA8 c1);
   inline void hgradiant(float x0, const Color& c0, float x1, const Color& c1);
-  inline void vgradiant(float y0, uint32_t c0, float y1, uint32_t c1);
+  inline void vgradiant(float y0, RGBA8 c0, float y1, RGBA8 c1);
   inline void vgradiant(float y0, const Color& c0, float y1, const Color& c1);
 
   inline void lineWidth(float w);
@@ -155,7 +155,7 @@ class gx::DrawContext
   void circleSector(
     Vec2 center, float radius, float startAngle, float endAngle, int segments);
   void circleSector(Vec2 center, float radius, float startAngle, float endAngle,
-                    int segments, uint32_t color0, uint32_t color1);
+                    int segments, RGBA8 color0, RGBA8 color1);
     // NOTE:
     //  * make start and end angles equal for a full circle
     //  * angles are in degrees
@@ -176,9 +176,9 @@ class gx::DrawContext
 
   // color/gradiant properties
   float _g0, _g1;         // x or y gradiant coords
-  uint32_t _c0, _c1;      // gradiant colors (packed)
+  RGBA8 _c0, _c1;      // gradiant colors (packed)
   Color _color0, _color1; // gradiant colors (full)
-  uint32_t _lastColor;
+  RGBA8 _lastColor;
   enum ColorMode { CM_SOLID, CM_HGRADIANT, CM_VGRADIANT };
   ColorMode _colorMode;
 
@@ -203,9 +203,9 @@ class gx::DrawContext
   void _rect(float x, float y, float w, float h) {
     add(CMD_rectangle, x, y, x + w, y + h); }
 
-  [[nodiscard]] inline uint32_t gradiantColor(float g) const;
+  [[nodiscard]] inline RGBA8 gradiantColor(float g) const;
 
-  [[nodiscard]] uint32_t pointColor(Vec2 pt) const {
+  [[nodiscard]] RGBA8 pointColor(Vec2 pt) const {
     switch (_colorMode) {
       default:           return _lastColor;
       case CM_HGRADIANT: return gradiantColor(pt.x);
@@ -226,7 +226,7 @@ void gx::DrawContext::color(const Color& c)
   color(packRGBA8(c));
 }
 
-void gx::DrawContext::color(uint32_t c)
+void gx::DrawContext::color(RGBA8 c)
 {
   _colorMode = CM_SOLID;
   if (c != _lastColor) {
@@ -235,7 +235,7 @@ void gx::DrawContext::color(uint32_t c)
   }
 }
 
-void gx::DrawContext::hgradiant(float x0, uint32_t c0, float x1, uint32_t c1)
+void gx::DrawContext::hgradiant(float x0, RGBA8 c0, float x1, RGBA8 c1)
 {
   _colorMode = CM_HGRADIANT;
   _g0 = x0;
@@ -258,7 +258,7 @@ void gx::DrawContext::hgradiant(
   _color1 = c1;
 }
 
-void gx::DrawContext::vgradiant(float y0, uint32_t c0, float y1, uint32_t c1)
+void gx::DrawContext::vgradiant(float y0, RGBA8 c0, float y1, RGBA8 c1)
 {
   _colorMode = CM_HGRADIANT;
   _g0 = y0;
@@ -297,7 +297,7 @@ void gx::DrawContext::texture(TextureID tid)
   }
 }
 
-uint32_t gx::DrawContext::gradiantColor(float g) const
+gx::RGBA8 gx::DrawContext::gradiantColor(float g) const
 {
   if (g <= _g0) { return _c0; }
   else if (g >= _g1) { return _c1; }

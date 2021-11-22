@@ -307,7 +307,7 @@ void gx::DrawContext::circleSector(
 
 void gx::DrawContext::circleSector(
   Vec2 center, float radius, float startAngle, float endAngle, int segments,
-  uint32_t color0, uint32_t color1)
+  RGBA8 color0, RGBA8 color1)
 {
   while (endAngle <= startAngle) { endAngle += 360.0f; }
   endAngle = std::min(endAngle, startAngle + 360.0f);
