@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
 
   gx::GuiTheme theme{&fnt};
 
-  gx::Gui gui1(
+  gx::Gui gui1{
     gx::guiVFrame(
       gx::guiLabel(gx::ALIGN_HCENTER, "BUTTON LIST"),
       gx::guiHLine(),
@@ -43,10 +43,10 @@ int main(int argc, char* argv[])
       gx::guiHFrame(
         gx::guiButtonPress("PRESS", 77),
         gx::guiButtonHold("HOLD", 88)),
-      gx::guiButton(gx::ALIGN_RIGHT, "[QUIT]", 99)));
+      gx::guiButton(gx::ALIGN_RIGHT, "[QUIT]", 99))};
   gui1.layout(theme, 60, 80, gx::ALIGN_TOP_LEFT);
 
-  gx::Gui gui2(
+  gx::Gui gui2{
     gx::guiVFrame(
       gx::guiHFrame(
         gx::guiMenu(
@@ -58,17 +58,17 @@ int main(int argc, char* argv[])
         gx::guiMenu(
           "Help",
           gx::guiMenuItem("Manual", 3),
-          gx::guiMenuItem("About", 4)))));
+          gx::guiMenuItem("About", 4))))};
   gui2.layout(theme, 0, 0, gx::ALIGN_TOP_LEFT);
 
-  gx::Gui gui3(
+  gx::Gui gui3{
     gx::guiVFrame(
       gx::guiHFrame(
         gx::guiLabel(gx::ALIGN_VCENTER, "R"), gx::guiCardinalEntry(3.0f,3,1),
         gx::guiLabel(gx::ALIGN_VCENTER, " G"), gx::guiCardinalEntry(3.0f,3,2),
         gx::guiLabel(gx::ALIGN_VCENTER, " B"), gx::guiCardinalEntry(3.0f,3,3)),
       gx::guiHLine(),
-      gx::guiTextEntry(16.0f,100,10)));
+      gx::guiTextEntry(16.0f,100,10))};
   gui3.layout(theme, 60, 300, gx::ALIGN_TOP_LEFT);
 
   gx::Window win;
