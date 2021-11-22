@@ -8,7 +8,6 @@
 // TODO: sub menus
 // TODO: menu item key short-cuts
 // TODO: list select (combo box)
-// TODO: theme text colors for button state & entry text
 // TODO: modal dialog
 
 #pragma once
@@ -44,15 +43,6 @@ namespace gx {
     GUI_BUTTON_HOLD,   // activated continuously on hold&press
     GUI_MENU_ITEM,     // activated on release
     GUI_ENTRY,         // activated if changed on enter/tab/click-away
-  };
-
-  enum ButtonState {
-    BSTATE_NONE = 0,  // no button
-    BSTATE_NORMAL,    // normal button
-    BSTATE_HOVER,     // pointer over button
-    BSTATE_PRESSED,   // pointer over button with mouse left button pressed
-    BSTATE_HELD_ONLY  // previously pressed & mouse left button still held
-                      //   but pointer not over button
   };
 
   enum EntryType {
@@ -103,29 +93,41 @@ struct gx::GuiElem
 
 struct gx::GuiTheme
 {
-  struct RecColor { uint32_t bg, edge; };
+  struct Style {
+    uint32_t textColor;
+    uint32_t backgroundColor;
+    uint32_t edgeColor;
+  };
 
-  const Font* baseFont = nullptr;
-  RecColor guiRec = {packRGBA8(.2f,.2f,.2f,1.0f), 0};
+  const Font* font = nullptr;
+  Style base = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.2f,.2f,.2f,1.0f), 0};
 
-  uint32_t textColor = packRGBA8(1.0f,1.0f,1.0f,1.0f);
-  uint32_t textHoverColor = packRGBA8(1.0f,1.0f,1.0f,1.0f);
-  uint32_t textPressColor = packRGBA8(1.0f,1.0f,1.0f,1.0f);
-  uint32_t textHoldColor = packRGBA8(1.0f,1.0f,1.0f,1.0f);
+  Style button = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f), 0};
+  Style buttonHover = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f), 0};
+  Style buttonPress = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f), 0};
+  Style buttonHold = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0};
 
-  RecColor buttonRec = {packRGBA8(.4f,.4f,.4f,1.0f), 0};
-  RecColor buttonHoverRec = {packRGBA8(.8f,.4f,.4f,1.0f), 0};
-  RecColor buttonPressRec = {packRGBA8(.8f,.8f,.8f,1.0f), 0};
-  RecColor buttonHoldRec = {packRGBA8(.6f,.6f,.6f,1.0f), 0};
+  Style menuButton = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), 0, 0};
+  Style menuButtonHover = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f), 0};
+  Style menuButtonOpen = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0};
+  Style menuFrame = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,0.0f,1.0f), 0};
+  Style menuItemSelect = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f), 0};
 
-  RecColor menuButtonRec = {0, 0};
-  RecColor menuButtonHoverRec = {packRGBA8(.8f,.4f,.4f,1.0f), 0};
-  RecColor menuButtonOpenRec = {packRGBA8(.6f,.6f,.6f,1.0f), 0};
-  RecColor menuFrameRec = {packRGBA8(0.0f,0.0f,0.0f,1.0f), 0};
-  RecColor menuItemSelectRec = {packRGBA8(.8f,.8f,.8f,1.0f), 0};
+  Style entry = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,.2f,1.0f), 0};
+  Style entryFocus = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.1f,.1f,.3f,1.0f), 0};
 
-  RecColor entryRec = {packRGBA8(0.0f,0.0f,.2f,1.0f), 0};
-  RecColor entryFocusRec = {packRGBA8(.1f,.1f,.3f,1.0f), 0};
   uint16_t entryLeftMargin = 4;
   uint16_t entryRightMargin = 4;
   uint16_t entryTopMargin = 2;
@@ -191,8 +193,9 @@ class gx::Gui
   void init(GuiElem& def);
   void calcSize(GuiElem& def);
   void calcPos(GuiElem& def, float base_x, float base_y);
-  void drawElem(DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-                const GuiElem& def, ButtonState bstate, bool popup) const;
+  void drawElem(
+    DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
+    const GuiElem& def, const GuiTheme::Style* style, bool popup) const;
 
   [[nodiscard]] GuiElem* findElem(int id);
   [[nodiscard]] const GuiElem* findElem(int id) const;

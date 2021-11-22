@@ -27,8 +27,7 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  gx::GuiTheme theme;
-  theme.baseFont = &fnt;
+  gx::GuiTheme theme{&fnt};
 
   gx::Gui gui1(
     gx::guiVFrame(
