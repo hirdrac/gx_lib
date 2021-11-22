@@ -42,10 +42,8 @@ BIN11.SRC = demo_draw.cc
 BIN11.LIBS = LIB_gx
 
 
-# unit tests
-FLAGS_TEST = -I. -UNDEBUG
-TEST_MathUtil.SRC = tests/MathUtilTest.cc
-TEST_StringUtil.SRC = tests/StringUtilTest.cc
+# setup unit tests
+include tests/tests.mk
 
 
 STANDARD = c++17
