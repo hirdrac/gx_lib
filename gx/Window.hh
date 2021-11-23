@@ -178,6 +178,7 @@ class gx::Window
 
   [[nodiscard]] int events() const { return _events; }
   [[nodiscard]] int removedEvents() const { return _removedEvents; }
+  [[nodiscard]] int allEvents() const { return _events | _removedEvents; }
     // current event mask
 
   void removeEvent(int event_mask) {

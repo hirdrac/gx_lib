@@ -9,10 +9,6 @@
 // TODO: disable/enable menu items
 //   - need theme 'disabled menu item text color'
 //   - mouse over disabled items has no 'hover' change
-// TODO: 'stay open' logic for menus
-//   - mouse release while over menu button enables
-//     (other GUIs trigger 'stay open' if released anywhere on menu)
-//   - 'stay open' disabled by any mouse click outside of a menu
 
 #include "Gui.hh"
 #include "Window.hh"
@@ -171,7 +167,6 @@ void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
 void gx::Gui::update(Window& win)
 {
   // clear event state that only persists for a single update
-  _pressedID = 0;
   _eventID = 0;
   _needRedraw = false;
 
@@ -186,23 +181,19 @@ void gx::Gui::update(Window& win)
 
   // mouse movement/button handling
   if (win.focused()
-      && (win.events() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_BUTTON1))) {
+      && (win.allEvents() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_BUTTON1))) {
     processMouseEvent(win);
   }
 
-  if (_heldType == GUI_BUTTON_HOLD) {
-    _eventID = (_hoverID == _heldID) ? _heldID : 0;
+  if (_heldType == GUI_BUTTON_HOLD && _eventID == 0) {
+    _eventID = _heldID;
   }
 
   // entry input handling & cursor update
   if (_focusID != 0) {
     if (win.events() & EVENT_CHAR) { processCharEvent(win); }
 
-    if (_pressedID != 0) {
-      // reset cursor blink state
-      _lastCursorUpdate = win.lastPollTime();
-      _cursorState = true;
-    } else if (_theme.cursorBlinkTime > 0) {
+    if (_theme.cursorBlinkTime > 0) {
       // check for cursor blink
       const int64_t blinks = (win.lastPollTime() - _lastCursorUpdate)
         / int64_t(_theme.cursorBlinkTime);
@@ -255,7 +246,8 @@ void gx::Gui::processMouseEvent(Window& win)
 {
   const bool buttonDown = win.buttons() & BUTTON1;
   const bool buttonEvent = win.events() & EVENT_MOUSE_BUTTON1;
-  int releasedID = 0;
+  const bool pressEvent = buttonDown & buttonEvent;
+  const bool anyGuiButtonEvent = win.allEvents() & EVENT_MOUSE_BUTTON1;
 
   // get elem at pointer
   GuiElem* ptr = nullptr;
@@ -269,71 +261,83 @@ void gx::Gui::processMouseEvent(Window& win)
     }
   }
 
+  // update focus
+  // FIXME: setFocusID() could trigger an event that is overridden below
+  if (pressEvent) {
+    setFocusID(win, (type == GUI_ENTRY) ? id : 0);
+  } else if (buttonDown && anyGuiButtonEvent) {
+    // click in other Gui instance clears our focus
+    setFocusID(win, 0);
+  }
+
   // update hoverID
   if (_hoverID != id) {
-    int hid = id;
-    if (buttonDown && _heldType != GUI_MENU && id != _heldID) { hid = 0; }
+    int hid = (buttonDown && type != GUI_MENU_ITEM && id != _heldID) ? 0 : id;
     if (_hoverID != hid) {
       _hoverID = hid;
       _needRender = true;
     }
-
-    if (_heldType == GUI_BUTTON_PRESS || _heldType == GUI_BUTTON_HOLD) {
-      _heldID = 0;
-      _heldType = GUI_NULL;
-      // FIXME: alternatively, lock pointer in place until button release
-    }
   }
 
-  if (buttonDown) {
-    // clear focus if button clicked in another GUI
-    if (win.removedEvents() & EVENT_MOUSE_BUTTON1) {
-      setFocusID(0);
-    }
-
-    // update pressedID
-    if (buttonEvent
-        // treat moving between menus with button held as a press event
-        || (type == GUI_MENU && _heldID != id && _heldType == GUI_MENU))
-    {
-      setFocusID((type == GUI_ENTRY) ?  id : 0);
-      _pressedID = id;
-      _heldID = id;
-      _heldType = type;
-      if (type == GUI_MENU) {
-        if (_popupActive) { deactivate(_rootElem); } // close other open menu
-        ptr->_active = true;
-        _popupActive = true;
-        _needRender = true;
-      } else if (_pressedID != 0) {
-        if (type == GUI_BUTTON_PRESS) { _eventID = id; }
-        _needRender = true;
-      }
-    }
-  } else {
-    // update releasedID
-    if ((type == GUI_MENU_ITEM)
-        || ((type == GUI_BUTTON) && (_heldID == id))) {
-      releasedID = id;
-      _eventID = id;
-    }
-
-    if (_heldID != 0) {
-      _heldID = 0;
-      _heldType = GUI_NULL;
-      _needRender = true;
-    }
-
-    if (_popupActive) {
-      // close open menus
+  bool usedEvent = false;
+  if (type == GUI_MENU) {
+    if (pressEvent && ptr->_active) {
+      // click on open menu button closes it
       deactivate(_rootElem);
       _popupActive = false;
       _needRender = true;
+      usedEvent = true;
+    } else if (pressEvent || _popupActive) {
+      // open menu
+      if (_popupActive) { deactivate(_rootElem); } // close other open menu
+      ptr->_active = true;
+      _popupActive = true;
+      _needRender = true;
+      usedEvent = true;
+    }
+  } else if (type == GUI_MENU_ITEM) {
+    if (buttonEvent) {
+      _eventID = id;
+      usedEvent = true;
+    }
+  } else {
+    if (pressEvent && id != 0) {
+      _heldID = id;
+      _heldType = type;
+      _needRender = true;
+      usedEvent = true;
+      if (type == GUI_BUTTON_PRESS) { _eventID = id; }
+    }
+
+    if ((_heldType == GUI_BUTTON_PRESS || _heldType == GUI_BUTTON_HOLD)
+        && (_heldID != id)) {
+      // clear hold if cursor moves off BUTTON_PRESS/BUTTON_HOLD
+      _heldID = 0;
+      _heldType = GUI_NULL;
+      _needRender = true;
+    }
+
+    if (!buttonDown && (_heldID != 0)) {
+      if ((type == GUI_BUTTON) && buttonEvent && (_heldID == id)) {
+        _eventID = id;
+        usedEvent = true;
+      }
+
+      _heldID = 0;
+      _heldType = GUI_NULL;
+      _needRender = true;
     }
   }
 
+  if (type != GUI_MENU && _popupActive && anyGuiButtonEvent) {
+    // press/release off menu closes open menus
+    deactivate(_rootElem);
+    _popupActive = false;
+    _needRender = true;
+  }
+
   // clear button event if used by GUI
-  if (buttonEvent && (_pressedID != 0 || releasedID != 0)) {
+  if (buttonEvent && usedEvent) {
     win.removeEvent(EVENT_MOUSE_BUTTON1);
   }
 }
@@ -379,11 +383,11 @@ void gx::Gui::processCharEvent(Window& win)
       _textChanged |= added;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       GuiElem* next = findNextElem(_focusID, GUI_ENTRY);
-      setFocusID(next ? next->id : 0);
+      setFocusID(win, next ? next->id : 0);
       usedEvent = true;
     } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
       GuiElem* prev = findPrevElem(_focusID, GUI_ENTRY);
-      setFocusID(prev ? prev->id : 0);
+      setFocusID(win, prev ? prev->id : 0);
       usedEvent = true;
     }
     // TODO: handle KEY_LEFT, KEY_RIGHT for cursor movement
@@ -398,7 +402,7 @@ void gx::Gui::processCharEvent(Window& win)
   }
 }
 
-void gx::Gui::setFocusID(int id)
+void gx::Gui::setFocusID(Window& win, int id)
 {
   if (_focusID == id) { return; }
   if (_textChanged) {
@@ -406,6 +410,8 @@ void gx::Gui::setFocusID(int id)
     _eventID = _focusID;
   }
   _focusID = id;
+  _lastCursorUpdate = win.lastPollTime();
+  _cursorState = true;
   _needRender = true;
 }
 
@@ -632,9 +638,8 @@ void gx::Gui::drawElem(
       drawRec(dc, def, *style);
       break;
     case GUI_MENU:
-      style = (def.id == _heldID) ? &_theme.menuButtonOpen
-        : ((def.id == _hoverID)
-           ? &_theme.menuButtonHover : &_theme.menuButton);
+      style = def._active ? &_theme.menuButtonOpen
+        : ((def.id == _hoverID) ? &_theme.menuButtonHover : &_theme.menuButton);
       drawRec(dc, def, *style);
       break;
     case GUI_MENU_HFRAME:

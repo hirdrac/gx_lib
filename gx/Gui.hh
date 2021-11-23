@@ -174,7 +174,6 @@ class gx::Gui
   Vec2 _pt = {};
   int _hoverID = 0;
   int _heldID = 0;
-  int _pressedID = 0;
   int _focusID = 0;
   int _eventID = 0;
   GuiElemType _heldType = GUI_NULL;
@@ -189,7 +188,7 @@ class gx::Gui
 
   void processMouseEvent(Window& win);
   void processCharEvent(Window& win);
-  void setFocusID(int id);
+  void setFocusID(Window& win, int id);
   void init(GuiElem& def);
   void calcSize(GuiElem& def);
   void calcPos(GuiElem& def, float base_x, float base_y);
