@@ -195,7 +195,10 @@ class gx::Gui
   void calcPos(GuiElem& def, float base_x, float base_y);
   void drawElem(
     DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-    const GuiElem& def, const GuiTheme::Style* style, bool popup) const;
+    const GuiElem& def, const GuiTheme::Style* style = nullptr) const;
+  void drawPopup(
+    DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
+    const GuiElem& def) const;
 
   [[nodiscard]] GuiElem* findElem(int id);
   [[nodiscard]] const GuiElem* findElem(int id) const;
