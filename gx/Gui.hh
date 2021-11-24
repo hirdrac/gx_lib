@@ -59,10 +59,10 @@ struct gx::GuiElem
 {
   // shared properties
   std::vector<GuiElem> elems;  // child elements
+  std::string text;  // label/entry text
   GuiElemType type;
-  std::string text;  // label text
-  AlignEnum align = ALIGN_TOP_LEFT;
-  int id = 0;
+  AlignEnum align;
+  int id;
 
   // elem type specific properties
   struct EntryProps {
@@ -86,9 +86,10 @@ struct gx::GuiElem
   float _x = 0, _y = 0, _w = 0, _h = 0; // layout position/size
   bool _active = false;                 // popup/menu enabled
 
-  GuiElem(GuiElemType t) : type{t} { }
-  GuiElem(GuiElemType t, std::initializer_list<GuiElem> x)
-    : elems{x}, type{t} { }
+  GuiElem(GuiElemType t, AlignEnum a, int i)
+    : type{t}, align{a}, id{i} { }
+  GuiElem(GuiElemType t, AlignEnum a, int i, std::initializer_list<GuiElem> x)
+    : elems{x}, type{t}, align{a}, id{i} { }
 };
 
 struct gx::GuiTheme
@@ -213,234 +214,188 @@ namespace gx {
   template<typename... Elems>
   inline GuiElem guiHFrame(const Elems&... elems)
   {
-    return GuiElem{GUI_HFRAME, {elems...}};
+    return {GUI_HFRAME, ALIGN_TOP_LEFT, 0, {elems...}};
   }
 
   template<typename... Elems>
   inline GuiElem guiHFrame(AlignEnum align, const Elems&... elems)
   {
-    GuiElem e{GUI_HFRAME, {elems...}};
-    e.align = align;
-    return e;
+    return {GUI_HFRAME, align, 0, {elems...}};
   }
 
   // VFrame
   template<typename... Elems>
   inline GuiElem guiVFrame(const Elems&... elems)
   {
-    return GuiElem{GUI_VFRAME, {elems...}};
+    return {GUI_VFRAME, ALIGN_TOP_LEFT, 0, {elems...}};
   }
 
   template<typename... Elems>
   inline GuiElem guiVFrame(AlignEnum align, const Elems&... elems)
   {
-    GuiElem e{GUI_VFRAME, {elems...}};
-    e.align = align;
-    return e;
+    return {GUI_VFRAME, align, 0, {elems...}};
   }
 
   // Label
   inline GuiElem guiLabel(std::string_view text)
   {
-    GuiElem e{GUI_LABEL};
+    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, 0};
     e.text = text;
     return e;
   }
 
   inline GuiElem guiLabel(AlignEnum align, std::string_view text)
   {
-    GuiElem e{GUI_LABEL};
+    GuiElem e{GUI_LABEL, align, 0};
     e.text = text;
-    e.align = align;
     return e;
   }
 
   // HLine
   inline GuiElem guiHLine()
   {
-    GuiElem e{GUI_HLINE};
-    e.align = ALIGN_HCENTER;
-    return e;
+    return {GUI_HLINE, ALIGN_HCENTER, 0};
   }
 
   // VLine
   inline GuiElem guiVLine()
   {
-    GuiElem e{GUI_VLINE};
-    e.align = ALIGN_VCENTER;
-    return e;
+    return {GUI_VLINE, ALIGN_VCENTER, 0};
   }
 
   // Button
   // (triggered on button release)
   inline GuiElem guiButton(int eventID, const GuiElem& elem)
   {
-    GuiElem e{GUI_BUTTON, {elem}};
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON, ALIGN_TOP_LEFT, eventID, {elem}};
   }
 
   inline GuiElem guiButton(AlignEnum align, int eventID, const GuiElem& elem)
   {
-    GuiElem e{GUI_BUTTON, {elem}};
-    e.align = align;
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON, align, eventID, {elem}};
   }
 
   inline GuiElem guiButton(std::string_view text, int eventID)
   {
-    GuiElem e{GUI_BUTTON, {guiLabel(text)}};
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON, ALIGN_TOP_LEFT, eventID, {guiLabel(text)}};
   }
 
   inline GuiElem guiButton(AlignEnum align, std::string_view text, int eventID)
   {
-    GuiElem e{GUI_BUTTON, {guiLabel(text)}};
-    e.align = align;
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON, align, eventID, {guiLabel(text)}};
   }
 
   // ButtonPress
   // (triggered on initial button press)
   inline GuiElem guiButtonPress(int eventID, const GuiElem& elem)
   {
-    GuiElem e{GUI_BUTTON_PRESS, {elem}};
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, eventID, {elem}};
   }
 
   inline GuiElem guiButtonPress(
     AlignEnum align, int eventID, const GuiElem& elem)
   {
-    GuiElem e{GUI_BUTTON_PRESS, {elem}};
-    e.align = align;
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON_PRESS, align, eventID, {elem}};
   }
 
   inline GuiElem guiButtonPress(std::string_view text, int eventID)
   {
-    GuiElem e{GUI_BUTTON_PRESS, {guiLabel(text)}};
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, eventID, {guiLabel(text)}};
   }
 
   inline GuiElem guiButtonPress(
     AlignEnum align, std::string_view text, int eventID)
   {
-    GuiElem e{GUI_BUTTON_PRESS, {guiLabel(text)}};
-    e.align = align;
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON_PRESS, align, eventID, {guiLabel(text)}};
   }
 
   // ButtonHold
   // (triggered repeatedly while held)
   inline GuiElem guiButtonHold(int eventID, const GuiElem& elem)
   {
-    GuiElem e{GUI_BUTTON_HOLD, {elem}};
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, eventID, {elem}};
   }
 
   inline GuiElem guiButtonHold(
     AlignEnum align, int eventID, const GuiElem& elem)
   {
-    GuiElem e{GUI_BUTTON_HOLD, {elem}};
-    e.align = align;
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON_HOLD, align, eventID, {elem}};
   }
 
   inline GuiElem guiButtonHold(std::string_view text, int eventID)
   {
-    GuiElem e{GUI_BUTTON_HOLD, {guiLabel(text)}};
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, eventID, {guiLabel(text)}};
   }
 
   inline GuiElem guiButtonHold(
     AlignEnum align, std::string_view text, int eventID)
   {
-    GuiElem e{GUI_BUTTON_HOLD, {guiLabel(text)}};
-    e.align = align;
-    e.id = eventID;
-    return e;
+    return {GUI_BUTTON_HOLD, align, eventID, {guiLabel(text)}};
   }
 
   // Menu
   template<typename... Elems>
   inline GuiElem guiMenu(std::string_view text, const Elems&... items)
   {
-    return GuiElem{GUI_MENU, {guiLabel(text),
-        GuiElem{GUI_MENU_VFRAME,{items...}}}};
+    return {GUI_MENU, ALIGN_TOP_LEFT, 0, {guiLabel(text),
+        GuiElem{GUI_MENU_VFRAME, ALIGN_TOP_LEFT, 0, {items...}}}};
   }
 
   inline GuiElem guiMenuItem(std::string_view text, int eventID)
   {
-    GuiElem e{GUI_MENU_ITEM, {guiLabel(text)}};
-    e.id = eventID;
-    return e;
+    return {GUI_MENU_ITEM, ALIGN_TOP_LEFT, eventID, {guiLabel(text)}};
   }
 
   // Entry
   inline GuiElem guiTextEntry(float size, int maxLength, int eventID)
   {
-    GuiElem e{GUI_ENTRY};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_TEXT;
-    e.id = eventID;
     return e;
   }
 
   inline GuiElem guiCardinalEntry(float size, int maxLength, int eventID)
   {
-    GuiElem e{GUI_ENTRY};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_CARDINAL;
-    e.id = eventID;
     return e;
   }
 
   inline GuiElem guiIntegerEntry(float size, int maxLength, int eventID)
   {
-    GuiElem e{GUI_ENTRY};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_INTEGER;
-    e.id = eventID;
     return e;
   }
 
   inline GuiElem guiFloatEntry(float size, int maxLength, int eventID)
   {
-    GuiElem e{GUI_ENTRY};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_FLOAT;
-    e.id = eventID;
     return e;
   }
 
   inline GuiElem guiPasswordEntry(float size, int maxLength, int eventID)
   {
-    GuiElem e{GUI_ENTRY};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_PASSWORD;
-    e.id = eventID;
     return e;
   }
 
   // Image
   inline GuiElem guiImage(float w, float h, TextureID tid, Vec2 t0, Vec2 t1)
   {
-    GuiElem e{GUI_IMAGE};
+    GuiElem e{GUI_IMAGE, ALIGN_TOP_LEFT, 0};
     e.image.width = w;
     e.image.height = h;
     e.image.texId = tid;
