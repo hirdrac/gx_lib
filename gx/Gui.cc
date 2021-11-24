@@ -155,8 +155,8 @@ gx::Gui::Gui(GuiElem&& rootElem)
 
 void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
 {
-  _theme = theme;
-  assert(_theme.font != nullptr);
+  _theme = &theme;
+  assert(_theme->font != nullptr);
 
   _pt.set(x, y);
   _rootElem.align = align;
@@ -193,12 +193,12 @@ void gx::Gui::update(Window& win)
   if (_focusID != 0) {
     if (win.events() & EVENT_CHAR) { processCharEvent(win); }
 
-    if (_theme.cursorBlinkTime > 0) {
+    const uint64_t bt = _theme->cursorBlinkTime;
+    if (bt > 0) {
       // check for cursor blink
-      const int64_t blinks = (win.lastPollTime() - _lastCursorUpdate)
-        / int64_t(_theme.cursorBlinkTime);
+      const int64_t blinks = (win.lastPollTime() - _lastCursorUpdate) / bt;
       if (blinks > 0) {
-        _lastCursorUpdate += blinks * _theme.cursorBlinkTime;
+        _lastCursorUpdate += blinks * bt;
         if (blinks & 1) { _cursorState = !_cursorState; }
         _needRender = true;
       }
@@ -213,14 +213,14 @@ void gx::Gui::update(Window& win)
     // 2 - popup background/frames
     // 3 - popup text
 
-    TextFormatting tf{_theme.font};
-    tf.spacing = _theme.spacing;
+    TextFormatting tf{_theme->font};
+    tf.spacing = _theme->spacing;
 
     DrawContext dc0{_dlm[0]}, dc1{_dlm[1]};
     dc0.clear();
     dc1.clear();
 
-    drawRec(dc0, _rootElem, _theme.base);
+    drawRec(dc0, _rootElem, _theme->base);
     drawElem(dc0, dc1, tf, _rootElem);
 
     if (_popupActive) {
@@ -249,7 +249,7 @@ void gx::Gui::processMouseEvent(Window& win)
   const bool pressEvent = buttonDown & buttonEvent;
   const bool anyGuiButtonEvent = win.allEvents() & EVENT_MOUSE_BUTTON1;
 
-  // get elem at pointer
+  // get elem at mouse pointer
   GuiElem* ptr = nullptr;
   int id = 0;
   GuiElemType type = GUI_NULL;
@@ -459,14 +459,14 @@ void gx::Gui::calcSize(GuiElem& def)
       float total_w = 0, max_h = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
-        total_w += e._w + _theme.border;
+        total_w += e._w + _theme->border;
         max_h = std::max(max_h, e._h);
       }
       if (def.type == GUI_MENU_HFRAME) {
         for (GuiElem& e : def.elems) { e._h = max_h; }
       }
-      def._w = total_w + _theme.border;
-      def._h = max_h + (_theme.border * 2);
+      def._w = total_w + _theme->border;
+      def._h = max_h + (_theme->border * 2);
       break;
     }
     case GUI_VFRAME:
@@ -474,32 +474,32 @@ void gx::Gui::calcSize(GuiElem& def)
       float total_h = 0, max_w = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
-        total_h += e._h + _theme.border;
+        total_h += e._h + _theme->border;
         max_w = std::max(max_w, e._w);
       }
       if (def.type == GUI_MENU_VFRAME) {
         for (GuiElem& e : def.elems) { e._w = max_w; }
       }
-      def._w = max_w + (_theme.border * 2);
-      def._h = total_h + _theme.border;
+      def._w = max_w + (_theme->border * 2);
+      def._h = total_h + _theme->border;
       break;
     }
     case GUI_LABEL: {
-      const Font& fnt = *_theme.font;
+      const Font& fnt = *_theme->font;
       def._w = fnt.calcWidth(def.text);
       int lines = calcLines(def.text);
       def._h = float(
-        (fnt.size() - 1) * lines + (_theme.spacing * std::max(lines - 1, 0)));
+        (fnt.size() - 1) * lines + (_theme->spacing * std::max(lines - 1, 0)));
       // FIXME: improve line height calc (based on font ymax/ymin?)
       break;
     }
     case GUI_HLINE:
-      def._w = float(32 + _theme.border * 2);
-      def._h = float(1 + _theme.border * 2);
+      def._w = float(32 + _theme->border * 2);
+      def._h = float(1 + _theme->border * 2);
       break;
     case GUI_VLINE:
-      def._w = float(1 + _theme.border * 2);
-      def._h = float(32 + _theme.border * 2);
+      def._w = float(1 + _theme->border * 2);
+      def._h = float(32 + _theme->border * 2);
       break;
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
@@ -507,22 +507,22 @@ void gx::Gui::calcSize(GuiElem& def)
     case GUI_MENU_ITEM: {
       GuiElem& e = def.elems[0];
       calcSize(e);
-      def._w = float(e._w + (_theme.border * 2));
-      def._h = float(e._h + (_theme.border * 2));
+      def._w = float(e._w + (_theme->border * 2));
+      def._h = float(e._h + (_theme->border * 2));
       break;
     }
     case GUI_MENU: {
       // menu button
       GuiElem& e = def.elems[0];
       calcSize(e);
-      def._w = float(e._w + (_theme.border * 2));
-      def._h = float(e._h + (_theme.border * 2));
+      def._w = float(e._w + (_theme->border * 2));
+      def._h = float(e._h + (_theme->border * 2));
       // menu items
       calcSize(def.elems[1]);
       break;
     }
     case GUI_ENTRY: {
-      const Font& fnt = *_theme.font;
+      const Font& fnt = *_theme->font;
       if (def.entry.type == ENTRY_CARDINAL
           || def.entry.type == ENTRY_INTEGER
           || def.entry.type == ENTRY_FLOAT) {
@@ -531,15 +531,15 @@ void gx::Gui::calcSize(GuiElem& def)
         def._w = def.entry.size * fnt.calcWidth("A");
         // FIXME: use better width value than capital A * size
       }
-      def._w += float(_theme.entryLeftMargin + _theme.entryRightMargin
-                      + _theme.cursorWidth + 1);
+      def._w += float(_theme->entryLeftMargin + _theme->entryRightMargin
+                      + _theme->cursorWidth + 1);
       def._h = float(fnt.size() - 1)
-        + _theme.entryTopMargin + _theme.entryBottomMargin;
+        + _theme->entryTopMargin + _theme->entryBottomMargin;
       break;
     }
     case GUI_IMAGE:
-      def._w = def.image.width + (_theme.border * 2);
-      def._h = def.image.height + (_theme.border * 2);
+      def._w = def.image.width + (_theme->border * 2);
+      def._h = def.image.height + (_theme->border * 2);
       break;
     default:
       GX_LOG_ERROR("unknown type ", def.type);
@@ -556,12 +556,12 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
     case GUI_HFRAME:
     case GUI_MENU_HFRAME:
       for (GuiElem& e : def.elems) {
-        base_x += _theme.border;
+        base_x += _theme->border;
         float yy = 0;
         if (VAlign(e.align) == ALIGN_TOP) {
-          yy = _theme.border;
+          yy = _theme->border;
         } else if (VAlign(e.align) == ALIGN_BOTTOM) {
-          yy = (def._h - e._h) - _theme.border;
+          yy = (def._h - e._h) - _theme->border;
         } else {
           yy = (def._h - e._h) / 2.0f;
         }
@@ -572,12 +572,12 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
     case GUI_VFRAME:
     case GUI_MENU_VFRAME:
       for (GuiElem& e : def.elems) {
-        base_y += _theme.border;
+        base_y += _theme->border;
         float xx = 0;
         if (HAlign(e.align) == ALIGN_LEFT) {
-          xx = _theme.border;
+          xx = _theme->border;
         } else if (HAlign(e.align) == ALIGN_RIGHT) {
-          xx = (def._w - e._w) - _theme.border;
+          xx = (def._w - e._w) - _theme->border;
         } else {
           xx = (def._w - e._w) / 2.0f;
         }
@@ -589,10 +589,10 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
     case GUI_BUTTON_PRESS:
     case GUI_BUTTON_HOLD:
     case GUI_MENU_ITEM:
-      calcPos(def.elems[0], base_x + _theme.border, base_y + _theme.border);
+      calcPos(def.elems[0], base_x + _theme->border, base_y + _theme->border);
       break;
     case GUI_MENU:
-      calcPos(def.elems[0], base_x + _theme.border, base_y + _theme.border);
+      calcPos(def.elems[0], base_x + _theme->border, base_y + _theme->border);
       // FIXME: menu items always directly under button for now
       calcPos(def.elems[1], base_x, base_y + def._h);
       break;
@@ -613,7 +613,7 @@ void gx::Gui::drawElem(
   DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
   const GuiElem& def, const GuiTheme::Style* style) const
 {
-  if (!style) { style = &_theme.base; }
+  if (!style) { style = &_theme->base; }
   switch (def.type) {
     case GUI_LABEL:
       dc2.color(style->textColor);
@@ -622,34 +622,35 @@ void gx::Gui::drawElem(
     case GUI_HLINE:
     case GUI_VLINE:
       dc.color(style->textColor);
-      dc.rectangle(def._x + _theme.border, def._y + _theme.border,
-                   def._w - (_theme.border*2), def._h - (_theme.border*2));
+      dc.rectangle(def._x + _theme->border, def._y + _theme->border,
+                   def._w - (_theme->border*2), def._h - (_theme->border*2));
       break;
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
     case GUI_BUTTON_HOLD:
       if (def.id == _heldID) {
         style = (def.id == _hoverID || def.type != GUI_BUTTON)
-          ? &_theme.buttonPress : &_theme.buttonHold;
+          ? &_theme->buttonPress : &_theme->buttonHold;
       } else {
         style = (def.id == _hoverID)
-          ? &_theme.buttonHover : &_theme.button;
+          ? &_theme->buttonHover : &_theme->button;
       }
       drawRec(dc, def, *style);
       break;
     case GUI_MENU:
-      style = def._active ? &_theme.menuButtonOpen
-        : ((def.id == _hoverID) ? &_theme.menuButtonHover : &_theme.menuButton);
+      style = def._active ? &_theme->menuButtonOpen
+        : ((def.id == _hoverID)
+           ? &_theme->menuButtonHover : &_theme->menuButton);
       drawRec(dc, def, *style);
       break;
     case GUI_MENU_HFRAME:
     case GUI_MENU_VFRAME:
-      style = &_theme.menuFrame;
+      style = &_theme->menuFrame;
       drawRec(dc, def, *style);
       break;
     case GUI_MENU_ITEM:
       if (def.id == _hoverID) {
-        style = &_theme.menuItemSelect;
+        style = &_theme->menuItemSelect;
         drawRec(dc, def, *style);
       }
       break;
@@ -657,16 +658,16 @@ void gx::Gui::drawElem(
       const Font& fnt = *tf.font;
       float tw = fnt.calcWidth(def.text);
       if (def.id == _focusID) {
-        style = &_theme.entryFocus;
-        tw += float(1 + _theme.cursorWidth);
+        style = &_theme->entryFocus;
+        tw += float(1 + _theme->cursorWidth);
         // TODO: handle variable cursor position
       } else {
-        style = &_theme.entry;
+        style = &_theme->entry;
       }
       drawRec(dc, def, *style);
       const float maxWidth = def._w
-        - _theme.entryLeftMargin - _theme.entryRightMargin;
-      float tx = def._x + _theme.entryLeftMargin;
+        - _theme->entryLeftMargin - _theme->entryRightMargin;
+      float tx = def._x + _theme->entryLeftMargin;
       const uint32_t textColor = style->textColor;
       if (tw > maxWidth) {
         // text doesn't fit in entry
@@ -677,21 +678,21 @@ void gx::Gui::drawElem(
       } else {
         dc2.color(textColor);
       }
-      dc2.text(tf, tx, def._y + _theme.entryTopMargin, ALIGN_TOP_LEFT,
+      dc2.text(tf, tx, def._y + _theme->entryTopMargin, ALIGN_TOP_LEFT,
                def.text, {def._x, def._y, def._w, def._h});
       // TODO: draw all characters as '*' for password entries
       if (def.id == _focusID && _cursorState) {
         // draw cursor
-        dc.color(_theme.cursorColor);
+        dc.color(_theme->cursorColor);
         dc.rectangle(
-          tx + tw - float(_theme.cursorWidth), def._y + _theme.entryTopMargin,
-          float(_theme.cursorWidth), float(fnt.size()-1));
+          tx + tw - float(_theme->cursorWidth), def._y + _theme->entryTopMargin,
+          float(_theme->cursorWidth), float(fnt.size()-1));
       }
       break;
     }
     case GUI_IMAGE:
       dc.texture(def.image.texId);
-      dc.rectangle(def._x + _theme.border, def._y + _theme.border,
+      dc.rectangle(def._x + _theme->border, def._y + _theme->border,
                    def.image.width, def.image.height,
                    def.image.texCoord0, def.image.texCoord1);
       break;

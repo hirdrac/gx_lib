@@ -168,8 +168,8 @@ class gx::Gui
   bool setText(int id, std::string_view text);
 
  private:
+  const GuiTheme* _theme = nullptr;
   GuiElem _rootElem;
-  GuiTheme _theme;
   DrawListMap _dlm;
   Vec2 _pt = {};
   int _hoverID = 0;
