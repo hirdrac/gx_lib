@@ -454,31 +454,31 @@ void gx::Gui::init(GuiElem& def)
 void gx::Gui::calcSize(GuiElem& def)
 {
   switch (def.type) {
-    case GUI_HFRAME:
-    case GUI_MENU_HFRAME: {
+    case GUI_HFRAME: {
       float total_w = 0, max_h = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
         total_w += e._w + _theme->border;
         max_h = std::max(max_h, e._h);
       }
-      if (def.type == GUI_MENU_HFRAME) {
-        for (GuiElem& e : def.elems) { e._h = max_h; }
+      for (GuiElem& e : def.elems) {
+        if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; }
+        // TODO: support horizontal justify
       }
       def._w = total_w + _theme->border;
       def._h = max_h + (_theme->border * 2);
       break;
     }
-    case GUI_VFRAME:
-    case GUI_MENU_VFRAME: {
+    case GUI_VFRAME: {
       float total_h = 0, max_w = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
         total_h += e._h + _theme->border;
         max_w = std::max(max_w, e._w);
       }
-      if (def.type == GUI_MENU_VFRAME) {
-        for (GuiElem& e : def.elems) { e._w = max_w; }
+      for (GuiElem& e : def.elems) {
+        if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; }
+        // TODO: support vertical justify
       }
       def._w = max_w + (_theme->border * 2);
       def._h = total_h + _theme->border;
@@ -554,7 +554,6 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
 
   switch (def.type) {
     case GUI_HFRAME:
-    case GUI_MENU_HFRAME:
       for (GuiElem& e : def.elems) {
         base_x += _theme->border;
         float yy = 0;
@@ -565,12 +564,12 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
         } else {
           yy = (def._h - e._h) / 2.0f;
         }
+        // TODO: support horizontal alignment
         calcPos(e, base_x, base_y + yy);
         base_x += e._w;
       }
       break;
     case GUI_VFRAME:
-    case GUI_MENU_VFRAME:
       for (GuiElem& e : def.elems) {
         base_y += _theme->border;
         float xx = 0;
@@ -581,6 +580,7 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
         } else {
           xx = (def._w - e._w) / 2.0f;
         }
+        // TODO: support vertical alignment
         calcPos(e, base_x + xx, base_y);
         base_y += e._h;
       }
@@ -589,6 +589,7 @@ void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
     case GUI_BUTTON_PRESS:
     case GUI_BUTTON_HOLD:
     case GUI_MENU_ITEM:
+      // TODO: support alignment for child element
       calcPos(def.elems[0], base_x + _theme->border, base_y + _theme->border);
       break;
     case GUI_MENU:
@@ -641,11 +642,6 @@ void gx::Gui::drawElem(
       style = def._active ? &_theme->menuButtonOpen
         : ((def.id == _hoverID)
            ? &_theme->menuButtonHover : &_theme->menuButton);
-      drawRec(dc, def, *style);
-      break;
-    case GUI_MENU_HFRAME:
-    case GUI_MENU_VFRAME:
-      style = &_theme->menuFrame;
       drawRec(dc, def, *style);
       break;
     case GUI_MENU_ITEM:
@@ -720,7 +716,9 @@ void gx::Gui::drawPopup(
   if (def.type == GUI_MENU) {
     if (def._active) {
       // menu frame & items
-      drawElem(dc, dc2, tf, def.elems[1]);
+      const GuiTheme::Style* style = &_theme->menuFrame;
+      drawRec(dc, def.elems[1], *style);
+      drawElem(dc, dc2, tf, def.elems[1], style);
     }
   } else {
     for (auto& e : def.elems) { drawPopup(dc, dc2, tf, e); }

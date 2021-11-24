@@ -35,13 +35,13 @@ namespace gx {
     // layout/draw types
     GUI_HFRAME, GUI_VFRAME,
     GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_IMAGE,
-    GUI_MENU, GUI_MENU_HFRAME, GUI_MENU_VFRAME,
 
     // event types
     GUI_BUTTON,        // activated on release
     GUI_BUTTON_PRESS,  // activated once on press
     GUI_BUTTON_HOLD,   // activated continuously on hold&press
-    GUI_MENU_ITEM,     // activated on release
+    GUI_MENU,          // button hold or release on menu opens menu
+    GUI_MENU_ITEM,     // activated on press or release
     GUI_ENTRY,         // activated if changed on enter/tab/click-away
   };
 
@@ -254,13 +254,13 @@ namespace gx {
   // HLine
   inline GuiElem guiHLine()
   {
-    return {GUI_HLINE, ALIGN_HCENTER, 0};
+    return {GUI_HLINE, ALIGN_HJUSTIFY, 0};
   }
 
   // VLine
   inline GuiElem guiVLine()
   {
-    return {GUI_VLINE, ALIGN_VCENTER, 0};
+    return {GUI_VLINE, ALIGN_VJUSTIFY, 0};
   }
 
   // Button
@@ -277,7 +277,7 @@ namespace gx {
 
   inline GuiElem guiButton(std::string_view text, int eventID)
   {
-    return {GUI_BUTTON, ALIGN_TOP_LEFT, eventID, {guiLabel(text)}};
+    return {GUI_BUTTON, ALIGN_TOP_LEFT, eventID, {guiLabel(ALIGN_CENTER, text)}};
   }
 
   inline GuiElem guiButton(AlignEnum align, std::string_view text, int eventID)
@@ -337,13 +337,12 @@ namespace gx {
   template<typename... Elems>
   inline GuiElem guiMenu(std::string_view text, const Elems&... items)
   {
-    return {GUI_MENU, ALIGN_TOP_LEFT, 0, {guiLabel(text),
-        GuiElem{GUI_MENU_VFRAME, ALIGN_TOP_LEFT, 0, {items...}}}};
+    return {GUI_MENU, ALIGN_TOP_LEFT, 0, {guiLabel(text), guiVFrame(items...)}};
   }
 
   inline GuiElem guiMenuItem(std::string_view text, int eventID)
   {
-    return {GUI_MENU_ITEM, ALIGN_TOP_LEFT, eventID, {guiLabel(text)}};
+    return {GUI_MENU_ITEM, ALIGN_JUSTIFY, eventID, {guiLabel(text)}};
   }
 
   // Entry
