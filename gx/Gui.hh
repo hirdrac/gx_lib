@@ -140,8 +140,9 @@ struct gx::GuiTheme
   uint32_t cursorBlinkTime = 400000; // 1 sec
   uint16_t cursorWidth = 3;
 
-  uint16_t spacing = 2;
-  uint16_t border = 4;
+  uint16_t border = 6;
+  uint16_t frameSpacing = 4;
+  uint16_t lineSpacing = 0;
 };
 
 

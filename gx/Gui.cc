@@ -186,7 +186,7 @@ void gx::Gui::update(Window& win)
     // 3 - popup text
 
     TextFormatting tf{_theme->font};
-    tf.spacing = _theme->spacing;
+    tf.spacing = _theme->lineSpacing;
 
     DrawContext dc0{_dlm[0]}, dc1{_dlm[1]};
     dc0.clear();
@@ -408,10 +408,11 @@ void gx::Gui::calcSize(GuiElem& def)
   const float b = _theme->border;
   switch (def.type) {
     case GUI_HFRAME: {
-      float total_w = -b, max_h = 0;
+      const float fs = _theme->frameSpacing;
+      float total_w = -fs, max_h = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
-        total_w += e._w + b;
+        total_w += e._w + fs;
         max_h = std::max(max_h, e._h);
       }
       for (GuiElem& e : def.elems) {
@@ -423,10 +424,11 @@ void gx::Gui::calcSize(GuiElem& def)
       break;
     }
     case GUI_VFRAME: {
-      float total_h = -b, max_w = 0;
+      const float fs = _theme->frameSpacing;
+      float total_h = -fs, max_w = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
-        total_h += e._h + b;
+        total_h += e._h + fs;
         max_w = std::max(max_w, e._w);
       }
       for (GuiElem& e : def.elems) {
@@ -441,8 +443,8 @@ void gx::Gui::calcSize(GuiElem& def)
       const Font& fnt = *_theme->font;
       def._w = fnt.calcWidth(def.text);
       int lines = calcLines(def.text);
-      def._h = float(
-        (fnt.size() - 1) * lines + (_theme->spacing * std::max(lines - 1, 0)));
+      def._h = float((fnt.size() - 1) * lines
+                     + (_theme->lineSpacing * std::max(lines - 1, 0)));
       // FIXME: improve line height calc (based on font ymax/ymin?)
       break;
     }
@@ -524,7 +526,6 @@ void gx::Gui::calcPos(
     }
   }
 
-  const float b = _theme->border;
   left   = def._x;
   top    = def._y;
   right  = def._x + def._w;
@@ -532,22 +533,24 @@ void gx::Gui::calcPos(
 
   switch (def.type) {
     case GUI_HFRAME: {
+      const float fs = _theme->frameSpacing;
       float total_w = 0;
-      for (GuiElem& e : def.elems) { total_w += e._w + b; }
+      for (GuiElem& e : def.elems) { total_w += e._w + fs; }
       for (GuiElem& e : def.elems) {
-        total_w -= e._w + b;
+        total_w -= e._w + fs;
         calcPos(e, left, top, right - total_w, bottom);
-        left = e._x + e._w + b;
+        left = e._x + e._w + fs;
       }
       break;
     }
     case GUI_VFRAME: {
+      const float fs = _theme->frameSpacing;
       float total_h = 0;
-      for (GuiElem& e : def.elems) { total_h += e._h + b; }
+      for (GuiElem& e : def.elems) { total_h += e._h + fs; }
       for (GuiElem& e : def.elems) {
-        total_h -= e._h + b;
+        total_h -= e._h + fs;
         calcPos(e, left, top, right, bottom - total_h);
-        top = e._y + e._h + b;
+        top = e._y + e._h + fs;
       }
       break;
     }
@@ -556,18 +559,20 @@ void gx::Gui::calcPos(
       calcPos(e0, left, top, right, bottom);
       // always position menu frame below menu button for now
       left = def._x;
-      top  = e0._y + e0._h + b;
+      top  = e0._y + e0._h + _theme->border;
       GuiElem& e1 = def.elems[1];
       calcPos(e1, left, top, left + e1._w, top + e1._h);
       break;
     }
-    default:
+    default: {
       // align single child element
+      const float b = _theme->border;
       if (!def.elems.empty()) {
         assert(def.elems.size() == 1);
         calcPos(def.elems[0], left + b, top + b, right - b, bottom - b);
       }
       break;
+    }
   }
 }
 
