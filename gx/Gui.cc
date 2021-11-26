@@ -129,8 +129,9 @@ void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
 {
   _theme = &theme;
   assert(_theme->font != nullptr);
-  _panel.x = x;
-  _panel.y = y;
+  _layout = {x,y,0,0};
+  if (HAlign(align) == ALIGN_RIGHT) { std::swap(_layout.x, _layout.w); }
+  if (VAlign(align) == ALIGN_BOTTOM) { std::swap(_layout.y, _layout.h); }
   _rootElem.align = align;
   _needLayout = true;
   _needRender = true;
@@ -145,11 +146,8 @@ void gx::Gui::update(Window& win)
   // size & position update
   if (_needLayout) {
     calcSize(_rootElem);
-    const float b = _theme->border;
-    _panel.w = _rootElem._w + (b * 2.0f);
-    _panel.h = _rootElem._h + (b * 2.0f);
-    calcPos(_rootElem, _panel.x + b, _panel.y + b,
-            _panel.x + _panel.w - b, _panel.y + _panel.y - b);
+    calcPos(_rootElem, _layout.x, _layout.y,
+            _layout.x + _layout.w, _layout.y + _layout.h);
     _needLayout = false;
   }
 

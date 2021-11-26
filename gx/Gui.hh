@@ -174,7 +174,7 @@ class gx::Gui
   const GuiTheme* _theme = nullptr;
   GuiElem _rootElem;
   DrawListMap _dlm;
-  Rect _panel;
+  Rect _layout;
   int _hoverID = 0;
   int _heldID = 0;
   int _focusID = 0;
