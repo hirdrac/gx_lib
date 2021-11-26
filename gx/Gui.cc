@@ -106,36 +106,24 @@ namespace {
     return true;
   }
 
-  void drawRec(gx::DrawContext& dc, float x, float y, float w, float h,
+  void drawRec(gx::DrawContext& dc, const gx::GuiElem& e,
                const gx::GuiTheme::Style* style)
   {
     if (style->backgroundColor != 0) {
       dc.color(style->backgroundColor);
-      dc.rectangle(x, y, w, h);
+      dc.rectangle(e._x, e._y, e._w, e._h);
     }
 
     if (style->edgeColor != 0) {
       dc.color(style->edgeColor);
-      dc.rectangle(x, y, w, 1);
-      dc.rectangle(x, y + h - 1, w, 1);
-      dc.rectangle(x, y, 1, h);
-      dc.rectangle(x + w - 1, y, 1, h);
+      dc.rectangle(e._x, e._y, e._w, 1);
+      dc.rectangle(e._x, e._y + e._h - 1, e._w, 1);
+      dc.rectangle(e._x, e._y, 1, e._h);
+      dc.rectangle(e._x + e._w - 1, e._y, 1, e._h);
     }
-  }
-
-  inline void drawRec(gx::DrawContext& dc, const gx::GuiElem& def,
-                      const gx::GuiTheme::Style* style)
-  {
-    drawRec(dc, def._x, def._y, def._w, def._h, style);
   }
 }
 
-
-gx::Gui::Gui(const GuiElem& rootElem)
-  : _rootElem{rootElem} { init(_rootElem); }
-
-gx::Gui::Gui(GuiElem&& rootElem)
-  : _rootElem{std::move(rootElem)} { init(_rootElem); }
 
 void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
 {
@@ -179,7 +167,7 @@ void gx::Gui::update(Window& win)
   if (_focusID != 0) {
     if (win.events() & EVENT_CHAR) { processCharEvent(win); }
 
-    const uint64_t bt = _theme->cursorBlinkTime;
+    const int64_t bt = _theme->cursorBlinkTime;
     if (bt > 0) {
       // check for cursor blink
       const int64_t blinks = (win.lastPollTime() - _lastCursorUpdate) / bt;
@@ -206,10 +194,7 @@ void gx::Gui::update(Window& win)
     dc0.clear();
     dc1.clear();
 
-    const float b = _theme->border;
-    const GuiTheme::Style* style = &_theme->panel;
-    drawRec(dc0, _panel.x, _panel.y, _panel.w, _panel.h, style);
-    drawElem(dc0, dc1, tf, _rootElem, style);
+    drawElem(dc0, dc1, tf, _rootElem, &_theme->panel);
 
     if (_popupActive) {
       DrawContext dc2{_dlm[2]}, dc3{_dlm[3]};
@@ -416,26 +401,7 @@ bool gx::Gui::setText(int id, std::string_view text)
 
 void gx::Gui::init(GuiElem& def)
 {
-  if (def.type == GUI_MENU) {
-    def.id = _uniqueID--;
-  }
-
-#ifndef NDEBUG
-  switch (def.type) {
-    case GUI_BUTTON:
-    case GUI_BUTTON_PRESS:
-    case GUI_BUTTON_HOLD:
-    case GUI_MENU_ITEM:
-      assert(def.elems.size() == 1);
-      break;
-    case GUI_MENU:
-      assert(def.elems.size() == 2);
-      break;
-    default:
-      break;
-  }
-#endif
-
+  if (def.type == GUI_MENU) { def.id = _uniqueID--; }
   for (GuiElem& e : def.elems) { init(e); }
 }
 
@@ -490,6 +456,7 @@ void gx::Gui::calcSize(GuiElem& def)
       def._w = 1.0f + (b * 2.0f);
       def._h = 32.0f + (b * 2.0f);
       break;
+    case GUI_BACKGROUND:
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
     case GUI_BUTTON_HOLD:
@@ -611,6 +578,10 @@ void gx::Gui::drawElem(
   const GuiElem& def, const GuiTheme::Style* style) const
 {
   switch (def.type) {
+    case GUI_BACKGROUND:
+      assert(style != nullptr);
+      drawRec(dc, def, style);
+      break;
     case GUI_LABEL:
       assert(style != nullptr);
       dc2.color(style->textColor);
@@ -658,10 +629,10 @@ void gx::Gui::drawElem(
         style = &_theme->entry;
       }
       drawRec(dc, def, style);
+      const uint32_t textColor = style->textColor;
       const float maxWidth = def._w
         - _theme->entryLeftMargin - _theme->entryRightMargin;
       float tx = def._x + _theme->entryLeftMargin;
-      const uint32_t textColor = style->textColor;
       if (tw > maxWidth) {
         // text doesn't fit in entry
         tx -= tw - maxWidth;
@@ -676,10 +647,10 @@ void gx::Gui::drawElem(
       // TODO: draw all characters as '*' for password entries
       if (def.id == _focusID && _cursorState) {
         // draw cursor
+        const float cw = _theme->cursorWidth;
         dc.color(_theme->cursorColor);
-        dc.rectangle(
-          tx + tw - float(_theme->cursorWidth), def._y + _theme->entryTopMargin,
-          float(_theme->cursorWidth), float(fnt.size()-1));
+        dc.rectangle(tx + tw - cw, def._y + _theme->entryTopMargin,
+                     cw, float(fnt.size()-1));
       }
       break;
     }
@@ -713,9 +684,7 @@ void gx::Gui::drawPopup(
   if (def.type == GUI_MENU) {
     if (def._active) {
       // menu frame & items
-      const GuiTheme::Style* style = &_theme->menuFrame;
-      drawRec(dc, def.elems[1], style);
-      drawElem(dc, dc2, tf, def.elems[1], style);
+      drawElem(dc, dc2, tf, def.elems[1], &_theme->menuFrame);
     }
   } else {
     for (auto& e : def.elems) { drawPopup(dc, dc2, tf, e); }

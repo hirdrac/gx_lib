@@ -32,9 +32,11 @@ namespace gx {
   enum GuiElemType {
     GUI_NULL = 0,
 
-    // layout/draw types
+    // layout types
     GUI_HFRAME, GUI_VFRAME,
-    GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_IMAGE,
+
+    // draw types
+    GUI_BACKGROUND, GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_IMAGE,
 
     // event types
     GUI_BUTTON,        // activated on release
@@ -146,8 +148,8 @@ struct gx::GuiTheme
 class gx::Gui
 {
  public:
-  Gui(const GuiElem& rootElem);
-  Gui(GuiElem&& rootElem);
+  Gui(const GuiElem& elems)
+    : _rootElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {elems}} { init(_rootElem); }
 
   void layout(const GuiTheme& theme, float x, float y, AlignEnum align);
   void update(Window& win);
@@ -340,7 +342,9 @@ namespace gx {
   inline GuiElem guiMenu(std::string_view text, const Elems&... items)
   {
     return {GUI_MENU, ALIGN_TOP_LEFT, 0,
-            {guiLabel(ALIGN_CENTER, text), guiVFrame(items...)}};
+            {guiLabel(ALIGN_CENTER, text),
+             GuiElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0,
+                     {guiVFrame(items...)}}}};
   }
 
   inline GuiElem guiMenuItem(std::string_view text, int eventID)
