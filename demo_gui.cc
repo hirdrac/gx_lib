@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
 
   gx::GuiTheme theme{&fnt};
 
+  // button demo
   gx::Gui gui1{
     gx::guiVFrame(
       gx::guiLabel(gx::ALIGN_HCENTER, "BUTTON LIST"),
@@ -39,13 +40,15 @@ int main(int argc, char* argv[])
         gx::guiButton(gx::ALIGN_VCENTER, "B3", 3),
         gx::guiButton("B4", 4),
         gx::guiVLine(),
-        gx::guiButton("B5", 5)),
+        gx::guiButton(gx::ALIGN_VJUSTIFY, "B5", 5)),
       gx::guiHFrame(
         gx::guiButtonPress("PRESS", 77),
         gx::guiButtonHold("HOLD", 88)),
+      gx::guiHLine(),
       gx::guiButton(gx::ALIGN_RIGHT, "[QUIT]", 99))};
   gui1.layout(theme, 60, 80, gx::ALIGN_TOP_LEFT);
 
+  // pull-down menu demo
   gx::Gui gui2{
     gx::guiVFrame(
       gx::guiHFrame(
@@ -61,13 +64,17 @@ int main(int argc, char* argv[])
           gx::guiMenuItem("About", 4))))};
   gui2.layout(theme, 0, 0, gx::ALIGN_TOP_LEFT);
 
+  // text entry demo
   gx::Gui gui3{
     gx::guiVFrame(
       gx::guiHFrame(
-        gx::guiLabel(gx::ALIGN_VCENTER, "R"), gx::guiCardinalEntry(3.0f,3,1),
-        gx::guiLabel(gx::ALIGN_VCENTER, " G"), gx::guiCardinalEntry(3.0f,3,2),
-        gx::guiLabel(gx::ALIGN_VCENTER, " B"), gx::guiCardinalEntry(3.0f,3,3)),
-      gx::guiHLine(),
+        gx::guiLabel(gx::ALIGN_CENTER_LEFT, "R"),
+        gx::guiCardinalEntry(3.0f,3,1),
+        gx::guiLabel(gx::ALIGN_CENTER_LEFT, " G"),
+        gx::guiCardinalEntry(3.0f,3,2),
+        gx::guiLabel(gx::ALIGN_CENTER_LEFT, " B"),
+        gx::guiCardinalEntry(3.0f,3,3)),
+      //gx::guiHLine(),
       gx::guiTextEntry(16.0f,100,10))};
   gui3.layout(theme, 60, 300, gx::ALIGN_TOP_LEFT);
 
@@ -85,6 +92,7 @@ int main(int argc, char* argv[])
   bool running = true;
   bool needRedraw = true;
 
+  // **** MAIN LOOP ****
   while (running) {
     // draw frame
     if (win.resized() || needRedraw) {

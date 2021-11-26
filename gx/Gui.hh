@@ -101,7 +101,7 @@ struct gx::GuiTheme
   };
 
   const Font* font = nullptr;
-  Style base = {
+  Style panel = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.2f,.2f,.2f,1.0f), 0};
 
   Style button = {
@@ -172,7 +172,7 @@ class gx::Gui
   const GuiTheme* _theme = nullptr;
   GuiElem _rootElem;
   DrawListMap _dlm;
-  Vec2 _pt = {};
+  Rect _panel;
   int _hoverID = 0;
   int _heldID = 0;
   int _focusID = 0;
@@ -192,10 +192,10 @@ class gx::Gui
   void setFocusID(Window& win, int id);
   void init(GuiElem& def);
   void calcSize(GuiElem& def);
-  void calcPos(GuiElem& def, float base_x, float base_y);
+  void calcPos(GuiElem& e, float left, float top, float right, float bottom);
   void drawElem(
     DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-    const GuiElem& def, const GuiTheme::Style* style = nullptr) const;
+    const GuiElem& def, const GuiTheme::Style* style) const;
   void drawPopup(
     DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
     const GuiElem& def) const;
@@ -282,7 +282,7 @@ namespace gx {
 
   inline GuiElem guiButton(AlignEnum align, std::string_view text, int eventID)
   {
-    return {GUI_BUTTON, align, eventID, {guiLabel(text)}};
+    return {GUI_BUTTON, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
   }
 
   // ButtonPress
@@ -300,13 +300,14 @@ namespace gx {
 
   inline GuiElem guiButtonPress(std::string_view text, int eventID)
   {
-    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, eventID, {guiLabel(text)}};
+    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, eventID,
+            {guiLabel(ALIGN_CENTER, text)}};
   }
 
   inline GuiElem guiButtonPress(
     AlignEnum align, std::string_view text, int eventID)
   {
-    return {GUI_BUTTON_PRESS, align, eventID, {guiLabel(text)}};
+    return {GUI_BUTTON_PRESS, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
   }
 
   // ButtonHold
@@ -324,25 +325,28 @@ namespace gx {
 
   inline GuiElem guiButtonHold(std::string_view text, int eventID)
   {
-    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, eventID, {guiLabel(text)}};
+    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, eventID,
+            {guiLabel(ALIGN_CENTER, text)}};
   }
 
   inline GuiElem guiButtonHold(
     AlignEnum align, std::string_view text, int eventID)
   {
-    return {GUI_BUTTON_HOLD, align, eventID, {guiLabel(text)}};
+    return {GUI_BUTTON_HOLD, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
   }
 
   // Menu
   template<typename... Elems>
   inline GuiElem guiMenu(std::string_view text, const Elems&... items)
   {
-    return {GUI_MENU, ALIGN_TOP_LEFT, 0, {guiLabel(text), guiVFrame(items...)}};
+    return {GUI_MENU, ALIGN_TOP_LEFT, 0,
+            {guiLabel(ALIGN_CENTER, text), guiVFrame(items...)}};
   }
 
   inline GuiElem guiMenuItem(std::string_view text, int eventID)
   {
-    return {GUI_MENU_ITEM, ALIGN_JUSTIFY, eventID, {guiLabel(text)}};
+    return {GUI_MENU_ITEM, ALIGN_JUSTIFY, eventID,
+            {guiLabel(ALIGN_CENTER_LEFT, text)}};
   }
 
   // Entry

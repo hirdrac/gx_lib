@@ -28,28 +28,6 @@ namespace {
       && (y >= e._y) && (y < (e._y + e._h));
   }
 
-  [[nodiscard]] float actualX(float x, float w, gx::AlignEnum a)
-  {
-    if (gx::HAlign(a) == gx::ALIGN_LEFT) {
-      return x;
-    } else if (gx::HAlign(a) == gx::ALIGN_RIGHT) {
-      return x - w;
-    } else {
-      return x - (w / 2.0f);
-    }
-  }
-
-  [[nodiscard]] float actualY(float y, float h, gx::AlignEnum a)
-  {
-    if (gx::VAlign(a) == gx::ALIGN_TOP) {
-      return y;
-    } else if (gx::VAlign(a) == gx::ALIGN_BOTTOM) {
-      return y - h;
-    } else {
-      return y - (h / 2.0f);
-    }
-  }
-
   [[nodiscard]] int calcLines(std::string_view text)
   {
     if (text.empty()) { return 0; }
@@ -128,37 +106,43 @@ namespace {
     return true;
   }
 
-  void drawRec(gx::DrawContext& dc, const gx::GuiElem& def,
-               const gx::GuiTheme::Style& style)
+  void drawRec(gx::DrawContext& dc, float x, float y, float w, float h,
+               const gx::GuiTheme::Style* style)
   {
-    if (style.backgroundColor != 0) {
-      dc.color(style.backgroundColor);
-      dc.rectangle(def._x, def._y, def._w, def._h);
+    if (style->backgroundColor != 0) {
+      dc.color(style->backgroundColor);
+      dc.rectangle(x, y, w, h);
     }
 
-    if (style.edgeColor != 0) {
-      dc.color(style.edgeColor);
-      dc.rectangle(def._x, def._y, def._w, 1);
-      dc.rectangle(def._x, def._y + def._h - 1, def._w, 1);
-      dc.rectangle(def._x, def._y, 1, def._h);
-      dc.rectangle(def._x + def._w - 1, def._y, 1, def._h);
+    if (style->edgeColor != 0) {
+      dc.color(style->edgeColor);
+      dc.rectangle(x, y, w, 1);
+      dc.rectangle(x, y + h - 1, w, 1);
+      dc.rectangle(x, y, 1, h);
+      dc.rectangle(x + w - 1, y, 1, h);
     }
+  }
+
+  inline void drawRec(gx::DrawContext& dc, const gx::GuiElem& def,
+                      const gx::GuiTheme::Style* style)
+  {
+    drawRec(dc, def._x, def._y, def._w, def._h, style);
   }
 }
 
 
 gx::Gui::Gui(const GuiElem& rootElem)
-  : _rootElem(rootElem) { init(_rootElem); }
+  : _rootElem{rootElem} { init(_rootElem); }
 
 gx::Gui::Gui(GuiElem&& rootElem)
-  : _rootElem(std::move(rootElem)) { init(_rootElem); }
+  : _rootElem{std::move(rootElem)} { init(_rootElem); }
 
 void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
 {
   _theme = &theme;
   assert(_theme->font != nullptr);
-
-  _pt.set(x, y);
+  _panel.x = x;
+  _panel.y = y;
   _rootElem.align = align;
   _needLayout = true;
   _needRender = true;
@@ -173,9 +157,11 @@ void gx::Gui::update(Window& win)
   // size & position update
   if (_needLayout) {
     calcSize(_rootElem);
-    const float x = actualX(_pt.x, _rootElem._w, _rootElem.align);
-    const float y = actualY(_pt.y, _rootElem._h, _rootElem.align);
-    calcPos(_rootElem, x, y);
+    const float b = _theme->border;
+    _panel.w = _rootElem._w + (b * 2.0f);
+    _panel.h = _rootElem._h + (b * 2.0f);
+    calcPos(_rootElem, _panel.x + b, _panel.y + b,
+            _panel.x + _panel.w - b, _panel.y + _panel.y - b);
     _needLayout = false;
   }
 
@@ -220,8 +206,10 @@ void gx::Gui::update(Window& win)
     dc0.clear();
     dc1.clear();
 
-    drawRec(dc0, _rootElem, _theme->base);
-    drawElem(dc0, dc1, tf, _rootElem);
+    const float b = _theme->border;
+    const GuiTheme::Style* style = &_theme->panel;
+    drawRec(dc0, _panel.x, _panel.y, _panel.w, _panel.h, style);
+    drawElem(dc0, dc1, tf, _rootElem, style);
 
     if (_popupActive) {
       DrawContext dc2{_dlm[2]}, dc3{_dlm[3]};
@@ -453,35 +441,36 @@ void gx::Gui::init(GuiElem& def)
 
 void gx::Gui::calcSize(GuiElem& def)
 {
+  const float b = _theme->border;
   switch (def.type) {
     case GUI_HFRAME: {
-      float total_w = 0, max_h = 0;
+      float total_w = -b, max_h = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
-        total_w += e._w + _theme->border;
+        total_w += e._w + b;
         max_h = std::max(max_h, e._h);
       }
       for (GuiElem& e : def.elems) {
         if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; }
         // TODO: support horizontal justify
       }
-      def._w = total_w + _theme->border;
-      def._h = max_h + (_theme->border * 2);
+      def._w = total_w;
+      def._h = max_h;
       break;
     }
     case GUI_VFRAME: {
-      float total_h = 0, max_w = 0;
+      float total_h = -b, max_w = 0;
       for (GuiElem& e : def.elems) {
         calcSize(e);
-        total_h += e._h + _theme->border;
+        total_h += e._h + b;
         max_w = std::max(max_w, e._w);
       }
       for (GuiElem& e : def.elems) {
         if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; }
         // TODO: support vertical justify
       }
-      def._w = max_w + (_theme->border * 2);
-      def._h = total_h + _theme->border;
+      def._w = max_w;
+      def._h = total_h;
       break;
     }
     case GUI_LABEL: {
@@ -494,12 +483,12 @@ void gx::Gui::calcSize(GuiElem& def)
       break;
     }
     case GUI_HLINE:
-      def._w = float(32 + _theme->border * 2);
-      def._h = float(1 + _theme->border * 2);
+      def._w = 32.0f + (b * 2.0f);
+      def._h = 1.0f + (b * 2.0f);
       break;
     case GUI_VLINE:
-      def._w = float(1 + _theme->border * 2);
-      def._h = float(32 + _theme->border * 2);
+      def._w = 1.0f + (b * 2.0f);
+      def._h = 32.0f + (b * 2.0f);
       break;
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
@@ -507,16 +496,16 @@ void gx::Gui::calcSize(GuiElem& def)
     case GUI_MENU_ITEM: {
       GuiElem& e = def.elems[0];
       calcSize(e);
-      def._w = float(e._w + (_theme->border * 2));
-      def._h = float(e._h + (_theme->border * 2));
+      def._w = e._w + (b * 2.0f);
+      def._h = e._h + (b * 2.0f);
       break;
     }
     case GUI_MENU: {
       // menu button
       GuiElem& e = def.elems[0];
       calcSize(e);
-      def._w = float(e._w + (_theme->border * 2));
-      def._h = float(e._h + (_theme->border * 2));
+      def._w = e._w + (b * 2.0f);
+      def._h = e._h + (b * 2.0f);
       // menu items
       calcSize(def.elems[1]);
       break;
@@ -538,8 +527,8 @@ void gx::Gui::calcSize(GuiElem& def)
       break;
     }
     case GUI_IMAGE:
-      def._w = def.image.width + (_theme->border * 2);
-      def._h = def.image.height + (_theme->border * 2);
+      def._w = def.image.width + (b * 2.0f);
+      def._h = def.image.height + (b * 2.0f);
       break;
     default:
       GX_LOG_ERROR("unknown type ", def.type);
@@ -547,65 +536,72 @@ void gx::Gui::calcSize(GuiElem& def)
   }
 }
 
-void gx::Gui::calcPos(GuiElem& def, float base_x, float base_y)
+void gx::Gui::calcPos(
+  GuiElem& def, float left, float top, float right, float bottom)
 {
-  def._x = base_x;
-  def._y = base_y;
+  {
+    const auto va = VAlign(def.align);
+    if (va == ALIGN_TOP) {
+      def._y = top;
+    } else if (va == ALIGN_BOTTOM) {
+      def._y = bottom - def._h;
+    } else { // vcenter
+      def._y = std::floor((top + bottom - def._h) * .5f + .5f);
+    }
+
+    const auto ha = HAlign(def.align);
+    if (ha == ALIGN_LEFT) {
+      def._x = left;
+    } else if (ha == ALIGN_RIGHT) {
+      def._x = right - def._w;
+    } else { // hcenter
+      def._x = std::floor((left + right - def._w) * .5f);
+    }
+  }
+
+  const float b = _theme->border;
+  left   = def._x;
+  top    = def._y;
+  right  = def._x + def._w;
+  bottom = def._y + def._h;
 
   switch (def.type) {
-    case GUI_HFRAME:
+    case GUI_HFRAME: {
+      float total_w = 0;
+      for (GuiElem& e : def.elems) { total_w += e._w + b; }
       for (GuiElem& e : def.elems) {
-        base_x += _theme->border;
-        float yy = 0;
-        if (VAlign(e.align) == ALIGN_TOP) {
-          yy = _theme->border;
-        } else if (VAlign(e.align) == ALIGN_BOTTOM) {
-          yy = (def._h - e._h) - _theme->border;
-        } else {
-          yy = (def._h - e._h) / 2.0f;
-        }
-        // TODO: support horizontal alignment
-        calcPos(e, base_x, base_y + yy);
-        base_x += e._w;
+        total_w -= e._w + b;
+        calcPos(e, left, top, right - total_w, bottom);
+        left = e._x + e._w + b;
       }
       break;
-    case GUI_VFRAME:
+    }
+    case GUI_VFRAME: {
+      float total_h = 0;
+      for (GuiElem& e : def.elems) { total_h += e._h + b; }
       for (GuiElem& e : def.elems) {
-        base_y += _theme->border;
-        float xx = 0;
-        if (HAlign(e.align) == ALIGN_LEFT) {
-          xx = _theme->border;
-        } else if (HAlign(e.align) == ALIGN_RIGHT) {
-          xx = (def._w - e._w) - _theme->border;
-        } else {
-          xx = (def._w - e._w) / 2.0f;
-        }
-        // TODO: support vertical alignment
-        calcPos(e, base_x + xx, base_y);
-        base_y += e._h;
+        total_h -= e._h + b;
+        calcPos(e, left, top, right, bottom - total_h);
+        top = e._y + e._h + b;
       }
       break;
-    case GUI_BUTTON:
-    case GUI_BUTTON_PRESS:
-    case GUI_BUTTON_HOLD:
-    case GUI_MENU_ITEM:
-      // TODO: support alignment for child element
-      calcPos(def.elems[0], base_x + _theme->border, base_y + _theme->border);
+    }
+    case GUI_MENU: {
+      GuiElem& e0 = def.elems[0];
+      calcPos(e0, left, top, right, bottom);
+      // always position menu frame below menu button for now
+      left = def._x;
+      top  = e0._y + e0._h + b;
+      GuiElem& e1 = def.elems[1];
+      calcPos(e1, left, top, left + e1._w, top + e1._h);
       break;
-    case GUI_MENU:
-      calcPos(def.elems[0], base_x + _theme->border, base_y + _theme->border);
-      // FIXME: menu items always directly under button for now
-      calcPos(def.elems[1], base_x, base_y + def._h);
-      break;
-    case GUI_LABEL:
-    case GUI_HLINE:
-    case GUI_VLINE:
-    case GUI_ENTRY:
-    case GUI_IMAGE:
-      // noting extra to do
-      break;
+    }
     default:
-      GX_LOG_ERROR("unknown type ", def.type);
+      // align single child element
+      if (!def.elems.empty()) {
+        assert(def.elems.size() == 1);
+        calcPos(def.elems[0], left + b, top + b, right - b, bottom - b);
+      }
       break;
   }
 }
@@ -614,14 +610,15 @@ void gx::Gui::drawElem(
   DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
   const GuiElem& def, const GuiTheme::Style* style) const
 {
-  if (!style) { style = &_theme->base; }
   switch (def.type) {
     case GUI_LABEL:
+      assert(style != nullptr);
       dc2.color(style->textColor);
       dc2.text(tf, def._x, def._y, ALIGN_TOP_LEFT, def.text);
       break;
     case GUI_HLINE:
     case GUI_VLINE:
+      assert(style != nullptr);
       dc.color(style->textColor);
       dc.rectangle(def._x + _theme->border, def._y + _theme->border,
                    def._w - (_theme->border*2), def._h - (_theme->border*2));
@@ -636,18 +633,18 @@ void gx::Gui::drawElem(
         style = (def.id == _hoverID)
           ? &_theme->buttonHover : &_theme->button;
       }
-      drawRec(dc, def, *style);
+      drawRec(dc, def, style);
       break;
     case GUI_MENU:
       style = def._active ? &_theme->menuButtonOpen
         : ((def.id == _hoverID)
            ? &_theme->menuButtonHover : &_theme->menuButton);
-      drawRec(dc, def, *style);
+      drawRec(dc, def, style);
       break;
     case GUI_MENU_ITEM:
       if (def.id == _hoverID) {
         style = &_theme->menuItemSelect;
-        drawRec(dc, def, *style);
+        drawRec(dc, def, style);
       }
       break;
     case GUI_ENTRY: {
@@ -660,7 +657,7 @@ void gx::Gui::drawElem(
       } else {
         style = &_theme->entry;
       }
-      drawRec(dc, def, *style);
+      drawRec(dc, def, style);
       const float maxWidth = def._w
         - _theme->entryLeftMargin - _theme->entryRightMargin;
       float tx = def._x + _theme->entryLeftMargin;
@@ -717,7 +714,7 @@ void gx::Gui::drawPopup(
     if (def._active) {
       // menu frame & items
       const GuiTheme::Style* style = &_theme->menuFrame;
-      drawRec(dc, def.elems[1], *style);
+      drawRec(dc, def.elems[1], style);
       drawElem(dc, dc2, tf, def.elems[1], style);
     }
   } else {
