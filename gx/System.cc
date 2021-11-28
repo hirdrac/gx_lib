@@ -7,6 +7,7 @@
 #include "Logger.hh"
 #include <GLFW/glfw3.h>
 #include <thread>
+#include <string_view>
 #include <cstdlib>
 #include <cassert>
 
@@ -54,13 +55,25 @@ bool gx::glfwInitStatus()
   return lib_init;
 }
 
-std::string gx::getClipboard()
+std::string gx::getClipboardFull()
 {
   assert(isMainThread());
 
   initGLFW();
   const char* txt = glfwGetClipboardString(nullptr);
   return (txt == nullptr) ? std::string() : txt;
+}
+
+std::string gx::getClipboardFirstLine()
+{
+  assert(isMainThread());
+
+  initGLFW();
+  const char* txt = glfwGetClipboardString(nullptr);
+  if (txt == nullptr) { return std::string(); }
+
+  std::string_view sv{txt};
+  return std::string{sv.substr(0, sv.find('\n'))};
 }
 
 void gx::setClipboard(const char* s)

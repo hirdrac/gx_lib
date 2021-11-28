@@ -344,10 +344,9 @@ void gx::Gui::processCharEvent(Window& win)
     } else if (c.key == KEY_V && c.mods == MOD_CONTROL) {
       // (CTRL-V) paste first line of clipboard
       usedEvent = true;
-      std::string cb = getClipboard();
-      std::string_view line{cb.data(), cb.find('\n')};
+      std::string cb = getClipboardFirstLine();
       bool added = false;
-      for (UTF8Iterator itr{line}; !itr.done(); itr.next()) {
+      for (UTF8Iterator itr{cb}; !itr.done(); itr.next()) {
         added |= addEntryChar(*e, itr.get());
       }
       _needRender |= added;
