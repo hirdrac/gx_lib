@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
         gx::guiCardinalEntry(3.0f,3,3)),
       //gx::guiHLine(),
       gx::guiTextEntry(16.0f,100,10))};
-  gui3.layout(theme, 60, 300, gx::ALIGN_TOP_LEFT);
+  gui3.layout(theme, 60, 320, gx::ALIGN_TOP_LEFT);
 
   gx::Window win;
   win.setTitle("GUI demo");
