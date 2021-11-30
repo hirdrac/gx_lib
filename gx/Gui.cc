@@ -9,6 +9,7 @@
 // TODO: disable/enable menu items
 //   - need theme 'disabled menu item text color'
 //   - mouse over disabled items has no 'hover' change
+// TODO: entry center text option
 
 #include "Gui.hh"
 #include "Window.hh"
@@ -201,11 +202,9 @@ void gx::Gui::update(Window& win)
 
       drawPopup(dc2, dc3, tf, _rootElem);
     } else {
-      // clear popups
-      auto itr = _dlm.find(2);
-      if (itr != _dlm.end()) { itr->second.clear(); }
-      itr = _dlm.find(3);
-      if (itr != _dlm.end()) { itr->second.clear(); }
+      // clear popup layers
+      if (auto it = _dlm.find(2); it != _dlm.end()) { it->second.clear(); }
+      if (auto it = _dlm.find(3); it != _dlm.end()) { it->second.clear(); }
     }
 
     _needRender = false;
@@ -557,7 +556,6 @@ void gx::Gui::calcPos(
       GuiElem& e0 = def.elems[0];
       calcPos(e0, left, top, right, bottom);
       // always position menu frame below menu button for now
-      left = def._x;
       top  = e0._y + e0._h + _theme->border;
       GuiElem& e1 = def.elems[1];
       calcPos(e1, left, top, left + e1._w, top + e1._h);
