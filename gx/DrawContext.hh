@@ -151,6 +151,8 @@ class gx::DrawContext
   void text(const TextFormatting& tf, float x, float y, AlignEnum align,
             std::string_view text, const Rect& clip) {
     _text(tf, x, y, align, text, &clip); }
+  void glyph(
+    const TextFormatting& tf, float x, float y, AlignEnum align, int code);
 
   void circleSector(
     Vec2 center, float radius, float startAngle, float endAngle, int segments);

@@ -112,6 +112,38 @@ void gx::DrawContext::rectangle(
   }
 }
 
+void gx::DrawContext::glyph(
+  const TextFormatting& tf, float x, float y, AlignEnum align, int code)
+{
+  assert(tf.font != nullptr);
+  const Font& f = *tf.font;
+  const Glyph* g = f.findGlyph(code);
+  if (!g || !g->bitmap) { return; }
+
+  Vec2 cursor{x,y};
+
+  const AlignEnum v_align = VAlign(align);
+  if (v_align == ALIGN_TOP) {
+    cursor += tf.advY * f.ymax();
+  } else {
+    const float fs = float(f.size()) + tf.spacing;
+    if (v_align == ALIGN_BOTTOM) {
+      cursor += tf.advY * (f.ymin() - fs);
+    } else { // ALIGN_VCENTER
+      cursor += tf.advY * ((f.ymax() - fs) * .5f);
+    }
+  }
+
+  const AlignEnum h_align = HAlign(align);
+  if (h_align != ALIGN_LEFT) {
+    const float tw = f.calcWidth(code);
+    cursor -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
+  }
+
+  texture(f.tex());
+  _glyph(*g, tf, cursor, nullptr);
+}
+
 void gx::DrawContext::_text(
   const TextFormatting& tf, float x, float y, AlignEnum align,
   std::string_view text, const Rect* clipPtr)
@@ -123,7 +155,7 @@ void gx::DrawContext::_text(
   const float fs = float(f.size()) + tf.spacing;
   const AlignEnum h_align = HAlign(align);
   const AlignEnum v_align = VAlign(align);
-  Vec2 cursor = {x,y};
+  Vec2 cursor{x,y};
 
   if (v_align == ALIGN_TOP) {
     cursor += tf.advY * f.ymax();

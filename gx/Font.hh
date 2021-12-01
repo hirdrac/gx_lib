@@ -69,6 +69,7 @@ class gx::Font
 
   [[nodiscard]] const auto& glyphs() const { return _glyphs; }
 
+  [[nodiscard]] float calcWidth(int code) const;
   [[nodiscard]] float calcWidth(std::string_view text) const;
     // single text line width calculation
 

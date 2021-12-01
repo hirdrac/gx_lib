@@ -251,10 +251,17 @@ gx::Glyph& gx::Font::newGlyph(
   }
 
   if (std::isdigit(code) || code == '.' || code == '-') {
-    _digitWidth = std::max(_digitWidth, std::max(float(g.width), g.advX));
+    _digitWidth = std::max(
+      _digitWidth, std::max(float(g.width + g.left), g.advX));
   }
 
   return g;
+}
+
+float gx::Font::calcWidth(int code) const
+{
+  const Glyph* g = findGlyph(code);
+  return g ? std::max(g->advX, g->width + g->left) : 0;
 }
 
 float gx::Font::calcWidth(std::string_view text) const
