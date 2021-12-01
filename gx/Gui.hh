@@ -142,7 +142,8 @@ struct gx::GuiTheme
 
   uint16_t border = 6;
   uint16_t frameSpacing = 4;
-  uint16_t lineSpacing = 0;
+  uint16_t textSpacing = 0;
+  uint16_t lineWidth = 2;
 };
 
 

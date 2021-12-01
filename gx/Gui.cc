@@ -187,7 +187,7 @@ void gx::Gui::update(Window& win)
     // 3 - popup text
 
     TextFormatting tf{_theme->font};
-    tf.spacing = _theme->lineSpacing;
+    tf.spacing = _theme->textSpacing;
 
     DrawContext dc0{_dlm[0]}, dc1{_dlm[1]};
     dc0.clear();
@@ -442,17 +442,17 @@ void gx::Gui::calcSize(GuiElem& def)
       def._w = fnt.calcWidth(def.text);
       int lines = calcLines(def.text);
       def._h = float((fnt.size() - 1) * lines
-                     + (_theme->lineSpacing * std::max(lines - 1, 0)));
+                     + (_theme->textSpacing * std::max(lines - 1, 0)));
       // FIXME: improve line height calc (based on font ymax/ymin?)
       break;
     }
     case GUI_HLINE:
-      def._w = 32.0f + (b * 2.0f);
-      def._h = 1.0f + (b * 2.0f);
+      def._w = float(_theme->font->size() - 1) + (b * 2.0f);
+      def._h = float(_theme->lineWidth) + (b * 2.0f);
       break;
     case GUI_VLINE:
-      def._w = 1.0f + (b * 2.0f);
-      def._h = 32.0f + (b * 2.0f);
+      def._w = float(_theme->lineWidth) + (b * 2.0f);
+      def._h = float(_theme->font->size() - 1) + (b * 2.0f);
       break;
     case GUI_BACKGROUND:
     case GUI_BUTTON:
@@ -588,12 +588,13 @@ void gx::Gui::drawElem(
       dc2.text(tf, def._x, def._y, ALIGN_TOP_LEFT, def.text);
       break;
     case GUI_HLINE:
-    case GUI_VLINE:
+    case GUI_VLINE: {
+      const float b = _theme->border;
       assert(style != nullptr);
       dc.color(style->textColor);
-      dc.rectangle(def._x + _theme->border, def._y + _theme->border,
-                   def._w - (_theme->border*2), def._h - (_theme->border*2));
+      dc.rectangle(def._x + b, def._y + b, def._w - (b*2), def._h - (b*2));
       break;
+    }
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
     case GUI_BUTTON_HOLD:
