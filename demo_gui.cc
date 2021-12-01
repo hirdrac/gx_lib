@@ -35,17 +35,17 @@ int main(int argc, char* argv[])
       gx::guiLabel(gx::ALIGN_HCENTER, "BUTTON LIST"),
       gx::guiHLine(),
       gx::guiHFrame(
-        gx::guiButton("B1\nline 2", 1),
-        gx::guiButton(gx::ALIGN_BOTTOM, "B2", 2),
-        gx::guiButton(gx::ALIGN_VCENTER, "B3", 3),
-        gx::guiButton("B4", 4),
+        gx::guiButton(1, "B1\nline 2"),
+        gx::guiButton(2, gx::ALIGN_BOTTOM, "B2"),
+        gx::guiButton(3, gx::ALIGN_VCENTER, "B3"),
+        gx::guiButton(4, "B4"),
         gx::guiVLine(),
-        gx::guiButton(gx::ALIGN_VJUSTIFY, "B5", 5)),
+        gx::guiButton(5, gx::ALIGN_VJUSTIFY, "B5")),
       gx::guiHFrame(
-        gx::guiButtonPress("PRESS", 77),
-        gx::guiButtonHold("HOLD", 88)),
+        gx::guiButtonPress(77, "PRESS"),
+        gx::guiButtonHold(88, "HOLD")),
       gx::guiHLine(),
-      gx::guiButton(gx::ALIGN_RIGHT, "[QUIT]", 99))};
+      gx::guiButton(99, gx::ALIGN_RIGHT, "[QUIT]"))};
   gui1.layout(theme, 60, 80, gx::ALIGN_TOP_LEFT);
 
   // pull-down menu demo
@@ -54,28 +54,28 @@ int main(int argc, char* argv[])
       gx::guiHFrame(
         gx::guiMenu(
           "File",
-          gx::guiMenuItem("Open...", 1),
-          gx::guiMenuItem("Save...", 2),
+          gx::guiMenuItem(1, "Open..."),
+          gx::guiMenuItem(2, "Save..."),
           gx::guiHLine(),
-          gx::guiMenuItem("Quit", 99)),
+          gx::guiMenuItem(99, "Quit")),
         gx::guiMenu(
           "Help",
-          gx::guiMenuItem("Manual", 3),
-          gx::guiMenuItem("About", 4))))};
+          gx::guiMenuItem(3, "Manual"),
+          gx::guiMenuItem(4, "About"))))};
   gui2.layout(theme, 0, 0, gx::ALIGN_TOP_LEFT);
 
   // text entry demo
   gx::Gui gui3{
     gx::guiVFrame(
       gx::guiHFrame(
-        gx::guiLabel(gx::ALIGN_CENTER_LEFT, "R"),
-        gx::guiCardinalEntry(3.0f,3,1),
+        gx::guiLabel(gx::ALIGN_CENTER_LEFT, " R"),
+        gx::guiCardinalEntry(1, 3.0f,3),
         gx::guiLabel(gx::ALIGN_CENTER_LEFT, " G"),
-        gx::guiCardinalEntry(3.0f,3,2),
+        gx::guiCardinalEntry(2, 3.0f,3),
         gx::guiLabel(gx::ALIGN_CENTER_LEFT, " B"),
-        gx::guiCardinalEntry(3.0f,3,3)),
+        gx::guiCardinalEntry(3, 3.0f,3)),
       //gx::guiHLine(),
-      gx::guiTextEntry(16.0f,100,10))};
+      gx::guiTextEntry(10, 16.0f,100))};
   gui3.layout(theme, 60, 320, gx::ALIGN_TOP_LEFT);
 
   gx::Window win;

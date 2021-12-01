@@ -274,17 +274,17 @@ namespace gx {
     return {GUI_BUTTON, ALIGN_TOP_LEFT, eventID, {elem}};
   }
 
-  inline GuiElem guiButton(AlignEnum align, int eventID, const GuiElem& elem)
+  inline GuiElem guiButton(int eventID, AlignEnum align, const GuiElem& elem)
   {
     return {GUI_BUTTON, align, eventID, {elem}};
   }
 
-  inline GuiElem guiButton(std::string_view text, int eventID)
+  inline GuiElem guiButton(int eventID, std::string_view text)
   {
     return {GUI_BUTTON, ALIGN_TOP_LEFT, eventID, {guiLabel(ALIGN_CENTER, text)}};
   }
 
-  inline GuiElem guiButton(AlignEnum align, std::string_view text, int eventID)
+  inline GuiElem guiButton(int eventID, AlignEnum align, std::string_view text)
   {
     return {GUI_BUTTON, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
   }
@@ -297,19 +297,19 @@ namespace gx {
   }
 
   inline GuiElem guiButtonPress(
-    AlignEnum align, int eventID, const GuiElem& elem)
+    int eventID, AlignEnum align, const GuiElem& elem)
   {
     return {GUI_BUTTON_PRESS, align, eventID, {elem}};
   }
 
-  inline GuiElem guiButtonPress(std::string_view text, int eventID)
+  inline GuiElem guiButtonPress(int eventID, std::string_view text)
   {
     return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, eventID,
             {guiLabel(ALIGN_CENTER, text)}};
   }
 
   inline GuiElem guiButtonPress(
-    AlignEnum align, std::string_view text, int eventID)
+    int eventID, AlignEnum align, std::string_view text)
   {
     return {GUI_BUTTON_PRESS, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
   }
@@ -322,19 +322,19 @@ namespace gx {
   }
 
   inline GuiElem guiButtonHold(
-    AlignEnum align, int eventID, const GuiElem& elem)
+    int eventID, AlignEnum align, const GuiElem& elem)
   {
     return {GUI_BUTTON_HOLD, align, eventID, {elem}};
   }
 
-  inline GuiElem guiButtonHold(std::string_view text, int eventID)
+  inline GuiElem guiButtonHold(int eventID, std::string_view text)
   {
     return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, eventID,
             {guiLabel(ALIGN_CENTER, text)}};
   }
 
   inline GuiElem guiButtonHold(
-    AlignEnum align, std::string_view text, int eventID)
+    int eventID, AlignEnum align, std::string_view text)
   {
     return {GUI_BUTTON_HOLD, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
   }
@@ -349,14 +349,14 @@ namespace gx {
                      {guiVFrame(items...)}}}};
   }
 
-  inline GuiElem guiMenuItem(std::string_view text, int eventID)
+  inline GuiElem guiMenuItem(int eventID, std::string_view text)
   {
     return {GUI_MENU_ITEM, ALIGN_JUSTIFY, eventID,
             {guiLabel(ALIGN_CENTER_LEFT, text)}};
   }
 
   // Entry
-  inline GuiElem guiTextEntry(float size, int maxLength, int eventID)
+  inline GuiElem guiTextEntry(int eventID, float size, int maxLength)
   {
     GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
@@ -365,7 +365,7 @@ namespace gx {
     return e;
   }
 
-  inline GuiElem guiCardinalEntry(float size, int maxLength, int eventID)
+  inline GuiElem guiCardinalEntry(int eventID, float size, int maxLength)
   {
     GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
@@ -374,7 +374,7 @@ namespace gx {
     return e;
   }
 
-  inline GuiElem guiIntegerEntry(float size, int maxLength, int eventID)
+  inline GuiElem guiIntegerEntry(int eventID, float size, int maxLength)
   {
     GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
@@ -383,7 +383,7 @@ namespace gx {
     return e;
   }
 
-  inline GuiElem guiFloatEntry(float size, int maxLength, int eventID)
+  inline GuiElem guiFloatEntry(int eventID, float size, int maxLength)
   {
     GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
@@ -392,7 +392,7 @@ namespace gx {
     return e;
   }
 
-  inline GuiElem guiPasswordEntry(float size, int maxLength, int eventID)
+  inline GuiElem guiPasswordEntry(int eventID, float size, int maxLength)
   {
     GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
     e.entry.size = size;
