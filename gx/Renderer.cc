@@ -9,14 +9,15 @@
 #include <GLFW/glfw3.h>
 #include <atomic>
 #include <mutex>
+using namespace gx;
 
 
 // **** Texture Owner data/functions ****
 namespace {
-  std::unordered_map<gx::TextureID,gx::Renderer*> _textureOwners;
+  std::unordered_map<TextureID,Renderer*> _textureOwners;
   std::mutex _textureOwnersMutex;
 
-  void freeRenderer(gx::Renderer* rPtr)
+  void freeRenderer(Renderer* rPtr)
   {
     std::lock_guard lg(_textureOwnersMutex);
     auto itr = _textureOwners.begin();
@@ -62,7 +63,7 @@ void gx::freeTexture(TextureID tid)
 
 
 // **** Renderer class ****
-gx::Renderer::~Renderer()
+Renderer::~Renderer()
 {
   if (_window && glfwInitStatus()) {
     glfwDestroyWindow(_window);
@@ -71,7 +72,7 @@ gx::Renderer::~Renderer()
   freeRenderer(this);
 }
 
-void gx::Renderer::clearFrame(int width, int height)
+void Renderer::clearFrame(int width, int height)
 {
   _width = width;
   _height = height;
@@ -80,20 +81,20 @@ void gx::Renderer::clearFrame(int width, int height)
   _changed = true;
 }
 
-void gx::Renderer::setScreenOrthoProjection(int layer)
+void Renderer::setScreenOrthoProjection(int layer)
 {
   setTransform(
     layer, Mat4Identity, orthoProjection(float(_width), float(_height)));
 }
 
-void gx::Renderer::setOrthoProjection(int layer, float width, float height)
+void Renderer::setOrthoProjection(int layer, float width, float height)
 {
   setTransform(layer, Mat4Identity, orthoProjection(width, height));
 }
 
 
 // Static Methods
-gx::TextureID gx::Renderer::newTextureID()
+TextureID Renderer::newTextureID()
 {
   static std::atomic<TextureID> _lastID = 0;
   return ++_lastID;

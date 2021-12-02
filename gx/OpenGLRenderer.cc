@@ -18,6 +18,8 @@
 //#include "Print.hh"
 #include <GLFW/glfw3.h>
 #include <cassert>
+using namespace gx;
+
 
 namespace {
   // **** Helper Functions ****
@@ -67,20 +69,20 @@ namespace {
   }
 
   // DrawEntry iterator reading helper functions
-  inline uint32_t uval(const gx::DrawEntry*& ptr) {
+  inline uint32_t uval(const DrawEntry*& ptr) {
     return (ptr++)->uval; }
-  inline float fval(const gx::DrawEntry*& ptr) {
+  inline float fval(const DrawEntry*& ptr) {
     return (ptr++)->fval; }
-  inline gx::Vec2 fval2(const gx::DrawEntry*& ptr) {
+  inline Vec2 fval2(const DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr)}; }
-  inline gx::Vec3 fval3(const gx::DrawEntry*& ptr) {
+  inline Vec3 fval3(const DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
 
 #if 0
   // unused for now
-  inline int32_t ival(const gx::DrawEntry*& ptr) {
+  inline int32_t ival(const DrawEntry*& ptr) {
     return (ptr++)->ival; }
-  inline gx::Mat4 mat4_val(const gx::DrawEntry*& ptr) {
+  inline Mat4 mat4_val(const DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr), fval(ptr),
             fval(ptr), fval(ptr), fval(ptr), fval(ptr),
             fval(ptr), fval(ptr), fval(ptr), fval(ptr),
@@ -88,17 +90,17 @@ namespace {
 #endif
 
   // vertex output functions
-  inline void vertex(gx::Vertex3TC*& ptr, gx::Vec2 pt, uint32_t c) {
+  inline void vertex(Vertex3TC*& ptr, Vec2 pt, uint32_t c) {
     *ptr++ = {pt.x,pt.y,0.0f, 0.0f,0.0f, c}; }
-  inline void vertex(gx::Vertex3TC*& ptr, gx::Vec3 pt, uint32_t c) {
+  inline void vertex(Vertex3TC*& ptr, Vec3 pt, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, 0.0f,0.0f, c}; }
-  inline void vertex(gx::Vertex3TC*& ptr, gx::Vec2 pt, gx::Vec2 tx, uint32_t c) {
+  inline void vertex(Vertex3TC*& ptr, Vec2 pt, Vec2 tx, uint32_t c) {
     *ptr++ = {pt.x,pt.y,0.0f, tx.x,tx.y, c}; }
-  inline void vertex(gx::Vertex3TC*& ptr, gx::Vec3 pt, gx::Vec2 tx, uint32_t c) {
+  inline void vertex(Vertex3TC*& ptr, Vec3 pt, Vec2 tx, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, tx.x,tx.y, c}; }
 }
 
-void gx::OpenGLRenderer::setWindowHints(bool debug)
+void OpenGLRenderer::setWindowHints(bool debug)
 {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
   //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
@@ -109,7 +111,7 @@ void gx::OpenGLRenderer::setWindowHints(bool debug)
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, debug ? GLFW_TRUE : GLFW_FALSE);
 }
 
-bool gx::OpenGLRenderer::init(GLFWwindow* win)
+bool OpenGLRenderer::init(GLFWwindow* win)
 {
   _window = win;
   setCurrentContext(win);
@@ -199,7 +201,7 @@ bool gx::OpenGLRenderer::init(GLFWwindow* win)
   return status;
 }
 
-gx::TextureID gx::OpenGLRenderer::setTexture(
+TextureID OpenGLRenderer::setTexture(
   TextureID id, const Image& img, int levels,
   FilterType minFilter, FilterType magFilter)
 {
@@ -266,7 +268,7 @@ gx::TextureID gx::OpenGLRenderer::setTexture(
   return id;
 }
 
-void gx::OpenGLRenderer::setupBuffer()
+void OpenGLRenderer::setupBuffer()
 {
   unsigned int vsize = 0; // vertices needed
   for (auto& [no,layer] : _layers) {
@@ -602,7 +604,7 @@ void gx::OpenGLRenderer::setupBuffer()
 #endif
 }
 
-void gx::OpenGLRenderer::renderFrame()
+void OpenGLRenderer::renderFrame()
 {
   setCurrentContext(_window);
   GX_GLCALL(glViewport, 0, 0, _width, _height);
@@ -675,7 +677,7 @@ void gx::OpenGLRenderer::renderFrame()
   GLClearState();
 }
 
-void gx::OpenGLRenderer::setGLCapabilities(int cap)
+void OpenGLRenderer::setGLCapabilities(int cap)
 {
   constexpr int CULL = CULL_CW | CULL_CCW;
 
@@ -720,7 +722,7 @@ void gx::OpenGLRenderer::setGLCapabilities(int cap)
   _currentGLCap = cap;
 }
 
-void gx::OpenGLRenderer::setCullFace(int cap)
+void OpenGLRenderer::setCullFace(int cap)
 {
   const bool cw = cap & CULL_CW;
   const bool ccw = cap & CULL_CCW;

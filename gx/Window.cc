@@ -13,8 +13,8 @@
 #include <mutex>
 #include <set>
 #include <cassert>
-
 #include <GLFW/glfw3.h>
+using namespace gx;
 
 
 namespace {
@@ -48,31 +48,31 @@ namespace {
   [[nodiscard]] constexpr int glfwBool(bool val) {
     return val ? GLFW_TRUE : GLFW_FALSE; }
 
-  [[nodiscard]] constexpr int cursorInputModeVal(gx::MouseModeEnum mode) {
+  [[nodiscard]] constexpr int cursorInputModeVal(MouseModeEnum mode) {
     switch (mode) {
-      case gx::MOUSE_NORMAL:  return GLFW_CURSOR_NORMAL;
-      case gx::MOUSE_HIDE:    return GLFW_CURSOR_HIDDEN;
-      case gx::MOUSE_DISABLE: return GLFW_CURSOR_DISABLED;
-      default:                return -1;
+      case MOUSE_NORMAL:  return GLFW_CURSOR_NORMAL;
+      case MOUSE_HIDE:    return GLFW_CURSOR_HIDDEN;
+      case MOUSE_DISABLE: return GLFW_CURSOR_DISABLED;
+      default:            return -1;
     }
   }
 
   // **** Window Instance Tracking ****
-  std::set<gx::Window*> allWindows;
+  std::set<Window*> allWindows;
   std::mutex allWindowsMutex;
 }
 
 
 // **** Window class ****
-int64_t gx::Window::_lastPollTime = 0;
+int64_t Window::_lastPollTime = 0;
 
-gx::Window::Window()
+Window::Window()
 {
   std::lock_guard lg{allWindowsMutex};
   allWindows.insert(this);
 }
 
-gx::Window::~Window()
+Window::~Window()
 {
   {
     std::lock_guard lg{allWindowsMutex};
@@ -86,7 +86,7 @@ gx::Window::~Window()
   }
 }
 
-void gx::Window::setTitle(std::string_view title)
+void Window::setTitle(std::string_view title)
 {
   _title = title;
   if (_renderer) {
@@ -95,7 +95,7 @@ void gx::Window::setTitle(std::string_view title)
   }
 }
 
-void gx::Window::setSize(int width, int height, bool fullScreen)
+void Window::setSize(int width, int height, bool fullScreen)
 {
   assert(width > 0 || fullScreen);
   assert(height > 0 || fullScreen);
@@ -157,7 +157,7 @@ void gx::Window::setSize(int width, int height, bool fullScreen)
   _fullScreen = fullScreen;
 }
 
-void gx::Window::setSizeLimits(
+void Window::setSizeLimits(
   int minWidth, int minHeight, int maxWidth, int maxHeight)
 {
   _minWidth = (minWidth < 0) ? -1 : minWidth;
@@ -171,7 +171,7 @@ void gx::Window::setSizeLimits(
   }
 }
 
-void gx::Window::setMouseMode(MouseModeEnum mode)
+void Window::setMouseMode(MouseModeEnum mode)
 {
   int val = cursorInputModeVal(mode);
   if (val < 0) {
@@ -186,7 +186,7 @@ void gx::Window::setMouseMode(MouseModeEnum mode)
   }
 }
 
-void gx::Window::setMousePos(float x, float y)
+void Window::setMousePos(float x, float y)
 {
   if (_renderer) {
     assert(isMainThread());
@@ -194,13 +194,13 @@ void gx::Window::setMousePos(float x, float y)
   }
 }
 
-void gx::Window::setSamples(int samples)
+void Window::setSamples(int samples)
 {
   _samples = std::max(0, samples);
   // FIXME: no effect if window has already been opened
 }
 
-bool gx::Window::open(int flags)
+bool Window::open(int flags)
 {
   assert(isMainThread());
   if (!initGLFW()) {
@@ -302,7 +302,7 @@ bool gx::Window::open(int flags)
   return true;
 }
 
-void gx::Window::showWindow(GLFWwindow* w)
+void Window::showWindow(GLFWwindow* w)
 {
   if (!_fullScreen) {
     // center window initially
@@ -321,7 +321,7 @@ void gx::Window::showWindow(GLFWwindow* w)
   updateMouseState(w);
 }
 
-void gx::Window::updateMouseState(GLFWwindow* w)
+void Window::updateMouseState(GLFWwindow* w)
 {
   double mx = 0, my = 0;
   glfwGetCursorPos(w, &mx, &my);
@@ -330,7 +330,7 @@ void gx::Window::updateMouseState(GLFWwindow* w)
   _mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
 }
 
-void gx::Window::resetEventState()
+void Window::resetEventState()
 {
   _events = 0;
   _removedEvents = 0;
@@ -348,7 +348,7 @@ void gx::Window::resetEventState()
   }
 }
 
-void gx::Window::finalizeEventState()
+void Window::finalizeEventState()
 {
   // button event pressing
   if (_buttonsPress != 0 || _buttonsRelease != 0) {
@@ -372,7 +372,7 @@ void gx::Window::finalizeEventState()
   }
 }
 
-int gx::Window::pollEvents()
+int Window::pollEvents()
 {
   assert(isMainThread());
   int e = 0;
@@ -396,7 +396,7 @@ int gx::Window::pollEvents()
   return e;
 }
 
-bool gx::Window::keyPressed(int key) const
+bool Window::keyPressed(int key) const
 {
   auto itr = std::find_if(_keyStates.begin(), _keyStates.end(),
                           [key](const auto& ks){ return ks.key == key; });
@@ -404,7 +404,7 @@ bool gx::Window::keyPressed(int key) const
   return itr->pressed || (itr->pressCount > 0);
 }
 
-int gx::Window::keyPressCount(int key, bool includeRepeat) const
+int Window::keyPressCount(int key, bool includeRepeat) const
 {
   auto itr = std::find_if(_keyStates.begin(), _keyStates.end(),
                           [key](const auto& ks){ return ks.key == key; });
@@ -413,7 +413,7 @@ int gx::Window::keyPressCount(int key, bool includeRepeat) const
 }
 
 // GLFW event callbacks
-void gx::Window::closeCB(GLFWwindow* win)
+void Window::closeCB(GLFWwindow* win)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
@@ -429,7 +429,7 @@ void gx::Window::closeCB(GLFWwindow* win)
   glfwSetWindowShouldClose(win, GLFW_FALSE);
 }
 
-void gx::Window::sizeCB(GLFWwindow* win, int width, int height)
+void Window::sizeCB(GLFWwindow* win, int width, int height)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
@@ -445,7 +445,7 @@ void gx::Window::sizeCB(GLFWwindow* win, int width, int height)
   e.updateMouseState(win);
 }
 
-void gx::Window::keyCB(
+void Window::keyCB(
   GLFWwindow* win, int key, int scancode, int action, int mods)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
@@ -490,7 +490,7 @@ void gx::Window::keyCB(
   }
 }
 
-void gx::Window::charCB(GLFWwindow* win, unsigned int codepoint)
+void Window::charCB(GLFWwindow* win, unsigned int codepoint)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
@@ -504,7 +504,7 @@ void gx::Window::charCB(GLFWwindow* win, unsigned int codepoint)
   e._chars.push_back({codepoint, 0, 0, false});
 }
 
-void gx::Window::cursorEnterCB(GLFWwindow* win, int entered)
+void Window::cursorEnterCB(GLFWwindow* win, int entered)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
@@ -518,7 +518,7 @@ void gx::Window::cursorEnterCB(GLFWwindow* win, int entered)
   e._mouseIn = (entered != 0);
 }
 
-void gx::Window::cursorPosCB(GLFWwindow* win, double xpos, double ypos)
+void Window::cursorPosCB(GLFWwindow* win, double xpos, double ypos)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
@@ -533,7 +533,7 @@ void gx::Window::cursorPosCB(GLFWwindow* win, double xpos, double ypos)
   e._mouseY = float(ypos);
 }
 
-void gx::Window::mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
+void Window::mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
@@ -554,14 +554,14 @@ void gx::Window::mouseButtonCB(GLFWwindow* win, int button, int action, int mods
   e._mods = mods;
   if (action == GLFW_PRESS) {
     e._buttonsPress |= bVal;
-    //gx::println("button press:", int(b));
+    //println("button press:", int(b));
   } else if (action == GLFW_RELEASE) {
     e._buttonsRelease |= bVal;
-    //gx::println("button release:", int(b));
+    //println("button release:", int(b));
   }
 }
 
-void gx::Window::scrollCB(GLFWwindow* win, double xoffset, double yoffset)
+void Window::scrollCB(GLFWwindow* win, double xoffset, double yoffset)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
@@ -576,7 +576,7 @@ void gx::Window::scrollCB(GLFWwindow* win, double xoffset, double yoffset)
   e._scrollY += float(yoffset);
 }
 
-void gx::Window::iconifyCB(GLFWwindow* win, int iconified)
+void Window::iconifyCB(GLFWwindow* win, int iconified)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {
@@ -590,7 +590,7 @@ void gx::Window::iconifyCB(GLFWwindow* win, int iconified)
   e._iconified = iconified;
 }
 
-void gx::Window::focusCB(GLFWwindow* win, int focused)
+void Window::focusCB(GLFWwindow* win, int focused)
 {
   void* ePtr = glfwGetWindowUserPointer(win);
   if (!ePtr) {

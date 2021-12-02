@@ -6,6 +6,7 @@
 #include "OpenGL.hh"
 #include "Logger.hh"
 #include <cstdlib>
+using namespace gx;
 
 
 inline namespace GX_GLNAMESPACE {
@@ -57,7 +58,7 @@ static void APIENTRY GLDebugCB(
   }
   #undef DEBUG_TYPE_CASE
 
-  gx::LogLevel lvl = gx::LVL_ERROR;
+  LogLevel lvl = LVL_ERROR;
   const char* severityStr = "";
   switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:
@@ -65,13 +66,13 @@ static void APIENTRY GLDebugCB(
     case GL_DEBUG_SEVERITY_MEDIUM:
       severityStr = " severity=MEDIUM"; break;
     case GL_DEBUG_SEVERITY_LOW:
-      severityStr = " severity=LOW"; lvl = gx::LVL_WARN; break;
+      severityStr = " severity=LOW"; lvl = LVL_WARN; break;
     default:
-      lvl = gx::LVL_INFO; break;
+      lvl = LVL_INFO; break;
   }
 
   GX_LOGGER_LOG(
-    gx::defaultLogger(), lvl, "GLDebug: source=", sourceStr, " type=",
+    defaultLogger(), lvl, "GLDebug: source=", sourceStr, " type=",
     typeStr, " id=", id, severityStr, " message=[", message, ']');
 }
 #endif
@@ -143,7 +144,7 @@ int GLCheckErrors(std::string_view msg, const char* file, int line)
   int count = 0;
   GLenum error;
   while ((error = glGetError()) != GL_NO_ERROR) {
-    GX_LOGGER_LOG_FL(gx::defaultLogger(), gx::LVL_ERROR, file, line, msg, ": ",
+    GX_LOGGER_LOG_FL(defaultLogger(), LVL_ERROR, file, line, msg, ": ",
                      GLErrorStr(error));
     ++count;
   }

@@ -8,6 +8,7 @@
 #include "Unicode.hh"
 #include "MathUtil.hh"
 #include <cassert>
+using namespace gx;
 
 
 namespace {
@@ -19,16 +20,15 @@ namespace {
     return std::max(std::max(a,b),std::max(c,d));
   }
 
-  using gx::Vec2;
   [[nodiscard]] constexpr float triangleArea(Vec2 a, Vec2 b, Vec2 c) {
     // triangle_area = len(cross(B-A,C-A)) / 2
     Vec2 ba = b-a, ca = c-a;
-    return gx::abs((ba.x * ca.y) - (ba.y * ca.x)) * .5f;
+    return abs((ba.x * ca.y) - (ba.y * ca.x)) * .5f;
   }
 }
 
 
-void gx::DrawContext::rectangle(float x, float y, float w, float h)
+void DrawContext::rectangle(float x, float y, float w, float h)
 {
   if (_colorMode == CM_SOLID) {
     _rect(x, y, w, h);
@@ -45,7 +45,7 @@ void gx::DrawContext::rectangle(float x, float y, float w, float h)
   }
 }
 
-void gx::DrawContext::rectangle(
+void DrawContext::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1)
 {
   if (_colorMode == CM_SOLID) {
@@ -63,7 +63,7 @@ void gx::DrawContext::rectangle(
   }
 }
 
-void gx::DrawContext::rectangle(
+void DrawContext::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1, const Rect& clip)
 {
   float x0 = x;
@@ -112,7 +112,7 @@ void gx::DrawContext::rectangle(
   }
 }
 
-void gx::DrawContext::glyph(
+void DrawContext::glyph(
   const TextFormatting& tf, float x, float y, AlignEnum align, int code)
 {
   assert(tf.font != nullptr);
@@ -144,7 +144,7 @@ void gx::DrawContext::glyph(
   _glyph(*g, tf, cursor, nullptr);
 }
 
-void gx::DrawContext::_text(
+void DrawContext::_text(
   const TextFormatting& tf, float x, float y, AlignEnum align,
   std::string_view text, const Rect* clipPtr)
 {
@@ -204,7 +204,7 @@ void gx::DrawContext::_text(
   }
 }
 
-void gx::DrawContext::_glyph(
+void DrawContext::_glyph(
   const Glyph& g, const TextFormatting& tf, Vec2 cursor, const Rect* clipPtr)
 {
   const Vec2 gx = tf.glyphX * float(g.width);
@@ -305,7 +305,7 @@ void gx::DrawContext::_glyph(
   }
 }
 
-void gx::DrawContext::circleSector(
+void DrawContext::circleSector(
   Vec2 center, float radius, float startAngle, float endAngle, int segments)
 {
   while (endAngle <= startAngle) { endAngle += 360.0f; }
@@ -337,7 +337,7 @@ void gx::DrawContext::circleSector(
   }
 }
 
-void gx::DrawContext::circleSector(
+void DrawContext::circleSector(
   Vec2 center, float radius, float startAngle, float endAngle, int segments,
   RGBA8 color0, RGBA8 color1)
 {
@@ -373,7 +373,7 @@ void gx::DrawContext::circleSector(
   }
 }
 
-void gx::DrawContext::roundedRectangle(
+void DrawContext::roundedRectangle(
   float x, float y, float w, float h, float curveRadius, int curveSegments)
 {
   const float half_w = w * .5f;

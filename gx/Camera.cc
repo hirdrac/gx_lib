@@ -5,6 +5,7 @@
 
 #include "Camera.hh"
 #include "Logger.hh"
+using namespace gx;
 
 
 // **** NOTES ****
@@ -21,7 +22,7 @@
 
 
 // Camera class
-bool gx::Camera::updateView()
+bool Camera::updateView()
 {
   const float dot = dotProduct(_vnormal, _vup);
   if (dot >= .99999) {
@@ -37,7 +38,7 @@ bool gx::Camera::updateView()
   return true;
 }
 
-bool gx::Camera::calcView(Mat4& result) const
+bool Camera::calcView(Mat4& result) const
 {
   result.setTranslation(-_pos.x, -_pos.y, -_pos.z);
   result *= { // 'lookAt' transform
@@ -49,7 +50,7 @@ bool gx::Camera::calcView(Mat4& result) const
   return true;
 }
 
-bool gx::Camera::calcProjection(
+bool Camera::calcProjection(
   int screenWidth, int screenHeight, Mat4& result) const
 {
   if (!isPos(_zoom)) {
@@ -91,7 +92,7 @@ bool gx::Camera::calcProjection(
   return true;
 }
 
-bool gx::Camera::calcDirToScreenPt(
+bool Camera::calcDirToScreenPt(
   int screenWidth, int screenHeight,
   float mouseX, float mouseY, Vec3& result) const
 {

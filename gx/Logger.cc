@@ -22,6 +22,7 @@
 #if __has_include(<sys/syscall.h>)
 #include <sys/syscall.h>
 #endif
+using namespace gx;
 
 
 // **** Helper Functions ****
@@ -62,14 +63,14 @@ namespace
     return std::string(str, std::size_t(len));
   }
 
-  [[nodiscard]] constexpr std::string_view levelStr(gx::LogLevel l)
+  [[nodiscard]] constexpr std::string_view levelStr(LogLevel l)
   {
     switch (l) {
-      case gx::LVL_TRACE: return "[TRACE] ";
-      case gx::LVL_INFO:  return "[INFO] ";
-      case gx::LVL_WARN:  return "[WARN] ";
-      case gx::LVL_ERROR: return "[ERROR] ";
-      case gx::LVL_FATAL: return "[FATAL] ";
+      case LVL_TRACE: return "[TRACE] ";
+      case LVL_INFO:  return "[INFO] ";
+      case LVL_WARN:  return "[WARN] ";
+      case LVL_ERROR: return "[ERROR] ";
+      case LVL_FATAL: return "[FATAL] ";
       default:            return "[UNKNOWN] ";
     }
   }
@@ -131,34 +132,34 @@ class gx::LoggerImpl
 
 
 // **** Logger class ****
-gx::Logger::Logger() : _impl(new LoggerImpl) { }
+Logger::Logger() : _impl(new LoggerImpl) { }
 
-gx::Logger::~Logger() = default;
+Logger::~Logger() = default;
   // NOTE: default destructor needed here because LoggerImpl is not
   //   visible externally
 
-void gx::Logger::setOStream(std::ostream& os)
+void Logger::setOStream(std::ostream& os)
 {
   _impl->setOStream(os);
 }
 
-void gx::Logger::setFile(std::string_view fileName)
+void Logger::setFile(std::string_view fileName)
 {
   _impl->setFile(fileName);
 }
 
-void gx::Logger::rotate()
+void Logger::rotate()
 {
   _impl->rotate();
 }
 
-void gx::Logger::header(std::ostringstream& os, LogLevel lvl)
+void Logger::header(std::ostringstream& os, LogLevel lvl)
 {
   logTime(os);
   os << levelStr(lvl);
 }
 
-void gx::Logger::logMsg(std::ostringstream& os, const char* file, int line)
+void Logger::logMsg(std::ostringstream& os, const char* file, int line)
 {
   // footer
   os << " (";

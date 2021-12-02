@@ -2,6 +2,7 @@
 // gx/Font.cc
 // Copyright (C) 2021 Richard Bradley
 //
+
 // TODO: investigate using stb_truetype.h
 // TODO: use signed distance fields for font texture
 //       (FT_RENDER_MODE_SDF available in freetype 2.11)
@@ -16,6 +17,7 @@
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
+using namespace gx;
 
 
 namespace {
@@ -43,7 +45,7 @@ namespace {
     return true;
   }
 
-  bool genGlyphs(gx::Font& font, FT_Face face,
+  bool genGlyphs(Font& font, FT_Face face,
                  uint32_t start = 0, uint32_t end = 0)
   {
     // read font glyph data
@@ -77,7 +79,7 @@ namespace {
 }
 
 
-bool gx::Font::load(const char* fileName, int fontSize)
+bool Font::load(const char* fileName, int fontSize)
 {
   if (!initFreeType()) { return false; }
 
@@ -100,7 +102,7 @@ bool gx::Font::load(const char* fileName, int fontSize)
   return status;
 }
 
-bool gx::Font::loadFromMemory(
+bool Font::loadFromMemory(
   const void* mem, std::size_t memSize, int fontSize)
 {
   if (!initFreeType()) { return false; }
@@ -125,7 +127,7 @@ bool gx::Font::loadFromMemory(
   return status;
 }
 
-bool gx::Font::loadFromData(
+bool Font::loadFromData(
   const GlyphStaticData* data, int glyphs, int fontSize)
 {
   init(fontSize);
@@ -138,7 +140,7 @@ bool gx::Font::loadFromData(
   return true;
 }
 
-bool gx::Font::makeAtlas(Renderer& ren)
+bool Font::makeAtlas(Renderer& ren)
 {
   if (_tex && !_changed) {
     return true; // atlas already set
@@ -202,7 +204,7 @@ bool gx::Font::makeAtlas(Renderer& ren)
   return true;
 }
 
-void gx::Font::addGlyph(
+void Font::addGlyph(
   int code, int width, int height, float left, float top,
   float advX, float advY, const uint8_t* bitmap, bool copy)
 {
@@ -219,7 +221,7 @@ void gx::Font::addGlyph(
   }
 }
 
-void gx::Font::init(int fontSize)
+void Font::init(int fontSize)
 {
   _size = fontSize;
   _ymin = 0;
@@ -228,7 +230,7 @@ void gx::Font::init(int fontSize)
   _glyphs.clear();
 }
 
-gx::Glyph& gx::Font::newGlyph(
+Glyph& Font::newGlyph(
   int code, int width, int height, float left, float top, float advX, float advY)
 {
   assert(width >= 0 && width < 0xffff);
@@ -258,13 +260,13 @@ gx::Glyph& gx::Font::newGlyph(
   return g;
 }
 
-float gx::Font::calcWidth(int code) const
+float Font::calcWidth(int code) const
 {
   const Glyph* g = findGlyph(code);
   return g ? std::max(g->advX, g->width + g->left) : 0;
 }
 
-float gx::Font::calcWidth(std::string_view text) const
+float Font::calcWidth(std::string_view text) const
 {
   float max_width = 0, width = 0;
   const Glyph* g = nullptr;
@@ -284,7 +286,7 @@ float gx::Font::calcWidth(std::string_view text) const
   return std::max(max_width, width);
 }
 
-std::size_t gx::Font::fitChars(std::string_view text, float maxWidth) const
+std::size_t Font::fitChars(std::string_view text, float maxWidth) const
 {
   float w = 0.0f;
   for (size_t i = 0; i < text.size(); ++i) {
