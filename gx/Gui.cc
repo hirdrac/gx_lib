@@ -107,21 +107,26 @@ namespace {
     return true;
   }
 
-  void drawRec(gx::DrawContext& dc, const gx::GuiElem& e,
+  void drawRec(gx::DrawContext& dc, float x, float y, float w, float h,
                const gx::GuiTheme::Style* style)
   {
     if (style->backgroundColor != 0) {
       dc.color(style->backgroundColor);
-      dc.rectangle(e._x, e._y, e._w, e._h);
+      dc.rectangle(x, y, w, h);
     }
 
     if (style->edgeColor != 0) {
       dc.color(style->edgeColor);
-      dc.rectangle(e._x, e._y, e._w, 1);
-      dc.rectangle(e._x, e._y + e._h - 1, e._w, 1);
-      dc.rectangle(e._x, e._y, 1, e._h);
-      dc.rectangle(e._x + e._w - 1, e._y, 1, e._h);
+      dc.rectangle(x, y, w, 1);
+      dc.rectangle(x, y + h - 1, w, 1);
+      dc.rectangle(x, y, 1, h);
+      dc.rectangle(x + w - 1, y, 1, h);
     }
+  }
+
+  inline void drawRec(gx::DrawContext& dc, const gx::GuiElem& e,
+                      const gx::GuiTheme::Style* style) {
+    drawRec(dc, e._x, e._y, e._w, e._h, style);
   }
 }
 
@@ -288,8 +293,11 @@ void gx::Gui::processMouseEvent(Window& win)
     }
 
     if (!buttonDown && (_heldID != 0)) {
-      if ((type == GUI_BUTTON) && buttonEvent && (_heldID == id)) {
+      if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
+          && buttonEvent && (_heldID == id)) {
+        // activate if cursor is over element & button is released
         _eventID = id;
+        if (type == GUI_CHECKBOX) { ptr->checkbox_set = !ptr->checkbox_set; }
         usedEvent = true;
       }
 
@@ -395,6 +403,16 @@ bool gx::Gui::setText(int id, std::string_view text)
   return true;
 }
 
+bool gx::Gui::setBool(int id, bool val)
+{
+  GuiElem* e = findElem(id);
+  if (!e || e->type != GUI_CHECKBOX) { return false; }
+
+  e->checkbox_set = val;
+  _needRender = true;
+  return true;
+}
+
 void gx::Gui::init(GuiElem& def)
 {
   if (def.type == GUI_MENU) { def.id = _uniqueID--; }
@@ -463,6 +481,14 @@ void gx::Gui::calcSize(GuiElem& def)
       calcSize(e);
       def._w = e._w + (b * 2.0f);
       def._h = e._h + (b * 2.0f);
+      break;
+    }
+    case GUI_CHECKBOX: {
+      const Font& fnt = *_theme->font;
+      GuiElem& e = def.elems[0];
+      calcSize(e);
+      def._w = fnt.calcWidth(_theme->checkCode) + (b*3.0f) + e._w;
+      def._h = std::max(float(fnt.size() - 1) + (b*2.0f), e._h);
       break;
     }
     case GUI_MENU: {
@@ -552,6 +578,11 @@ void gx::Gui::calcPos(
       }
       break;
     }
+    case GUI_CHECKBOX:
+      left += _theme->font->calcWidth(_theme->checkCode)
+        + (_theme->border*3.0f);
+      calcPos(def.elems[0], left, top, right, bottom);
+      break;
     case GUI_MENU: {
       GuiElem& e0 = def.elems[0];
       calcPos(e0, left, top, right, bottom);
@@ -613,6 +644,27 @@ void gx::Gui::drawElem(
       }
       drawRec(dc, def, style);
       break;
+    case GUI_CHECKBOX: {
+      if (def.id == _heldID) {
+        style = (def.id == _hoverID)
+          ? &_theme->checkboxPress : &_theme->checkboxHold;
+      } else {
+        style = (def.id == _hoverID)
+          ? &_theme->checkboxHover : &_theme->checkbox;
+      }
+      const Font& fnt = *tf.font;
+      const float b = _theme->border;
+      const float cw = fnt.calcWidth(_theme->checkCode) + (b*2.0f);
+      const float ch = float(fnt.size() - 1) + (b*2.0f);
+      drawRec(dc, def._x, def._y, cw, ch, style);
+      if (def.checkbox_set) {
+        dc2.glyph(
+          tf, def._x + b + _theme->checkXOffset,
+          def._y + b + _theme->checkYOffset, ALIGN_TOP_LEFT, _theme->checkCode);
+      }
+      drawElem(dc, dc2, tf, def.elems[0], style);
+      break;
+    }
     case GUI_MENU:
       style = def._active ? &_theme->menuButtonOpen
         : ((def.id == _hoverID)

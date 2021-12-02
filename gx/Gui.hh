@@ -42,6 +42,7 @@ namespace gx {
     GUI_BUTTON,        // activated on release
     GUI_BUTTON_PRESS,  // activated once on press
     GUI_BUTTON_HOLD,   // activated continuously on hold&press
+    GUI_CHECKBOX,      // toggle value on release
     GUI_MENU,          // button hold or release on menu opens menu
     GUI_MENU_ITEM,     // activated on press or release
     GUI_ENTRY,         // activated if changed on enter/tab/click-away
@@ -80,6 +81,7 @@ struct gx::GuiElem
   };
 
   union {
+    bool checkbox_set;
     EntryProps entry;
     ImageProps image;
   };
@@ -115,6 +117,15 @@ struct gx::GuiTheme
   Style buttonHold = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0};
 
+  Style checkbox = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f), 0};
+  Style checkboxHover = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f), 0};
+  Style checkboxPress = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f), 0};
+  Style checkboxHold = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0};
+
   Style menuButton = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), 0, 0};
   Style menuButtonHover = {
@@ -135,6 +146,10 @@ struct gx::GuiTheme
   uint16_t entryRightMargin = 4;
   uint16_t entryTopMargin = 2;
   uint16_t entryBottomMargin = 2;
+
+  int32_t checkCode = 'X';
+  int16_t checkXOffset = 0;
+  int16_t checkYOffset = 2;
 
   RGBA8 cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
   uint32_t cursorBlinkTime = 400000; // 1 sec
@@ -170,7 +185,13 @@ class gx::Gui
     return (e == nullptr) ? std::string() : e->text;
   }
 
+  [[nodiscard]] bool getBool(int id) const {
+    const GuiElem* e = findElem(id);
+    return (e == nullptr || e->type != GUI_CHECKBOX) ? false : e->checkbox_set;
+  }
+
   bool setText(int id, std::string_view text);
+  bool setBool(int id, bool val);
 
  private:
   const GuiTheme* _theme = nullptr;
@@ -337,6 +358,38 @@ namespace gx {
     int eventID, AlignEnum align, std::string_view text)
   {
     return {GUI_BUTTON_HOLD, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
+  }
+
+  // Checkbox
+  inline GuiElem guiCheckbox(int eventID, bool set, const GuiElem& label)
+  {
+    GuiElem e{GUI_CHECKBOX, ALIGN_LEFT, eventID, {label}};
+    e.checkbox_set = set;
+    return e;
+  }
+
+  inline GuiElem guiCheckbox(
+    int eventID, AlignEnum align, bool set, const GuiElem& label)
+  {
+    GuiElem e{GUI_CHECKBOX, align, eventID, {label}};
+    e.checkbox_set = set;
+    return e;
+  }
+
+  inline GuiElem guiCheckbox(int eventID, bool set, std::string_view label)
+  {
+    GuiElem e{GUI_CHECKBOX, ALIGN_TOP_LEFT, eventID,
+              {guiLabel(ALIGN_LEFT, label)}};
+    e.checkbox_set = set;
+    return e;
+  }
+
+  inline GuiElem guiCheckbox(
+    int eventID, AlignEnum align, bool set, std::string_view label)
+  {
+    GuiElem e{GUI_CHECKBOX, align, eventID, {guiLabel(ALIGN_LEFT, label)}};
+    e.checkbox_set = set;
+    return e;
   }
 
   // Menu

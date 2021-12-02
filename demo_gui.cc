@@ -50,18 +50,20 @@ int main(int argc, char* argv[])
 
   // pull-down menu demo
   gx::Gui gui2{
-    gx::guiVFrame(
-      gx::guiHFrame(
-        gx::guiMenu(
-          "File",
-          gx::guiMenuItem(1, "Open..."),
-          gx::guiMenuItem(2, "Save..."),
-          gx::guiHLine(),
-          gx::guiMenuItem(99, "Quit")),
-        gx::guiMenu(
-          "Help",
-          gx::guiMenuItem(3, "Manual"),
-          gx::guiMenuItem(4, "About"))))};
+    gx::guiHFrame(
+      gx::guiMenu(
+        "File",
+        gx::guiMenuItem(1, "Open..."),
+        gx::guiMenuItem(2, "Save..."),
+        gx::guiHLine(),
+        gx::guiMenuItem(99, "Quit")),
+      gx::guiMenu(
+        "Help",
+        gx::guiMenuItem(3, "Manual"),
+        gx::guiMenuItem(4, "About")),
+      gx::guiVLine(),
+      gx::guiCheckbox(21, true, "click me!"))
+  };
   gui2.layout(theme, 0, 0, gx::ALIGN_TOP_LEFT);
 
   // text entry demo
