@@ -21,117 +21,314 @@
 #include "Print.hh"
 #include <algorithm>
 #include <cassert>
+using namespace gx;
 
-namespace {
-  [[nodiscard]] bool contains(const gx::GuiElem& e, float x, float y)
+
+[[nodiscard]] static bool contains(const GuiElem& e, float x, float y)
+{
+  return (x >= e._x) && (x < (e._x + e._w))
+    && (y >= e._y) && (y < (e._y + e._h));
+}
+
+[[nodiscard]] static int calcLines(std::string_view text)
+{
+  if (text.empty()) { return 0; }
+  int lines = 1;
+  for (int ch : text) { lines += (ch == '\n'); }
+  return lines;
+}
+
+static void deactivate(GuiElem& def)
+{
+  def._active = false;
+  for (auto& e : def.elems) { deactivate(e); }
+}
+
+[[nodiscard]] static GuiElem* findElemByXY(
+  GuiElem& def, float x, float y, bool popup)
+{
+  if (popup && def.type == GUI_MENU) {
+    if (def._active) {
+      GuiElem* e = findElemByXY(def.elems[1], x, y, false);
+      if (e) { return e; }
+    }
+    if (contains(def, x, y)) { return &def; }
+  }
+  else if (popup || contains(def, x, y))
   {
-    return (x >= e._x) && (x < (e._x + e._w))
-      && (y >= e._y) && (y < (e._y + e._h));
+    if (!popup && def.id != 0) { return &def; }
+    for (GuiElem& c : def.elems) {
+      GuiElem* e = findElemByXY(c, x, y, popup);
+      if (e) { return e; }
+    }
+  }
+  return nullptr;
+}
+
+static bool addEntryChar(GuiElem& e, int32_t codepoint)
+{
+  assert(e.type == GUI_ENTRY);
+  if (e.entry.maxLength != 0 && lengthUTF8(e.text) >= e.entry.maxLength) {
+    return false; // no space for character
   }
 
-  [[nodiscard]] int calcLines(std::string_view text)
-  {
-    if (text.empty()) { return 0; }
-    int lines = 1;
-    for (int ch : text) { lines += (ch == '\n'); }
-    return lines;
-  }
-
-  void deactivate(gx::GuiElem& def)
-  {
-    def._active = false;
-    for (auto& e : def.elems) { deactivate(e); }
-  }
-
-  [[nodiscard]] gx::GuiElem* findElemByXY(
-    gx::GuiElem& def, float x, float y, bool popup)
-  {
-    if (popup && def.type == gx::GUI_MENU) {
-      if (def._active) {
-        gx::GuiElem* e = findElemByXY(def.elems[1], x, y, false);
-        if (e) { return e; }
+  switch (e.entry.type) {
+    default: // ENTRY_TEXT, ENTRY_PASSWORD
+      if (codepoint <= 31) { return false; }
+      break;
+    case ENTRY_CARDINAL:
+      if (!std::isdigit(codepoint)
+          || (e.text == "0" && codepoint == '0')) { return false; }
+      if (e.text == "0") { e.text.clear(); }
+      break;
+    case ENTRY_INTEGER:
+      if ((!std::isdigit(codepoint) && codepoint != '-')
+          || (codepoint == '-' && !e.text.empty() && e.text != "0")
+          || (codepoint == '0' && (e.text == "0" || e.text == "-"))) {
+        return false; }
+      if (e.text == "0") { e.text.clear(); }
+      break;
+    case ENTRY_FLOAT:
+      if ((!std::isdigit(codepoint) && codepoint != '-' && codepoint != '.')
+          || (codepoint == '-' && !e.text.empty() && e.text != "0")
+          || (codepoint == '0' && (e.text == "0" || e.text == "-0"))) {
+        return false;
+      } else if (codepoint == '.') {
+        int count = 0;
+        for (char ch : e.text) { count += int{ch == '.'}; }
+        if (count > 0) { return false; }
       }
-      if (contains(def, x, y)) { return &def; }
-    }
-    else if (popup || contains(def, x, y))
-    {
-      if (!popup && def.id != 0) { return &def; }
-      for (gx::GuiElem& c : def.elems) {
-        gx::GuiElem* e = findElemByXY(c, x, y, popup);
-        if (e) { return e; }
-      }
-    }
-    return nullptr;
+      if (e.text == "0" && codepoint != '.') { e.text.clear(); }
+      break;
   }
 
-  bool addEntryChar(gx::GuiElem& e, int32_t codepoint)
-  {
-    assert(e.type == gx::GUI_ENTRY);
+  e.text += toUTF8(codepoint);
+  return true;
+}
 
-    if (e.entry.maxLength != 0
-        && gx::lengthUTF8(e.text) >= e.entry.maxLength) {
-      return false; // no space for character
-    }
-
-    switch (e.entry.type) {
-      default: // ENTRY_TEXT, ENTRY_PASSWORD
-        if (codepoint <= 31) { return false; }
-        break;
-      case gx::ENTRY_CARDINAL:
-        if (!std::isdigit(codepoint)
-            || (e.text == "0" && codepoint == '0')) { return false; }
-        if (e.text == "0") { e.text.clear(); }
-        break;
-      case gx::ENTRY_INTEGER:
-        if ((!std::isdigit(codepoint) && codepoint != '-')
-            || (codepoint == '-' && !e.text.empty() && e.text != "0")
-            || (codepoint == '0' && (e.text == "0" || e.text == "-"))) {
-          return false; }
-        if (e.text == "0") { e.text.clear(); }
-        break;
-      case gx::ENTRY_FLOAT:
-        if ((!std::isdigit(codepoint) && codepoint != '-' && codepoint != '.')
-            || (codepoint == '-' && !e.text.empty() && e.text != "0")
-            || (codepoint == '0' && (e.text == "0" || e.text == "-0"))) {
-          return false;
-        } else if (codepoint == '.') {
-          int count = 0;
-          for (char ch : e.text) { count += int{ch == '.'}; }
-          if (count > 0) { return false; }
-        }
-        if (e.text == "0" && codepoint != '.') { e.text.clear(); }
-        break;
-    }
-
-    e.text += gx::toUTF8(codepoint);
-    return true;
+static void drawRec(DrawContext& dc, float x, float y, float w, float h,
+                    const GuiTheme::Style* style)
+{
+  if (style->backgroundColor != 0) {
+    dc.color(style->backgroundColor);
+    dc.rectangle(x, y, w, h);
   }
 
-  void drawRec(gx::DrawContext& dc, float x, float y, float w, float h,
-               const gx::GuiTheme::Style* style)
-  {
-    if (style->backgroundColor != 0) {
-      dc.color(style->backgroundColor);
-      dc.rectangle(x, y, w, h);
-    }
-
-    if (style->edgeColor != 0) {
-      dc.color(style->edgeColor);
-      dc.rectangle(x, y, w, 1);
-      dc.rectangle(x, y + h - 1, w, 1);
-      dc.rectangle(x, y, 1, h);
-      dc.rectangle(x + w - 1, y, 1, h);
-    }
-  }
-
-  inline void drawRec(gx::DrawContext& dc, const gx::GuiElem& e,
-                      const gx::GuiTheme::Style* style) {
-    drawRec(dc, e._x, e._y, e._w, e._h, style);
+  if (style->edgeColor != 0) {
+    dc.color(style->edgeColor);
+    dc.rectangle(x, y, w, 1);
+    dc.rectangle(x, y + h - 1, w, 1);
+    dc.rectangle(x, y, 1, h);
+    dc.rectangle(x + w - 1, y, 1, h);
   }
 }
 
+static inline void drawRec(DrawContext& dc, const GuiElem& e,
+                           const GuiTheme::Style* style) {
+  drawRec(dc, e._x, e._y, e._w, e._h, style);
+}
 
-void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
+static void calcSize(const GuiTheme& theme, GuiElem& def)
+{
+  const float b = theme.border;
+  switch (def.type) {
+    case GUI_HFRAME: {
+      const float fs = theme.frameSpacing;
+      float total_w = -fs, max_h = 0;
+      for (GuiElem& e : def.elems) {
+        calcSize(theme, e);
+        total_w += e._w + fs;
+        max_h = std::max(max_h, e._h);
+      }
+      for (GuiElem& e : def.elems) {
+        if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; }
+        // TODO: support horizontal justify
+      }
+      def._w = total_w;
+      def._h = max_h;
+      break;
+    }
+    case GUI_VFRAME: {
+      const float fs = theme.frameSpacing;
+      float total_h = -fs, max_w = 0;
+      for (GuiElem& e : def.elems) {
+        calcSize(theme, e);
+        total_h += e._h + fs;
+        max_w = std::max(max_w, e._w);
+      }
+      for (GuiElem& e : def.elems) {
+        if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; }
+        // TODO: support vertical justify
+      }
+      def._w = max_w;
+      def._h = total_h;
+      break;
+    }
+    case GUI_LABEL: {
+      const Font& fnt = *theme.font;
+      def._w = fnt.calcWidth(def.text);
+      int lines = calcLines(def.text);
+      def._h = float((fnt.size() - 1) * lines
+                     + (theme.textSpacing * std::max(lines - 1, 0)));
+      // FIXME: improve line height calc (based on font ymax/ymin?)
+      break;
+    }
+    case GUI_HLINE:
+      def._w = float(theme.font->size() - 1);
+      def._h = float(theme.lineWidth) + (b * 2.0f);
+      break;
+    case GUI_VLINE:
+      def._w = float(theme.lineWidth) + (b * 2.0f);
+      def._h = float(theme.font->size() - 1);
+      break;
+    case GUI_BACKGROUND:
+    case GUI_BUTTON:
+    case GUI_BUTTON_PRESS:
+    case GUI_BUTTON_HOLD:
+    case GUI_MENU_ITEM: {
+      GuiElem& e = def.elems[0];
+      calcSize(theme, e);
+      def._w = e._w + (b * 2.0f);
+      def._h = e._h + (b * 2.0f);
+      break;
+    }
+    case GUI_CHECKBOX: {
+      const Font& fnt = *theme.font;
+      GuiElem& e = def.elems[0];
+      calcSize(theme, e);
+      def._w = fnt.calcWidth(theme.checkCode) + (b*3.0f) + e._w;
+      def._h = std::max(float(fnt.size() - 1) + (b*2.0f), e._h);
+      break;
+    }
+    case GUI_MENU: {
+      // menu button
+      GuiElem& e = def.elems[0];
+      calcSize(theme, e);
+      def._w = e._w + (b * 2.0f);
+      def._h = e._h + (b * 2.0f);
+      // menu items
+      calcSize(theme, def.elems[1]);
+      break;
+    }
+    case GUI_ENTRY: {
+      const Font& fnt = *theme.font;
+      if (def.entry.type == ENTRY_CARDINAL
+          || def.entry.type == ENTRY_INTEGER
+          || def.entry.type == ENTRY_FLOAT) {
+        def._w = def.entry.size * fnt.digitWidth();
+      } else {
+        def._w = def.entry.size * fnt.calcWidth("A");
+        // FIXME: use better width value than capital A * size
+      }
+      def._w += float(theme.entryLeftMargin + theme.entryRightMargin
+                      + theme.cursorWidth + 1);
+      def._h = float(fnt.size() - 1)
+        + theme.entryTopMargin + theme.entryBottomMargin;
+      break;
+    }
+    case GUI_IMAGE:
+      def._w = def.image.width + (b * 2.0f);
+      def._h = def.image.height + (b * 2.0f);
+      break;
+    default:
+      GX_LOG_ERROR("unknown type ", def.type);
+      break;
+  }
+}
+
+static void calcPos(const GuiTheme& theme, GuiElem& def,
+                    float left, float top, float right, float bottom)
+{
+  switch (VAlign(def.align)) {
+    case ALIGN_TOP:    def._y = top; break;
+    case ALIGN_BOTTOM: def._y = bottom - def._h; break;
+    default: // vcenter
+      def._y = std::floor((top + bottom - def._h) * .5f + .5f); break;
+  }
+
+  switch (HAlign(def.align)) {
+    case ALIGN_LEFT:  def._x = left; break;
+    case ALIGN_RIGHT: def._x = right - def._w; break;
+    default: // hcenter
+      def._x = std::floor((left + right - def._w) * .5f); break;
+  }
+
+  left   = def._x;
+  top    = def._y;
+  right  = def._x + def._w;
+  bottom = def._y + def._h;
+
+  switch (def.type) {
+    case GUI_HFRAME: {
+      const float fs = theme.frameSpacing;
+      float total_w = 0;
+      for (GuiElem& e : def.elems) { total_w += e._w + fs; }
+      for (GuiElem& e : def.elems) {
+        total_w -= e._w + fs;
+        calcPos(theme, e, left, top, right - total_w, bottom);
+        left = e._x + e._w + fs;
+      }
+      break;
+    }
+    case GUI_VFRAME: {
+      const float fs = theme.frameSpacing;
+      float total_h = 0;
+      for (GuiElem& e : def.elems) { total_h += e._h + fs; }
+      for (GuiElem& e : def.elems) {
+        total_h -= e._h + fs;
+        calcPos(theme, e, left, top, right, bottom - total_h);
+        top = e._y + e._h + fs;
+      }
+      break;
+    }
+    case GUI_CHECKBOX:
+      left += theme.font->calcWidth(theme.checkCode)
+        + (theme.border*3.0f);
+      calcPos(theme, def.elems[0], left, top, right, bottom);
+      break;
+    case GUI_MENU: {
+      GuiElem& e0 = def.elems[0];
+      calcPos(theme, e0, left, top, right, bottom);
+      // always position menu frame below menu button for now
+      top  = e0._y + e0._h + theme.border;
+      GuiElem& e1 = def.elems[1];
+      calcPos(theme, e1, left, top, left + e1._w, top + e1._h);
+      break;
+    }
+    default: {
+      // align single child element
+      const float b = theme.border;
+      if (!def.elems.empty()) {
+        assert(def.elems.size() == 1);
+        calcPos(theme, def.elems[0], left + b, top + b, right - b, bottom - b);
+      }
+      break;
+    }
+  }
+}
+
+template<class T>
+static inline T* findElemT(T* root, int id)
+{
+  assert(id != 0);
+  std::vector<T*> stack;
+  T* e = root;
+  while (e->id != id) {
+    if (!e->elems.empty()) {
+      stack.reserve(stack.size() + e->elems.size());
+      for (T& c : e->elems) { stack.push_back(&c); }
+    }
+
+    if (stack.empty()) { return nullptr; }
+    e = stack.back();
+    stack.pop_back();
+  }
+  return e;
+}
+
+
+// **** Gui class ****
+void Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
 {
   _theme = &theme;
   assert(_theme->font != nullptr);
@@ -143,7 +340,7 @@ void gx::Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
   _needRender = true;
 }
 
-void gx::Gui::update(Window& win)
+void Gui::update(Window& win)
 {
   // clear event state that only persists for a single update
   _eventID = 0;
@@ -151,8 +348,8 @@ void gx::Gui::update(Window& win)
 
   // size & position update
   if (_needLayout) {
-    calcSize(_rootElem);
-    calcPos(_rootElem, _layout.x, _layout.y,
+    calcSize(*_theme, _rootElem);
+    calcPos(*_theme, _rootElem, _layout.x, _layout.y,
             _layout.x + _layout.w, _layout.y + _layout.h);
     _needLayout = false;
   }
@@ -217,7 +414,7 @@ void gx::Gui::update(Window& win)
   }
 }
 
-void gx::Gui::processMouseEvent(Window& win)
+void Gui::processMouseEvent(Window& win)
 {
   const bool buttonDown = win.buttons() & BUTTON1;
   const bool buttonEvent = win.events() & EVENT_MOUSE_BUTTON1;
@@ -320,7 +517,7 @@ void gx::Gui::processMouseEvent(Window& win)
   }
 }
 
-void gx::Gui::processCharEvent(Window& win)
+void Gui::processCharEvent(Window& win)
 {
   GuiElem* e = findElem(_focusID);
   if (!e) { return; }
@@ -379,7 +576,7 @@ void gx::Gui::processCharEvent(Window& win)
   }
 }
 
-void gx::Gui::setFocusID(Window& win, int id)
+void Gui::setFocusID(Window& win, int id)
 {
   if (_focusID == id) { return; }
   if (_textChanged) {
@@ -392,7 +589,7 @@ void gx::Gui::setFocusID(Window& win, int id)
   _needRender = true;
 }
 
-bool gx::Gui::setText(int id, std::string_view text)
+bool Gui::setText(int id, std::string_view text)
 {
   GuiElem* e = findElem(id);
   if (!e) { return false; }
@@ -403,7 +600,7 @@ bool gx::Gui::setText(int id, std::string_view text)
   return true;
 }
 
-bool gx::Gui::setBool(int id, bool val)
+bool Gui::setBool(int id, bool val)
 {
   GuiElem* e = findElem(id);
   if (!e || e->type != GUI_CHECKBOX) { return false; }
@@ -413,198 +610,13 @@ bool gx::Gui::setBool(int id, bool val)
   return true;
 }
 
-void gx::Gui::init(GuiElem& def)
+void Gui::init(GuiElem& def)
 {
   if (def.type == GUI_MENU) { def.id = _uniqueID--; }
   for (GuiElem& e : def.elems) { init(e); }
 }
 
-void gx::Gui::calcSize(GuiElem& def)
-{
-  const float b = _theme->border;
-  switch (def.type) {
-    case GUI_HFRAME: {
-      const float fs = _theme->frameSpacing;
-      float total_w = -fs, max_h = 0;
-      for (GuiElem& e : def.elems) {
-        calcSize(e);
-        total_w += e._w + fs;
-        max_h = std::max(max_h, e._h);
-      }
-      for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; }
-        // TODO: support horizontal justify
-      }
-      def._w = total_w;
-      def._h = max_h;
-      break;
-    }
-    case GUI_VFRAME: {
-      const float fs = _theme->frameSpacing;
-      float total_h = -fs, max_w = 0;
-      for (GuiElem& e : def.elems) {
-        calcSize(e);
-        total_h += e._h + fs;
-        max_w = std::max(max_w, e._w);
-      }
-      for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; }
-        // TODO: support vertical justify
-      }
-      def._w = max_w;
-      def._h = total_h;
-      break;
-    }
-    case GUI_LABEL: {
-      const Font& fnt = *_theme->font;
-      def._w = fnt.calcWidth(def.text);
-      int lines = calcLines(def.text);
-      def._h = float((fnt.size() - 1) * lines
-                     + (_theme->textSpacing * std::max(lines - 1, 0)));
-      // FIXME: improve line height calc (based on font ymax/ymin?)
-      break;
-    }
-    case GUI_HLINE:
-      def._w = float(_theme->font->size() - 1);
-      def._h = float(_theme->lineWidth) + (b * 2.0f);
-      break;
-    case GUI_VLINE:
-      def._w = float(_theme->lineWidth) + (b * 2.0f);
-      def._h = float(_theme->font->size() - 1);
-      break;
-    case GUI_BACKGROUND:
-    case GUI_BUTTON:
-    case GUI_BUTTON_PRESS:
-    case GUI_BUTTON_HOLD:
-    case GUI_MENU_ITEM: {
-      GuiElem& e = def.elems[0];
-      calcSize(e);
-      def._w = e._w + (b * 2.0f);
-      def._h = e._h + (b * 2.0f);
-      break;
-    }
-    case GUI_CHECKBOX: {
-      const Font& fnt = *_theme->font;
-      GuiElem& e = def.elems[0];
-      calcSize(e);
-      def._w = fnt.calcWidth(_theme->checkCode) + (b*3.0f) + e._w;
-      def._h = std::max(float(fnt.size() - 1) + (b*2.0f), e._h);
-      break;
-    }
-    case GUI_MENU: {
-      // menu button
-      GuiElem& e = def.elems[0];
-      calcSize(e);
-      def._w = e._w + (b * 2.0f);
-      def._h = e._h + (b * 2.0f);
-      // menu items
-      calcSize(def.elems[1]);
-      break;
-    }
-    case GUI_ENTRY: {
-      const Font& fnt = *_theme->font;
-      if (def.entry.type == ENTRY_CARDINAL
-          || def.entry.type == ENTRY_INTEGER
-          || def.entry.type == ENTRY_FLOAT) {
-        def._w = def.entry.size * fnt.digitWidth();
-      } else {
-        def._w = def.entry.size * fnt.calcWidth("A");
-        // FIXME: use better width value than capital A * size
-      }
-      def._w += float(_theme->entryLeftMargin + _theme->entryRightMargin
-                      + _theme->cursorWidth + 1);
-      def._h = float(fnt.size() - 1)
-        + _theme->entryTopMargin + _theme->entryBottomMargin;
-      break;
-    }
-    case GUI_IMAGE:
-      def._w = def.image.width + (b * 2.0f);
-      def._h = def.image.height + (b * 2.0f);
-      break;
-    default:
-      GX_LOG_ERROR("unknown type ", def.type);
-      break;
-  }
-}
-
-void gx::Gui::calcPos(
-  GuiElem& def, float left, float top, float right, float bottom)
-{
-  {
-    const auto va = VAlign(def.align);
-    if (va == ALIGN_TOP) {
-      def._y = top;
-    } else if (va == ALIGN_BOTTOM) {
-      def._y = bottom - def._h;
-    } else { // vcenter
-      def._y = std::floor((top + bottom - def._h) * .5f + .5f);
-    }
-
-    const auto ha = HAlign(def.align);
-    if (ha == ALIGN_LEFT) {
-      def._x = left;
-    } else if (ha == ALIGN_RIGHT) {
-      def._x = right - def._w;
-    } else { // hcenter
-      def._x = std::floor((left + right - def._w) * .5f);
-    }
-  }
-
-  left   = def._x;
-  top    = def._y;
-  right  = def._x + def._w;
-  bottom = def._y + def._h;
-
-  switch (def.type) {
-    case GUI_HFRAME: {
-      const float fs = _theme->frameSpacing;
-      float total_w = 0;
-      for (GuiElem& e : def.elems) { total_w += e._w + fs; }
-      for (GuiElem& e : def.elems) {
-        total_w -= e._w + fs;
-        calcPos(e, left, top, right - total_w, bottom);
-        left = e._x + e._w + fs;
-      }
-      break;
-    }
-    case GUI_VFRAME: {
-      const float fs = _theme->frameSpacing;
-      float total_h = 0;
-      for (GuiElem& e : def.elems) { total_h += e._h + fs; }
-      for (GuiElem& e : def.elems) {
-        total_h -= e._h + fs;
-        calcPos(e, left, top, right, bottom - total_h);
-        top = e._y + e._h + fs;
-      }
-      break;
-    }
-    case GUI_CHECKBOX:
-      left += _theme->font->calcWidth(_theme->checkCode)
-        + (_theme->border*3.0f);
-      calcPos(def.elems[0], left, top, right, bottom);
-      break;
-    case GUI_MENU: {
-      GuiElem& e0 = def.elems[0];
-      calcPos(e0, left, top, right, bottom);
-      // always position menu frame below menu button for now
-      top  = e0._y + e0._h + _theme->border;
-      GuiElem& e1 = def.elems[1];
-      calcPos(e1, left, top, left + e1._w, top + e1._h);
-      break;
-    }
-    default: {
-      // align single child element
-      const float b = _theme->border;
-      if (!def.elems.empty()) {
-        assert(def.elems.size() == 1);
-        calcPos(def.elems[0], left + b, top + b, right - b, bottom - b);
-      }
-      break;
-    }
-  }
-}
-
-void gx::Gui::drawElem(
+void Gui::drawElem(
   DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
   const GuiElem& def, const GuiTheme::Style* style) const
 {
@@ -735,7 +747,7 @@ void gx::Gui::drawElem(
   }
 }
 
-void gx::Gui::drawPopup(
+void Gui::drawPopup(
   DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
   const GuiElem& def) const
 {
@@ -749,38 +761,17 @@ void gx::Gui::drawPopup(
   }
 }
 
-namespace {
-  template<class T>
-  inline T* findElemT(T* root, int id)
-  {
-    assert(id != 0);
-    std::vector<T*> stack;
-    T* e = root;
-    while (e->id != id) {
-      if (!e->elems.empty()) {
-        stack.reserve(stack.size() + e->elems.size());
-        for (T& c : e->elems) { stack.push_back(&c); }
-      }
-
-      if (stack.empty()) { return nullptr; }
-      e = stack.back();
-      stack.pop_back();
-    }
-    return e;
-  }
-}
-
-gx::GuiElem* gx::Gui::findElem(int id)
+GuiElem* Gui::findElem(int id)
 {
   return findElemT(&_rootElem, id);
 }
 
-const gx::GuiElem* gx::Gui::findElem(int id) const
+const GuiElem* Gui::findElem(int id) const
 {
   return findElemT(&_rootElem, id);
 }
 
-gx::GuiElem* gx::Gui::findNextElem(int id, GuiElemType type)
+GuiElem* Gui::findNextElem(int id, GuiElemType type)
 {
   assert(id != 0);
   std::vector<GuiElem*> stack;
@@ -805,7 +796,7 @@ gx::GuiElem* gx::Gui::findNextElem(int id, GuiElemType type)
   }
 }
 
-gx::GuiElem* gx::Gui::findPrevElem(int id, GuiElemType type)
+GuiElem* Gui::findPrevElem(int id, GuiElemType type)
 {
   assert(id != 0);
   std::vector<GuiElem*> stack;

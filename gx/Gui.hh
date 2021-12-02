@@ -216,8 +216,6 @@ class gx::Gui
   void processCharEvent(Window& win);
   void setFocusID(Window& win, int id);
   void init(GuiElem& def);
-  void calcSize(GuiElem& def);
-  void calcPos(GuiElem& e, float left, float top, float right, float bottom);
   void drawElem(
     DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
     const GuiElem& def, const GuiTheme::Style* style) const;
