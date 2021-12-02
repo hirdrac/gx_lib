@@ -662,7 +662,6 @@ void gx::Gui::drawElem(
           tf, def._x + b + _theme->checkXOffset,
           def._y + b + _theme->checkYOffset, ALIGN_TOP_LEFT, _theme->checkCode);
       }
-      drawElem(dc, dc2, tf, def.elems[0], style);
       break;
     }
     case GUI_MENU:
