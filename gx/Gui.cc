@@ -390,7 +390,7 @@ bool gx::Gui::setText(int id, std::string_view text)
   if (!e) { return false; }
 
   e->text = text;
-  _needLayout = true;
+  _needLayout |= (e->type != GUI_ENTRY);
   _needRender = true;
   return true;
 }
@@ -447,12 +447,12 @@ void gx::Gui::calcSize(GuiElem& def)
       break;
     }
     case GUI_HLINE:
-      def._w = float(_theme->font->size() - 1) + (b * 2.0f);
+      def._w = float(_theme->font->size() - 1);
       def._h = float(_theme->lineWidth) + (b * 2.0f);
       break;
     case GUI_VLINE:
       def._w = float(_theme->lineWidth) + (b * 2.0f);
-      def._h = float(_theme->font->size() - 1) + (b * 2.0f);
+      def._h = float(_theme->font->size() - 1);
       break;
     case GUI_BACKGROUND:
     case GUI_BUTTON:
@@ -587,12 +587,18 @@ void gx::Gui::drawElem(
       dc2.color(style->textColor);
       dc2.text(tf, def._x, def._y, ALIGN_TOP_LEFT, def.text);
       break;
-    case GUI_HLINE:
+    case GUI_HLINE: {
+      const float b = _theme->border;
+      assert(style != nullptr);
+      dc.color(style->textColor);
+      dc.rectangle(def._x, def._y + b, def._w, def._h - (b*2));
+      break;
+    }
     case GUI_VLINE: {
       const float b = _theme->border;
       assert(style != nullptr);
       dc.color(style->textColor);
-      dc.rectangle(def._x + b, def._y + b, def._w - (b*2), def._h - (b*2));
+      dc.rectangle(def._x + b, def._y, def._w - (b*2), def._h);
       break;
     }
     case GUI_BUTTON:
