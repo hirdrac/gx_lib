@@ -328,30 +328,21 @@ static inline T* findElemT(T* root, int id)
 
 
 // **** Gui class ****
-void Gui::layout(const GuiTheme& theme, float x, float y, AlignEnum align)
-{
-  _theme = &theme;
-  assert(_theme->font != nullptr);
-  _layout = {x,y,0,0};
-  if (HAlign(align) == ALIGN_RIGHT) { std::swap(_layout.x, _layout.w); }
-  if (VAlign(align) == ALIGN_BOTTOM) { std::swap(_layout.y, _layout.h); }
-  _rootElem.align = align;
-  _needLayout = true;
-  _needRender = true;
-}
-
 void Gui::update(Window& win)
 {
   // clear event state that only persists for a single update
   _eventID = 0;
   _needRedraw = false;
 
-  // size & position update
-  if (_needLayout) {
-    calcSize(*_theme, _rootElem);
-    calcPos(*_theme, _rootElem, _layout.x, _layout.y,
-            _layout.x + _layout.w, _layout.y + _layout.h);
-    _needLayout = false;
+  for (auto& pPtr : _panels) {
+    Panel& p = *pPtr;
+    // size & position update
+    if (p.needLayout) {
+      calcSize(*p.theme, p.root);
+      calcPos(*p.theme, p.root, p.layout.x, p.layout.y,
+              p.layout.x + p.layout.w, p.layout.y + p.layout.h);
+      p.needLayout = false;
+    }
   }
 
   // mouse movement/button handling
@@ -368,12 +359,12 @@ void Gui::update(Window& win)
   if (_focusID != 0) {
     if (win.events() & EVENT_CHAR) { processCharEvent(win); }
 
-    const int64_t bt = _theme->cursorBlinkTime;
-    if (bt > 0) {
+    if (_cursorBlinkTime > 0) {
       // check for cursor blink
-      const int64_t blinks = (win.lastPollTime() - _lastCursorUpdate) / bt;
+      const int64_t blinks =
+        (win.lastPollTime() - _lastCursorUpdate) / _cursorBlinkTime;
       if (blinks > 0) {
-        _lastCursorUpdate += blinks * bt;
+        _lastCursorUpdate += blinks * _cursorBlinkTime;
         if (blinks & 1) { _cursorState = !_cursorState; }
         _needRender = true;
       }
@@ -388,21 +379,25 @@ void Gui::update(Window& win)
     // 2 - popup background/frames
     // 3 - popup text
 
-    TextFormatting tf{_theme->font};
-    tf.spacing = _theme->textSpacing;
-
     DrawContext dc0{_dlm[0]}, dc1{_dlm[1]};
     dc0.clear();
     dc1.clear();
 
-    drawElem(dc0, dc1, tf, _rootElem, &_theme->panel);
+    for (auto& pPtr : _panels) {
+      Panel& p = *pPtr;
+      const TextFormatting tf{p.theme->font, float(p.theme->textSpacing)};
+      drawElem(dc0, dc1, tf, p.root, p, &(p.theme->panel));
+    }
 
     if (_popupActive) {
       DrawContext dc2{_dlm[2]}, dc3{_dlm[3]};
       dc2.clear();
       dc3.clear();
-
-      drawPopup(dc2, dc3, tf, _rootElem);
+      for (auto& pPtr : _panels) {
+        Panel& p = *pPtr;
+        const TextFormatting tf{p.theme->font, float(p.theme->textSpacing)};
+        drawPopup(dc2, dc3, tf, p.root, p);
+      }
     } else {
       // clear popup layers
       if (auto it = _dlm.find(2); it != _dlm.end()) { it->second.clear(); }
@@ -414,6 +409,12 @@ void Gui::update(Window& win)
   }
 }
 
+void Gui::deactivatePopup()
+{
+  for (auto& pPtr : _panels) { deactivate(pPtr->root); }
+  _popupActive = false;
+}
+
 void Gui::processMouseEvent(Window& win)
 {
   const bool buttonDown = win.buttons() & BUTTON1;
@@ -422,14 +423,17 @@ void Gui::processMouseEvent(Window& win)
   const bool anyGuiButtonEvent = win.allEvents() & EVENT_MOUSE_BUTTON1;
 
   // get elem at mouse pointer
-  GuiElem* ptr = nullptr;
+  GuiElem* ePtr = nullptr;
   int id = 0;
   GuiElemType type = GUI_NULL;
   if (win.mouseIn()) {
-    ptr = findElemByXY(_rootElem, win.mouseX(), win.mouseY(), _popupActive);
-    if (ptr) {
-      id = ptr->id;
-      type = ptr->type;
+    for (auto& pPtr : _panels) {
+      ePtr = findElemByXY(pPtr->root, win.mouseX(), win.mouseY(), _popupActive);
+      if (ePtr) {
+        id = ePtr->id;
+        type = ePtr->type;
+        break;
+      }
     }
   }
 
@@ -453,16 +457,15 @@ void Gui::processMouseEvent(Window& win)
 
   bool usedEvent = false;
   if (type == GUI_MENU) {
-    if (pressEvent && ptr->_active) {
+    if (pressEvent && ePtr->_active) {
       // click on open menu button closes it
-      deactivate(_rootElem);
-      _popupActive = false;
+      deactivatePopup();
       _needRender = true;
       usedEvent = true;
     } else if (pressEvent || _popupActive) {
       // open menu
-      if (_popupActive) { deactivate(_rootElem); } // close other open menu
-      ptr->_active = true;
+      if (_popupActive) { deactivatePopup(); } // close other open menu
+      ePtr->_active = true;
       _popupActive = true;
       _needRender = true;
       usedEvent = true;
@@ -494,7 +497,7 @@ void Gui::processMouseEvent(Window& win)
           && buttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
         _eventID = id;
-        if (type == GUI_CHECKBOX) { ptr->checkbox_set = !ptr->checkbox_set; }
+        if (type == GUI_CHECKBOX) { ePtr->checkbox_set = !ePtr->checkbox_set; }
         usedEvent = true;
       }
 
@@ -506,8 +509,7 @@ void Gui::processMouseEvent(Window& win)
 
   if (type != GUI_MENU && _popupActive && anyGuiButtonEvent) {
     // press/release off menu closes open menus
-    deactivate(_rootElem);
-    _popupActive = false;
+    deactivatePopup();
     _needRender = true;
   }
 
@@ -584,30 +586,52 @@ void Gui::setFocusID(Window& win, int id)
     _eventID = _focusID;
   }
   _focusID = id;
-  _lastCursorUpdate = win.lastPollTime();
-  _cursorState = true;
+  if (id != 0) {
+    _lastCursorUpdate = win.lastPollTime();
+    const Panel* p = findPanel(_focusID);
+    _cursorBlinkTime = p ? p->theme->cursorBlinkTime : 400000;
+    _cursorState = true;
+  }
   _needRender = true;
 }
 
 bool Gui::setText(int id, std::string_view text)
 {
-  GuiElem* e = findElem(id);
-  if (!e) { return false; }
+  for (auto& pPtr : _panels) {
+    GuiElem* e = findElemT(&pPtr->root, id);
+    if (!e) { continue; }
 
-  e->text = text;
-  _needLayout |= (e->type != GUI_ENTRY);
-  _needRender = true;
-  return true;
+    e->text = text;
+    pPtr->needLayout |= (e->type != GUI_ENTRY);
+    _needRender = true;
+    return true;
+  }
+  return false;
 }
 
 bool Gui::setBool(int id, bool val)
 {
-  GuiElem* e = findElem(id);
-  if (!e || e->type != GUI_CHECKBOX) { return false; }
+  for (auto& pPtr : _panels) {
+    GuiElem* e = findElemT(&pPtr->root, id);
+    if (!e) { continue; }
 
-  e->checkbox_set = val;
+    if (e->type != GUI_CHECKBOX) { break; }
+    e->checkbox_set = val;
+    _needRender = true;
+    return true;
+  }
+  return false;
+}
+
+void Gui::layout(Panel& p, float x, float y, AlignEnum align)
+{
+  assert(p.theme->font != nullptr);
+  p.layout = {x,y,0,0};
+  if (HAlign(align) == ALIGN_RIGHT) { std::swap(p.layout.x, p.layout.w); }
+  if (VAlign(align) == ALIGN_BOTTOM) { std::swap(p.layout.y, p.layout.h); }
+  p.root.align = align;
+  p.needLayout = true;
   _needRender = true;
-  return true;
 }
 
 void Gui::init(GuiElem& def)
@@ -618,7 +642,7 @@ void Gui::init(GuiElem& def)
 
 void Gui::drawElem(
   DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-  const GuiElem& def, const GuiTheme::Style* style) const
+  const GuiElem& def, const Panel& panel, const GuiTheme::Style* style) const
 {
   switch (def.type) {
     case GUI_BACKGROUND:
@@ -631,14 +655,14 @@ void Gui::drawElem(
       dc2.text(tf, def._x, def._y, ALIGN_TOP_LEFT, def.text);
       break;
     case GUI_HLINE: {
-      const float b = _theme->border;
+      const float b = panel.theme->border;
       assert(style != nullptr);
       dc.color(style->textColor);
       dc.rectangle(def._x, def._y + b, def._w, def._h - (b*2));
       break;
     }
     case GUI_VLINE: {
-      const float b = _theme->border;
+      const float b = panel.theme->border;
       assert(style != nullptr);
       dc.color(style->textColor);
       dc.rectangle(def._x + b, def._y, def._w - (b*2), def._h);
@@ -649,42 +673,42 @@ void Gui::drawElem(
     case GUI_BUTTON_HOLD:
       if (def.id == _heldID) {
         style = (def.id == _hoverID || def.type != GUI_BUTTON)
-          ? &_theme->buttonPress : &_theme->buttonHold;
+          ? &panel.theme->buttonPress : &panel.theme->buttonHold;
       } else {
         style = (def.id == _hoverID)
-          ? &_theme->buttonHover : &_theme->button;
+          ? &panel.theme->buttonHover : &panel.theme->button;
       }
       drawRec(dc, def, style);
       break;
     case GUI_CHECKBOX: {
       if (def.id == _heldID) {
         style = (def.id == _hoverID)
-          ? &_theme->checkboxPress : &_theme->checkboxHold;
+          ? &panel.theme->checkboxPress : &panel.theme->checkboxHold;
       } else {
         style = (def.id == _hoverID)
-          ? &_theme->checkboxHover : &_theme->checkbox;
+          ? &panel.theme->checkboxHover : &panel.theme->checkbox;
       }
       const Font& fnt = *tf.font;
-      const float b = _theme->border;
-      const float cw = fnt.calcWidth(_theme->checkCode) + (b*2.0f);
+      const float b = panel.theme->border;
+      const float cw = fnt.calcWidth(panel.theme->checkCode) + (b*2.0f);
       const float ch = float(fnt.size() - 1) + (b*2.0f);
       drawRec(dc, def._x, def._y, cw, ch, style);
       if (def.checkbox_set) {
         dc2.glyph(
-          tf, def._x + b + _theme->checkXOffset,
-          def._y + b + _theme->checkYOffset, ALIGN_TOP_LEFT, _theme->checkCode);
+          tf, def._x + b + panel.theme->checkXOffset,
+          def._y + b + panel.theme->checkYOffset, ALIGN_TOP_LEFT, panel.theme->checkCode);
       }
       break;
     }
     case GUI_MENU:
-      style = def._active ? &_theme->menuButtonOpen
+      style = def._active ? &panel.theme->menuButtonOpen
         : ((def.id == _hoverID)
-           ? &_theme->menuButtonHover : &_theme->menuButton);
+           ? &panel.theme->menuButtonHover : &panel.theme->menuButton);
       drawRec(dc, def, style);
       break;
     case GUI_MENU_ITEM:
       if (def.id == _hoverID) {
-        style = &_theme->menuItemSelect;
+        style = &panel.theme->menuItemSelect;
         drawRec(dc, def, style);
       }
       break;
@@ -692,17 +716,17 @@ void Gui::drawElem(
       const Font& fnt = *tf.font;
       float tw = fnt.calcWidth(def.text);
       if (def.id == _focusID) {
-        style = &_theme->entryFocus;
-        tw += float(1 + _theme->cursorWidth);
+        style = &panel.theme->entryFocus;
+        tw += float(1 + panel.theme->cursorWidth);
         // TODO: handle variable cursor position
       } else {
-        style = &_theme->entry;
+        style = &panel.theme->entry;
       }
       drawRec(dc, def, style);
       const uint32_t textColor = style->textColor;
       const float maxWidth = def._w
-        - _theme->entryLeftMargin - _theme->entryRightMargin;
-      float tx = def._x + _theme->entryLeftMargin;
+        - panel.theme->entryLeftMargin - panel.theme->entryRightMargin;
+      float tx = def._x + panel.theme->entryLeftMargin;
       if (tw > maxWidth) {
         // text doesn't fit in entry
         tx -= tw - maxWidth;
@@ -712,21 +736,21 @@ void Gui::drawElem(
       } else {
         dc2.color(textColor);
       }
-      dc2.text(tf, tx, def._y + _theme->entryTopMargin, ALIGN_TOP_LEFT,
+      dc2.text(tf, tx, def._y + panel.theme->entryTopMargin, ALIGN_TOP_LEFT,
                def.text, {def._x, def._y, def._w, def._h});
       // TODO: draw all characters as '*' for password entries
       if (def.id == _focusID && _cursorState) {
         // draw cursor
-        const float cw = _theme->cursorWidth;
-        dc.color(_theme->cursorColor);
-        dc.rectangle(tx + tw - cw, def._y + _theme->entryTopMargin,
+        const float cw = panel.theme->cursorWidth;
+        dc.color(panel.theme->cursorColor);
+        dc.rectangle(tx + tw - cw, def._y + panel.theme->entryTopMargin,
                      cw, float(fnt.size()-1));
       }
       break;
     }
     case GUI_IMAGE:
       dc.texture(def.image.texId);
-      dc.rectangle(def._x + _theme->border, def._y + _theme->border,
+      dc.rectangle(def._x + panel.theme->border, def._y + panel.theme->border,
                    def.image.width, def.image.height,
                    def.image.texCoord0, def.image.texCoord1);
       break;
@@ -741,41 +765,60 @@ void Gui::drawElem(
   // draw child elements
   if (def.type == GUI_MENU) {
     // menu button label
-    drawElem(dc, dc2, tf, def.elems[0], style);
+    drawElem(dc, dc2, tf, def.elems[0], panel, style);
   } else {
-    for (auto& e : def.elems) { drawElem(dc, dc2, tf, e, style); }
+    for (auto& e : def.elems) { drawElem(dc, dc2, tf, e, panel, style); }
   }
 }
 
 void Gui::drawPopup(
   DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-  const GuiElem& def) const
+  const GuiElem& def, const Panel& panel) const
 {
   if (def.type == GUI_MENU) {
     if (def._active) {
       // menu frame & items
-      drawElem(dc, dc2, tf, def.elems[1], &_theme->menuFrame);
+      drawElem(dc, dc2, tf, def.elems[1], panel, &panel.theme->menuFrame);
     }
   } else {
-    for (auto& e : def.elems) { drawPopup(dc, dc2, tf, e); }
+    for (auto& e : def.elems) { drawPopup(dc, dc2, tf, e, panel); }
   }
+}
+
+Gui::Panel* Gui::findPanel(int id)
+{
+  for (auto& pPtr : _panels) {
+    if (findElemT(&pPtr->root, id)) { return pPtr.get(); }
+  }
+  return nullptr;
 }
 
 GuiElem* Gui::findElem(int id)
 {
-  return findElemT(&_rootElem, id);
+  for (auto& pPtr : _panels) {
+    GuiElem* e = findElemT(&pPtr->root, id);
+    if (e) { return e; }
+  }
+  return nullptr;
 }
 
 const GuiElem* Gui::findElem(int id) const
 {
-  return findElemT(&_rootElem, id);
+  for (auto& pPtr : _panels) {
+    const GuiElem* e = findElemT(&pPtr->root, id);
+    if (e) { return e; }
+  }
+  return nullptr;
 }
 
 GuiElem* Gui::findNextElem(int id, GuiElemType type)
 {
   assert(id != 0);
+  Panel* p = findPanel(id);
+  if (!p) { return nullptr; }
+
   std::vector<GuiElem*> stack;
-  GuiElem* e = &_rootElem;
+  GuiElem* e = &p->root;
   GuiElem* next = nullptr;
   GuiElem* first = nullptr;
   for (;;) {
@@ -799,8 +842,11 @@ GuiElem* Gui::findNextElem(int id, GuiElemType type)
 GuiElem* Gui::findPrevElem(int id, GuiElemType type)
 {
   assert(id != 0);
+  Panel* p = findPanel(id);
+  if (!p) { return nullptr; }
+
   std::vector<GuiElem*> stack;
-  GuiElem* e = &_rootElem;
+  GuiElem* e = &p->root;
   GuiElem* prev = nullptr;
   GuiElem* last = nullptr;
   for (;;) {

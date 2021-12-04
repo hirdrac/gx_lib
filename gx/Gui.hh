@@ -8,7 +8,6 @@
 // TODO: sub menus
 // TODO: menu item key short-cuts
 // TODO: list select (combo box)
-// TODO: modal dialog
 
 #pragma once
 #include "DrawList.hh"
@@ -18,9 +17,13 @@
 #include <string_view>
 #include <vector>
 #include <initializer_list>
+#include <memory>
 
 
 namespace gx {
+  using PanelID = int;
+  using EventID = int;
+
   class Window;
   class DrawContext;
   struct TextFormatting;
@@ -65,7 +68,7 @@ struct gx::GuiElem
   std::string text;  // label/entry text
   GuiElemType type;
   AlignEnum align;
-  int id;
+  EventID id;
 
   // elem type specific properties
   struct EntryProps {
@@ -95,6 +98,7 @@ struct gx::GuiElem
   GuiElem(GuiElemType t, AlignEnum a, int i, std::initializer_list<GuiElem> x)
     : elems{x}, type{t}, align{a}, id{i} { }
 };
+
 
 struct gx::GuiTheme
 {
@@ -157,7 +161,7 @@ struct gx::GuiTheme
 
   uint16_t border = 6;
   uint16_t frameSpacing = 4;
-  uint16_t textSpacing = 0;
+  uint16_t textSpacing = 1;
   uint16_t lineWidth = 2;
 };
 
@@ -165,16 +169,15 @@ struct gx::GuiTheme
 class gx::Gui
 {
  public:
-  Gui(const GuiElem& elems)
-    : _rootElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {elems}} { init(_rootElem); }
+  inline PanelID newPanel(const GuiTheme& theme, float x, float y,
+                          AlignEnum align, GuiElem&& elems);
+  inline PanelID newPanel(const GuiTheme& theme, float x, float y,
+                          AlignEnum align, const GuiElem& elems);
 
-  void layout(const GuiTheme& theme, float x, float y, AlignEnum align);
   void update(Window& win);
+    // process events & update drawLists
 
   [[nodiscard]] const DrawListMap& drawLists() const { return _dlm; }
-  [[nodiscard]] float width() const { return _rootElem._w; }
-  [[nodiscard]] float height() const { return _rootElem._h; }
-
   [[nodiscard]] int eventID() const { return _eventID; }
     // id of element triggering an event
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
@@ -194,41 +197,75 @@ class gx::Gui
   bool setBool(int id, bool val);
 
  private:
-  const GuiTheme* _theme = nullptr;
-  GuiElem _rootElem;
+  struct Panel {
+    const GuiTheme* theme;
+    GuiElem root;
+    PanelID id;
+
+    Rect layout{};
+    bool needLayout = true;
+  };
+
+  std::vector<std::unique_ptr<Panel>> _panels;
+  PanelID _lastPanelID = 0;
+
   DrawListMap _dlm;
-  Rect _layout;
   int _hoverID = 0;
   int _heldID = 0;
   int _focusID = 0;
   int _eventID = 0;
   GuiElemType _heldType = GUI_NULL;
   int64_t _lastCursorUpdate = 0;
+  uint32_t _cursorBlinkTime = 0;
   int _uniqueID = -1;
   bool _cursorState = false;
-  bool _needLayout = true;
   bool _needRender = true;
   bool _needRedraw = false;
   bool _textChanged = false;
   bool _popupActive = false;
 
+  void layout(Panel& p, float x, float y, AlignEnum align);
   void processMouseEvent(Window& win);
   void processCharEvent(Window& win);
   void setFocusID(Window& win, int id);
   void init(GuiElem& def);
+  void deactivatePopup();
   void drawElem(
     DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-    const GuiElem& def, const GuiTheme::Style* style) const;
+    const GuiElem& def, const Panel& panel, const GuiTheme::Style* style) const;
   void drawPopup(
     DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-    const GuiElem& def) const;
+    const GuiElem& def, const Panel& panel) const;
 
+  [[nodiscard]] Panel* findPanel(int id);
   [[nodiscard]] GuiElem* findElem(int id);
   [[nodiscard]] const GuiElem* findElem(int id) const;
   [[nodiscard]] GuiElem* findNextElem(int id, GuiElemType type = GUI_NULL);
   [[nodiscard]] GuiElem* findPrevElem(int id, GuiElemType type = GUI_NULL);
 };
 
+// **** Inline Implementations ****
+gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
+                              AlignEnum align, GuiElem&& elems)
+{
+  PanelID id = ++_lastPanelID;
+  std::unique_ptr<Panel> ptr{new Panel{&theme, {GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {std::move(elems)}}, id}};
+  init(ptr->root);
+  layout(*ptr, x, y, align);
+  _panels.push_back(std::move(ptr));
+  return id;
+}
+
+gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
+                              AlignEnum align, const GuiElem& elems)
+{
+  PanelID id = ++_lastPanelID;
+  std::unique_ptr<Panel> ptr{new Panel{&theme, {GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {elems}}, id}};
+  init(ptr->root);
+  layout(*ptr, x, y, align);
+  _panels.push_back(std::move(ptr));
+  return id;
+}
 
 namespace gx {
   // **** GuiElem functions ****
@@ -288,104 +325,103 @@ namespace gx {
 
   // Button
   // (triggered on button release)
-  inline GuiElem guiButton(int eventID, const GuiElem& elem)
+  inline GuiElem guiButton(EventID id, const GuiElem& elem)
   {
-    return {GUI_BUTTON, ALIGN_TOP_LEFT, eventID, {elem}};
+    return {GUI_BUTTON, ALIGN_TOP_LEFT, id, {elem}};
   }
 
-  inline GuiElem guiButton(int eventID, AlignEnum align, const GuiElem& elem)
+  inline GuiElem guiButton(EventID id, AlignEnum align, const GuiElem& elem)
   {
-    return {GUI_BUTTON, align, eventID, {elem}};
+    return {GUI_BUTTON, align, id, {elem}};
   }
 
-  inline GuiElem guiButton(int eventID, std::string_view text)
+  inline GuiElem guiButton(EventID id, std::string_view text)
   {
-    return {GUI_BUTTON, ALIGN_TOP_LEFT, eventID, {guiLabel(ALIGN_CENTER, text)}};
+    return {GUI_BUTTON, ALIGN_TOP_LEFT, id, {guiLabel(ALIGN_CENTER, text)}};
   }
 
-  inline GuiElem guiButton(int eventID, AlignEnum align, std::string_view text)
+  inline GuiElem guiButton(EventID id, AlignEnum align, std::string_view text)
   {
-    return {GUI_BUTTON, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
+    return {GUI_BUTTON, align, id, {guiLabel(ALIGN_CENTER, text)}};
   }
 
   // ButtonPress
   // (triggered on initial button press)
-  inline GuiElem guiButtonPress(int eventID, const GuiElem& elem)
+  inline GuiElem guiButtonPress(EventID id, const GuiElem& elem)
   {
-    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, eventID, {elem}};
+    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
   }
 
   inline GuiElem guiButtonPress(
-    int eventID, AlignEnum align, const GuiElem& elem)
+    EventID id, AlignEnum align, const GuiElem& elem)
   {
-    return {GUI_BUTTON_PRESS, align, eventID, {elem}};
+    return {GUI_BUTTON_PRESS, align, id, {elem}};
   }
 
-  inline GuiElem guiButtonPress(int eventID, std::string_view text)
+  inline GuiElem guiButtonPress(EventID id, std::string_view text)
   {
-    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, eventID,
+    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
             {guiLabel(ALIGN_CENTER, text)}};
   }
 
   inline GuiElem guiButtonPress(
-    int eventID, AlignEnum align, std::string_view text)
+    EventID id, AlignEnum align, std::string_view text)
   {
-    return {GUI_BUTTON_PRESS, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
+    return {GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
   }
 
   // ButtonHold
   // (triggered repeatedly while held)
-  inline GuiElem guiButtonHold(int eventID, const GuiElem& elem)
+  inline GuiElem guiButtonHold(EventID id, const GuiElem& elem)
   {
-    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, eventID, {elem}};
+    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, id, {elem}};
   }
 
   inline GuiElem guiButtonHold(
-    int eventID, AlignEnum align, const GuiElem& elem)
+    EventID id, AlignEnum align, const GuiElem& elem)
   {
-    return {GUI_BUTTON_HOLD, align, eventID, {elem}};
+    return {GUI_BUTTON_HOLD, align, id, {elem}};
   }
 
-  inline GuiElem guiButtonHold(int eventID, std::string_view text)
+  inline GuiElem guiButtonHold(EventID id, std::string_view text)
   {
-    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, eventID,
+    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, id,
             {guiLabel(ALIGN_CENTER, text)}};
   }
 
   inline GuiElem guiButtonHold(
-    int eventID, AlignEnum align, std::string_view text)
+    EventID id, AlignEnum align, std::string_view text)
   {
-    return {GUI_BUTTON_HOLD, align, eventID, {guiLabel(ALIGN_CENTER, text)}};
+    return {GUI_BUTTON_HOLD, align, id, {guiLabel(ALIGN_CENTER, text)}};
   }
 
   // Checkbox
-  inline GuiElem guiCheckbox(int eventID, bool set, const GuiElem& label)
+  inline GuiElem guiCheckbox(EventID id, bool set, const GuiElem& label)
   {
-    GuiElem e{GUI_CHECKBOX, ALIGN_LEFT, eventID, {label}};
+    GuiElem e{GUI_CHECKBOX, ALIGN_LEFT, id, {label}};
     e.checkbox_set = set;
     return e;
   }
 
   inline GuiElem guiCheckbox(
-    int eventID, AlignEnum align, bool set, const GuiElem& label)
+    EventID id, AlignEnum align, bool set, const GuiElem& label)
   {
-    GuiElem e{GUI_CHECKBOX, align, eventID, {label}};
+    GuiElem e{GUI_CHECKBOX, align, id, {label}};
     e.checkbox_set = set;
     return e;
   }
 
-  inline GuiElem guiCheckbox(int eventID, bool set, std::string_view label)
+  inline GuiElem guiCheckbox(EventID id, bool set, std::string_view label)
   {
-    GuiElem e{GUI_CHECKBOX, ALIGN_TOP_LEFT, eventID,
-              {guiLabel(ALIGN_LEFT, label)}};
+    GuiElem e{GUI_CHECKBOX, ALIGN_TOP_LEFT, id, {guiLabel(ALIGN_LEFT, label)}};
     e.checkbox_set = set;
     return e;
   }
 
   inline GuiElem guiCheckbox(
-    int eventID, AlignEnum align, bool set, std::string_view label)
+    EventID id, AlignEnum align, bool set, std::string_view label)
   {
-    GuiElem e{GUI_CHECKBOX, align, eventID, {guiLabel(ALIGN_LEFT, label)}};
+    GuiElem e{GUI_CHECKBOX, align, id, {guiLabel(ALIGN_LEFT, label)}};
     e.checkbox_set = set;
     return e;
   }
@@ -400,52 +436,52 @@ namespace gx {
                      {guiVFrame(items...)}}}};
   }
 
-  inline GuiElem guiMenuItem(int eventID, std::string_view text)
+  inline GuiElem guiMenuItem(EventID id, std::string_view text)
   {
-    return {GUI_MENU_ITEM, ALIGN_JUSTIFY, eventID,
+    return {GUI_MENU_ITEM, ALIGN_JUSTIFY, id,
             {guiLabel(ALIGN_CENTER_LEFT, text)}};
   }
 
   // Entry
-  inline GuiElem guiTextEntry(int eventID, float size, int maxLength)
+  inline GuiElem guiTextEntry(EventID id, float size, int maxLength)
   {
-    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, id};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_TEXT;
     return e;
   }
 
-  inline GuiElem guiCardinalEntry(int eventID, float size, int maxLength)
+  inline GuiElem guiCardinalEntry(EventID id, float size, int maxLength)
   {
-    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, id};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_CARDINAL;
     return e;
   }
 
-  inline GuiElem guiIntegerEntry(int eventID, float size, int maxLength)
+  inline GuiElem guiIntegerEntry(EventID id, float size, int maxLength)
   {
-    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, id};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_INTEGER;
     return e;
   }
 
-  inline GuiElem guiFloatEntry(int eventID, float size, int maxLength)
+  inline GuiElem guiFloatEntry(EventID id, float size, int maxLength)
   {
-    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, id};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_FLOAT;
     return e;
   }
 
-  inline GuiElem guiPasswordEntry(int eventID, float size, int maxLength)
+  inline GuiElem guiPasswordEntry(EventID id, float size, int maxLength)
   {
-    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, eventID};
+    GuiElem e{GUI_ENTRY, ALIGN_TOP_LEFT, id};
     e.entry.size = size;
     e.entry.maxLength = maxLength;
     e.entry.type = ENTRY_PASSWORD;

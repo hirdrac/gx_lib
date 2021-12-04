@@ -30,9 +30,11 @@ int main(int argc, char* argv[])
   gx::GuiTheme theme{&fnt};
 
   // button demo
-  gx::Gui gui1{
+  gx::Gui gui;
+  gui.newPanel(
+    theme, 60, 80, gx::ALIGN_TOP_LEFT,
     gx::guiVFrame(
-      gx::guiLabel(gx::ALIGN_HCENTER, "BUTTON LIST"),
+      gx::guiLabel(gx::ALIGN_HCENTER, "BUTTONS"),
       gx::guiHLine(),
       gx::guiHFrame(
         gx::guiButton(1, "B1\nline 2"),
@@ -45,41 +47,48 @@ int main(int argc, char* argv[])
         gx::guiButtonPress(77, "PRESS"),
         gx::guiButtonHold(88, "HOLD")),
       gx::guiHLine(),
-      gx::guiButton(99, gx::ALIGN_RIGHT, "[QUIT]"))};
-  gui1.layout(theme, 60, 80, gx::ALIGN_TOP_LEFT);
+      gx::guiButton(99, gx::ALIGN_RIGHT, " QUIT ")));
 
   // pull-down menu demo
-  gx::Gui gui2{
+  gui.newPanel(
+    theme, 0, 0, gx::ALIGN_TOP_LEFT,
     gx::guiHFrame(
       gx::guiMenu(
         "File",
-        gx::guiMenuItem(1, "Open..."),
-        gx::guiMenuItem(2, "Save..."),
+        gx::guiMenuItem(11, "Open..."),
+        gx::guiMenuItem(12, "Save..."),
         gx::guiHLine(),
         gx::guiMenuItem(99, "Quit")),
       gx::guiMenu(
         "Help",
-        gx::guiMenuItem(3, "Manual"),
-        gx::guiMenuItem(4, "About")),
-      gx::guiVLine(),
-      gx::guiCheckbox(21, true, "click me!"))
-  };
-  gui2.layout(theme, 0, 0, gx::ALIGN_TOP_LEFT);
+        gx::guiMenuItem(13, "Manual"),
+        gx::guiMenuItem(14, "About"))));
 
   // text entry demo
-  gx::Gui gui3{
+  gui.newPanel(
+    theme, 60, 320, gx::ALIGN_TOP_LEFT,
     gx::guiVFrame(
       gx::guiHFrame(
         gx::guiLabel(gx::ALIGN_CENTER_LEFT, " R"),
-        gx::guiCardinalEntry(1, 3.0f,3),
+        gx::guiCardinalEntry(31, 3.0f,3),
         gx::guiLabel(gx::ALIGN_CENTER_LEFT, " G"),
-        gx::guiCardinalEntry(2, 3.0f,3),
+        gx::guiCardinalEntry(32, 3.0f,3),
         gx::guiLabel(gx::ALIGN_CENTER_LEFT, " B"),
-        gx::guiCardinalEntry(3, 3.0f,3)),
-      //gx::guiHLine(),
-      gx::guiTextEntry(10, 16.0f,100))};
-  gui3.layout(theme, 60, 320, gx::ALIGN_TOP_LEFT);
+        gx::guiCardinalEntry(33, 3.0f,3)),
+      gx::guiTextEntry(34, 16.0f,100)));
 
+  // checkbox demo
+  gui.newPanel(
+    theme, 400, 80, gx::ALIGN_TOP_LEFT,
+    gx::guiVFrame(
+      gx::guiCheckbox(21, true,  "Option 1"),
+      gx::guiCheckbox(22, false, "Option 2"),
+      gx::guiHLine(),
+      gx::guiCheckbox(23, false, "Option 3\n(line 2)"),
+      gx::guiHLine(),
+      gx::guiCheckbox(24, false, "Option 4\n(line 2)\n(line 3)")));
+
+  // window setup
   gx::Window win;
   win.setTitle("GUI demo");
   win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
@@ -100,9 +109,7 @@ int main(int argc, char* argv[])
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
       ren.clearFrame(win.width(), win.height());
-      ren.draw(gui2);
-      ren.draw(gui1);
-      ren.draw(gui3);
+      ren.draw(gui);
       needRedraw = false;
     }
     ren.renderFrame();
@@ -118,26 +125,12 @@ int main(int argc, char* argv[])
       }
     }
 
-    // update gui(s)
-    gui1.update(win);
-    needRedraw |= gui1.needRedraw();
-    if (gui1.eventID() > 0) {
-      gx::println_err("GUI1 event:", gui1.eventID());
-      if (gui1.eventID() == 99) { running = false; }
-    }
-
-    gui2.update(win);
-    needRedraw |= gui2.needRedraw();
-    if (gui2.eventID() > 0) {
-      gx::println_err("GUI2 event:", gui2.eventID());
-      if (gui2.eventID() == 99) { running = false; }
-    }
-
-    gui3.update(win);
-    needRedraw |= gui3.needRedraw();
-    if (gui3.eventID() > 0) {
-      gx::println_err("GUI3 event:", gui3.eventID(), ": ",
-                      gui3.getText(gui3.eventID()));
+    // update gui
+    gui.update(win);
+    needRedraw |= gui.needRedraw();
+    if (gui.eventID() > 0) {
+      gx::println_err("GUI event:", gui.eventID());
+      if (gui.eventID() == 99) { running = false; }
     }
 
     //gx::println_err("time ", gx::Window::lastPollTime());
