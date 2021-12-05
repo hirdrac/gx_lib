@@ -383,8 +383,8 @@ void Gui::update(Window& win)
     dc0.clear();
     dc1.clear();
 
-    for (auto& pPtr : _panels) {
-      Panel& p = *pPtr;
+    for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
+      Panel& p = **it;
       const TextFormatting tf{p.theme->font, float(p.theme->textSpacing)};
       drawElem(dc0, dc1, tf, p.root, p, &(p.theme->panel));
     }
@@ -393,8 +393,8 @@ void Gui::update(Window& win)
       DrawContext dc2{_dlm[2]}, dc3{_dlm[3]};
       dc2.clear();
       dc3.clear();
-      for (auto& pPtr : _panels) {
-        Panel& p = *pPtr;
+      for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
+        Panel& p = **it;
         const TextFormatting tf{p.theme->font, float(p.theme->textSpacing)};
         drawPopup(dc2, dc3, tf, p.root, p);
       }
@@ -694,9 +694,10 @@ void Gui::drawElem(
       const float ch = float(fnt.size() - 1) + (b*2.0f);
       drawRec(dc, def._x, def._y, cw, ch, style);
       if (def.checkbox_set) {
-        dc2.glyph(
-          tf, def._x + b + panel.theme->checkXOffset,
-          def._y + b + panel.theme->checkYOffset, ALIGN_TOP_LEFT, panel.theme->checkCode);
+        dc2.color(style->textColor);
+        dc2.glyph(tf, def._x + b + panel.theme->checkXOffset,
+                  def._y + b + panel.theme->checkYOffset, ALIGN_TOP_LEFT,
+                  panel.theme->checkCode);
       }
       break;
     }
