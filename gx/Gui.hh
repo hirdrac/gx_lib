@@ -210,6 +210,7 @@ class gx::Gui
   PanelID _lastPanelID = 0;
 
   DrawListMap _dlm;
+  DrawList _tmp_dl;
   int _hoverID = 0;
   int _heldID = 0;
   int _focusID = 0;

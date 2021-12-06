@@ -374,34 +374,42 @@ void Gui::update(Window& win)
   // redraw GUI if needed
   if (_needRender) {
     // layers:
-    // 0 - background/frames
-    // 1 - text
-    // 2 - popup background/frames
-    // 3 - popup text
+    // 0 - main gui
+    // 1 - popup gui
 
-    DrawContext dc0{_dlm[0]}, dc1{_dlm[1]};
+    DrawContext dc0{_dlm[0]}, dc_txt{_tmp_dl};
     dc0.clear();
-    dc1.clear();
+    dc_txt.clear();
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
       Panel& p = **it;
       const TextFormatting tf{p.theme->font, float(p.theme->textSpacing)};
-      drawElem(dc0, dc1, tf, p.root, p, &(p.theme->panel));
+      drawElem(dc0, dc_txt, tf, p.root, p, &(p.theme->panel));
+
+      if (!dc_txt.empty()) {
+        // append text to end of gui drawlist so panels can overlap correctly
+        dc0.append(dc_txt);
+        dc_txt.clear();
+      }
     }
 
     if (_popupActive) {
-      DrawContext dc2{_dlm[2]}, dc3{_dlm[3]};
-      dc2.clear();
-      dc3.clear();
+      DrawContext dc1{_dlm[1]};
+      dc1.clear();
+      dc_txt.clear();
       for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
         Panel& p = **it;
         const TextFormatting tf{p.theme->font, float(p.theme->textSpacing)};
-        drawPopup(dc2, dc3, tf, p.root, p);
+        drawPopup(dc1, dc_txt, tf, p.root, p);
+
+        if (!dc_txt.empty()) {
+          dc1.append(dc_txt);
+          dc_txt.clear();
+        }
       }
     } else {
-      // clear popup layers
-      if (auto it = _dlm.find(2); it != _dlm.end()) { it->second.clear(); }
-      if (auto it = _dlm.find(3); it != _dlm.end()) { it->second.clear(); }
+      // clear popup layer
+      if (auto it = _dlm.find(1); it != _dlm.end()) { it->second.clear(); }
     }
 
     _needRender = false;
