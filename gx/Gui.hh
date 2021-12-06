@@ -181,7 +181,7 @@ class gx::Gui
   void update(Window& win);
     // process events & update drawLists
 
-  [[nodiscard]] const DrawListMap& drawLists() const { return _dlm; }
+  [[nodiscard]] const DrawList& drawList() const { return _dl; }
   [[nodiscard]] int eventID() const { return _eventID; }
     // id of element triggering an event
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
@@ -214,8 +214,7 @@ class gx::Gui
   PanelID _lastPanelID = 0;
   PanelID _lastUniqueID = 0;
 
-  DrawListMap _dlm;
-  DrawList _tmp_dl;
+  DrawList _dl, _dl2;
   int _hoverID = 0;
   int _heldID = 0;
   int _focusID = 0;

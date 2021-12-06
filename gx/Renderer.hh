@@ -85,9 +85,6 @@ class gx::Renderer
     for (auto& [id,dl] : dlm) { draw(baseLayer + id, dl); } }
   void draw(const DrawListMap& dlm) { draw(0, dlm); }
 
-  template<typename Drawable>
-  void draw(const Drawable& d) { draw(0, d.drawLists()); }
-
   // general accessors
   [[nodiscard]] GLFWwindow* window() { return _window; }
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }

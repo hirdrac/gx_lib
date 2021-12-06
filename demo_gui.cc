@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
       ren.clearFrame(win.width(), win.height());
-      ren.draw(gui);
+      ren.draw(gui.drawList());
       needRedraw = false;
     }
     ren.renderFrame();
