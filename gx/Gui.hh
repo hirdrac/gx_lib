@@ -182,7 +182,7 @@ class gx::Gui
     // process events & update drawLists
 
   [[nodiscard]] const DrawList& drawList() const { return _dl; }
-  [[nodiscard]] int eventID() const { return _eventID; }
+  [[nodiscard]] EventID eventID() const { return _eventID; }
     // id of element triggering an event
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // true if GUI needs to be redrawn
@@ -218,7 +218,7 @@ class gx::Gui
   int _hoverID = 0;
   int _heldID = 0;
   int _focusID = 0;
-  int _eventID = 0;
+  EventID _eventID = 0;
   GuiElemType _heldType = GUI_NULL;
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0;
