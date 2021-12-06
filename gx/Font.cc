@@ -49,7 +49,7 @@ namespace {
                  uint32_t start = 0, uint32_t end = 0)
   {
     // read font glyph data
-    bool hasVert = FT_HAS_VERTICAL(face);
+    const bool hasVert = FT_HAS_VERTICAL(face);
     FT_UInt index = 0;
     FT_ULong ch = FT_Get_First_Char(face, &index);
 
@@ -68,8 +68,8 @@ namespace {
         return false;
       }
 
-      float advX = float(gs->advance.x) / 64.0f;
-      float advY = hasVert ? (float(gs->advance.y) / 64.0f) : 0;
+      const float advX = float(gs->advance.x) / 64.0f;
+      const float advY = hasVert ? (float(gs->advance.y) / 64.0f) : 0;
       font.addGlyph(int(ch), int(gs->bitmap.width), int(gs->bitmap.rows),
                     float(gs->bitmap_left), float(gs->bitmap_top),
                     advX, advY, gs->bitmap.buffer, true);
@@ -97,7 +97,7 @@ bool Font::load(const char* fileName, int fontSize)
 
   // read font glyph data
   init(fontSize);
-  bool status = genGlyphs(*this, face);
+  const bool status = genGlyphs(*this, face);
   FT_Done_Face(face);
   return status;
 }
@@ -122,7 +122,7 @@ bool Font::loadFromMemory(
 
   // read font glyph data
   init(fontSize);
-  bool status = genGlyphs(*this, face);
+  const bool status = genGlyphs(*this, face);
   FT_Done_Face(face);
   return status;
 }
@@ -148,15 +148,15 @@ bool Font::makeAtlas(Renderer& ren)
 
   // get font dimensions for texture creation
   int maxW = 0, maxH = 0, totalW = 0;
-  for (auto& itr : _glyphs) {
-    Glyph& g = itr.second;
+  for (const auto& itr : _glyphs) {
+    const Glyph& g = itr.second;
     if (g.width > maxW) { maxW = g.width; }
     if (g.height > maxH) { maxH = g.height; }
     totalW += g.width;
   }
 
   // calculate texture size
-  int maxSize = ren.maxTextureSize();
+  const int maxSize = ren.maxTextureSize();
   int texW, texH;
   int rows = 0;
   do {
@@ -210,7 +210,7 @@ void Font::addGlyph(
 {
   _changed = true;
   Glyph& g = newGlyph(code, width, height, left, top, advX, advY);
-  std::size_t size = g.width * g.height;
+  const std::size_t size = g.width * g.height;
   if (copy && bitmap && size > 0) {
     g.bitmap_copy.reset(new uint8_t[size]);
     std::memcpy(g.bitmap_copy.get(), bitmap, size);
@@ -246,10 +246,8 @@ Glyph& Font::newGlyph(
 
   if ((code > 47 && code < 94) || (code > 96 && code < 127)) {
     // ymin/ymax adjust for a limited range of characters
-    float yt = top;
-    if (yt > _ymax) { _ymax = yt; }
-    float yb = top - float(height);
-    if (yb < _ymin) { _ymin = yb; }
+    _ymax = std::max(_ymax, top);
+    _ymin = std::min(_ymin, top - float(height));
   }
 
   if (std::isdigit(code) || code == '.' || code == '-') {
