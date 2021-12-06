@@ -173,6 +173,10 @@ class gx::Gui
                           AlignEnum align, GuiElem&& elems);
   inline PanelID newPanel(const GuiTheme& theme, float x, float y,
                           AlignEnum align, const GuiElem& elems);
+  void clear();
+  void deletePanel(PanelID id);
+  void raisePanel(PanelID id);
+  void lowerPanel(PanelID id);
 
   void update(Window& win);
     // process events & update drawLists
@@ -208,6 +212,7 @@ class gx::Gui
 
   std::vector<std::unique_ptr<Panel>> _panels;
   PanelID _lastPanelID = 0;
+  PanelID _lastUniqueID = 0;
 
   DrawListMap _dlm;
   DrawList _tmp_dl;
@@ -218,7 +223,6 @@ class gx::Gui
   GuiElemType _heldType = GUI_NULL;
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0;
-  int _uniqueID = -1;
   bool _cursorState = false;
   bool _needRender = true;
   bool _needRedraw = false;

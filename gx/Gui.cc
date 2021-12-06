@@ -328,6 +328,52 @@ static inline T* findElemT(T* root, int id)
 
 
 // **** Gui class ****
+void Gui::clear()
+{
+  _panels.clear();
+  _focusID = 0;
+  _eventID = 0;
+  _needRender = true;
+  _popupActive = false;
+}
+
+void Gui::deletePanel(PanelID id)
+{
+  for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
+    if ((*i)->id == id) {
+      _panels.erase(i);
+      _needRender = true;
+      break;
+    }
+  }
+}
+
+void Gui::raisePanel(PanelID id)
+{
+  for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
+    if ((*i)->id == id) {
+      auto pPtr = std::move(*i);
+      _panels.erase(i);
+      _panels.insert(_panels.begin(), std::move(pPtr));
+      _needRender = true;
+      break;
+    }
+  }
+}
+
+void Gui::lowerPanel(PanelID id)
+{
+  for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
+    if ((*i)->id == id) {
+      auto pPtr = std::move(*i);
+      _panels.erase(i);
+      _panels.insert(_panels.end(), std::move(pPtr));
+      _needRender = true;
+      break;
+    }
+  }
+}
+
 void Gui::update(Window& win)
 {
   // clear event state that only persists for a single update
@@ -644,7 +690,7 @@ void Gui::layout(Panel& p, float x, float y, AlignEnum align)
 
 void Gui::init(GuiElem& def)
 {
-  if (def.type == GUI_MENU) { def.id = _uniqueID--; }
+  if (def.type == GUI_MENU) { def.id = --_lastUniqueID; }
   for (GuiElem& e : def.elems) { init(e); }
 }
 
