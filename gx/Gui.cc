@@ -9,7 +9,6 @@
 // TODO: disable/enable menu items
 //   - need theme 'disabled menu item text color'
 //   - mouse over disabled items has no 'hover' change
-// TODO: entry center text option
 
 #include "Gui.hh"
 #include "Window.hh"
@@ -128,15 +127,15 @@ static inline void drawRec(DrawContext& dc, const GuiElem& e,
   drawRec(dc, e._x, e._y, e._w, e._h, style);
 }
 
-static void calcSize(const GuiTheme& theme, GuiElem& def)
+static void calcSize(const GuiTheme& thm, GuiElem& def)
 {
-  const float b = theme.border;
+  const float b = thm.border;
   switch (def.type) {
     case GUI_HFRAME: {
-      const float fs = theme.frameSpacing;
+      const float fs = thm.frameSpacing;
       float total_w = -fs, max_h = 0;
       for (GuiElem& e : def.elems) {
-        calcSize(theme, e);
+        calcSize(thm, e);
         total_w += e._w + fs;
         max_h = std::max(max_h, e._h);
       }
@@ -149,10 +148,10 @@ static void calcSize(const GuiTheme& theme, GuiElem& def)
       break;
     }
     case GUI_VFRAME: {
-      const float fs = theme.frameSpacing;
+      const float fs = thm.frameSpacing;
       float total_h = -fs, max_w = 0;
       for (GuiElem& e : def.elems) {
-        calcSize(theme, e);
+        calcSize(thm, e);
         total_h += e._h + fs;
         max_w = std::max(max_w, e._w);
       }
@@ -165,21 +164,21 @@ static void calcSize(const GuiTheme& theme, GuiElem& def)
       break;
     }
     case GUI_LABEL: {
-      const Font& fnt = *theme.font;
+      const Font& fnt = *thm.font;
       def._w = fnt.calcWidth(def.text);
       int lines = calcLines(def.text);
       def._h = float((fnt.size() - 1) * lines
-                     + (theme.textSpacing * std::max(lines - 1, 0)));
+                     + (thm.textSpacing * std::max(lines - 1, 0)));
       // FIXME: improve line height calc (based on font ymax/ymin?)
       break;
     }
     case GUI_HLINE:
-      def._w = float(theme.font->size() - 1);
-      def._h = float(theme.lineWidth) + (b * 2.0f);
+      def._w = float(thm.font->size() - 1);
+      def._h = float(thm.lineWidth) + (b * 2.0f);
       break;
     case GUI_VLINE:
-      def._w = float(theme.lineWidth) + (b * 2.0f);
-      def._h = float(theme.font->size() - 1);
+      def._w = float(thm.lineWidth) + (b * 2.0f);
+      def._h = float(thm.font->size() - 1);
       break;
     case GUI_BACKGROUND:
     case GUI_BUTTON:
@@ -187,31 +186,31 @@ static void calcSize(const GuiTheme& theme, GuiElem& def)
     case GUI_BUTTON_HOLD:
     case GUI_MENU_ITEM: {
       GuiElem& e = def.elems[0];
-      calcSize(theme, e);
+      calcSize(thm, e);
       def._w = e._w + (b * 2.0f);
       def._h = e._h + (b * 2.0f);
       break;
     }
     case GUI_CHECKBOX: {
-      const Font& fnt = *theme.font;
       GuiElem& e = def.elems[0];
-      calcSize(theme, e);
-      def._w = fnt.calcWidth(theme.checkCode) + (b*3.0f) + e._w;
+      calcSize(thm, e);
+      const Font& fnt = *thm.font;
+      def._w = fnt.calcWidth(thm.checkCode) + (b*3.0f) + e._w;
       def._h = std::max(float(fnt.size() - 1) + (b*2.0f), e._h);
       break;
     }
     case GUI_MENU: {
       // menu button
       GuiElem& e = def.elems[0];
-      calcSize(theme, e);
+      calcSize(thm, e);
       def._w = e._w + (b * 2.0f);
       def._h = e._h + (b * 2.0f);
       // menu items
-      calcSize(theme, def.elems[1]);
+      calcSize(thm, def.elems[1]);
       break;
     }
     case GUI_ENTRY: {
-      const Font& fnt = *theme.font;
+      const Font& fnt = *thm.font;
       if (def.entry.type == ENTRY_CARDINAL
           || def.entry.type == ENTRY_INTEGER
           || def.entry.type == ENTRY_FLOAT) {
@@ -220,10 +219,10 @@ static void calcSize(const GuiTheme& theme, GuiElem& def)
         def._w = def.entry.size * fnt.calcWidth("A");
         // FIXME: use better width value than capital A * size
       }
-      def._w += float(theme.entryLeftMargin + theme.entryRightMargin
-                      + theme.cursorWidth + 1);
+      def._w += float(thm.entryLeftMargin + thm.entryRightMargin
+                      + thm.cursorWidth + 1);
       def._h = float(fnt.size() - 1)
-        + theme.entryTopMargin + theme.entryBottomMargin;
+        + thm.entryTopMargin + thm.entryBottomMargin;
       break;
     }
     case GUI_IMAGE:
@@ -236,7 +235,7 @@ static void calcSize(const GuiTheme& theme, GuiElem& def)
   }
 }
 
-static void calcPos(const GuiTheme& theme, GuiElem& def,
+static void calcPos(const GuiTheme& thm, GuiElem& def,
                     float left, float top, float right, float bottom)
 {
   switch (VAlign(def.align)) {
@@ -260,47 +259,46 @@ static void calcPos(const GuiTheme& theme, GuiElem& def,
 
   switch (def.type) {
     case GUI_HFRAME: {
-      const float fs = theme.frameSpacing;
+      const float fs = thm.frameSpacing;
       float total_w = 0;
       for (GuiElem& e : def.elems) { total_w += e._w + fs; }
       for (GuiElem& e : def.elems) {
         total_w -= e._w + fs;
-        calcPos(theme, e, left, top, right - total_w, bottom);
+        calcPos(thm, e, left, top, right - total_w, bottom);
         left = e._x + e._w + fs;
       }
       break;
     }
     case GUI_VFRAME: {
-      const float fs = theme.frameSpacing;
+      const float fs = thm.frameSpacing;
       float total_h = 0;
       for (GuiElem& e : def.elems) { total_h += e._h + fs; }
       for (GuiElem& e : def.elems) {
         total_h -= e._h + fs;
-        calcPos(theme, e, left, top, right, bottom - total_h);
+        calcPos(thm, e, left, top, right, bottom - total_h);
         top = e._y + e._h + fs;
       }
       break;
     }
     case GUI_CHECKBOX:
-      left += theme.font->calcWidth(theme.checkCode)
-        + (theme.border*3.0f);
-      calcPos(theme, def.elems[0], left, top, right, bottom);
+      left += thm.font->calcWidth(thm.checkCode) + (thm.border*3.0f);
+      calcPos(thm, def.elems[0], left, top, right, bottom);
       break;
     case GUI_MENU: {
       GuiElem& e0 = def.elems[0];
-      calcPos(theme, e0, left, top, right, bottom);
+      calcPos(thm, e0, left, top, right, bottom);
       // always position menu frame below menu button for now
-      top  = e0._y + e0._h + theme.border;
+      top  = e0._y + e0._h + thm.border;
       GuiElem& e1 = def.elems[1];
-      calcPos(theme, e1, left, top, left + e1._w, top + e1._h);
+      calcPos(thm, e1, left, top, left + e1._w, top + e1._h);
       break;
     }
     default: {
       // align single child element
-      const float b = theme.border;
+      const float b = thm.border;
       if (!def.elems.empty()) {
         assert(def.elems.size() == 1);
-        calcPos(theme, def.elems[0], left + b, top + b, right - b, bottom - b);
+        calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
       }
       break;
     }
@@ -686,6 +684,7 @@ void Gui::drawElem(
   DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
   const GuiElem& def, const Panel& panel, const GuiTheme::Style* style) const
 {
+  const GuiTheme& thm = *panel.theme;
   switch (def.type) {
     case GUI_BACKGROUND:
       assert(style != nullptr);
@@ -697,14 +696,14 @@ void Gui::drawElem(
       dc2.text(tf, def._x, def._y, ALIGN_TOP_LEFT, def.text);
       break;
     case GUI_HLINE: {
-      const float b = panel.theme->border;
+      const float b = thm.border;
       assert(style != nullptr);
       dc.color(style->textColor);
       dc.rectangle(def._x, def._y + b, def._w, def._h - (b*2));
       break;
     }
     case GUI_VLINE: {
-      const float b = panel.theme->border;
+      const float b = thm.border;
       assert(style != nullptr);
       dc.color(style->textColor);
       dc.rectangle(def._x + b, def._y, def._w - (b*2), def._h);
@@ -715,85 +714,77 @@ void Gui::drawElem(
     case GUI_BUTTON_HOLD:
       if (def.id == _heldID) {
         style = (def.id == _hoverID || def.type != GUI_BUTTON)
-          ? &panel.theme->buttonPress : &panel.theme->buttonHold;
+          ? &thm.buttonPress : &thm.buttonHold;
       } else {
-        style = (def.id == _hoverID)
-          ? &panel.theme->buttonHover : &panel.theme->button;
+        style = (def.id == _hoverID) ? &thm.buttonHover : &thm.button;
       }
       drawRec(dc, def, style);
       break;
     case GUI_CHECKBOX: {
       if (def.id == _heldID) {
-        style = (def.id == _hoverID)
-          ? &panel.theme->checkboxPress : &panel.theme->checkboxHold;
+        style = (def.id == _hoverID) ? &thm.checkboxPress : &thm.checkboxHold;
       } else {
-        style = (def.id == _hoverID)
-          ? &panel.theme->checkboxHover : &panel.theme->checkbox;
+        style = (def.id == _hoverID) ? &thm.checkboxHover : &thm.checkbox;
       }
-      const Font& fnt = *tf.font;
-      const float b = panel.theme->border;
-      const float cw = fnt.calcWidth(panel.theme->checkCode) + (b*2.0f);
-      const float ch = float(fnt.size() - 1) + (b*2.0f);
+      const float b = thm.border;
+      const float cw = tf.font->calcWidth(thm.checkCode) + (b*2.0f);
+      const float ch = float(tf.font->size() - 1) + (b*2.0f);
       drawRec(dc, def._x, def._y, cw, ch, style);
       if (def.checkbox_set) {
         dc2.color(style->textColor);
-        dc2.glyph(tf, def._x + b + panel.theme->checkXOffset,
-                  def._y + b + panel.theme->checkYOffset, ALIGN_TOP_LEFT,
-                  panel.theme->checkCode);
+        dc2.glyph(tf, def._x + b + thm.checkXOffset,
+                  def._y + b + thm.checkYOffset, ALIGN_TOP_LEFT, thm.checkCode);
       }
       break;
     }
     case GUI_MENU:
-      style = def._active ? &panel.theme->menuButtonOpen
-        : ((def.id == _hoverID)
-           ? &panel.theme->menuButtonHover : &panel.theme->menuButton);
+      style = def._active ? &thm.menuButtonOpen
+        : ((def.id == _hoverID) ? &thm.menuButtonHover : &thm.menuButton);
       drawRec(dc, def, style);
       break;
     case GUI_MENU_ITEM:
       if (def.id == _hoverID) {
-        style = &panel.theme->menuItemSelect;
+        style = &thm.menuItemSelect;
         drawRec(dc, def, style);
       }
       break;
     case GUI_ENTRY: {
-      const Font& fnt = *tf.font;
-      float tw = fnt.calcWidth(def.text);
-      if (def.id == _focusID) {
-        style = &panel.theme->entryFocus;
-        tw += float(1 + panel.theme->cursorWidth);
-        // TODO: handle variable cursor position
-      } else {
-        style = &panel.theme->entry;
-      }
+      style = (def.id == _focusID) ? &thm.entryFocus : &thm.entry;
       drawRec(dc, def, style);
-      const uint32_t textColor = style->textColor;
-      const float maxWidth = def._w
-        - panel.theme->entryLeftMargin - panel.theme->entryRightMargin;
-      float tx = def._x + panel.theme->entryLeftMargin;
+      const RGBA8 textColor = style->textColor;
+      const float cw = thm.cursorWidth;
+      const float tw = tf.font->calcWidth(def.text);
+      const float fs = float(tf.font->size());
+      const float maxWidth = def._w - thm.entryLeftMargin
+        - thm.entryRightMargin - cw;
+      float tx = def._x + thm.entryLeftMargin;
       if (tw > maxWidth) {
         // text doesn't fit in entry
         tx -= tw - maxWidth;
         dc2.hgradiant(def._x + 1.0f, textColor & 0x00ffffff,
-                      def._x + float(fnt.size() / 2), textColor);
+                      def._x + (fs*.5f), textColor);
         // TODO: gradiant dim at both ends if moving cursor in long string
       } else {
         dc2.color(textColor);
+        if (HAlign(def.entry.align) == ALIGN_RIGHT) {
+          tx = def._x + def._w - (tw + cw + thm.entryRightMargin);
+        } else if (HAlign(def.entry.align) != ALIGN_LEFT) { // HCENTER
+          tx = def._x + ((def._w - tw) * .5f);
+        }
       }
-      dc2.text(tf, tx, def._y + panel.theme->entryTopMargin, ALIGN_TOP_LEFT,
-               def.text, {def._x, def._y, def._w, def._h});
+      dc2.text(tf, tx, def._y + thm.entryTopMargin, ALIGN_TOP_LEFT, def.text,
+               {def._x, def._y, def._w, def._h});
       // TODO: draw all characters as '*' for password entries
       if (def.id == _focusID && _cursorState) {
         // draw cursor
-        const float cw = panel.theme->cursorWidth;
-        dc.color(panel.theme->cursorColor);
-        dc.rectangle(tx + tw - cw, def._y + panel.theme->entryTopMargin,
-                     cw, float(fnt.size()-1));
+        dc.color(thm.cursorColor);
+        dc.rectangle(tx + tw, def._y + thm.entryTopMargin, cw, fs - 1.0f);
       }
       break;
     }
     case GUI_IMAGE:
       dc.texture(def.image.texId);
-      dc.rectangle(def._x + panel.theme->border, def._y + panel.theme->border,
+      dc.rectangle(def._x + thm.border, def._y + thm.border,
                    def.image.width, def.image.height,
                    def.image.texCoord0, def.image.texCoord1);
       break;

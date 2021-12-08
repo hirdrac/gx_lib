@@ -75,7 +75,9 @@ int main(int argc, char* argv[])
         gx::guiCardinalEntry(32, 3.0f,3),
         gx::guiLabel(gx::ALIGN_CENTER_LEFT, " B"),
         gx::guiCardinalEntry(33, 3.0f,3)),
-      gx::guiTextEntry(34, 16.0f,100)));
+      gx::guiTextEntry(34, 16.0f,100),
+      gx::guiTextEntry(35, 16.0f,100,gx::ALIGN_CENTER),
+      gx::guiTextEntry(36, 16.0f,100,gx::ALIGN_RIGHT)));
 
   // checkbox demo
   gui.newPanel(
