@@ -11,6 +11,7 @@
 #include "Font.hh"
 #include "Image.hh"
 #include "Renderer.hh"
+#include "Unicode.hh"
 #include "Logger.hh"
 #include <cstdlib>
 #include <cstring>
@@ -268,7 +269,8 @@ float Font::calcWidth(std::string_view text) const
 {
   float max_width = 0, width = 0;
   const Glyph* g = nullptr;
-  for (auto ch : text) {
+  for (UTF8Iterator itr(text); !itr.done(); itr.next()) {
+    int32_t ch = itr.get();
     if (ch == '\t') {
       ch = ' '; // tab logic should be handled outside of thie function
     } else if (ch == '\n') {
