@@ -269,7 +269,7 @@ float Font::calcWidth(std::string_view text) const
 {
   float max_width = 0, width = 0;
   const Glyph* g = nullptr;
-  for (UTF8Iterator itr(text); !itr.done(); itr.next()) {
+  for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
     int32_t ch = itr.get();
     if (ch == '\t') {
       ch = ' '; // tab logic should be handled outside of thie function
@@ -289,13 +289,13 @@ float Font::calcWidth(std::string_view text) const
 std::size_t Font::fitChars(std::string_view text, float maxWidth) const
 {
   float w = 0.0f;
-  for (size_t i = 0; i < text.size(); ++i) {
-    int ch = text[i];
+  for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
+    int32_t ch = itr.get();
     if (ch == '\t') { ch = ' '; }
     const Glyph* g = findGlyph(ch);
     if (!g) { continue; }
 
-    if ((w + g->advX) > maxWidth) { return i; }
+    if ((w + g->advX) > maxWidth) { return itr.pos(); }
     w += g->advX;
   }
 

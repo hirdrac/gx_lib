@@ -3,7 +3,6 @@
 // Copyright (C) 2021 Richard Bradley
 //
 // Unicode/UTF-8 utilities
-// (C++17 version)
 //
 
 #pragma once
@@ -36,13 +35,13 @@ class gx::UTF8Iterator
  public:
   // constructors
   UTF8Iterator(const char* s) noexcept
-    : _itr{s}, _end{nullptr} { }
+    : _begin{s}, _itr{s}, _end{nullptr} { }
   UTF8Iterator(const char* s, const char* e) noexcept
-    : _itr{s}, _end{e} { }
+    : _begin{s}, _itr{s}, _end{e} { }
 
   template<class T>
   explicit UTF8Iterator(const T& s)
-    : _itr{std::data(s)}, _end{_itr + std::size(s)} { }
+    : _begin{std::data(s)}, _itr{_begin}, _end{_begin + std::size(s)} { }
 
 
   // member functions
@@ -57,7 +56,12 @@ class gx::UTF8Iterator
     // return current unicode character
     // (returns -1 for an invalid encoding or at the end of the string)
 
+  [[nodiscard]] std::size_t pos() const { return _itr - _begin; }
+    // return byte position of iterator
+    // (useful for substrings, but don't use for counting unicode characters)
+
  private:
+  const char* _begin;
   const char* _itr;
   const char* _end;
 };
