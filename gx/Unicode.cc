@@ -15,10 +15,9 @@
 // additional char in multi-char encoding:
 //   0b10xxxxxx
 
-namespace {
-  [[nodiscard]] constexpr bool isMultiChar(int ch) {
-    return (ch & 0b11000000) == 0b10000000;
-  }
+[[nodiscard]] static constexpr bool isMultiChar(int ch)
+{
+  return (ch & 0b11000000) == 0b10000000;
 }
 
 
@@ -51,10 +50,10 @@ std::string gx::toUTF8(int32_t num)
   return std::string{str, ptr};
 }
 
-int gx::lengthUTF8(std::string_view sv)
+std::size_t gx::lengthUTF8(std::string_view sv)
 {
-  int len = 0;
-  for (char ch : sv) { len += int(!isMultiChar(uint8_t(ch))); }
+  std::size_t len = 0;
+  for (char ch : sv) { len += !isMultiChar(uint8_t(ch)); }
   return len;
 }
 

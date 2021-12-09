@@ -19,7 +19,7 @@ namespace gx
     return toUTF8(int32_t(code)); }
     // returns UTF-8 encoded value (1-4 characters) of a unicode character
 
-  [[nodiscard]] int lengthUTF8(std::string_view str);
+  [[nodiscard]] std::size_t lengthUTF8(std::string_view str);
     // returns UTF8 string length
 
   void popbackUTF8(std::string& str);
@@ -56,7 +56,7 @@ class gx::UTF8Iterator
     // return current unicode character
     // (returns -1 for an invalid encoding or at the end of the string)
 
-  [[nodiscard]] std::size_t pos() const { return _itr - _begin; }
+  [[nodiscard]] std::size_t pos() const { return std::size_t(_itr - _begin); }
     // return byte position of iterator
     // (useful for substrings, but don't use for counting unicode characters)
 
