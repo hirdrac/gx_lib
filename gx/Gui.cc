@@ -305,6 +305,15 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
   }
 }
 
+static std::string passwordStr(int32_t code, std::size_t len)
+{
+  std::string ch = toUTF8(code);
+  std::string val;
+  val.reserve(ch.size() * len);
+  for (std::size_t i = 0; i < len; ++i) { val += ch; }
+  return val;
+}
+
 template<class T>
 static inline T* findElemT(T* root, int id)
 {
@@ -751,9 +760,11 @@ void Gui::drawElem(
     case GUI_ENTRY: {
       style = (def.id == _focusID) ? &thm.entryFocus : &thm.entry;
       drawRec(dc, def, style);
+      const std::string txt = (def.entry.type == ENTRY_PASSWORD)
+        ? passwordStr(thm.passwordCode, def.text.size()) : def.text;
       const RGBA8 textColor = style->textColor;
       const float cw = thm.cursorWidth;
-      const float tw = tf.font->calcWidth(def.text);
+      const float tw = tf.font->calcWidth(txt);
       const float fs = float(tf.font->size());
       const float maxWidth = def._w - thm.entryLeftMargin
         - thm.entryRightMargin - cw;
@@ -772,9 +783,8 @@ void Gui::drawElem(
           tx = def._x + ((def._w - tw) * .5f);
         }
       }
-      dc2.text(tf, tx, def._y + thm.entryTopMargin, ALIGN_TOP_LEFT, def.text,
+      dc2.text(tf, tx, def._y + thm.entryTopMargin, ALIGN_TOP_LEFT, txt,
                {def._x, def._y, def._w, def._h});
-      // TODO: draw all characters as '*' for password entries
       if (def.id == _focusID && _cursorState) {
         // draw cursor
         dc.color(thm.cursorColor);
