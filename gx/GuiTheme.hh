@@ -60,8 +60,8 @@ struct gx::GuiTheme
   Style entryFocus = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.1f,.1f,.3f,1.0f), 0};
 
-  uint16_t entryLeftMargin = 4;
-  uint16_t entryRightMargin = 4;
+  uint16_t entryLeftMargin = 6;
+  uint16_t entryRightMargin = 6;
   uint16_t entryTopMargin = 2;
   uint16_t entryBottomMargin = 2;
 

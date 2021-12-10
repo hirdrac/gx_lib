@@ -773,10 +773,16 @@ void Gui::drawElem(
       float tx = def._x + thm.entryLeftMargin;
       if (tw > maxWidth) {
         // text doesn't fit in entry
-        tx -= tw - maxWidth;
-        dc2.hgradiant(def._x + 1.0f, textColor & 0x00ffffff,
-                      def._x + (fs*.5f), textColor);
-        // TODO: gradiant dim at both ends if moving cursor in long string
+        const RGBA8 c0 = textColor & 0x00ffffff;
+        if (def.id == _focusID) {
+          // text being edited so show text end where cursor is
+          dc2.hgradiant(def._x, c0, tx + (fs * .5f), textColor);
+          tx -= tw - maxWidth;
+        } else {
+          // show text start when not in focus
+          dc2.hgradiant(def._x + def._w - thm.entryRightMargin - (fs * .5f),
+                        textColor, def._x + def._w, c0);
+        }
       } else {
         dc2.color(textColor);
         if (HAlign(def.entry.align) == ALIGN_RIGHT) {
