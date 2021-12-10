@@ -94,9 +94,10 @@ struct gx::GuiElem
   float _x = 0, _y = 0, _w = 0, _h = 0; // layout position/size
   bool _active = false;                 // popup/menu enabled
 
-  GuiElem(GuiElemType t, AlignEnum a, int i)
+  GuiElem(GuiElemType t, AlignEnum a, EventID i)
     : type{t}, align{a}, id{i} { }
-  GuiElem(GuiElemType t, AlignEnum a, int i, std::initializer_list<GuiElem> x)
+  GuiElem(GuiElemType t, AlignEnum a, EventID i,
+          std::initializer_list<GuiElem> x)
     : elems{x}, type{t}, align{a}, id{i} { }
 };
 
@@ -122,18 +123,18 @@ class gx::Gui
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // true if GUI needs to be redrawn
 
-  [[nodiscard]] std::string getText(int id) const {
+  [[nodiscard]] std::string getText(EventID id) const {
     const GuiElem* e = findElem(id);
     return (e == nullptr) ? std::string() : e->text;
   }
 
-  [[nodiscard]] bool getBool(int id) const {
+  [[nodiscard]] bool getBool(EventID id) const {
     const GuiElem* e = findElem(id);
     return (e == nullptr || e->type != GUI_CHECKBOX) ? false : e->checkbox_set;
   }
 
-  bool setText(int id, std::string_view text);
-  bool setBool(int id, bool val);
+  bool setText(EventID id, std::string_view text);
+  bool setBool(EventID id, bool val);
 
  private:
   struct Panel {
@@ -150,9 +151,9 @@ class gx::Gui
   PanelID _lastUniqueID = 0;
 
   DrawList _dl, _dl2;
-  int _hoverID = 0;
-  int _heldID = 0;
-  int _focusID = 0;
+  EventID _hoverID = 0;
+  EventID _heldID = 0;
+  EventID _focusID = 0;
   EventID _eventID = 0;
   GuiElemType _heldType = GUI_NULL;
   int64_t _lastCursorUpdate = 0;
@@ -166,7 +167,7 @@ class gx::Gui
   void layout(Panel& p, float x, float y, AlignEnum align);
   void processMouseEvent(Window& win);
   void processCharEvent(Window& win);
-  void setFocusID(Window& win, int id);
+  void setFocusID(Window& win, EventID id);
   void init(GuiElem& def);
   void deactivatePopup();
   void drawElem(
@@ -176,11 +177,11 @@ class gx::Gui
     DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
     const GuiElem& def, const Panel& panel) const;
 
-  [[nodiscard]] Panel* findPanel(int id);
-  [[nodiscard]] GuiElem* findElem(int id);
-  [[nodiscard]] const GuiElem* findElem(int id) const;
-  [[nodiscard]] GuiElem* findNextElem(int id, GuiElemType type = GUI_NULL);
-  [[nodiscard]] GuiElem* findPrevElem(int id, GuiElemType type = GUI_NULL);
+  [[nodiscard]] Panel* findPanel(EventID id);
+  [[nodiscard]] GuiElem* findElem(EventID id);
+  [[nodiscard]] const GuiElem* findElem(EventID id) const;
+  [[nodiscard]] GuiElem* findNextElem(EventID id, GuiElemType type = GUI_NULL);
+  [[nodiscard]] GuiElem* findPrevElem(EventID id, GuiElemType type = GUI_NULL);
 };
 
 // **** Inline Implementations ****

@@ -123,7 +123,8 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
 }
 
 static inline void drawRec(DrawContext& dc, const GuiElem& e,
-                           const GuiTheme::Style* style) {
+                           const GuiTheme::Style* style)
+{
   drawRec(dc, e._x, e._y, e._w, e._h, style);
 }
 
@@ -315,7 +316,7 @@ static std::string passwordStr(int32_t code, std::size_t len)
 }
 
 template<class T>
-static inline T* findElemT(T* root, int id)
+static inline T* findElemT(T* root, EventID id)
 {
   assert(id != 0);
   std::vector<T*> stack;
@@ -473,7 +474,7 @@ void Gui::processMouseEvent(Window& win)
 
   // get elem at mouse pointer
   GuiElem* ePtr = nullptr;
-  int id = 0;
+  EventID id = 0;
   GuiElemType type = GUI_NULL;
   if (win.mouseIn()) {
     for (auto& pPtr : _panels) {
@@ -497,7 +498,8 @@ void Gui::processMouseEvent(Window& win)
 
   // update hoverID
   if (_hoverID != id) {
-    int hid = (buttonDown && type != GUI_MENU_ITEM && id != _heldID) ? 0 : id;
+    EventID hid = (buttonDown && type != GUI_MENU_ITEM && id != _heldID)
+      ? 0 : id;
     if (_hoverID != hid) {
       _hoverID = hid;
       _needRender = true;
@@ -627,7 +629,7 @@ void Gui::processCharEvent(Window& win)
   }
 }
 
-void Gui::setFocusID(Window& win, int id)
+void Gui::setFocusID(Window& win, EventID id)
 {
   if (_focusID == id) { return; }
   if (_textChanged) {
@@ -644,7 +646,7 @@ void Gui::setFocusID(Window& win, int id)
   _needRender = true;
 }
 
-bool Gui::setText(int id, std::string_view text)
+bool Gui::setText(EventID id, std::string_view text)
 {
   for (auto& pPtr : _panels) {
     GuiElem* e = findElemT(&pPtr->root, id);
@@ -658,7 +660,7 @@ bool Gui::setText(int id, std::string_view text)
   return false;
 }
 
-bool Gui::setBool(int id, bool val)
+bool Gui::setBool(EventID id, bool val)
 {
   for (auto& pPtr : _panels) {
     GuiElem* e = findElemT(&pPtr->root, id);
@@ -829,7 +831,7 @@ void Gui::drawPopup(
   }
 }
 
-Gui::Panel* Gui::findPanel(int id)
+Gui::Panel* Gui::findPanel(EventID id)
 {
   for (auto& pPtr : _panels) {
     if (findElemT(&pPtr->root, id)) { return pPtr.get(); }
@@ -837,7 +839,7 @@ Gui::Panel* Gui::findPanel(int id)
   return nullptr;
 }
 
-GuiElem* Gui::findElem(int id)
+GuiElem* Gui::findElem(EventID id)
 {
   for (auto& pPtr : _panels) {
     GuiElem* e = findElemT(&pPtr->root, id);
@@ -846,7 +848,7 @@ GuiElem* Gui::findElem(int id)
   return nullptr;
 }
 
-const GuiElem* Gui::findElem(int id) const
+const GuiElem* Gui::findElem(EventID id) const
 {
   for (auto& pPtr : _panels) {
     const GuiElem* e = findElemT(&pPtr->root, id);
@@ -855,7 +857,7 @@ const GuiElem* Gui::findElem(int id) const
   return nullptr;
 }
 
-GuiElem* Gui::findNextElem(int id, GuiElemType type)
+GuiElem* Gui::findNextElem(EventID id, GuiElemType type)
 {
   assert(id != 0);
   Panel* p = findPanel(id);
@@ -883,7 +885,7 @@ GuiElem* Gui::findNextElem(int id, GuiElemType type)
   }
 }
 
-GuiElem* Gui::findPrevElem(int id, GuiElemType type)
+GuiElem* Gui::findPrevElem(EventID id, GuiElemType type)
 {
   assert(id != 0);
   Panel* p = findPanel(id);
