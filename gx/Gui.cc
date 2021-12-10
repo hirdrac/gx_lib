@@ -382,6 +382,14 @@ void Gui::lowerPanel(PanelID id)
   }
 }
 
+bool Gui::getPanelLayout(PanelID id, Rect& layout) const
+{
+  const Panel* p = findPanel(id);
+  if (!p) { return false; }
+  layout = p->layout;
+  return true;
+}
+
 void Gui::update(Window& win)
 {
   // clear event state that only persists for a single update
@@ -674,21 +682,35 @@ bool Gui::setBool(EventID id, bool val)
   return false;
 }
 
+PanelID Gui::addPanel(
+  std::unique_ptr<Panel> ptr, float x, float y, AlignEnum align)
+{
+  PanelID id = ++_lastPanelID;
+  ptr->id = id;
+  initElem(ptr->root);
+  layout(*ptr, x, y, align);
+  _panels.insert(_panels.begin(), std::move(ptr));
+  return id;
+}
+
 void Gui::layout(Panel& p, float x, float y, AlignEnum align)
 {
-  assert(p.theme->font != nullptr);
+  const GuiTheme& thm = *p.theme;
+  assert(thm.font != nullptr);
   p.layout = {x,y,0,0};
   if (HAlign(align) == ALIGN_RIGHT) { std::swap(p.layout.x, p.layout.w); }
   if (VAlign(align) == ALIGN_BOTTOM) { std::swap(p.layout.y, p.layout.h); }
+  p.needLayout = false;
   p.root.align = align;
-  p.needLayout = true;
+  calcSize(thm, p.root);
+  calcPos(thm, p.root, x, y, x + p.layout.w, y + p.layout.h);
   _needRender = true;
 }
 
-void Gui::init(GuiElem& def)
+void Gui::initElem(GuiElem& def)
 {
   if (def.type == GUI_MENU) { def.id = --_lastUniqueID; }
-  for (GuiElem& e : def.elems) { init(e); }
+  for (GuiElem& e : def.elems) { initElem(e); }
 }
 
 void Gui::drawElem(
@@ -837,7 +859,15 @@ void Gui::drawPopup(
   }
 }
 
-Gui::Panel* Gui::findPanel(EventID id)
+Gui::Panel* Gui::findPanel(PanelID id)
+{
+  for (auto& pPtr : _panels) {
+    if (findElemT(&pPtr->root, id)) { return pPtr.get(); }
+  }
+  return nullptr;
+}
+
+const Gui::Panel* Gui::findPanel(PanelID id) const
 {
   for (auto& pPtr : _panels) {
     if (findElemT(&pPtr->root, id)) { return pPtr.get(); }

@@ -114,6 +114,10 @@ class gx::Gui
   void raisePanel(PanelID id);
   void lowerPanel(PanelID id);
 
+  bool getPanelLayout(PanelID id, Rect& layout) const;
+  [[nodiscard]] PanelID topPanel() const {
+    return _panels.empty() ? 0 : _panels.front()->id; }
+
   void update(Window& win);
     // process events & update drawLists
 
@@ -140,10 +144,9 @@ class gx::Gui
   struct Panel {
     const GuiTheme* theme;
     GuiElem root;
-    PanelID id;
-
+    PanelID id = 0;
     Rect layout{};
-    bool needLayout = true;
+    bool needLayout = false;
   };
 
   std::vector<std::unique_ptr<Panel>> _panels;
@@ -164,11 +167,13 @@ class gx::Gui
   bool _textChanged = false;
   bool _popupActive = false;
 
+  PanelID addPanel(
+    std::unique_ptr<Panel> ptr, float x, float y, AlignEnum align);
   void layout(Panel& p, float x, float y, AlignEnum align);
   void processMouseEvent(Window& win);
   void processCharEvent(Window& win);
   void setFocusID(Window& win, EventID id);
-  void init(GuiElem& def);
+  void initElem(GuiElem& def);
   void deactivatePopup();
   void drawElem(
     DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
@@ -177,7 +182,8 @@ class gx::Gui
     DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
     const GuiElem& def, const Panel& panel) const;
 
-  [[nodiscard]] Panel* findPanel(EventID id);
+  [[nodiscard]] Panel* findPanel(PanelID id);
+  [[nodiscard]] const Panel* findPanel(PanelID id) const;
   [[nodiscard]] GuiElem* findElem(EventID id);
   [[nodiscard]] const GuiElem* findElem(EventID id) const;
   [[nodiscard]] GuiElem* findNextElem(EventID id, GuiElemType type = GUI_NULL);
@@ -188,23 +194,17 @@ class gx::Gui
 gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
                               AlignEnum align, GuiElem&& elems)
 {
-  PanelID id = ++_lastPanelID;
-  std::unique_ptr<Panel> ptr{new Panel{&theme, {GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {std::move(elems)}}, id}};
-  init(ptr->root);
-  layout(*ptr, x, y, align);
-  _panels.push_back(std::move(ptr));
-  return id;
+  std::unique_ptr<Panel> ptr{
+    new Panel{&theme, {GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {std::move(elems)}}}};
+  return addPanel(std::move(ptr), x, y, align);
 }
 
 gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
                               AlignEnum align, const GuiElem& elems)
 {
-  PanelID id = ++_lastPanelID;
-  std::unique_ptr<Panel> ptr{new Panel{&theme, {GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {elems}}, id}};
-  init(ptr->root);
-  layout(*ptr, x, y, align);
-  _panels.push_back(std::move(ptr));
-  return id;
+  std::unique_ptr<Panel> ptr{
+    new Panel{&theme, {GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {elems}}}};
+  return addPanel(std::move(ptr), x, y, align);
 }
 
 namespace gx {
