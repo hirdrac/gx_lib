@@ -438,11 +438,12 @@ void Gui::update(Window& win)
     DrawContext dc{_dl}, dc2{_dl2};
     dc.clear();
     dc2.clear();
+    _needRender = false;
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
       Panel& p = **it;
-      const TextFormatting tf{p.theme->font, float(p.theme->textSpacing)};
-      drawElem(dc, dc2, tf, p.root, p, &(p.theme->panel));
+      const GuiTheme& thm = *p.theme;
+      _needRender |= drawElem(p.root, dc, dc2, thm, &thm.panel);
 
       if (!dc2.empty()) {
         dc.append(dc2);
@@ -453,8 +454,7 @@ void Gui::update(Window& win)
     if (_popupActive) {
       for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
         Panel& p = **it;
-        const TextFormatting tf{p.theme->font, float(p.theme->textSpacing)};
-        drawPopup(dc, dc2, tf, p.root, p);
+        _needRender |= drawPopup(p.root, dc, dc2, *p.theme);
 
         if (!dc2.empty()) {
           dc.append(dc2);
@@ -462,7 +462,6 @@ void Gui::update(Window& win)
         }
       }
     }
-    _needRender = false;
     _needRedraw = true;
   }
 }
@@ -713,11 +712,11 @@ void Gui::initElem(GuiElem& def)
   for (GuiElem& e : def.elems) { initElem(e); }
 }
 
-void Gui::drawElem(
-  DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-  const GuiElem& def, const Panel& panel, const GuiTheme::Style* style) const
+bool Gui::drawElem(
+  GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  const GuiTheme& thm, const GuiTheme::Style* style) const
 {
-  const GuiTheme& thm = *panel.theme;
+  bool needRedraw = false;
   switch (def.type) {
     case GUI_BACKGROUND:
       assert(style != nullptr);
@@ -726,7 +725,8 @@ void Gui::drawElem(
     case GUI_LABEL:
       assert(style != nullptr);
       dc2.color(style->textColor);
-      dc2.text(tf, def._x, def._y, ALIGN_TOP_LEFT, def.text);
+      dc2.text(TextFormatting{thm.font, float(thm.textSpacing)},
+               def._x, def._y, ALIGN_TOP_LEFT, def.text);
       break;
     case GUI_HLINE: {
       const float b = thm.border;
@@ -760,13 +760,14 @@ void Gui::drawElem(
         style = (def.id == _hoverID) ? &thm.checkboxHover : &thm.checkbox;
       }
       const float b = thm.border;
-      const float cw = tf.font->calcWidth(thm.checkCode) + (b*2.0f);
-      const float ch = float(tf.font->size() - 1) + (b*2.0f);
+      const float cw = thm.font->calcWidth(thm.checkCode) + (b*2.0f);
+      const float ch = float(thm.font->size() - 1) + (b*2.0f);
       drawRec(dc, def._x, def._y, cw, ch, style);
       if (def.checkbox_set) {
         dc2.color(style->textColor);
-        dc2.glyph(tf, def._x + b + thm.checkXOffset,
-                  def._y + b + thm.checkYOffset, ALIGN_TOP_LEFT, thm.checkCode);
+        dc2.glyph(TextFormatting{thm.font, float(thm.textSpacing)},
+                  def._x + b + thm.checkXOffset, def._y + b + thm.checkYOffset,
+                  ALIGN_TOP_LEFT, thm.checkCode);
       }
       break;
     }
@@ -788,8 +789,8 @@ void Gui::drawElem(
         ? passwordStr(thm.passwordCode, def.text.size()) : def.text;
       const RGBA8 textColor = style->textColor;
       const float cw = thm.cursorWidth;
-      const float tw = tf.font->calcWidth(txt);
-      const float fs = float(tf.font->size());
+      const float tw = thm.font->calcWidth(txt);
+      const float fs = float(thm.font->size());
       const float maxWidth = def._w - thm.entryLeftMargin
         - thm.entryRightMargin - cw;
       float tx = def._x + thm.entryLeftMargin;
@@ -813,7 +814,8 @@ void Gui::drawElem(
           tx = def._x + ((def._w - tw) * .5f);
         }
       }
-      dc2.text(tf, tx, def._y + thm.entryTopMargin, ALIGN_TOP_LEFT, txt,
+      dc2.text(TextFormatting{thm.font, float(thm.textSpacing)},
+               tx, def._y + thm.entryTopMargin, ALIGN_TOP_LEFT, txt,
                {def._x, def._y, def._w, def._h});
       if (def.id == _focusID && _cursorState) {
         // draw cursor
@@ -839,24 +841,28 @@ void Gui::drawElem(
   // draw child elements
   if (def.type == GUI_MENU) {
     // menu button label
-    drawElem(dc, dc2, tf, def.elems[0], panel, style);
+    needRedraw |= drawElem(def.elems[0], dc, dc2, thm, style);
   } else {
-    for (auto& e : def.elems) { drawElem(dc, dc2, tf, e, panel, style); }
+    for (auto& e : def.elems) {
+      needRedraw |= drawElem(e, dc, dc2, thm, style);
+    }
   }
+  return needRedraw;
 }
 
-void Gui::drawPopup(
-  DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-  const GuiElem& def, const Panel& panel) const
+bool Gui::drawPopup(
+  GuiElem& def, DrawContext& dc, DrawContext& dc2, const GuiTheme& thm) const
 {
+  bool needRedraw = false;
   if (def.type == GUI_MENU) {
     if (def._active) {
       // menu frame & items
-      drawElem(dc, dc2, tf, def.elems[1], panel, &panel.theme->menuFrame);
+      needRedraw |= drawElem(def.elems[1], dc, dc2, thm, &thm.menuFrame);
     }
   } else {
-    for (auto& e : def.elems) { drawPopup(dc, dc2, tf, e, panel); }
+    for (auto& e : def.elems) { needRedraw |= drawPopup(e, dc, dc2, thm); }
   }
+  return needRedraw;
 }
 
 Gui::Panel* Gui::findPanel(PanelID id)

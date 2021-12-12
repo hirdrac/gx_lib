@@ -27,7 +27,6 @@ namespace gx {
 
   class Window;
   class DrawContext;
-  struct TextFormatting;
   class Font;
   class Gui;
   struct GuiElem;
@@ -175,12 +174,10 @@ class gx::Gui
   void setFocusID(Window& win, EventID id);
   void initElem(GuiElem& def);
   void deactivatePopup();
-  void drawElem(
-    DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-    const GuiElem& def, const Panel& panel, const GuiTheme::Style* style) const;
-  void drawPopup(
-    DrawContext& dc, DrawContext& dc2, const TextFormatting& tf,
-    const GuiElem& def, const Panel& panel) const;
+  bool drawElem(GuiElem& def, DrawContext& dc, DrawContext& dc2,
+                const GuiTheme& thm, const GuiTheme::Style* style) const;
+  bool drawPopup(GuiElem& def, DrawContext& dc, DrawContext& dc2,
+                 const GuiTheme& thm) const;
 
   [[nodiscard]] Panel* findPanel(PanelID id);
   [[nodiscard]] const Panel* findPanel(PanelID id) const;
