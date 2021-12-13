@@ -439,11 +439,12 @@ void Gui::update(Window& win)
     dc.clear();
     dc2.clear();
     _needRender = false;
+    const int64_t usec = win.lastPollTime();
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
       Panel& p = **it;
       const GuiTheme& thm = *p.theme;
-      _needRender |= drawElem(p.root, dc, dc2, thm, &thm.panel);
+      _needRender |= drawElem(p.root, dc, dc2, usec, thm, &thm.panel);
 
       if (!dc2.empty()) {
         dc.append(dc2);
@@ -454,7 +455,7 @@ void Gui::update(Window& win)
     if (_popupActive) {
       for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
         Panel& p = **it;
-        _needRender |= drawPopup(p.root, dc, dc2, *p.theme);
+        _needRender |= drawPopup(p.root, dc, dc2, usec, *p.theme);
 
         if (!dc2.empty()) {
           dc.append(dc2);
@@ -616,11 +617,11 @@ void Gui::processCharEvent(Window& win)
       _needRender |= added;
       _textChanged |= added;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
-      GuiElem* next = findNextElem(_focusID, GUI_ENTRY);
+      const GuiElem* next = findNextElem(_focusID, GUI_ENTRY);
       setFocusID(win, next ? next->id : 0);
       usedEvent = true;
     } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
-      GuiElem* prev = findPrevElem(_focusID, GUI_ENTRY);
+      const GuiElem* prev = findPrevElem(_focusID, GUI_ENTRY);
       setFocusID(win, prev ? prev->id : 0);
       usedEvent = true;
     }
@@ -713,7 +714,7 @@ void Gui::initElem(GuiElem& def)
 }
 
 bool Gui::drawElem(
-  GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
   const GuiTheme& thm, const GuiTheme::Style* style) const
 {
   bool needRedraw = false;
@@ -841,26 +842,27 @@ bool Gui::drawElem(
   // draw child elements
   if (def.type == GUI_MENU) {
     // menu button label
-    needRedraw |= drawElem(def.elems[0], dc, dc2, thm, style);
+    needRedraw |= drawElem(def.elems[0], dc, dc2, usec, thm, style);
   } else {
     for (auto& e : def.elems) {
-      needRedraw |= drawElem(e, dc, dc2, thm, style);
+      needRedraw |= drawElem(e, dc, dc2, usec, thm, style);
     }
   }
   return needRedraw;
 }
 
 bool Gui::drawPopup(
-  GuiElem& def, DrawContext& dc, DrawContext& dc2, const GuiTheme& thm) const
+  GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
+  const GuiTheme& thm) const
 {
   bool needRedraw = false;
   if (def.type == GUI_MENU) {
     if (def._active) {
       // menu frame & items
-      needRedraw |= drawElem(def.elems[1], dc, dc2, thm, &thm.menuFrame);
+      needRedraw |= drawElem(def.elems[1], dc, dc2, usec, thm, &thm.menuFrame);
     }
   } else {
-    for (auto& e : def.elems) { needRedraw |= drawPopup(e, dc, dc2, thm); }
+    for (auto& e : def.elems) { needRedraw |= drawPopup(e, dc, dc2, usec, thm); }
   }
   return needRedraw;
 }

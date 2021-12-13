@@ -174,9 +174,9 @@ class gx::Gui
   void setFocusID(Window& win, EventID id);
   void initElem(GuiElem& def);
   void deactivatePopup();
-  bool drawElem(GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  bool drawElem(GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
                 const GuiTheme& thm, const GuiTheme::Style* style) const;
-  bool drawPopup(GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  bool drawPopup(GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
                  const GuiTheme& thm) const;
 
   [[nodiscard]] Panel* findPanel(PanelID id);
