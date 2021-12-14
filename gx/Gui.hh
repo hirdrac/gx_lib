@@ -173,7 +173,8 @@ class gx::Gui
   void processCharEvent(Window& win);
   void setFocusID(Window& win, EventID id);
   void initElem(GuiElem& def);
-  void deactivatePopup();
+  void deactivatePopups();
+  void activatePopup(EventID id);
   bool drawElem(GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
                 const GuiTheme& thm, const GuiTheme::Style* style) const;
   bool drawPopup(GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,

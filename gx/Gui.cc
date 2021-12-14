@@ -43,6 +43,17 @@ static void deactivate(GuiElem& def)
   for (auto& e : def.elems) { deactivate(e); }
 }
 
+static bool activate(GuiElem& def, EventID id)
+{
+  if (def.id == id) {
+    def._active = true;
+  } else {
+    // activate parent if child is activated to handle nested menus
+    for (auto& e : def.elems) { def._active |= activate(e, id); }
+  }
+  return def._active;
+}
+
 [[nodiscard]] static GuiElem* findElemByXY(
   GuiElem& def, float x, float y, bool popup)
 {
@@ -467,10 +478,16 @@ void Gui::update(Window& win)
   }
 }
 
-void Gui::deactivatePopup()
+void Gui::deactivatePopups()
 {
   for (auto& pPtr : _panels) { deactivate(pPtr->root); }
   _popupActive = false;
+}
+
+void Gui::activatePopup(EventID id)
+{
+  for (auto& pPtr : _panels) { activate(pPtr->root, id); }
+  _popupActive = true;
 }
 
 void Gui::processMouseEvent(Window& win)
@@ -518,12 +535,12 @@ void Gui::processMouseEvent(Window& win)
   if (type == GUI_MENU) {
     if (pressEvent && ePtr->_active) {
       // click on open menu button closes it
-      deactivatePopup();
+      deactivatePopups();
       _needRender = true;
       usedEvent = true;
     } else if (pressEvent || _popupActive) {
       // open menu
-      if (_popupActive) { deactivatePopup(); } // close other open menu
+      if (_popupActive) { deactivatePopups(); } // close other open menu
       ePtr->_active = true;
       _popupActive = true;
       _needRender = true;
@@ -568,7 +585,7 @@ void Gui::processMouseEvent(Window& win)
 
   if (type != GUI_MENU && _popupActive && anyGuiButtonEvent) {
     // press/release off menu closes open menus
-    deactivatePopup();
+    deactivatePopups();
     _needRender = true;
   }
 
