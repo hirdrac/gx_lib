@@ -13,6 +13,7 @@
 #include "Renderer.hh"
 #include "Unicode.hh"
 #include "Logger.hh"
+#include <limits>
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
@@ -234,12 +235,15 @@ void Font::init(int fontSize)
 Glyph& Font::newGlyph(
   int code, int width, int height, float left, float top, float advX, float advY)
 {
-  assert(width >= 0 && width < 0xffff);
-  assert(height >= 0 && height < 0xffff);
+  using width_t = decltype(Glyph::width);
+  using height_t = decltype(Glyph::height);
+
+  assert(width >= 0 && width < std::numeric_limits<width_t>::max());
+  assert(height >= 0 && height < std::numeric_limits<height_t>::max());
 
   Glyph& g = _glyphs[code];
-  g.width = uint16_t(width);
-  g.height = uint16_t(height);
+  g.width = static_cast<width_t>(width);
+  g.height = static_cast<height_t>(height);
   g.left = left;
   g.top = top;
   g.advX = advX;
@@ -288,7 +292,7 @@ float Font::calcWidth(std::string_view text) const
 
 std::size_t Font::fitChars(std::string_view text, float maxWidth) const
 {
-  float w = 0.0f;
+  float w = 0;
   for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
     int32_t ch = itr.get();
     if (ch == '\t') { ch = ' '; }
