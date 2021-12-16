@@ -19,7 +19,7 @@ namespace {
 
   void freeRenderer(Renderer* rPtr)
   {
-    std::lock_guard lg(_textureOwnersMutex);
+    std::lock_guard lg{_textureOwnersMutex};
     auto itr = _textureOwners.begin();
     auto end = _textureOwners.end();
     while (itr != end) {
@@ -35,7 +35,7 @@ namespace {
 void gx::registerTextureOwner(TextureID tid, Renderer* rPtr)
 {
   if (tid > 0) {
-    std::lock_guard lg(_textureOwnersMutex);
+    std::lock_guard lg{_textureOwnersMutex};
     _textureOwners[tid] = rPtr;
   }
 }
@@ -43,7 +43,7 @@ void gx::registerTextureOwner(TextureID tid, Renderer* rPtr)
 bool gx::updateTexture(TextureID tid, const Image& img, int levels,
                        FilterType minFilter, FilterType magFilter)
 {
-  std::lock_guard lg(_textureOwnersMutex);
+  std::lock_guard lg{_textureOwnersMutex};
   auto itr = _textureOwners.find(tid);
   if (itr == _textureOwners.end()) { return false; }
 
@@ -53,7 +53,7 @@ bool gx::updateTexture(TextureID tid, const Image& img, int levels,
 
 void gx::freeTexture(TextureID tid)
 {
-  std::lock_guard lg(_textureOwnersMutex);
+  std::lock_guard lg{_textureOwnersMutex};
   auto itr = _textureOwners.find(tid);
   if (itr != _textureOwners.end()) {
     itr->second->freeTexture(tid);

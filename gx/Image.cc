@@ -7,7 +7,6 @@
 #include "Glyph.hh"
 #include "Logger.hh"
 #include "3rd/stb_image.h"
-
 #include <limits>
 #include <cstring>
 #include <cassert>
@@ -86,7 +85,7 @@ bool gx::Image::clear()
 bool gx::Image::setPixel(int x, int y, const uint8_t* channel_vals)
 {
   assert(canEdit());
-  int offset = ((y * _width) + x) * _channels;
+  const int offset = ((y * _width) + x) * _channels;
   assert((offset >= 0) && (offset + _channels) <= int(size()));
 
   std::memcpy(_storage.get() + offset, channel_vals, std::size_t(_channels));
@@ -101,8 +100,8 @@ bool gx::Image::stamp(int x, int y, const Image& sub_image)
 
   uint8_t* dst = _storage.get() + (((y * _width) + x) * _channels);
   const uint8_t* src = sub_image.data();
-  int dw = _width * _channels;
-  std::size_t sw = std::size_t(sub_image.width() * sub_image.channels());
+  const int dw = _width * _channels;
+  const std::size_t sw = std::size_t(sub_image.width() * sub_image.channels());
   for (int sy = 0; sy < sub_image.height(); ++sy) {
     std::memcpy(dst, src, sw);
     dst += dw;

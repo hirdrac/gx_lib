@@ -71,7 +71,7 @@ namespace
       case LVL_WARN:  return "[WARN] ";
       case LVL_ERROR: return "[ERROR] ";
       case LVL_FATAL: return "[FATAL] ";
-      default:            return "[UNKNOWN] ";
+      default:        return "[UNKNOWN] ";
     }
   }
 }
@@ -83,7 +83,7 @@ class gx::LoggerImpl
  public:
   void setOStream(std::ostream& os)
   {
-    std::lock_guard lg(_mutex);
+    std::lock_guard lg{_mutex};
     _fileName.clear();
     _fileStream.close();
     _os = &os;
@@ -91,7 +91,7 @@ class gx::LoggerImpl
 
   void setFile(std::string_view fileName)
   {
-    std::lock_guard lg(_mutex);
+    std::lock_guard lg{_mutex};
     _fileName = fileName;
     _fileStream = std::ofstream(_fileName, std::ios_base::app);
     _os = &_fileStream;
@@ -99,7 +99,7 @@ class gx::LoggerImpl
 
   void log(const char* str, std::streamsize len)
   {
-    std::lock_guard lg(_mutex);
+    std::lock_guard lg{_mutex};
     _os->write(str, len);
     _os->flush();
   }
@@ -109,7 +109,7 @@ class gx::LoggerImpl
 
   void rotate()
   {
-    std::lock_guard lg(_mutex);
+    std::lock_guard lg{_mutex};
     if (!_fileStream) return;
 
     auto x = _fileName.rfind('.');
@@ -132,7 +132,7 @@ class gx::LoggerImpl
 
 
 // **** Logger class ****
-Logger::Logger() : _impl(new LoggerImpl) { }
+Logger::Logger() : _impl{new LoggerImpl} { }
 
 Logger::~Logger() = default;
   // NOTE: default destructor needed here because LoggerImpl is not
@@ -163,7 +163,7 @@ void Logger::logMsg(std::ostringstream& os, const char* file, int line)
 {
   // footer
   os << " (";
-  pid_t tid = get_threadid();
+  const pid_t tid = get_threadid();
   if (tid != mainThreadID) { os << "t=" << tid << ' '; }
   os << file << ':' << line << ")\n";
 
