@@ -5,7 +5,6 @@
 // Graphical user interface rendering & event handling
 //
 
-// TODO: sub menus
 // TODO: menu item key short-cuts
 // TODO: list select (combo box)
 
@@ -47,6 +46,7 @@ namespace gx {
     GUI_CHECKBOX,      // toggle value on release
     GUI_MENU,          // button hold or release on menu opens menu
     GUI_MENU_ITEM,     // activated on press or release
+    GUI_SUB_MENU,      // as GUI_MENU
     GUI_ENTRY,         // activated if changed on enter/tab/click-away
   };
 
@@ -157,6 +157,7 @@ class gx::Gui
   EventID _heldID = 0;
   EventID _focusID = 0;
   EventID _eventID = 0;
+  EventID _popupID = 0;
   GuiElemType _heldType = GUI_NULL;
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0;
@@ -164,7 +165,6 @@ class gx::Gui
   bool _needRender = true;
   bool _needRedraw = false;
   bool _textChanged = false;
-  bool _popupActive = false;
 
   PanelID addPanel(
     std::unique_ptr<Panel> ptr, float x, float y, AlignEnum align);
@@ -378,6 +378,15 @@ namespace gx {
   {
     return {GUI_MENU_ITEM, ALIGN_JUSTIFY, id,
             {guiLabel(ALIGN_CENTER_LEFT, text)}};
+  }
+
+  template<typename... Elems>
+  inline GuiElem guiSubMenu(std::string_view text, const Elems&... items)
+  {
+    return {GUI_SUB_MENU, ALIGN_JUSTIFY, 0,
+            {guiLabel(ALIGN_CENTER_LEFT, text),
+             GuiElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0,
+                     {guiVFrame(items...)}}}};
   }
 
   // Entry

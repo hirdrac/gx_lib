@@ -62,7 +62,17 @@ int main(int argc, char* argv[])
       gx::guiMenu(
         "Help",
         gx::guiMenuItem(13, "Manual"),
-        gx::guiMenuItem(14, "About"))));
+        gx::guiMenuItem(14, "About"),
+        gx::guiSubMenu(
+          "sub1",
+          gx::guiMenuItem(15, "item 1"),
+          gx::guiMenuItem(16, "item 2"),
+          gx::guiMenuItem(17, "item 3")),
+        gx::guiSubMenu(
+          "sub2 long name",
+          gx::guiMenuItem(18, "item 4"),
+          gx::guiMenuItem(19, "item 5"),
+          gx::guiMenuItem(20, "item 6")) )));
 
   // text entry demo
   gui.newPanel(
@@ -83,12 +93,12 @@ int main(int argc, char* argv[])
   gui.newPanel(
     theme, 400, 80, gx::ALIGN_TOP_LEFT,
     gx::guiVFrame(
-      gx::guiCheckbox(21, true,  "Option 1"),
-      gx::guiCheckbox(22, false, "Option 2"),
+      gx::guiCheckbox(51, true,  "Option 1"),
+      gx::guiCheckbox(52, false, "Option 2"),
       gx::guiHLine(),
-      gx::guiCheckbox(23, false, "Option 3\n(line 2)"),
+      gx::guiCheckbox(53, false, "Option 3\n(line 2)"),
       gx::guiHLine(),
-      gx::guiCheckbox(24, false, "Option 4\n(line 2)\n(line 3)")));
+      gx::guiCheckbox(54, false, "Option 4\n(line 2)\n(line 3)")));
 
   // window setup
   gx::Window win;

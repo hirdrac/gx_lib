@@ -37,6 +37,11 @@ using namespace gx;
   return lines;
 }
 
+[[nodiscard]] static constexpr bool isMenu(GuiElemType type)
+{
+  return (type == GUI_MENU) || (type == GUI_SUB_MENU);
+}
+
 static void deactivate(GuiElem& def)
 {
   def._active = false;
@@ -57,16 +62,14 @@ static bool activate(GuiElem& def, EventID id)
 [[nodiscard]] static GuiElem* findElemByXY(
   GuiElem& def, float x, float y, bool popup)
 {
-  if (popup && def.type == GUI_MENU) {
+  if (isMenu(def.type)) {
+    if (contains(def, x, y)) { return &def; }
     if (def._active) {
       GuiElem* e = findElemByXY(def.elems[1], x, y, false);
       if (e) { return e; }
     }
-    if (contains(def, x, y)) { return &def; }
-  }
-  else if (popup || contains(def, x, y))
-  {
-    if (!popup && def.id != 0) { return &def; }
+  } else {
+    if (!popup && def.id != 0 && contains(def, x, y)) { return &def; }
     for (GuiElem& c : def.elems) {
       GuiElem* e = findElemByXY(c, x, y, popup);
       if (e) { return e; }
@@ -221,6 +224,16 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       calcSize(thm, def.elems[1]);
       break;
     }
+    case GUI_SUB_MENU: {
+      // menu header
+      GuiElem& e = def.elems[0];
+      calcSize(thm, e);
+      def._w = e._w + (b * 3.0f) + thm.font->calcWidth(thm.subMenuCode);
+      def._h = e._h + (b * 2.0f);
+      // menu items
+      calcSize(thm, def.elems[1]);
+      break;
+    }
     case GUI_ENTRY: {
       const Font& fnt = *thm.font;
       if (def.entry.type == ENTRY_CARDINAL
@@ -305,6 +318,15 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
       calcPos(thm, e1, left, top, left + e1._w, top + e1._h);
       break;
     }
+    case GUI_SUB_MENU: {
+      const float b = thm.border;
+      calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
+      // sub-menu items
+      left += def._w;
+      GuiElem& e1 = def.elems[1];
+      calcPos(thm, e1, left, top, left + e1._w, top + e1._h);
+      break;
+    }
     default: {
       // align single child element
       const float b = thm.border;
@@ -352,8 +374,8 @@ void Gui::clear()
   _panels.clear();
   _focusID = 0;
   _eventID = 0;
+  _popupID = 0;
   _needRender = true;
-  _popupActive = false;
 }
 
 void Gui::deletePanel(PanelID id)
@@ -463,7 +485,7 @@ void Gui::update(Window& win)
       }
     }
 
-    if (_popupActive) {
+    if (_popupID != 0) {
       for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
         Panel& p = **it;
         _needRender |= drawPopup(p.root, dc, dc2, usec, *p.theme);
@@ -481,13 +503,14 @@ void Gui::update(Window& win)
 void Gui::deactivatePopups()
 {
   for (auto& pPtr : _panels) { deactivate(pPtr->root); }
-  _popupActive = false;
+  _popupID = 0;
 }
 
 void Gui::activatePopup(EventID id)
 {
+  if (_popupID != 0) { deactivatePopups(); }
   for (auto& pPtr : _panels) { activate(pPtr->root, id); }
-  _popupActive = true;
+  _popupID = id;
 }
 
 void Gui::processMouseEvent(Window& win)
@@ -503,7 +526,7 @@ void Gui::processMouseEvent(Window& win)
   GuiElemType type = GUI_NULL;
   if (win.mouseIn()) {
     for (auto& pPtr : _panels) {
-      ePtr = findElemByXY(pPtr->root, win.mouseX(), win.mouseY(), _popupActive);
+      ePtr = findElemByXY(pPtr->root, win.mouseX(), win.mouseY(), _popupID != 0);
       if (ePtr) {
         id = ePtr->id;
         type = ePtr->type;
@@ -532,21 +555,21 @@ void Gui::processMouseEvent(Window& win)
   }
 
   bool usedEvent = false;
-  if (type == GUI_MENU) {
+  if (isMenu(type)) {
     if (pressEvent && ePtr->_active) {
       // click on open menu button closes it
       deactivatePopups();
       _needRender = true;
       usedEvent = true;
-    } else if (pressEvent || _popupActive) {
+    } else if (pressEvent || _popupID != 0) {
       // open menu
-      if (_popupActive) { deactivatePopups(); } // close other open menu
-      ePtr->_active = true;
-      _popupActive = true;
+      if (_popupID != id) { activatePopup(id); }
       _needRender = true;
       usedEvent = true;
     }
   } else if (type == GUI_MENU_ITEM) {
+    // activate on menu item to close sub-menus if neccessary
+    if (_popupID != id) { activatePopup(id); }
     if (buttonEvent) {
       _eventID = id;
       usedEvent = true;
@@ -583,7 +606,7 @@ void Gui::processMouseEvent(Window& win)
     }
   }
 
-  if (type != GUI_MENU && _popupActive && anyGuiButtonEvent) {
+  if (!isMenu(type) && _popupID != 0 && anyGuiButtonEvent) {
     // press/release off menu closes open menus
     deactivatePopups();
     _needRender = true;
@@ -726,7 +749,7 @@ void Gui::layout(Panel& p, float x, float y, AlignEnum align)
 
 void Gui::initElem(GuiElem& def)
 {
-  if (def.type == GUI_MENU) { def.id = --_lastUniqueID; }
+  if (isMenu(def.type)) { def.id = --_lastUniqueID; }
   for (GuiElem& e : def.elems) { initElem(e); }
 }
 
@@ -734,7 +757,7 @@ bool Gui::drawElem(
   GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
   const GuiTheme& thm, const GuiTheme::Style* style) const
 {
-  bool needRedraw = false;
+  bool needRedraw = false; // use for anim trigger later
   switch (def.type) {
     case GUI_BACKGROUND:
       assert(style != nullptr);
@@ -800,6 +823,16 @@ bool Gui::drawElem(
         drawRec(dc, def, style);
       }
       break;
+    case GUI_SUB_MENU: {
+      if (def._active) {
+        style = &thm.menuItemSelect;
+        drawRec(dc, def, style);
+      }
+      const float b = thm.border;
+      dc2.glyph(TextFormatting{thm.font, 0}, def._x + def._w, def._y + b,
+                ALIGN_TOP_RIGHT, thm.subMenuCode);
+      break;
+    }
     case GUI_ENTRY: {
       style = (def.id == _focusID) ? &thm.entryFocus : &thm.entry;
       drawRec(dc, def, style);
@@ -857,7 +890,7 @@ bool Gui::drawElem(
   }
 
   // draw child elements
-  if (def.type == GUI_MENU) {
+  if (isMenu(def.type)) {
     // menu button label
     needRedraw |= drawElem(def.elems[0], dc, dc2, usec, thm, style);
   } else {
@@ -872,11 +905,13 @@ bool Gui::drawPopup(
   GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
   const GuiTheme& thm) const
 {
-  bool needRedraw = false;
-  if (def.type == GUI_MENU) {
+  bool needRedraw = false; // use for anim trigger later
+  if (isMenu(def.type)) {
+    // menu frame & items
     if (def._active) {
-      // menu frame & items
       needRedraw |= drawElem(def.elems[1], dc, dc2, usec, thm, &thm.menuFrame);
+      // continue popup draw for possible active sub-menu
+      needRedraw |= drawPopup(def.elems[1], dc, dc2, usec, thm);
     }
   } else {
     for (auto& e : def.elems) { needRedraw |= drawPopup(e, dc, dc2, usec, thm); }
