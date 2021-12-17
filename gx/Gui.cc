@@ -181,7 +181,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     case GUI_LABEL: {
       const Font& fnt = *thm.font;
       def._w = fnt.calcWidth(def.text);
-      int lines = calcLines(def.text);
+      const int lines = calcLines(def.text);
       def._h = float((fnt.size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
       // FIXME: improve line height calc (based on font ymax/ymin?)
@@ -341,7 +341,7 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
 
 static std::string passwordStr(int32_t code, std::size_t len)
 {
-  std::string ch = toUTF8(code);
+  const std::string ch = toUTF8(code);
   std::string val;
   val.reserve(ch.size() * len);
   for (std::size_t i = 0; i < len; ++i) { val += ch; }
@@ -546,8 +546,8 @@ void Gui::processMouseEvent(Window& win)
 
   // update hoverID
   if (_hoverID != id) {
-    EventID hid = (buttonDown && type != GUI_MENU_ITEM && id != _heldID)
-      ? 0 : id;
+    const EventID hid =
+      (buttonDown && type != GUI_MENU_ITEM && id != _heldID) ? 0 : id;
     if (_hoverID != hid) {
       _hoverID = hid;
       _needRender = true;
@@ -612,8 +612,7 @@ void Gui::processMouseEvent(Window& win)
     _needRender = true;
   }
 
-  // clear button event if used by GUI
-  if (buttonEvent && usedEvent) {
+  if (usedEvent) {
     win.removeEvent(EVENT_MOUSE_BUTTON1);
   }
 }
@@ -649,7 +648,7 @@ void Gui::processCharEvent(Window& win)
     } else if (c.key == KEY_V && c.mods == MOD_CONTROL) {
       // (CTRL-V) paste first line of clipboard
       usedEvent = true;
-      std::string cb = getClipboardFirstLine();
+      const std::string cb = getClipboardFirstLine();
       bool added = false;
       for (UTF8Iterator itr{cb}; !itr.done(); itr.next()) {
         added |= addEntryChar(*e, itr.get());
@@ -725,7 +724,7 @@ bool Gui::setBool(EventID id, bool val)
 PanelID Gui::addPanel(
   std::unique_ptr<Panel> ptr, float x, float y, AlignEnum align)
 {
-  PanelID id = ++_lastPanelID;
+  const PanelID id = ++_lastPanelID;
   ptr->id = id;
   initElem(ptr->root);
   layout(*ptr, x, y, align);
@@ -909,9 +908,10 @@ bool Gui::drawPopup(
   if (isMenu(def.type)) {
     // menu frame & items
     if (def._active) {
-      needRedraw |= drawElem(def.elems[1], dc, dc2, usec, thm, &thm.menuFrame);
+      GuiElem& e1 = def.elems[1];
+      needRedraw |= drawElem(e1, dc, dc2, usec, thm, &thm.menuFrame);
       // continue popup draw for possible active sub-menu
-      needRedraw |= drawPopup(def.elems[1], dc, dc2, usec, thm);
+      needRedraw |= drawPopup(e1, dc, dc2, usec, thm);
     }
   } else {
     for (auto& e : def.elems) { needRedraw |= drawPopup(e, dc, dc2, usec, thm); }
