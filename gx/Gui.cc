@@ -441,13 +441,14 @@ void Gui::update(Window& win)
   }
 
   // mouse movement/button handling
-  if (win.focused()
-      && (win.allEvents() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_BUTTON1))) {
-    processMouseEvent(win);
-  }
+  if (win.focused()) {
+    if (win.allEvents() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_BUTTON1)) {
+      processMouseEvent(win);
+    }
 
-  if (_heldType == GUI_BUTTON_HOLD && _eventID == 0) {
-    _eventID = _heldID;
+    if (_heldType == GUI_BUTTON_HOLD && _eventID == 0) {
+      _eventID = _heldID;
+    }
   }
 
   // entry input handling & cursor update
