@@ -6,9 +6,6 @@
 // TODO: handle tab/enter/mouse select differently for entry
 // TODO: cursor movement for entry
 // TODO: allow right button to open menus & select menu items
-// TODO: disable/enable menu items
-//   - need theme 'disabled menu item text color'
-//   - mouse over disabled items has no 'hover' change
 
 #include "Gui.hh"
 #include "Window.hh"
@@ -529,8 +526,10 @@ void Gui::processMouseEvent(Window& win)
     for (auto& pPtr : _panels) {
       ePtr = findElemByXY(pPtr->root, win.mouseX(), win.mouseY(), _popupID != 0);
       if (ePtr) {
-        id = ePtr->id;
-        type = ePtr->type;
+        if (ePtr->_enabled) {
+          id = ePtr->id;
+          type = ePtr->type;
+        }
         break;
       }
     }
@@ -694,6 +693,15 @@ void Gui::setFocusID(Window& win, EventID id)
   _needRender = true;
 }
 
+void Gui::setElemState(EventID id, bool enable)
+{
+  GuiElem* e = findElem(id);
+  if (e && e->_enabled != enable) {
+    e->_enabled = enable;
+    _needRender = true;
+  }
+}
+
 bool Gui::setText(EventID id, std::string_view text)
 {
   for (auto& pPtr : _panels) {
@@ -786,7 +794,9 @@ bool Gui::drawElem(
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
     case GUI_BUTTON_HOLD:
-      if (def.id == _heldID) {
+      if (!def._enabled) {
+        style = &thm.buttonDisable;
+      } else if (def.id == _heldID) {
         style = (def.id == _hoverID || def.type != GUI_BUTTON)
           ? &thm.buttonPress : &thm.buttonHold;
       } else {
@@ -795,7 +805,9 @@ bool Gui::drawElem(
       drawRec(dc, def, style);
       break;
     case GUI_CHECKBOX: {
-      if (def.id == _heldID) {
+      if (!def._enabled) {
+        style = &thm.checkboxDisable;
+      } else if (def.id == _heldID) {
         style = (def.id == _hoverID) ? &thm.checkboxPress : &thm.checkboxHold;
       } else {
         style = (def.id == _hoverID) ? &thm.checkboxHover : &thm.checkbox;
@@ -818,7 +830,9 @@ bool Gui::drawElem(
       drawRec(dc, def, style);
       break;
     case GUI_MENU_ITEM:
-      if (def.id == _hoverID) {
+      if (!def._enabled) {
+        style = &thm.menuItemDisable;
+      } else if (def.id == _hoverID) {
         style = &thm.menuItemSelect;
         drawRec(dc, def, style);
       }
@@ -834,7 +848,11 @@ bool Gui::drawElem(
       break;
     }
     case GUI_ENTRY: {
-      style = (def.id == _focusID) ? &thm.entryFocus : &thm.entry;
+      if (!def._enabled) {
+        style = &thm.entryDisable;
+      } else {
+        style = (def.id == _focusID) ? &thm.entryFocus : &thm.entry;
+      }
       drawRec(dc, def, style);
       const std::string txt = (def.entry.type == ENTRY_PASSWORD)
         ? passwordStr(thm.passwordCode, def.text.size()) : def.text;
@@ -965,7 +983,7 @@ GuiElem* Gui::findNextElem(EventID id, GuiElemType type)
   GuiElem* next = nullptr;
   GuiElem* first = nullptr;
   for (;;) {
-    if (e->id > 0 && (type == GUI_NULL || e->type == type)) {
+    if (e->id > 0 && e->_enabled && (type == GUI_NULL || e->type == type)) {
       if (e->id == (id+1)) { return e; }
       if (e->id > id && (!next || e->id < next->id)) { next = e; }
       if (!first || e->id < first->id) { first = e; }
@@ -993,7 +1011,7 @@ GuiElem* Gui::findPrevElem(EventID id, GuiElemType type)
   GuiElem* prev = nullptr;
   GuiElem* last = nullptr;
   for (;;) {
-    if (e->id > 0 && (type == GUI_NULL || e->type == type)) {
+    if (e->id > 0 && e->_enabled && (type == GUI_NULL || e->type == type)) {
       if (e->id == (id-1)) { return e; }
       if (e->id < id && (!prev || e->id > prev->id)) { prev = e; }
       if (!last || e->id > last->id) { last = e; }

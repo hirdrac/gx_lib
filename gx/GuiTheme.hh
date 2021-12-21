@@ -34,6 +34,8 @@ struct gx::GuiTheme
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f), 0};
   Style buttonHold = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0};
+  Style buttonDisable = {
+    packRGBA8(.6f,.6f,.6f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f), 0};
 
   Style checkbox = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f), 0};
@@ -43,6 +45,8 @@ struct gx::GuiTheme
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f), 0};
   Style checkboxHold = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0};
+  Style checkboxDisable = {
+    packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f), 0};
 
   Style menuButton = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), 0, 0};
@@ -54,11 +58,15 @@ struct gx::GuiTheme
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,0.0f,1.0f), 0};
   Style menuItemSelect = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f), 0};
+  Style menuItemDisable = {
+    packRGBA8(.5f,.5f,.5f,1.0f), 0, 0};
 
   Style entry = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,.2f,1.0f), 0};
   Style entryFocus = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.1f,.1f,.3f,1.0f), 0};
+  Style entryDisable = {
+    packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.15f,.15f,.2f,1.0f), 0};
 
   uint16_t entryLeftMargin = 6;
   uint16_t entryRightMargin = 6;

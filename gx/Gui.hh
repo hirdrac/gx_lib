@@ -91,7 +91,8 @@ struct gx::GuiElem
 
   // layout state
   float _x = 0, _y = 0, _w = 0, _h = 0; // layout position/size
-  bool _active = false;                 // popup/menu enabled
+  bool _active = false;                 // popup/menu activated
+  bool _enabled = true;
 
   GuiElem(GuiElemType t, AlignEnum a, EventID i)
     : type{t}, align{a}, id{i} { }
@@ -125,6 +126,11 @@ class gx::Gui
     // id of element triggering an event
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // true if GUI needs to be redrawn
+
+  void setElemState(EventID id, bool enable);
+  void enableElem(EventID id) { setElemState(id, true); }
+  void disableElem(EventID id) { setElemState(id, false); }
+    // enable/disable event generating elements
 
   [[nodiscard]] std::string getText(EventID id) const {
     const GuiElem* e = findElem(id);
