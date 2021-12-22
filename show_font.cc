@@ -47,7 +47,7 @@ int main(int argc, char** argv)
   win.setSize(t.width(), t.height(), false);
 
   gx::DrawList dl;
-  gx::DrawContext dc(dl);
+  gx::DrawContext dc{dl};
   int lastCode = 0;
 
   // main loop

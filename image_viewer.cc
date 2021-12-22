@@ -3,13 +3,13 @@
 // Copyright (C) 2021 Richard Bradley
 //
 
-// TODO - fullscreen zoom w/ mouse wheel
-// TODO - mouse drag of image when zoomed
-// TODO - background loading of images after 1st image loaded
-// TODO - multiple image display in fullscreen (horizontal/vertical)
-// TODO - smooth scrolling when moving to next image
-// TODO - don't scroll if all images can fit on screen?
-// TODO - make texture mag filter configurable? ('smooth' mode would use linear)
+// TODO: fullscreen zoom w/ mouse wheel
+// TODO: mouse drag of image when zoomed
+// TODO: background loading of images after 1st image loaded
+// TODO: multiple image display in fullscreen (horizontal/vertical)
+// TODO: smooth scrolling when moving to next image
+// TODO: don't scroll if all images can fit on screen?
+// TODO: make texture mag filter configurable? ('smooth' mode would use linear)
 
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
@@ -88,7 +88,7 @@ int main(int argc, char* argv[])
   }
 
   gx::DrawList dl;
-  gx::DrawContext dc(dl);
+  gx::DrawContext dc{dl};
   bool refresh = true;
   constexpr int border = 8;
 
@@ -104,8 +104,8 @@ int main(int argc, char* argv[])
       }
 
       auto [iw,ih] = calcSize(win, e.img);
-      int ix = int(float(win.width() - iw) / 2.0f);
-      int iy = int(float(win.height() - ih) / 2.0f);
+      int ix = int(float(win.width() - iw) * .5f);
+      int iy = int(float(win.height() - ih) * .5f);
       dc.clear();
       dc.color(gx::WHITE);
       dc.texture(e.tex);
