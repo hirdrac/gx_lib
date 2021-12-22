@@ -16,10 +16,18 @@ namespace gx {
 
 struct gx::GuiTheme
 {
+  enum EdgeTypeEnum : int32_t {
+    EDGE_BORDER_1px    = 0,
+    EDGE_BORDER_2px    = 1,
+    EDGE_UNDERLINE_1px = 2,
+    EDGE_UNDERLINE_2px = 3
+  };
+
   struct Style {
     RGBA8 textColor;
     RGBA8 backgroundColor;
     RGBA8 edgeColor;
+    EdgeTypeEnum edgeType = EDGE_BORDER_1px;
   };
 
   const Font* font = nullptr;
@@ -53,7 +61,8 @@ struct gx::GuiTheme
   Style menuButtonHover = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f), 0};
   Style menuButtonOpen = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0};
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f),
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), EDGE_UNDERLINE_2px};
   Style menuFrame = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,0.0f,1.0f), 0};
   Style menuItemSelect = {

@@ -124,12 +124,28 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
     dc.rectangle(x, y, w, h);
   }
 
-  if (style->edgeColor != 0) {
-    dc.color(style->edgeColor);
-    dc.rectangle(x, y, w, 1);
-    dc.rectangle(x, y + h - 1, w, 1);
-    dc.rectangle(x, y, 1, h);
-    dc.rectangle(x + w - 1, y, 1, h);
+  if (style->edgeColor == 0) { return; }
+
+  dc.color(style->edgeColor);
+  switch (style->edgeType) {
+    case GuiTheme::EDGE_BORDER_1px:
+      dc.rectangle(x, y, w, 1);
+      dc.rectangle(x, y + h - 1, w, 1);
+      dc.rectangle(x, y+1, 1, h-2);
+      dc.rectangle(x + w - 1, y+1, 1, h-2);
+      break;
+    case GuiTheme::EDGE_BORDER_2px:
+      dc.rectangle(x, y, w, 2);
+      dc.rectangle(x, y + h - 2, w, 2);
+      dc.rectangle(x, y+2, 2, h-4);
+      dc.rectangle(x + w - 2, y+2, 2, h-4);
+      break;
+    case GuiTheme::EDGE_UNDERLINE_1px:
+      dc.rectangle(x, y + h - 1, w, 1);
+      break;
+    case GuiTheme::EDGE_UNDERLINE_2px:
+      dc.rectangle(x, y + h - 2, w, 2);
+      break;
   }
 }
 
