@@ -474,8 +474,10 @@ void Gui::update(Window& win)
         (win.lastPollTime() - _lastCursorUpdate) / _cursorBlinkTime;
       if (blinks > 0) {
         _lastCursorUpdate += blinks * _cursorBlinkTime;
-        if (blinks & 1) { _cursorState = !_cursorState; }
-        _needRender = true;
+        if (blinks & 1) {
+          _cursorState = !_cursorState;
+          _needRender = true;
+        }
       }
     }
   }
@@ -524,7 +526,7 @@ void Gui::deactivatePopups()
 void Gui::activatePopup(EventID id)
 {
   if (_popupID != 0) { deactivatePopups(); }
-  for (auto& pPtr : _panels) { activate(pPtr->root, id); }
+  for (auto& pPtr : _panels) { if (activate(pPtr->root, id)) break; }
   _popupID = id;
   _needRender = true;
 }
