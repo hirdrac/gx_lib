@@ -100,6 +100,23 @@ int main(int argc, char* argv[])
       gx::guiHLine(),
       gx::guiCheckbox(54, false, "Option 4\n(line 2)\n(line 3)")));
 
+  // list select demo
+  gui.newPanel(
+    theme, 600, 80, gx::ALIGN_TOP_LEFT,
+    gx::guiVFrame(
+      gx::guiLabel(gx::ALIGN_CENTER, "LIST SELECTORS"),
+      gx::guiHFrame(
+        gx::guiListSelect(
+          60,
+          gx::guiListSelectItem(1, "item 1"),
+          gx::guiListSelectItem(2, "item two"),
+          gx::guiListSelectItem(3, "item three")),
+        gx::guiListSelect(
+          61,
+          gx::guiListSelectItem(4, "item four"),
+          gx::guiListSelectItem(5, "item 5"),
+          gx::guiListSelectItem(6, "item six")) )));
+
   // window setup
   gx::Window win;
   win.setTitle("GUI demo");

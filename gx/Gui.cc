@@ -40,6 +40,34 @@ using namespace gx;
   return (type == GUI_MENU) || (type == GUI_SUBMENU);
 }
 
+[[nodiscard]] static constexpr bool isPopup(GuiElemType type)
+{
+  return (type == GUI_MENU) || (type == GUI_SUBMENU)
+    || (type == GUI_LISTSELECT);
+}
+
+[[nodiscard]] static constexpr GuiElemType getPopupType(GuiElemType type)
+{
+  switch (type) {
+    case GUI_MENU:
+    case GUI_SUBMENU:
+    case GUI_MENU_ITEM:
+      return GUI_MENU;
+      break;
+    case GUI_LISTSELECT:
+    case GUI_LISTSELECT_ITEM:
+      return GUI_LISTSELECT;
+      break;
+    default:
+      return GUI_NULL;
+  }
+}
+
+[[nodiscard]] static constexpr bool isPopupItem(GuiElemType type)
+{
+  return (type == GUI_MENU_ITEM) || (type == GUI_LISTSELECT_ITEM);
+}
+
 static void deactivate(GuiElem& def)
 {
   def._active = false;
@@ -57,22 +85,69 @@ static bool activate(GuiElem& def, EventID id)
   return def._active;
 }
 
-[[nodiscard]]
-static GuiElem* findElemByXY(GuiElem& def, float x, float y, bool popup)
+[[nodiscard]] static GuiElem* findElemByXY(
+  GuiElem& def, float x, float y, GuiElemType popupType)
 {
-  if (isMenu(def.type)) {
-    if (contains(def, x, y)) { return &def; }
-    if (def._active) {
-      GuiElem* e = findElemByXY(def.elems[1], x, y, false);
-      if (e) { return e; }
+  if (isPopup(def.type)) {
+    if (popupType == GUI_NULL || (getPopupType(def.type) == popupType)) {
+      if (contains(def, x, y)) { return &def; }
+      if (def._active) {
+        GuiElem* e = findElemByXY(def.elems[1], x, y, GUI_NULL);
+        if (e) { return e; }
+      }
     }
   } else {
-    if (!popup && def.id != 0 && contains(def, x, y)) { return &def; }
+    if (popupType == GUI_NULL && def.id != 0 && contains(def, x, y)) {
+      return &def;
+    }
+
     for (GuiElem& c : def.elems) {
-      GuiElem* e = findElemByXY(c, x, y, popup);
+      GuiElem* e = findElemByXY(c, x, y, popupType);
       if (e) { return e; }
     }
   }
+  return nullptr;
+}
+
+[[nodiscard]] static GuiElem* findItem(GuiElem& root, int item_no)
+{
+  for (auto& e : root.elems) {
+    if (e.type == GUI_LISTSELECT_ITEM
+        && (item_no == 0 || e.item_no == item_no)) {
+      return &e;
+    } else if (!e.elems.empty()) {
+      GuiElem* e2 = findItem(e, item_no);
+      if (e2) { return e2; }
+    }
+  }
+  return nullptr;
+}
+
+static void calcMaxItemSize(GuiElem& root, float& maxW, float& maxH)
+{
+  for (auto& e : root.elems) {
+    if (e.type == GUI_LISTSELECT_ITEM) {
+      maxW = std::max(maxW, e._w);
+      maxH = std::max(maxH, e._h);
+      return;
+    } else if (!e.elems.empty()) {
+      calcMaxItemSize(e, maxW, maxH);
+    }
+  }
+}
+
+[[nodiscard]]
+static GuiElem* findParentListSelect(GuiElem& def, int item_no)
+{
+  if (def.type == GUI_LISTSELECT) {
+    return findItem(def.elems[1], item_no) ? &def : nullptr;
+  } else if (!isMenu(def.type)) {
+    for (auto& e : def.elems) {
+      GuiElem* ptr = findParentListSelect(e, item_no);
+      if (ptr) { return ptr; }
+    }
+  }
+
   return nullptr;
 }
 
@@ -248,6 +323,21 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       calcSize(thm, def.elems[1]);
       break;
     }
+    case GUI_LISTSELECT: {
+      calcSize(thm, def.elems[0]);
+      GuiElem& e1 = def.elems[1];
+      calcSize(thm, e1);
+      def._w = 0; def._h = 0;
+      calcMaxItemSize(e1, def._w, def._h);
+      break;
+    }
+    case GUI_LISTSELECT_ITEM: {
+      GuiElem& e = def.elems[0];
+      calcSize(thm, e);
+      def._w = e._w + (b * 3.0f) + thm.font->calcWidth(thm.listSelectCode);
+      def._h = e._h + (b * 2.0f);
+      break;
+    }
     case GUI_ENTRY: {
       const Font& fnt = *thm.font;
       if (def.entry.type == ENTRY_CARDINAL
@@ -339,6 +429,12 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
       left += def._w;
       GuiElem& e1 = def.elems[1];
       calcPos(thm, e1, left, top, left + e1._w, top + e1._h);
+      break;
+    }
+    case GUI_LISTSELECT: {
+      const float b = thm.border;
+      calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
+      calcPos(thm, def.elems[1], left - b, top + def._h, right, bottom);
       break;
     }
     default:
@@ -538,17 +634,25 @@ void Gui::processMouseEvent(Window& win)
   const bool pressEvent = buttonDown & buttonEvent;
   const bool anyGuiButtonEvent = win.allEvents() & EVENT_MOUSE_BUTTON1;
 
+  GuiElemType popupType = GUI_NULL;
+  if (_popupID != 0) {
+    GuiElem* e = findElem(_popupID);
+    popupType = getPopupType(e->type);
+  }
+
   // get elem at mouse pointer
+  Panel* pPtr = nullptr;
   GuiElem* ePtr = nullptr;
   EventID id = 0;
   GuiElemType type = GUI_NULL;
   if (win.mouseIn()) {
-    for (auto& pPtr : _panels) {
-      ePtr = findElemByXY(pPtr->root, win.mouseX(), win.mouseY(), _popupID != 0);
+    for (auto& ptr : _panels) {
+      ePtr = findElemByXY(ptr->root, win.mouseX(), win.mouseY(), popupType);
       if (ePtr) {
         if (ePtr->_enabled) {
           id = ePtr->id;
           type = ePtr->type;
+          pPtr = ptr.get();
         }
         break;
       }
@@ -567,7 +671,7 @@ void Gui::processMouseEvent(Window& win)
   // update hoverID
   if (_hoverID != id) {
     const EventID hid =
-      (buttonDown && type != GUI_MENU_ITEM && id != _heldID) ? 0 : id;
+      (buttonDown && !isPopupItem(type) && id != _heldID) ? 0 : id;
     if (_hoverID != hid) {
       _hoverID = hid;
       _needRender = true;
@@ -575,13 +679,17 @@ void Gui::processMouseEvent(Window& win)
   }
 
   bool usedEvent = false;
-  if (isMenu(type)) {
+  if (isPopup(type)) {
     if (pressEvent && ePtr->_active) {
       // click on open menu button closes it
       deactivatePopups();
       usedEvent = true;
-    } else if (pressEvent || _popupID != 0) {
-      // open menu
+    } else if (pressEvent) {
+      // open menu with click
+      if (_popupID != id) { activatePopup(id); }
+      usedEvent = true;
+    } else if (isMenu(type) && popupType == GUI_MENU) {
+      // new menu opened while holding button down
       if (_popupID != id) { activatePopup(id); }
       usedEvent = true;
     }
@@ -591,6 +699,22 @@ void Gui::processMouseEvent(Window& win)
     if (buttonEvent) {
       _eventID = id;
       usedEvent = true;
+    }
+  } else if (type == GUI_LISTSELECT_ITEM) {
+    if (_popupID != id) { activatePopup(id); }
+    if (buttonEvent) {
+      GuiElem* parent = findParentListSelect(pPtr->root, ePtr->item_no);
+      if (parent) {
+        GuiElem& ls = *parent;
+        GuiElem& e0 = ls.elems[0];
+        _eventID = ls.id;
+        e0 = ePtr->elems[0];
+        const float b = pPtr->theme->border;
+        calcPos(*pPtr->theme, e0, ls._x + b, ls._y + b, ls._x + ls._w - b,
+                ls._y + ls._h - b);
+        _needRender = true;
+        usedEvent = true;
+      }
     }
   } else {
     if (pressEvent && id != 0) {
@@ -624,8 +748,7 @@ void Gui::processMouseEvent(Window& win)
     }
   }
 
-  if (!isMenu(type) && _popupID != 0 && anyGuiButtonEvent) {
-    // press/release off menu closes open menus
+  if (_popupID != 0 && anyGuiButtonEvent && !isPopup(type)) {
     deactivatePopups();
   }
 
@@ -747,6 +870,20 @@ bool Gui::setBool(EventID id, bool val)
   return false;
 }
 
+bool Gui::setItemNo(EventID id, int item_no)
+{
+  for (auto& pPtr : _panels) {
+    GuiElem* e = findElemT(&pPtr->root, id);
+    if (!e) { continue; }
+
+    if (e->type != GUI_LISTSELECT) { break; }
+    e->item_no = item_no;
+    _needRender = true;
+    return true;
+  }
+  return false;  
+}
+
 PanelID Gui::addPanel(
   std::unique_ptr<Panel> ptr, float x, float y, AlignEnum align)
 {
@@ -774,7 +911,17 @@ void Gui::layout(Panel& p, float x, float y, AlignEnum align)
 
 void Gui::initElem(GuiElem& def)
 {
-  if (isMenu(def.type)) { def.id = --_lastUniqueID; }
+  if (isMenu(def.type) || def.type == GUI_LISTSELECT_ITEM) {
+    def.id = --_lastUniqueID;
+  } else if (def.type == GUI_LISTSELECT) {
+    GuiElem* e = findItem(def, def.item_no);
+    if (e) {
+      GuiElem& e0 = def.elems[0];
+      e0 = e->elems[0];
+      e0.align = ALIGN_CENTER_LEFT;
+      def.item_no = e->item_no;
+    }
+  }
   for (GuiElem& e : def.elems) { initElem(e); }
 }
 
@@ -866,6 +1013,29 @@ bool Gui::drawElem(
                 ALIGN_TOP_RIGHT, thm.subMenuCode);
       break;
     }
+    case GUI_LISTSELECT: {
+      if (!def._enabled) {
+        style = &thm.listSelectDisable;
+      } else if (def._active) {
+        style = &thm.listSelectOpen;
+      } else {
+        style = (def.id == _hoverID) ? &thm.listSelectHover : &thm.listSelect;
+      }
+      drawRec(dc, def, style);
+      needRedraw |= drawElem(def.elems[0], dc, dc2, usec, thm, style);
+      const float b = thm.border;
+      dc2.glyph(TextFormatting{thm.font, 0}, def._x + def._w - b, def._y + b,
+                ALIGN_TOP_RIGHT, thm.listSelectCode);
+      break;
+    }
+    case GUI_LISTSELECT_ITEM:
+      if (!def._enabled) {
+        style = &thm.listSelectItemDisable;
+      } else if (def.id == _hoverID) {
+        style = &thm.listSelectItemSelect;
+        drawRec(dc, def, style);
+      }
+      break;
     case GUI_ENTRY: {
       if (!def._enabled) {
         style = &thm.entryDisable;
@@ -927,7 +1097,7 @@ bool Gui::drawElem(
   }
 
   // draw child elements
-  if (!isMenu(def.type)) {
+  if (!isPopup(def.type)) {
     for (auto& e : def.elems) {
       needRedraw |= drawElem(e, dc, dc2, usec, thm, style);
     }
@@ -940,11 +1110,13 @@ bool Gui::drawPopup(
   const GuiTheme& thm) const
 {
   bool needRedraw = false; // use for anim trigger later
-  if (isMenu(def.type)) {
-    // menu frame & items
+  if (isPopup(def.type)) {
+    // menu/listselect frame & items
     if (def._active) {
       GuiElem& e1 = def.elems[1];
-      needRedraw |= drawElem(e1, dc, dc2, usec, thm, &thm.menuFrame);
+      needRedraw |= drawElem(
+        e1, dc, dc2, usec, thm,
+        isMenu(def.type) ? &thm.menuFrame : &thm.listSelectFrame);
       // continue popup draw for possible active sub-menu
       needRedraw |= drawPopup(e1, dc, dc2, usec, thm);
     }

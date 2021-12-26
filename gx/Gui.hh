@@ -5,8 +5,6 @@
 // Graphical user interface rendering & event handling
 //
 
-// TODO: list select (combo box)
-
 #pragma once
 #include "GuiTheme.hh"
 #include "DrawList.hh"
@@ -39,14 +37,16 @@ namespace gx {
     GUI_BACKGROUND, GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_IMAGE,
 
     // event types
-    GUI_BUTTON,        // activated on release
-    GUI_BUTTON_PRESS,  // activated once on press
-    GUI_BUTTON_HOLD,   // activated continuously on hold&press
-    GUI_CHECKBOX,      // toggle value on release
-    GUI_MENU,          // button hold or release on menu opens menu
-    GUI_MENU_ITEM,     // activated on press or release
-    GUI_SUBMENU,       // as GUI_MENU
-    GUI_ENTRY,         // activated if changed on enter/tab/click-away
+    GUI_BUTTON,          // activated on release
+    GUI_BUTTON_PRESS,    // activated once on press
+    GUI_BUTTON_HOLD,     // activated continuously on hold&press
+    GUI_CHECKBOX,        // toggle value on release
+    GUI_MENU,            // button hold or release on menu opens menu
+    GUI_MENU_ITEM,       // activated on press or release
+    GUI_SUBMENU,         // as GUI_MENU
+    GUI_LISTSELECT,      // as GUI_MENU
+    GUI_LISTSELECT_ITEM, // as GUI_MENU_ITEM
+    GUI_ENTRY,           // activated if changed on enter/tab/click-away
   };
 
   enum EntryType {
@@ -84,6 +84,7 @@ struct gx::GuiElem
 
   union {
     bool checkbox_set;
+    int item_no;
     EntryProps entry;
     ImageProps image;
   };
@@ -143,8 +144,14 @@ class gx::Gui
     return (e == nullptr || e->type != GUI_CHECKBOX) ? false : e->checkbox_set;
   }
 
+  [[nodiscard]] int getItemNo(EventID id) const {
+    const GuiElem* e = findElem(id);
+    return (e == nullptr || e->type != GUI_LISTSELECT) ? 0 : e->item_no;
+  }
+
   bool setText(EventID id, std::string_view text);
   bool setBool(EventID id, bool val);
+  bool setItemNo(EventID id, int item_no);
 
  private:
   struct Panel {
@@ -394,6 +401,26 @@ namespace gx {
             {guiLabel(ALIGN_CENTER_LEFT, text),
              GuiElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0,
                      {guiVFrame(items...)}}}};
+  }
+
+  // List Select
+  template<typename... Elems>
+  inline GuiElem guiListSelect(EventID id, const Elems&... items)
+  {
+    GuiElem e{GUI_LISTSELECT, ALIGN_TOP_LEFT, id,
+              {GuiElem{},
+               GuiElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0,
+                       {guiVFrame(items...)}}}};
+    e.item_no = 0; // unset (default to first item)
+    return e;
+  }
+
+  inline GuiElem guiListSelectItem(int no, std::string_view text)
+  {
+    GuiElem e{GUI_LISTSELECT_ITEM, ALIGN_JUSTIFY, 0,
+              {guiLabel(ALIGN_CENTER_LEFT, text)}};
+    e.item_no = no; // should be non-zero
+    return e;
   }
 
   // Entry

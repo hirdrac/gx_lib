@@ -70,6 +70,22 @@ struct gx::GuiTheme
   Style menuItemDisable = {
     packRGBA8(.5f,.5f,.5f,1.0f), 0};
 
+  Style listSelect = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f)};
+  Style listSelectHover = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f)};
+  Style listSelectOpen = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f),
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), EDGE_UNDERLINE_2px};
+  Style listSelectDisable = {
+    packRGBA8(.6f,.6f,.6f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f)};
+  Style listSelectFrame = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,0.0f,1.0f)};
+  Style listSelectItemSelect = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f)};
+  Style listSelectItemDisable = {
+    packRGBA8(.5f,.5f,.5f,1.0f), 0};
+
   Style entry = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,.2f,1.0f)};
   Style entryFocus = {
@@ -88,6 +104,7 @@ struct gx::GuiTheme
 
   int32_t passwordCode = 8226; // U+2022 (bullet)
   int32_t subMenuCode = '>';
+  int32_t listSelectCode = 8711; // U+2207
 
   RGBA8 cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
   uint32_t cursorBlinkTime = 400000; // 1 sec
