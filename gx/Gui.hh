@@ -415,6 +415,18 @@ namespace gx {
     return e;
   }
 
+  template<typename... Elems>
+  inline GuiElem guiListSelect(EventID id, AlignEnum align,
+                               const Elems&... items)
+  {
+    GuiElem e{GUI_LISTSELECT, align, id,
+              {GuiElem{},
+               GuiElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0,
+                       {guiVFrame(items...)}}}};
+    e.item_no = 0; // unset (default to first item)
+    return e;
+  }
+
   inline GuiElem guiListSelectItem(int no, std::string_view text)
   {
     GuiElem e{GUI_LISTSELECT_ITEM, ALIGN_JUSTIFY, 0,
