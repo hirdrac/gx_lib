@@ -107,12 +107,12 @@ int main(int argc, char* argv[])
       gx::guiLabel(gx::ALIGN_CENTER, "LIST SELECTORS"),
       gx::guiHFrame(
         gx::guiListSelect(
-          60,
+          60, gx::ALIGN_JUSTIFY,
           gx::guiListSelectItem(1, "item 1"),
           gx::guiListSelectItem(2, "item two"),
           gx::guiListSelectItem(3, "item three")),
         gx::guiListSelect(
-          61,
+          61, gx::ALIGN_JUSTIFY,
           gx::guiListSelectItem(4, "item four"),
           gx::guiListSelectItem(5, "item 5"),
           gx::guiListSelectItem(6, "item six")) )));

@@ -231,21 +231,60 @@ static inline void drawRec(DrawContext& dc, const GuiElem& e,
   drawRec(dc, e._x, e._y, e._w, e._h, style);
 }
 
+static void resizedElem(const GuiTheme& thm, GuiElem& def)
+{
+  // update children element sizes based on parent resize
+  // (usually because of justify alignment)
+  switch (def.type) {
+    case GUI_BACKGROUND: {
+      GuiElem& e0 = def.elems[0];
+      float b2 = thm.border * 2.0f;
+      e0._w = def._w - b2;
+      e0._h = def._h - b2;
+      resizedElem(thm, e0);
+      break;
+    }
+    case GUI_VFRAME:
+      for (GuiElem& e : def.elems) {
+        if (e.align & ALIGN_HJUSTIFY) { e._w = def._w; resizedElem(thm, e); }
+      }
+      break;
+    case GUI_HFRAME:
+      for (GuiElem& e : def.elems) {
+        if (e.align & ALIGN_VJUSTIFY) { e._h = def._h; resizedElem(thm, e); }
+      }
+      break;
+    case GUI_LISTSELECT: {
+      // listselect popup list width
+      GuiElem& e1 = def.elems[1];
+      e1._w = def._w + (thm.border * 2.0f);
+      resizedElem(thm, e1);
+      break;
+    }
+    default:
+      break;
+  }
+}
+
 static void calcSize(const GuiTheme& thm, GuiElem& def)
 {
   const float b = thm.border;
   switch (def.type) {
     case GUI_HFRAME: {
       const float fs = thm.frameSpacing;
-      float total_w = -fs, max_h = 0;
+      float max_w = 0, max_h = 0;
       for (GuiElem& e : def.elems) {
         calcSize(thm, e);
-        total_w += e._w + fs;
+        max_w = std::max(max_w, e._w);
         max_h = std::max(max_h, e._h);
       }
+      float total_w = -fs;
       for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; }
-        // TODO: support horizontal justify
+        bool resized = false;
+        if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; resized = true; }
+        if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; resized = true; }
+        if (resized) { resizedElem(thm, e); }
+        total_w += e._w + fs;
       }
       def._w = total_w;
       def._h = max_h;
@@ -253,15 +292,19 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     }
     case GUI_VFRAME: {
       const float fs = thm.frameSpacing;
-      float total_h = -fs, max_w = 0;
+      float max_w = 0, max_h = 0;
       for (GuiElem& e : def.elems) {
         calcSize(thm, e);
-        total_h += e._h + fs;
         max_w = std::max(max_w, e._w);
+        max_h = std::max(max_h, e._h);
       }
+      float total_h = -fs;
       for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; }
-        // TODO: support vertical justify
+        bool resized = false;
+        if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; resized = true; }
+        if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; resized = true; }
+        if (resized) { resizedElem(thm, e); }
+        total_h += e._h + fs;
       }
       def._w = max_w;
       def._h = total_h;
@@ -881,7 +924,7 @@ bool Gui::setItemNo(EventID id, int item_no)
     _needRender = true;
     return true;
   }
-  return false;  
+  return false;
 }
 
 PanelID Gui::addPanel(
