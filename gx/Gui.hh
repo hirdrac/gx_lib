@@ -124,8 +124,11 @@ class gx::Gui
     // process events & update drawLists
 
   [[nodiscard]] const DrawList& drawList() const { return _dl; }
+
   [[nodiscard]] EventID eventID() const { return _eventID; }
-    // id of element triggering an event
+  [[nodiscard]] GuiElemType eventType() const { return _eventType; }
+    // id/type of element triggering an event
+
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // true if GUI needs to be redrawn
 
@@ -170,8 +173,9 @@ class gx::Gui
   EventID _hoverID = 0;
   EventID _heldID = 0;
   EventID _focusID = 0;
-  EventID _eventID = 0;
   EventID _popupID = 0;
+  EventID _eventID = 0;
+  GuiElemType _eventType = GUI_NULL;
   GuiElemType _heldType = GUI_NULL;
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0;

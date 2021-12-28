@@ -158,7 +158,21 @@ int main(int argc, char* argv[])
     gui.update(win);
     needRedraw |= gui.needRedraw();
     if (gui.eventID() > 0) {
-      gx::println_err("GUI event:", gui.eventID());
+      gx::print_err("GUI event:", gui.eventID());
+      switch (gui.eventType()) {
+        case gx::GUI_ENTRY:
+          gx::println_err("\t", gui.getText(gui.eventID()));
+          break;
+        case gx::GUI_LISTSELECT:
+          gx::println_err("\t", gui.getItemNo(gui.eventID()));
+          break;
+        case gx::GUI_CHECKBOX:
+          gx::println_err("\t", gui.getBool(gui.eventID()));
+          break;
+        default:
+          gx::println_err();
+          break;
+      }
       if (gui.eventID() == 99) { running = false; }
     }
 

@@ -525,8 +525,9 @@ void Gui::clear()
 {
   _panels.clear();
   _focusID = 0;
-  _eventID = 0;
   _popupID = 0;
+  _eventID = 0;
+  _eventType = GUI_NULL;
   _needRender = true;
 }
 
@@ -579,6 +580,7 @@ void Gui::update(Window& win)
 {
   // clear event state that only persists for a single update
   _eventID = 0;
+  _eventType = GUI_NULL;
   _needRedraw = false;
 
   for (auto& pPtr : _panels) {
@@ -600,6 +602,7 @@ void Gui::update(Window& win)
 
     if (_heldType == GUI_BUTTON_HOLD && _eventID == 0) {
       _eventID = _heldID;
+      _eventType = _heldType;
     }
   }
 
@@ -741,6 +744,7 @@ void Gui::processMouseEvent(Window& win)
     if (_popupID != id) { activatePopup(id); }
     if (buttonEvent) {
       _eventID = id;
+      _eventType = type;
       usedEvent = true;
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
@@ -751,6 +755,7 @@ void Gui::processMouseEvent(Window& win)
         GuiElem& ls = *parent;
         GuiElem& e0 = ls.elems[0];
         _eventID = ls.id;
+        _eventType = ls.type;
         e0 = ePtr->elems[0];
         const float b = pPtr->theme->border;
         calcPos(*pPtr->theme, e0, ls._x + b, ls._y + b, ls._x + ls._w - b,
@@ -765,7 +770,10 @@ void Gui::processMouseEvent(Window& win)
       _heldType = type;
       _needRender = true;
       usedEvent = true;
-      if (type == GUI_BUTTON_PRESS) { _eventID = id; }
+      if (type == GUI_BUTTON_PRESS) {
+        _eventID = id;
+        _eventType = type;
+      }
     }
 
     if ((_heldType == GUI_BUTTON_PRESS || _heldType == GUI_BUTTON_HOLD)
@@ -781,6 +789,7 @@ void Gui::processMouseEvent(Window& win)
           && buttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
         _eventID = id;
+        _eventType = type;
         if (type == GUI_CHECKBOX) { ePtr->checkbox_set = !ePtr->checkbox_set; }
         usedEvent = true;
       }
@@ -865,6 +874,7 @@ void Gui::setFocusID(Window& win, EventID id)
   if (_textChanged) {
     _textChanged = false;
     _eventID = _focusID;
+    _eventType = GUI_ENTRY;
   }
   _focusID = id;
   if (id != 0) {
