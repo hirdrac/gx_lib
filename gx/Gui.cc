@@ -753,13 +753,14 @@ void Gui::processMouseEvent(Window& win)
       GuiElem* parent = findParentListSelect(pPtr->root, ePtr->item_no);
       if (parent) {
         GuiElem& ls = *parent;
+        ls.item_no = ePtr->item_no;
         GuiElem& e0 = ls.elems[0];
-        _eventID = ls.id;
-        _eventType = ls.type;
         e0 = ePtr->elems[0];
         const float b = pPtr->theme->border;
         calcPos(*pPtr->theme, e0, ls._x + b, ls._y + b, ls._x + ls._w - b,
                 ls._y + ls._h - b);
+        _eventID = ls.id;
+        _eventType = ls.type;
         _needRender = true;
         usedEvent = true;
       }
