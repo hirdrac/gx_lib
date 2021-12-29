@@ -152,6 +152,13 @@ class gx::Gui
     return (e == nullptr || e->type != GUI_LISTSELECT) ? 0 : e->item_no;
   }
 
+  [[nodiscard]] std::string eventText() const {
+    return getText(_eventID); }
+  [[nodiscard]] bool eventBool() const {
+    return getBool(_eventID); }
+  [[nodiscard]] int eventItemNo() const {
+    return getItemNo(_eventID); }
+
   bool setText(EventID id, std::string_view text);
   bool setBool(EventID id, bool val);
   bool setItemNo(EventID id, int item_no);

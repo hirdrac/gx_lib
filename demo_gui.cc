@@ -161,13 +161,13 @@ int main(int argc, char* argv[])
       gx::print_err("GUI event:", gui.eventID());
       switch (gui.eventType()) {
         case gx::GUI_ENTRY:
-          gx::println_err("\ttext:\"", gui.getText(gui.eventID()), "\"");
+          gx::println_err("\ttext:\"", gui.eventText(), "\"");
           break;
         case gx::GUI_LISTSELECT:
-          gx::println_err("\titem_no:", gui.getItemNo(gui.eventID()));
+          gx::println_err("\titem_no:", gui.eventItemNo());
           break;
         case gx::GUI_CHECKBOX:
-          gx::println_err("\tset:", gui.getBool(gui.eventID()));
+          gx::println_err("\tset:", gui.eventBool());
           break;
         default:
           gx::println_err();
