@@ -724,20 +724,16 @@ void Gui::processMouseEvent(Window& win)
     }
   }
 
-  bool usedEvent = false;
   if (isPopup(type)) {
     if (pressEvent && ePtr->_active) {
       // click on open menu button closes it
       deactivatePopups();
-      usedEvent = true;
     } else if (pressEvent) {
       // open menu with click
       if (_popupID != id) { activatePopup(id); }
-      usedEvent = true;
     } else if (isMenu(type) && popupType == GUI_MENU) {
       // new menu opened while holding button down
       if (_popupID != id) { activatePopup(id); }
-      usedEvent = true;
     }
   } else if (type == GUI_MENU_ITEM) {
     // activate on menu item to close sub-menus if neccessary
@@ -745,7 +741,6 @@ void Gui::processMouseEvent(Window& win)
     if (buttonEvent) {
       _eventID = id;
       _eventType = type;
-      usedEvent = true;
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
     if (_popupID != id) { activatePopup(id); }
@@ -762,7 +757,6 @@ void Gui::processMouseEvent(Window& win)
         _eventID = ls.id;
         _eventType = ls.type;
         _needRender = true;
-        usedEvent = true;
       }
     }
   } else {
@@ -770,7 +764,6 @@ void Gui::processMouseEvent(Window& win)
       _heldID = id;
       _heldType = type;
       _needRender = true;
-      usedEvent = true;
       if (type == GUI_BUTTON_PRESS) {
         _eventID = id;
         _eventType = type;
@@ -792,7 +785,6 @@ void Gui::processMouseEvent(Window& win)
         _eventID = id;
         _eventType = type;
         if (type == GUI_CHECKBOX) { ePtr->checkbox_set = !ePtr->checkbox_set; }
-        usedEvent = true;
       }
 
       _heldID = 0;
@@ -805,7 +797,7 @@ void Gui::processMouseEvent(Window& win)
     deactivatePopups();
   }
 
-  if (usedEvent) {
+  if (id != 0 && buttonEvent) {
     win.removeEvent(EVENT_MOUSE_BUTTON1);
   }
 }
