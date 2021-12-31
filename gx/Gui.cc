@@ -1,12 +1,7 @@
 //
 // gx/Gui.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
-
-// TODO: handle tab/enter/mouse select differently for entry
-// TODO: cursor movement for entry
-// TODO: allow right button to open menus & select menu items
-// TODO: menu item key short-cuts
 
 #include "Gui.hh"
 #include "Window.hh"
@@ -53,11 +48,9 @@ using namespace gx;
     case GUI_SUBMENU:
     case GUI_MENU_ITEM:
       return GUI_MENU;
-      break;
     case GUI_LISTSELECT:
     case GUI_LISTSELECT_ITEM:
       return GUI_LISTSELECT;
-      break;
     default:
       return GUI_NULL;
   }
