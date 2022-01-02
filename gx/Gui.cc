@@ -83,6 +83,8 @@ static bool activate(GuiElem& def, EventID id)
 {
   if (isPopup(def.type)) {
     if (popupType == GUI_NULL || (getPopupType(def.type) == popupType)) {
+      // FIXME: shouldn't find listselect/listselect_item if outside of
+      //   current listselect popup (ok for menus though)
       if (contains(def, x, y)) { return &def; }
       if (def._active) {
         GuiElem* e = findElemByXY(def.elems[1], x, y, GUI_NULL);
@@ -790,7 +792,7 @@ void Gui::processMouseEvent(Window& win)
     deactivatePopups();
   }
 
-  if (id != 0 && buttonEvent) {
+  if (type != GUI_NULL && buttonEvent) {
     win.removeEvent(EVENT_MOUSE_BUTTON1);
   }
 }
