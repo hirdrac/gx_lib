@@ -519,10 +519,14 @@ static inline T* findElemT(T* root, EventID id)
 void Gui::clear()
 {
   _panels.clear();
+  _hoverID = 0;
+  _heldID = 0;
   _focusID = 0;
   _popupID = 0;
   _eventID = 0;
   _eventType = GUI_NULL;
+  _heldType = GUI_NULL;
+  _eventTime = 0;
   _needRender = true;
 }
 
@@ -598,6 +602,7 @@ void Gui::update(Window& win)
     if (_heldType == GUI_BUTTON_HOLD && _eventID == 0) {
       _eventID = _heldID;
       _eventType = _heldType;
+      _eventTime = win.lastPollTime();
     }
   }
 
@@ -734,6 +739,7 @@ void Gui::processMouseEvent(Window& win)
     if (buttonEvent) {
       _eventID = id;
       _eventType = type;
+      _eventTime = win.lastPollTime();
       deactivatePopups();
     } else if (_popupID != id) {
       // activate on menu item to close sub-menus if neccessary
@@ -752,6 +758,7 @@ void Gui::processMouseEvent(Window& win)
                 ls._y + ls._h - b);
         _eventID = ls.id;
         _eventType = ls.type;
+        _eventTime = win.lastPollTime();
         deactivatePopups();
       }
     }
@@ -763,6 +770,7 @@ void Gui::processMouseEvent(Window& win)
       if (type == GUI_BUTTON_PRESS) {
         _eventID = id;
         _eventType = type;
+        _eventTime = win.lastPollTime();
       }
     }
     else if ((_heldType == GUI_BUTTON_PRESS || _heldType == GUI_BUTTON_HOLD)
@@ -777,6 +785,7 @@ void Gui::processMouseEvent(Window& win)
         // activate if cursor is over element & button is released
         _eventID = id;
         _eventType = type;
+        _eventTime = win.lastPollTime();
         if (type == GUI_CHECKBOX) { ePtr->checkbox_set = !ePtr->checkbox_set; }
       }
 
@@ -857,6 +866,7 @@ void Gui::setFocusID(Window& win, EventID id)
     _textChanged = false;
     _eventID = _focusID;
     _eventType = GUI_ENTRY;
+    _eventTime = win.lastPollTime();
   }
   _focusID = id;
   if (id != 0) {

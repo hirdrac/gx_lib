@@ -127,6 +127,7 @@ class gx::Gui
 
   [[nodiscard]] EventID eventID() const { return _eventID; }
   [[nodiscard]] GuiElemType eventType() const { return _eventType; }
+  [[nodiscard]] int64_t lastEventTime() const { return _eventTime; }
     // id/type of element triggering an event
 
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
@@ -152,12 +153,9 @@ class gx::Gui
     return (e == nullptr || e->type != GUI_LISTSELECT) ? 0 : e->item_no;
   }
 
-  [[nodiscard]] std::string eventText() const {
-    return getText(_eventID); }
-  [[nodiscard]] bool eventBool() const {
-    return getBool(_eventID); }
-  [[nodiscard]] int eventItemNo() const {
-    return getItemNo(_eventID); }
+  [[nodiscard]] std::string eventText() const { return getText(_eventID); }
+  [[nodiscard]] bool eventBool() const { return getBool(_eventID); }
+  [[nodiscard]] int eventItemNo() const { return getItemNo(_eventID); }
 
   bool setText(EventID id, std::string_view text);
   bool setBool(EventID id, bool val);
@@ -184,8 +182,9 @@ class gx::Gui
   EventID _eventID = 0;
   GuiElemType _eventType = GUI_NULL;
   GuiElemType _heldType = GUI_NULL;
+  int64_t _eventTime = 0;
   int64_t _lastCursorUpdate = 0;
-  uint32_t _cursorBlinkTime = 0;
+  uint32_t _cursorBlinkTime = 0; // cached theme value
   bool _cursorState = false;
   bool _needRender = true;
   bool _needRedraw = false;
