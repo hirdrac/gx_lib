@@ -662,6 +662,7 @@ void Gui::deactivatePopups()
 
 void Gui::activatePopup(EventID id)
 {
+  assert(id != 0);
   if (_popupID != 0) { deactivatePopups(); }
   for (auto& pPtr : _panels) { if (activate(pPtr->root, id)) break; }
   _popupID = id;
@@ -695,6 +696,8 @@ void Gui::processMouseEvent(Window& win)
           type = ePtr->type;
           pPtr = ptr.get();
         }
+
+        if (buttonEvent) { win.removeEvent(EVENT_MOUSE_BUTTON1); }
         break;
       }
     }
@@ -721,24 +724,22 @@ void Gui::processMouseEvent(Window& win)
 
   if (isPopup(type)) {
     if (pressEvent && ePtr->_active) {
-      // click on open menu button closes it
+      // click on open menu/listselect button closes popup
       deactivatePopups();
-    } else if (pressEvent) {
-      // open menu with click
-      if (_popupID != id) { activatePopup(id); }
-    } else if (isMenu(type) && popupType == GUI_MENU) {
-      // new menu opened while holding button down
+    } else if (pressEvent || (isMenu(type) && popupType == GUI_MENU)) {
+      // open menu/listselect with click OR open menu/sub-menu with mouse-over
       if (_popupID != id) { activatePopup(id); }
     }
   } else if (type == GUI_MENU_ITEM) {
-    // activate on menu item to close sub-menus if neccessary
-    if (_popupID != id) { activatePopup(id); }
     if (buttonEvent) {
       _eventID = id;
       _eventType = type;
+      deactivatePopups();
+    } else if (_popupID != id) {
+      // activate on menu item to close sub-menus if neccessary
+      activatePopup(id);
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
-    if (_popupID != id) { activatePopup(id); }
     if (buttonEvent) {
       GuiElem* parent = findParentListSelect(pPtr->root, ePtr->item_no);
       if (parent) {
@@ -751,7 +752,7 @@ void Gui::processMouseEvent(Window& win)
                 ls._y + ls._h - b);
         _eventID = ls.id;
         _eventType = ls.type;
-        _needRender = true;
+        deactivatePopups();
       }
     }
   } else {
@@ -764,16 +765,13 @@ void Gui::processMouseEvent(Window& win)
         _eventType = type;
       }
     }
-
-    if ((_heldType == GUI_BUTTON_PRESS || _heldType == GUI_BUTTON_HOLD)
-        && (_heldID != id)) {
+    else if ((_heldType == GUI_BUTTON_PRESS || _heldType == GUI_BUTTON_HOLD)
+               && (_heldID != id)) {
       // clear hold if cursor moves off BUTTON_PRESS/BUTTON_HOLD
       _heldID = 0;
       _heldType = GUI_NULL;
       _needRender = true;
-    }
-
-    if (!buttonDown && (_heldID != 0)) {
+    } else if (!buttonDown && (_heldID != 0)) {
       if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
           && buttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
@@ -786,14 +784,10 @@ void Gui::processMouseEvent(Window& win)
       _heldType = GUI_NULL;
       _needRender = true;
     }
-  }
 
-  if (_popupID != 0 && anyGuiButtonEvent && !isPopup(type)) {
-    deactivatePopups();
-  }
-
-  if (type != GUI_NULL && buttonEvent) {
-    win.removeEvent(EVENT_MOUSE_BUTTON1);
+    if (_popupID != 0 && anyGuiButtonEvent) {
+      deactivatePopups();
+    }
   }
 }
 

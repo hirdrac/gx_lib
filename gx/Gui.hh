@@ -83,10 +83,10 @@ struct gx::GuiElem
   };
 
   union {
-    bool checkbox_set;
-    int item_no;
-    EntryProps entry;
-    ImageProps image;
+    bool checkbox_set; // CHECKBOX
+    int item_no;       // LISTSELECT, LISTSELECT_ITEM
+    EntryProps entry;  // ENTRY
+    ImageProps image;  // IMAGE
   };
 
   // layout state
