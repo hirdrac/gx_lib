@@ -104,14 +104,13 @@ static bool activate(GuiElem& def, EventID id)
   return nullptr;
 }
 
-[[nodiscard]] static GuiElem* findItem(GuiElem& root, int item_no)
+[[nodiscard]] static GuiElem* findItem(GuiElem& root, int no)
 {
   for (auto& e : root.elems) {
-    if (e.type == GUI_LISTSELECT_ITEM
-        && (item_no == 0 || e.item_no == item_no)) {
+    if (e.type == GUI_LISTSELECT_ITEM && (no == 0 || e.itemNo == no)) {
       return &e;
     } else if (!e.elems.empty()) {
-      GuiElem* e2 = findItem(e, item_no);
+      GuiElem* e2 = findItem(e, no);
       if (e2) { return e2; }
     }
   }
@@ -577,6 +576,8 @@ bool Gui::getPanelLayout(PanelID id, Rect& layout) const
 
 void Gui::update(Window& win)
 {
+  const int64_t now = win.lastPollTime();
+
   // clear event state that only persists for a single update
   _eventID = 0;
   _eventType = GUI_NULL;
@@ -602,7 +603,7 @@ void Gui::update(Window& win)
     if (_heldType == GUI_BUTTON_HOLD && _eventID == 0) {
       _eventID = _heldID;
       _eventType = _heldType;
-      _eventTime = win.lastPollTime();
+      _eventTime = now;
     }
   }
 
@@ -612,8 +613,7 @@ void Gui::update(Window& win)
 
     if (_cursorBlinkTime > 0) {
       // check for cursor blink
-      const int64_t blinks =
-        (win.lastPollTime() - _lastCursorUpdate) / _cursorBlinkTime;
+      const int64_t blinks = (now - _lastCursorUpdate) / _cursorBlinkTime;
       if (blinks > 0) {
         _lastCursorUpdate += blinks * _cursorBlinkTime;
         if (blinks & 1) {
@@ -630,12 +630,11 @@ void Gui::update(Window& win)
     dc.clear();
     dc2.clear();
     _needRender = false;
-    const int64_t usec = win.lastPollTime();
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
       Panel& p = **it;
       const GuiTheme& thm = *p.theme;
-      _needRender |= drawElem(p.root, dc, dc2, usec, thm, &thm.panel);
+      _needRender |= drawElem(p.root, dc, dc2, now, thm, &thm.panel);
 
       if (!dc2.empty()) {
         dc.append(dc2);
@@ -646,7 +645,7 @@ void Gui::update(Window& win)
     if (_popupID != 0) {
       for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
         Panel& p = **it;
-        _needRender |= drawPopup(p.root, dc, dc2, usec, *p.theme);
+        _needRender |= drawPopup(p.root, dc, dc2, now, *p.theme);
 
         if (!dc2.empty()) {
           dc.append(dc2);
@@ -747,10 +746,10 @@ void Gui::processMouseEvent(Window& win)
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
     if (buttonEvent) {
-      GuiElem* parent = findParentListSelect(pPtr->root, ePtr->item_no);
+      GuiElem* parent = findParentListSelect(pPtr->root, ePtr->itemNo);
       if (parent) {
         GuiElem& ls = *parent;
-        ls.item_no = ePtr->item_no;
+        ls.itemNo = ePtr->itemNo;
         GuiElem& e0 = ls.elems[0];
         e0 = ePtr->elems[0];
         const float b = pPtr->theme->border;
@@ -786,7 +785,7 @@ void Gui::processMouseEvent(Window& win)
         _eventID = id;
         _eventType = type;
         _eventTime = win.lastPollTime();
-        if (type == GUI_CHECKBOX) { ePtr->checkbox_set = !ePtr->checkbox_set; }
+        if (type == GUI_CHECKBOX) { ePtr->checkboxSet = !ePtr->checkboxSet; }
       }
 
       _heldID = 0;
@@ -908,21 +907,21 @@ bool Gui::setBool(EventID id, bool val)
     if (!e) { continue; }
 
     if (e->type != GUI_CHECKBOX) { break; }
-    e->checkbox_set = val;
+    e->checkboxSet = val;
     _needRender = true;
     return true;
   }
   return false;
 }
 
-bool Gui::setItemNo(EventID id, int item_no)
+bool Gui::setItemNo(EventID id, int no)
 {
   for (auto& pPtr : _panels) {
     GuiElem* e = findElemT(&pPtr->root, id);
     if (!e) { continue; }
 
     if (e->type != GUI_LISTSELECT) { break; }
-    e->item_no = item_no;
+    e->itemNo = no;
     _needRender = true;
     return true;
   }
@@ -959,12 +958,12 @@ void Gui::initElem(GuiElem& def)
   if (isMenu(def.type) || def.type == GUI_LISTSELECT_ITEM) {
     def.id = --_lastUniqueID;
   } else if (def.type == GUI_LISTSELECT) {
-    GuiElem* e = findItem(def, def.item_no);
+    GuiElem* e = findItem(def, def.itemNo);
     if (e) {
       GuiElem& e0 = def.elems[0];
       e0 = e->elems[0];
       e0.align = ALIGN_CENTER_LEFT;
-      def.item_no = e->item_no;
+      def.itemNo = e->itemNo;
     }
   }
   for (GuiElem& e : def.elems) { initElem(e); }
@@ -1025,7 +1024,7 @@ bool Gui::drawElem(
       const float cw = thm.font->calcWidth(thm.checkCode) + (b*2.0f);
       const float ch = float(thm.font->size() - 1) + (b*2.0f);
       drawRec(dc, def._x, def._y, cw, ch, style);
-      if (def.checkbox_set) {
+      if (def.checkboxSet) {
         dc2.color(style->textColor);
         dc2.glyph(TextFormatting{thm.font, float(thm.textSpacing)},
                   def._x + b + thm.checkXOffset, def._y + b + thm.checkYOffset,
