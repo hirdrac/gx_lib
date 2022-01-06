@@ -526,6 +526,7 @@ void Gui::clear()
   _eventType = GUI_NULL;
   _heldType = GUI_NULL;
   _eventTime = 0;
+  _heldTime = 0;
   _needRender = true;
 }
 
@@ -601,9 +602,12 @@ void Gui::update(Window& win)
     }
 
     if (_heldType == GUI_BUTTON_HOLD && _eventID == 0) {
-      _eventID = _heldID;
-      _eventType = _heldType;
-      _eventTime = now;
+      if (_repeatDelay >= 0 && (now - _heldTime) > _repeatDelay) {
+        _heldTime += _repeatDelay * ((now - _heldTime) / _repeatDelay);
+        _eventID = _heldID;
+        _eventType = _heldType;
+        _eventTime = now;
+      }
     }
   }
 
@@ -765,8 +769,10 @@ void Gui::processMouseEvent(Window& win)
     if (pressEvent && id != 0) {
       _heldID = id;
       _heldType = type;
+      _heldTime = win.lastPollTime();
+      _repeatDelay = (type == GUI_BUTTON_HOLD) ? ePtr->repeatDelay : 0;
       _needRender = true;
-      if (type == GUI_BUTTON_PRESS) {
+      if (type == GUI_BUTTON_PRESS || type == GUI_BUTTON_HOLD) {
         _eventID = id;
         _eventType = type;
         _eventTime = win.lastPollTime();
@@ -777,6 +783,8 @@ void Gui::processMouseEvent(Window& win)
       // clear hold if cursor moves off BUTTON_PRESS/BUTTON_HOLD
       _heldID = 0;
       _heldType = GUI_NULL;
+      _heldTime = 0;
+      _repeatDelay = 0;
       _needRender = true;
     } else if (!buttonDown && (_heldID != 0)) {
       if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
@@ -790,6 +798,8 @@ void Gui::processMouseEvent(Window& win)
 
       _heldID = 0;
       _heldType = GUI_NULL;
+      _heldTime = 0;
+      _repeatDelay = 0;
       _needRender = true;
     }
 

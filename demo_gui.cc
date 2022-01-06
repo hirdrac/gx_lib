@@ -1,6 +1,6 @@
 //
 // demo_gui.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #include "gx/Window.hh"
@@ -43,9 +43,12 @@ int main(int argc, char* argv[])
         gx::guiButton(4, "B4"),
         gx::guiVLine(),
         gx::guiButton(5, gx::ALIGN_VJUSTIFY, "B5")),
+      gx::guiLabel(gx::ALIGN_CENTER, "\nRepeating Buttons"),
       gx::guiHFrame(
-        gx::guiButtonPress(77, "PRESS"),
-        gx::guiButtonHold(88, "HOLD")),
+        gx::ALIGN_CENTER,
+        gx::guiButtonPress(77, "ONCE"),
+        gx::guiButtonHold(78, 400000, "SLOW"),
+        gx::guiButtonHold(79, 1, "FAST")),
       gx::guiHLine(),
       gx::guiButton(99, gx::ALIGN_RIGHT, " QUIT ")));
 
@@ -76,7 +79,7 @@ int main(int argc, char* argv[])
 
   // text entry demo
   gui.newPanel(
-    theme, 60, 320, gx::ALIGN_TOP_LEFT,
+    theme, 60, 400, gx::ALIGN_TOP_LEFT,
     gx::guiVFrame(
       gx::guiHFrame(
         gx::guiLabel(gx::ALIGN_CENTER_LEFT, " R"),

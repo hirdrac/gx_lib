@@ -83,6 +83,7 @@ struct gx::GuiElem
   };
 
   union {
+    int64_t repeatDelay; // BUTTON_HOLD
     bool checkboxSet;    // CHECKBOX
     int itemNo;          // LISTSELECT, LISTSELECT_ITEM
     EntryProps entry;    // ENTRY
@@ -183,6 +184,8 @@ class gx::Gui
   GuiElemType _eventType = GUI_NULL;
   GuiElemType _heldType = GUI_NULL;
   int64_t _eventTime = 0;
+  int64_t _heldTime = 0;
+  int64_t _repeatDelay = 0;
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0; // cached theme value
   bool _cursorState = false;
@@ -334,27 +337,37 @@ namespace gx {
 
   // ButtonHold
   // (triggered repeatedly while held)
-  inline GuiElem guiButtonHold(EventID id, const GuiElem& elem)
+  inline GuiElem guiButtonHold(
+    EventID id, int64_t repeat_delay, const GuiElem& elem)
   {
-    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, id, {elem}};
+    GuiElem e{GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, id, {elem}};
+    e.repeatDelay = repeat_delay;
+    return e;
   }
 
   inline GuiElem guiButtonHold(
-    EventID id, AlignEnum align, const GuiElem& elem)
+    EventID id, AlignEnum align, int64_t repeat_delay, const GuiElem& elem)
   {
-    return {GUI_BUTTON_HOLD, align, id, {elem}};
-  }
-
-  inline GuiElem guiButtonHold(EventID id, std::string_view text)
-  {
-    return {GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, id,
-            {guiLabel(ALIGN_CENTER, text)}};
+    GuiElem e{GUI_BUTTON_HOLD, align, id, {elem}};
+    e.repeatDelay = repeat_delay;
+    return e;
   }
 
   inline GuiElem guiButtonHold(
-    EventID id, AlignEnum align, std::string_view text)
+    EventID id, int64_t repeat_delay, std::string_view text)
   {
-    return {GUI_BUTTON_HOLD, align, id, {guiLabel(ALIGN_CENTER, text)}};
+    GuiElem e{GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, id,
+              {guiLabel(ALIGN_CENTER, text)}};
+    e.repeatDelay = repeat_delay;
+    return e;
+  }
+
+  inline GuiElem guiButtonHold(
+    EventID id, AlignEnum align, int64_t repeat_delay, std::string_view text)
+  {
+    GuiElem e{GUI_BUTTON_HOLD, align, id, {guiLabel(ALIGN_CENTER, text)}};
+    e.repeatDelay = repeat_delay;
+    return e;
   }
 
   // Checkbox
