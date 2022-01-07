@@ -324,7 +324,6 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     case GUI_BACKGROUND:
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
-    case GUI_BUTTON_HOLD:
     case GUI_MENU_ITEM: {
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
@@ -528,6 +527,7 @@ void Gui::clear()
   _eventTime = 0;
   _heldTime = 0;
   _needRender = true;
+  _textChanged = false;
 }
 
 void Gui::deletePanel(PanelID id)
@@ -601,9 +601,11 @@ void Gui::update(Window& win)
       processMouseEvent(win);
     }
 
-    if (_heldType == GUI_BUTTON_HOLD && _eventID == 0) {
+    if (_heldType == GUI_BUTTON_PRESS && _eventID == 0) {
       if (_repeatDelay >= 0 && (now - _heldTime) > _repeatDelay) {
-        _heldTime += _repeatDelay * ((now - _heldTime) / _repeatDelay);
+        if (_repeatDelay > 0) {
+          _heldTime += _repeatDelay * ((now - _heldTime) / _repeatDelay);
+        }
         _eventID = _heldID;
         _eventType = _heldType;
         _eventTime = now;
@@ -770,17 +772,15 @@ void Gui::processMouseEvent(Window& win)
       _heldID = id;
       _heldType = type;
       _heldTime = win.lastPollTime();
-      _repeatDelay = (type == GUI_BUTTON_HOLD) ? ePtr->repeatDelay : 0;
+      _repeatDelay = (type == GUI_BUTTON_PRESS) ? ePtr->repeatDelay : -1;
       _needRender = true;
-      if (type == GUI_BUTTON_PRESS || type == GUI_BUTTON_HOLD) {
+      if (type == GUI_BUTTON_PRESS) {
         _eventID = id;
         _eventType = type;
         _eventTime = win.lastPollTime();
       }
-    }
-    else if ((_heldType == GUI_BUTTON_PRESS || _heldType == GUI_BUTTON_HOLD)
-               && (_heldID != id)) {
-      // clear hold if cursor moves off BUTTON_PRESS/BUTTON_HOLD
+    } else if ((_heldType == GUI_BUTTON_PRESS) && (_heldID != id)) {
+      // clear hold if cursor moves off BUTTON_PRESS
       _heldID = 0;
       _heldType = GUI_NULL;
       _heldTime = 0;
@@ -1011,7 +1011,6 @@ bool Gui::drawElem(
     }
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
-    case GUI_BUTTON_HOLD:
       if (!def._enabled) {
         style = &thm.buttonDisable;
       } else if (def.id == _heldID) {

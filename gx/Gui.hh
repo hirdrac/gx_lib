@@ -38,8 +38,7 @@ namespace gx {
 
     // event types
     GUI_BUTTON,          // activated on release
-    GUI_BUTTON_PRESS,    // activated once on press
-    GUI_BUTTON_HOLD,     // activated continuously on hold&press
+    GUI_BUTTON_PRESS,    // activated on press, optionally repeat if held
     GUI_CHECKBOX,        // toggle value on release
     GUI_MENU,            // button hold or release on menu opens menu
     GUI_MENU_ITEM,       // activated on press or release
@@ -83,7 +82,7 @@ struct gx::GuiElem
   };
 
   union {
-    int64_t repeatDelay; // BUTTON_HOLD
+    int64_t repeatDelay; // BUTTON_PRESS
     bool checkboxSet;    // CHECKBOX
     int itemNo;          // LISTSELECT, LISTSELECT_ITEM
     EntryProps entry;    // ENTRY
@@ -314,33 +313,40 @@ namespace gx {
   // (triggered on initial button press)
   inline GuiElem guiButtonPress(EventID id, const GuiElem& elem)
   {
-    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
+    GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
+    e.repeatDelay = -1; // disabled
+    return e;
   }
 
   inline GuiElem guiButtonPress(
     EventID id, AlignEnum align, const GuiElem& elem)
   {
-    return {GUI_BUTTON_PRESS, align, id, {elem}};
+    GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
+    e.repeatDelay = -1; // disabled
+    return e;
   }
 
   inline GuiElem guiButtonPress(EventID id, std::string_view text)
   {
-    return {GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
-            {guiLabel(ALIGN_CENTER, text)}};
+    GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
+              {guiLabel(ALIGN_CENTER, text)}};
+    e.repeatDelay = -1; // disabled
+    return e;
   }
 
   inline GuiElem guiButtonPress(
     EventID id, AlignEnum align, std::string_view text)
   {
-    return {GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
+    GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
+    e.repeatDelay = -1; // disabled
+    return e;
   }
 
-  // ButtonHold
-  // (triggered repeatedly while held)
+  // ButtonPress with repeat if held
   inline GuiElem guiButtonHold(
     EventID id, int64_t repeat_delay, const GuiElem& elem)
   {
-    GuiElem e{GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, id, {elem}};
+    GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
     e.repeatDelay = repeat_delay;
     return e;
   }
@@ -348,7 +354,7 @@ namespace gx {
   inline GuiElem guiButtonHold(
     EventID id, AlignEnum align, int64_t repeat_delay, const GuiElem& elem)
   {
-    GuiElem e{GUI_BUTTON_HOLD, align, id, {elem}};
+    GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
     e.repeatDelay = repeat_delay;
     return e;
   }
@@ -356,7 +362,7 @@ namespace gx {
   inline GuiElem guiButtonHold(
     EventID id, int64_t repeat_delay, std::string_view text)
   {
-    GuiElem e{GUI_BUTTON_HOLD, ALIGN_TOP_LEFT, id,
+    GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
               {guiLabel(ALIGN_CENTER, text)}};
     e.repeatDelay = repeat_delay;
     return e;
@@ -365,7 +371,7 @@ namespace gx {
   inline GuiElem guiButtonHold(
     EventID id, AlignEnum align, int64_t repeat_delay, std::string_view text)
   {
-    GuiElem e{GUI_BUTTON_HOLD, align, id, {guiLabel(ALIGN_CENTER, text)}};
+    GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
     e.repeatDelay = repeat_delay;
     return e;
   }
