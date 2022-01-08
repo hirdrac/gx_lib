@@ -219,12 +219,6 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
   }
 }
 
-static inline void drawRec(DrawContext& dc, const GuiElem& e,
-                           const GuiTheme::Style* style)
-{
-  drawRec(dc, e._x, e._y, e._w, e._h, style);
-}
-
 static void resizedElem(const GuiTheme& thm, GuiElem& def)
 {
   // update children element sizes based on parent resize
@@ -587,8 +581,7 @@ void Gui::update(Window& win)
     // size & position update
     if (p.needLayout) {
       calcSize(*p.theme, p.root);
-      calcPos(*p.theme, p.root, p.layout.x, p.layout.y,
-              p.layout.x + p.layout.w, p.layout.y + p.layout.h);
+      calcPos(*p.theme, p.root, 0, 0, p.layout.w, p.layout.h);
       p.needLayout = false;
     }
   }
@@ -636,8 +629,7 @@ void Gui::update(Window& win)
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
       Panel& p = **it;
-      const GuiTheme& thm = *p.theme;
-      _needRender |= drawElem(p.root, dc, dc2, now, thm, &thm.panel);
+      _needRender |= drawElem(p, p.root, dc, dc2, now, &(p.theme->panel));
 
       if (!dc2.empty()) {
         dc.append(dc2);
@@ -648,7 +640,7 @@ void Gui::update(Window& win)
     if (_popupID != 0) {
       for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
         Panel& p = **it;
-        _needRender |= drawPopup(p.root, dc, dc2, now, *p.theme);
+        _needRender |= drawPopup(p, p.root, dc, dc2, now);
 
         if (!dc2.empty()) {
           dc.append(dc2);
@@ -696,7 +688,10 @@ void Gui::processMouseEvent(Window& win)
   GuiElemType type = GUI_NULL;
   if (win.mouseIn()) {
     for (auto& ptr : _panels) {
-      ePtr = findElemByXY(ptr->root, win.mouseX(), win.mouseY(), popupType);
+      const Panel& p = *ptr;
+      const float mx = win.mouseX() - p.layout.x;
+      const float my = win.mouseY() - p.layout.y;
+      ePtr = findElemByXY(ptr->root, mx, my, popupType);
       if (ePtr) {
         if (ePtr->_enabled) {
           id = ePtr->id;
@@ -950,7 +945,7 @@ void Gui::layout(Panel& p, float x, float y, AlignEnum align)
   p.needLayout = false;
   p.root.align = align;
   calcSize(thm, p.root);
-  calcPos(thm, p.root, x, y, x + p.layout.w, y + p.layout.h);
+  calcPos(thm, p.root, 0, 0, p.layout.w, p.layout.h);
   _needRender = true;
 }
 
@@ -971,33 +966,39 @@ void Gui::initElem(GuiElem& def)
 }
 
 bool Gui::drawElem(
-  GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
-  const GuiTheme& thm, const GuiTheme::Style* style) const
+  const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  int64_t usec, const GuiTheme::Style* style) const
 {
+  const GuiTheme& thm = *p.theme;
+  const float ex = def._x + p.layout.x;
+  const float ey = def._y + p.layout.y;
+  const float ew = def._w;
+  const float eh = def._h;
+
   bool needRedraw = false; // use for anim trigger later
   switch (def.type) {
     case GUI_BACKGROUND:
       assert(style != nullptr);
-      drawRec(dc, def, style);
+      drawRec(dc, ex, ey, ew, eh, style);
       break;
     case GUI_LABEL:
       assert(style != nullptr);
       dc2.color(style->textColor);
       dc2.text(TextFormatting{thm.font, float(thm.textSpacing)},
-               def._x, def._y, ALIGN_TOP_LEFT, def.text);
+               ex, ey, ALIGN_TOP_LEFT, def.text);
       break;
     case GUI_HLINE: {
       const float b = thm.border;
       assert(style != nullptr);
       dc.color(style->textColor);
-      dc.rectangle(def._x, def._y + b, def._w, def._h - (b*2));
+      dc.rectangle(ex, ey + b, ew, eh - (b*2));
       break;
     }
     case GUI_VLINE: {
       const float b = thm.border;
       assert(style != nullptr);
       dc.color(style->textColor);
-      dc.rectangle(def._x + b, def._y, def._w - (b*2), def._h);
+      dc.rectangle(ex + b, ey, ew - (b*2), eh);
       break;
     }
     case GUI_BUTTON:
@@ -1010,7 +1011,7 @@ bool Gui::drawElem(
       } else {
         style = (def.id == _hoverID) ? &thm.buttonHover : &thm.button;
       }
-      drawRec(dc, def, style);
+      drawRec(dc, ex, ey, ew, eh, style);
       break;
     case GUI_CHECKBOX: {
       if (!def._enabled) {
@@ -1023,11 +1024,11 @@ bool Gui::drawElem(
       const float b = thm.border;
       const float cw = thm.font->calcWidth(thm.checkCode) + (b*2.0f);
       const float ch = float(thm.font->size() - 1) + (b*2.0f);
-      drawRec(dc, def._x, def._y, cw, ch, style);
+      drawRec(dc, ex, ey, cw, ch, style);
       if (def.checkboxSet) {
         dc2.color(style->textColor);
         dc2.glyph(TextFormatting{thm.font, float(thm.textSpacing)},
-                  def._x + b + thm.checkXOffset, def._y + b + thm.checkYOffset,
+                  ex + b + thm.checkXOffset, ey + b + thm.checkYOffset,
                   ALIGN_TOP_LEFT, thm.checkCode);
       }
       break;
@@ -1035,25 +1036,25 @@ bool Gui::drawElem(
     case GUI_MENU:
       style = def._active ? &thm.menuButtonOpen
         : ((def.id == _hoverID) ? &thm.menuButtonHover : &thm.menuButton);
-      drawRec(dc, def, style);
-      needRedraw |= drawElem(def.elems[0], dc, dc2, usec, thm, style);
+      drawRec(dc, ex, ey, ew, eh, style);
+      needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
       break;
     case GUI_MENU_ITEM:
       if (!def._enabled) {
         style = &thm.menuItemDisable;
       } else if (def.id == _hoverID) {
         style = &thm.menuItemSelect;
-        drawRec(dc, def, style);
+        drawRec(dc, ex, ey, ew, eh, style);
       }
       break;
     case GUI_SUBMENU: {
       if (def._active) {
         style = &thm.menuItemSelect;
-        drawRec(dc, def, style);
+        drawRec(dc, ex, ey, ew, eh, style);
       }
-      needRedraw |= drawElem(def.elems[0], dc, dc2, usec, thm, style);
+      needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
       const float b = thm.border;
-      dc2.glyph(TextFormatting{thm.font, 0}, def._x + def._w, def._y + b,
+      dc2.glyph(TextFormatting{thm.font, 0}, ex + ew, ey + b,
                 ALIGN_TOP_RIGHT, thm.subMenuCode);
       break;
     }
@@ -1065,10 +1066,10 @@ bool Gui::drawElem(
       } else {
         style = (def.id == _hoverID) ? &thm.listSelectHover : &thm.listSelect;
       }
-      drawRec(dc, def, style);
-      needRedraw |= drawElem(def.elems[0], dc, dc2, usec, thm, style);
+      drawRec(dc, ex, ey, ew, eh, style);
+      needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
       const float b = thm.border;
-      dc2.glyph(TextFormatting{thm.font, 0}, def._x + def._w - b, def._y + b,
+      dc2.glyph(TextFormatting{thm.font, 0}, ex + ew - b, ey + b,
                 ALIGN_TOP_RIGHT, thm.listSelectCode);
       break;
     }
@@ -1077,7 +1078,7 @@ bool Gui::drawElem(
         style = &thm.listSelectItemDisable;
       } else if (def.id == _hoverID) {
         style = &thm.listSelectItemSelect;
-        drawRec(dc, def, style);
+        drawRec(dc, ex, ey, ew, eh, style);
       }
       break;
     case GUI_ENTRY: {
@@ -1086,49 +1087,49 @@ bool Gui::drawElem(
       } else {
         style = (def.id == _focusID) ? &thm.entryFocus : &thm.entry;
       }
-      drawRec(dc, def, style);
+      drawRec(dc, ex, ey, ew, eh, style);
       const std::string txt = (def.entry.type == ENTRY_PASSWORD)
         ? passwordStr(thm.passwordCode, def.text.size()) : def.text;
       const RGBA8 textColor = style->textColor;
       const float cw = thm.cursorWidth;
       const float tw = thm.font->calcWidth(txt);
       const float fs = float(thm.font->size());
-      const float maxWidth = def._w - thm.entryLeftMargin
+      const float maxWidth = ew - thm.entryLeftMargin
         - thm.entryRightMargin - cw;
-      float tx = def._x + thm.entryLeftMargin;
+      float tx = ex + thm.entryLeftMargin;
       if (tw > maxWidth) {
         // text doesn't fit in entry
         const RGBA8 c0 = textColor & 0x00ffffff;
         if (def.id == _focusID) {
           // text being edited so show text end where cursor is
-          dc2.hgradiant(def._x, c0, tx + (fs * .5f), textColor);
+          dc2.hgradiant(ex, c0, tx + (fs * .5f), textColor);
           tx -= tw - maxWidth;
         } else {
           // show text start when not in focus
-          dc2.hgradiant(def._x + def._w - thm.entryRightMargin - (fs * .5f),
-                        textColor, def._x + def._w, c0);
+          dc2.hgradiant(ex + ew - thm.entryRightMargin - (fs * .5f),
+                        textColor, ex + ew, c0);
         }
       } else {
         dc2.color(textColor);
         if (HAlign(def.entry.align) == ALIGN_RIGHT) {
-          tx = def._x + def._w - (tw + cw + thm.entryRightMargin);
+          tx = ex + ew - (tw + cw + thm.entryRightMargin);
         } else if (HAlign(def.entry.align) != ALIGN_LEFT) { // HCENTER
-          tx = def._x + ((def._w - tw) * .5f);
+          tx = ex + ((ew - tw) * .5f);
         }
       }
       dc2.text(TextFormatting{thm.font, float(thm.textSpacing)},
-               tx, def._y + thm.entryTopMargin, ALIGN_TOP_LEFT, txt,
-               {def._x, def._y, def._w, def._h});
+               tx, ey + thm.entryTopMargin, ALIGN_TOP_LEFT, txt,
+               {ex, ey, ew, eh});
       if (def.id == _focusID && _cursorState) {
         // draw cursor
         dc.color(thm.cursorColor);
-        dc.rectangle(tx + tw, def._y + thm.entryTopMargin, cw, fs - 1.0f);
+        dc.rectangle(tx + tw, ey + thm.entryTopMargin, cw, fs - 1.0f);
       }
       break;
     }
     case GUI_IMAGE:
       dc.texture(def.image.texId);
-      dc.rectangle(def._x + thm.border, def._y + thm.border,
+      dc.rectangle(ex + thm.border, ey + thm.border,
                    def.image.width, def.image.height,
                    def.image.texCoord0, def.image.texCoord1);
       break;
@@ -1143,29 +1144,29 @@ bool Gui::drawElem(
   // draw child elements
   if (!isPopup(def.type)) {
     for (auto& e : def.elems) {
-      needRedraw |= drawElem(e, dc, dc2, usec, thm, style);
+      needRedraw |= drawElem(p, e, dc, dc2, usec, style);
     }
   }
   return needRedraw;
 }
 
-bool Gui::drawPopup(
-  GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
-  const GuiTheme& thm) const
+bool Gui::drawPopup(const Panel& p, GuiElem& def, DrawContext& dc,
+                    DrawContext& dc2, int64_t usec) const
 {
   bool needRedraw = false; // use for anim trigger later
   if (isPopup(def.type)) {
     // menu/listselect frame & items
     if (def._active) {
+      const GuiTheme& thm = *p.theme;
       GuiElem& e1 = def.elems[1];
       needRedraw |= drawElem(
-        e1, dc, dc2, usec, thm,
+        p, e1, dc, dc2, usec,
         isMenu(def.type) ? &thm.menuFrame : &thm.listSelectFrame);
       // continue popup draw for possible active sub-menu
-      needRedraw |= drawPopup(e1, dc, dc2, usec, thm);
+      needRedraw |= drawPopup(p, e1, dc, dc2, usec);
     }
   } else {
-    for (auto& e : def.elems) { needRedraw |= drawPopup(e, dc, dc2, usec, thm); }
+    for (auto& e : def.elems) { needRedraw |= drawPopup(p, e, dc, dc2, usec); }
   }
   return needRedraw;
 }

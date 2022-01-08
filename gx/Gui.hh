@@ -90,8 +90,9 @@ struct gx::GuiElem
   };
 
   // layout state
-  float _x = 0, _y = 0, _w = 0, _h = 0; // layout position/size
-  bool _active = false;                 // popup/menu activated
+  float _x = 0, _y = 0;  // layout position relative to panel
+  float _w = 0, _h = 0;  // layout size
+  bool _active = false;  // popup/menu activated
   bool _enabled = true;
 
   GuiElem()
@@ -201,10 +202,10 @@ class gx::Gui
   void initElem(GuiElem& def);
   void deactivatePopups();
   void activatePopup(EventID id);
-  bool drawElem(GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
-                const GuiTheme& thm, const GuiTheme::Style* style) const;
-  bool drawPopup(GuiElem& def, DrawContext& dc, DrawContext& dc2, int64_t usec,
-                 const GuiTheme& thm) const;
+  bool drawElem(const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+                int64_t usec, const GuiTheme::Style* style) const;
+  bool drawPopup(const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+                 int64_t usec) const;
 
   [[nodiscard]] Panel* findPanel(PanelID id);
   [[nodiscard]] const Panel* findPanel(PanelID id) const;
