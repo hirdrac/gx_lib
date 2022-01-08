@@ -184,7 +184,7 @@ class gx::Gui
   GuiElemType _heldType = GUI_NULL;
   int64_t _eventTime = 0;
   int64_t _heldTime = 0;
-  int64_t _repeatDelay = 0;
+  int64_t _repeatDelay = -1;
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0; // cached theme value
   bool _cursorState = false;
@@ -212,6 +212,13 @@ class gx::Gui
   [[nodiscard]] const GuiElem* findElem(EventID id) const;
   [[nodiscard]] GuiElem* findNextElem(EventID id, GuiElemType type = GUI_NULL);
   [[nodiscard]] GuiElem* findPrevElem(EventID id, GuiElemType type = GUI_NULL);
+
+  void clearHeld() {
+    _heldID = 0;
+    _heldType = GUI_NULL;
+    _heldTime = 0;
+    _repeatDelay = -1;
+  }
 };
 
 // **** Inline Implementations ****

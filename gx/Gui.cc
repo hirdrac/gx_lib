@@ -517,15 +517,13 @@ static inline T* findElemT(T* root, EventID id)
 void Gui::clear()
 {
   _panels.clear();
+  clearHeld();
   _hoverID = 0;
-  _heldID = 0;
   _focusID = 0;
   _popupID = 0;
   _eventID = 0;
   _eventType = GUI_NULL;
-  _heldType = GUI_NULL;
   _eventTime = 0;
-  _heldTime = 0;
   _needRender = true;
   _textChanged = false;
 }
@@ -579,7 +577,7 @@ void Gui::update(Window& win)
 {
   const int64_t now = win.lastPollTime();
 
-  // clear event state that only persists for a single update
+  // clear state that only persists for a single update
   _eventID = 0;
   _eventType = GUI_NULL;
   _needRedraw = false;
@@ -601,15 +599,14 @@ void Gui::update(Window& win)
       processMouseEvent(win);
     }
 
-    if (_heldType == GUI_BUTTON_PRESS && _eventID == 0) {
-      if (_repeatDelay >= 0 && (now - _heldTime) > _repeatDelay) {
-        if (_repeatDelay > 0) {
-          _heldTime += _repeatDelay * ((now - _heldTime) / _repeatDelay);
-        }
-        _eventID = _heldID;
-        _eventType = _heldType;
-        _eventTime = now;
+    if (_eventID == 0 && _heldID != 0 && _repeatDelay >= 0
+        && (now - _heldTime) > _repeatDelay) {
+      if (_repeatDelay > 0) {
+        _heldTime += _repeatDelay * ((now - _heldTime) / _repeatDelay);
       }
+      _eventID = _heldID;
+      _eventType = _heldType;
+      _eventTime = now;
     }
   }
 
@@ -781,10 +778,7 @@ void Gui::processMouseEvent(Window& win)
       }
     } else if ((_heldType == GUI_BUTTON_PRESS) && (_heldID != id)) {
       // clear hold if cursor moves off BUTTON_PRESS
-      _heldID = 0;
-      _heldType = GUI_NULL;
-      _heldTime = 0;
-      _repeatDelay = 0;
+      clearHeld();
       _needRender = true;
     } else if (!buttonDown && (_heldID != 0)) {
       if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
@@ -796,10 +790,7 @@ void Gui::processMouseEvent(Window& win)
         if (type == GUI_CHECKBOX) { ePtr->checkboxSet = !ePtr->checkboxSet; }
       }
 
-      _heldID = 0;
-      _heldType = GUI_NULL;
-      _heldTime = 0;
-      _repeatDelay = 0;
+      clearHeld();
       _needRender = true;
     }
 
