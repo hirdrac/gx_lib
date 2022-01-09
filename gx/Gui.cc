@@ -16,12 +16,6 @@
 using namespace gx;
 
 
-[[nodiscard]] static bool contains(const GuiElem& e, float x, float y)
-{
-  return (x >= e._x) && (x < (e._x + e._w))
-    && (y >= e._y) && (y < (e._y + e._h));
-}
-
 [[nodiscard]] static int calcLines(std::string_view text)
 {
   if (text.empty()) { return 0; }
@@ -76,6 +70,12 @@ static bool activate(GuiElem& def, EventID id)
     for (auto& e : def.elems) { def._active |= activate(e, id); }
   }
   return def._active;
+}
+
+[[nodiscard]] static bool contains(const GuiElem& e, float x, float y)
+{
+  return (x >= e._x) && (x < (e._x + e._w))
+    && (y >= e._y) && (y < (e._y + e._h));
 }
 
 [[nodiscard]] static GuiElem* findElemByXY(
