@@ -1,6 +1,6 @@
 //
 // gx/Window.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #include "Window.hh"
@@ -191,6 +191,8 @@ void Window::setMousePos(float x, float y)
   if (_renderer) {
     assert(isMainThread());
     glfwSetCursorPos(_renderer->window(), double(x), double(y));
+    _mouseX = x;
+    _mouseY = y;
   }
 }
 
