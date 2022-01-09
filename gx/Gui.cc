@@ -224,28 +224,36 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
   // update children element sizes based on parent resize
   // (usually because of justify alignment)
   switch (def.type) {
-    case GUI_BACKGROUND: {
-      GuiElem& e0 = def.elems[0];
-      float b2 = thm.border * 2.0f;
-      e0._w = def._w - b2;
-      e0._h = def._h - b2;
-      resizedElem(thm, e0);
-      break;
-    }
-    case GUI_VFRAME:
-      for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_HJUSTIFY) { e._w = def._w; resizedElem(thm, e); }
-      }
-      break;
     case GUI_HFRAME:
       for (GuiElem& e : def.elems) {
         if (e.align & ALIGN_VJUSTIFY) { e._h = def._h; resizedElem(thm, e); }
       }
       break;
+    case GUI_VFRAME:
+      for (GuiElem& e : def.elems) {
+        if (e.align & ALIGN_HJUSTIFY) { e._w = def._w; resizedElem(thm, e); }
+      }
+      break;
+    case GUI_PANEL: {
+      GuiElem& e0 = def.elems[0];
+      const float b2 = thm.panelBorder * 2.0f;
+      e0._w = def._w - b2;
+      e0._h = def._h - b2;
+      resizedElem(thm, e0);
+      break;
+    }
+    case GUI_MENU_FRAME: {
+      GuiElem& e0 = def.elems[0];
+      const float b2 = thm.menuFrameBorder * 2.0f;
+      e0._w = def._w - b2;
+      e0._h = def._h - b2;
+      resizedElem(thm, e0);
+      break;
+    }
     case GUI_LISTSELECT: {
       // listselect popup list width
-      GuiElem& e1 = def.elems[1];
-      e1._w = def._w + (thm.border * 2.0f);
+      GuiElem& e1 = def.elems[1]; // GUI_MENU_FRAME
+      e1._w = def._w + (thm.menuFrameBorder * 2.0f);
       resizedElem(thm, e1);
       break;
     }
@@ -298,6 +306,22 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       def._h = total_h;
       break;
     }
+    case GUI_PANEL: {
+      GuiElem& e = def.elems[0];
+      calcSize(thm, e);
+      const float b2 = thm.panelBorder * 2.0f;
+      def._w = e._w + b2;
+      def._h = e._h + b2;
+      break;
+    }
+    case GUI_MENU_FRAME: {
+      GuiElem& e = def.elems[0];
+      calcSize(thm, e);
+      const float b2 = thm.menuFrameBorder * 2.0f;
+      def._w = e._w + b2;
+      def._h = e._h + b2;
+      break;
+    }
     case GUI_LABEL: {
       const Font& fnt = *thm.font;
       def._w = fnt.calcWidth(def.text);
@@ -315,7 +339,6 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       def._w = float(thm.lineWidth) + (b * 2.0f);
       def._h = float(thm.font->size() - 1);
       break;
-    case GUI_BACKGROUND:
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
     case GUI_MENU_ITEM: {
@@ -355,10 +378,10 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     }
     case GUI_LISTSELECT: {
       calcSize(thm, def.elems[0]);
-      GuiElem& e1 = def.elems[1];
+      GuiElem& e1 = def.elems[1]; // GUI_MENU_FRAME
       calcSize(thm, e1);
       def._w = 0; def._h = 0;
-      calcMaxItemSize(e1, def._w, def._h);
+      calcMaxItemSize(e1.elems[0], def._w, def._h);
       break;
     }
     case GUI_LISTSELECT_ITEM: {
@@ -439,6 +462,16 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
       }
       break;
     }
+    case GUI_PANEL: {
+      const float b = thm.panelBorder;
+      calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
+      break;
+    }
+    case GUI_MENU_FRAME: {
+      const float b = thm.menuFrameBorder;
+      calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
+      break;
+    }
     case GUI_CHECKBOX:
       left += thm.font->calcWidth(thm.checkCode) + (thm.border*3.0f);
       calcPos(thm, def.elems[0], left, top, right, bottom);
@@ -464,7 +497,8 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
     case GUI_LISTSELECT: {
       const float b = thm.border;
       calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
-      calcPos(thm, def.elems[1], left - b, top + def._h, right, bottom);
+      calcPos(thm, def.elems[1], left - thm.menuFrameBorder, top + def._h,
+              right, bottom);
       break;
     }
     default:
@@ -977,7 +1011,8 @@ bool Gui::drawElem(
 
   bool needRedraw = false; // use for anim trigger later
   switch (def.type) {
-    case GUI_BACKGROUND:
+    case GUI_PANEL:
+    case GUI_MENU_FRAME:
       assert(style != nullptr);
       drawRec(dc, ex, ey, ew, eh, style);
       break;

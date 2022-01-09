@@ -1,6 +1,6 @@
 //
 // gx/GuiTheme.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #pragma once
@@ -110,6 +110,8 @@ struct gx::GuiTheme
   uint32_t cursorBlinkTime = 400000; // 1 sec
   uint16_t cursorWidth = 3;
 
+  uint16_t panelBorder = 8;
+  uint16_t menuFrameBorder = 4;
   uint16_t border = 6;
   uint16_t frameSpacing = 4;
   uint16_t textSpacing = 1;

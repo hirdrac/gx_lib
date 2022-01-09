@@ -34,7 +34,8 @@ namespace gx {
     GUI_HFRAME, GUI_VFRAME,
 
     // draw types
-    GUI_BACKGROUND, GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_IMAGE,
+    GUI_PANEL, GUI_MENU_FRAME,
+    GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_IMAGE,
 
     // event types
     GUI_BUTTON,          // activated on release
@@ -227,7 +228,7 @@ gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
                               AlignEnum align, GuiElem&& elems)
 {
   std::unique_ptr<Panel> ptr{
-    new Panel{&theme, {GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {std::move(elems)}}}};
+    new Panel{&theme, {GUI_PANEL, ALIGN_TOP_LEFT, 0, {std::move(elems)}}}};
   return addPanel(std::move(ptr), x, y, align);
 }
 
@@ -235,7 +236,7 @@ gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
                               AlignEnum align, const GuiElem& elems)
 {
   std::unique_ptr<Panel> ptr{
-    new Panel{&theme, {GUI_BACKGROUND, ALIGN_TOP_LEFT, 0, {elems}}}};
+    new Panel{&theme, {GUI_PANEL, ALIGN_TOP_LEFT, 0, {elems}}}};
   return addPanel(std::move(ptr), x, y, align);
 }
 
@@ -421,7 +422,7 @@ namespace gx {
   {
     return {GUI_MENU, ALIGN_TOP_LEFT, 0,
             {guiLabel(ALIGN_CENTER, text),
-             GuiElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0,
+             GuiElem{GUI_MENU_FRAME, ALIGN_TOP_LEFT, 0,
                      {guiVFrame(items...)}}}};
   }
 
@@ -436,7 +437,7 @@ namespace gx {
   {
     return {GUI_SUBMENU, ALIGN_JUSTIFY, 0,
             {guiLabel(ALIGN_CENTER_LEFT, text),
-             GuiElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0,
+             GuiElem{GUI_MENU_FRAME, ALIGN_TOP_LEFT, 0,
                      {guiVFrame(items...)}}}};
   }
 
@@ -446,7 +447,7 @@ namespace gx {
   {
     GuiElem e{GUI_LISTSELECT, ALIGN_TOP_LEFT, id,
               {GuiElem{},
-               GuiElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0,
+               GuiElem{GUI_MENU_FRAME, ALIGN_TOP_LEFT, 0,
                        {guiVFrame(items...)}}}};
     e.itemNo = 0; // unset (default to first item)
     return e;
@@ -458,7 +459,7 @@ namespace gx {
   {
     GuiElem e{GUI_LISTSELECT, align, id,
               {GuiElem{},
-               GuiElem{GUI_BACKGROUND, ALIGN_TOP_LEFT, 0,
+               GuiElem{GUI_MENU_FRAME, ALIGN_TOP_LEFT, 0,
                        {guiVFrame(items...)}}}};
     e.itemNo = 0; // unset (default to first item)
     return e;
