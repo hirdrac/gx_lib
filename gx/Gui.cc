@@ -773,7 +773,7 @@ void Gui::processMouseEvent(Window& win)
       _eventTime = win.lastPollTime();
       deactivatePopups();
     } else if (_popupID != id) {
-      // activate on menu item to close sub-menus if neccessary
+      // activate on menu item to close sub-menus if necessary
       activatePopup(id);
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
@@ -1137,11 +1137,11 @@ bool Gui::drawElem(
         const RGBA8 c0 = textColor & 0x00ffffff;
         if (def.id == _focusID) {
           // text being edited so show text end where cursor is
-          dc2.hgradiant(ex, c0, tx + (fs * .5f), textColor);
+          dc2.hgradient(ex, c0, tx + (fs * .5f), textColor);
           tx -= tw - maxWidth;
         } else {
           // show text start when not in focus
-          dc2.hgradiant(ex + ew - thm.entryRightMargin - (fs * .5f),
+          dc2.hgradient(ex + ew - thm.entryRightMargin - (fs * .5f),
                         textColor, ex + ew, c0);
         }
       } else {

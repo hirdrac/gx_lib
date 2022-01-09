@@ -1,15 +1,15 @@
 //
 // gx/DrawContext.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
-// TODO: support color gradiant for primitives other than rectangle
+// TODO: support color gradient for primitives other than rectangle
 // TODO: textured roundedRectangle()
 // TODO: continuous lines [lineX <vertex count> <v1> <v2> ...]
 // TODO: lines as quads
 //   - any width supported
 //   - multi-line corner types: squared, angled, rounded
-// TODO: gradiant function instead of set gradiant/color points
+// TODO: gradient function instead of set gradient/color points
 
 #pragma once
 #include "DrawList.hh"
@@ -58,10 +58,10 @@ class gx::DrawContext
   inline void color(const Color& c);
   inline void color(RGBA8 c);
 
-  inline void hgradiant(float x0, RGBA8 c0, float x1, RGBA8 c1);
-  inline void hgradiant(float x0, const Color& c0, float x1, const Color& c1);
-  inline void vgradiant(float y0, RGBA8 c0, float y1, RGBA8 c1);
-  inline void vgradiant(float y0, const Color& c0, float y1, const Color& c1);
+  inline void hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1);
+  inline void hgradient(float x0, const Color& c0, float x1, const Color& c1);
+  inline void vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1);
+  inline void vgradient(float y0, const Color& c0, float y1, const Color& c1);
 
   inline void lineWidth(float w);
 
@@ -179,12 +179,12 @@ class gx::DrawContext
   TextureID _lastTexID;
   float _lastLineWidth;
 
-  // color/gradiant properties
-  float _g0, _g1;         // x or y gradiant coords
-  RGBA8 _c0, _c1;      // gradiant colors (packed)
-  Color _color0, _color1; // gradiant colors (full)
+  // color/gradient properties
+  float _g0, _g1;         // x or y gradient coords
+  RGBA8 _c0, _c1;      // gradient colors (packed)
+  Color _color0, _color1; // gradient colors (full)
   RGBA8 _lastColor;
-  enum ColorMode { CM_SOLID, CM_HGRADIANT, CM_VGRADIANT };
+  enum ColorMode { CM_SOLID, CM_HGRADIENT, CM_VGRADIENT };
   ColorMode _colorMode;
 
 
@@ -208,13 +208,13 @@ class gx::DrawContext
   void _rect(float x, float y, float w, float h) {
     add(CMD_rectangle, x, y, x + w, y + h); }
 
-  [[nodiscard]] inline RGBA8 gradiantColor(float g) const;
+  [[nodiscard]] inline RGBA8 gradientColor(float g) const;
 
   [[nodiscard]] RGBA8 pointColor(Vec2 pt) const {
     switch (_colorMode) {
       default:           return _lastColor;
-      case CM_HGRADIANT: return gradiantColor(pt.x);
-      case CM_VGRADIANT: return gradiantColor(pt.y);
+      case CM_HGRADIENT: return gradientColor(pt.x);
+      case CM_VGRADIENT: return gradientColor(pt.y);
     }
   }
 };
@@ -240,9 +240,9 @@ void gx::DrawContext::color(RGBA8 c)
   }
 }
 
-void gx::DrawContext::hgradiant(float x0, RGBA8 c0, float x1, RGBA8 c1)
+void gx::DrawContext::hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1)
 {
-  _colorMode = CM_HGRADIANT;
+  _colorMode = CM_HGRADIENT;
   _g0 = x0;
   _c0 = c0;
   _color0 = unpackRGBA8(c0);
@@ -251,10 +251,10 @@ void gx::DrawContext::hgradiant(float x0, RGBA8 c0, float x1, RGBA8 c1)
   _color1 = unpackRGBA8(c1);
 }
 
-void gx::DrawContext::hgradiant(
+void gx::DrawContext::hgradient(
   float x0, const Color& c0, float x1, const Color& c1)
 {
-  _colorMode = CM_HGRADIANT;
+  _colorMode = CM_HGRADIENT;
   _g0 = x0;
   _c0 = packRGBA8(c0);
   _color0 = c0;
@@ -263,9 +263,9 @@ void gx::DrawContext::hgradiant(
   _color1 = c1;
 }
 
-void gx::DrawContext::vgradiant(float y0, RGBA8 c0, float y1, RGBA8 c1)
+void gx::DrawContext::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
 {
-  _colorMode = CM_HGRADIANT;
+  _colorMode = CM_HGRADIENT;
   _g0 = y0;
   _c0 = c0;
   _color0 = unpackRGBA8(c0);
@@ -274,10 +274,10 @@ void gx::DrawContext::vgradiant(float y0, RGBA8 c0, float y1, RGBA8 c1)
   _color1 = unpackRGBA8(c1);
 }
 
-void gx::DrawContext::vgradiant(
+void gx::DrawContext::vgradient(
   float y0, const Color& c0, float y1, const Color& c1)
 {
-  _colorMode = CM_HGRADIANT;
+  _colorMode = CM_HGRADIENT;
   _g0 = y0;
   _c0 = packRGBA8(c0);
   _color0 = c0;
@@ -302,7 +302,7 @@ void gx::DrawContext::texture(TextureID tid)
   }
 }
 
-gx::RGBA8 gx::DrawContext::gradiantColor(float g) const
+gx::RGBA8 gx::DrawContext::gradientColor(float g) const
 {
   if (g <= _g0) { return _c0; }
   else if (g >= _g1) { return _c1; }

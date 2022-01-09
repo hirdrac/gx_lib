@@ -1,6 +1,6 @@
 //
 // gx/OpenGLRenderer.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 // TODO: add blur transparency shader
@@ -639,7 +639,7 @@ void OpenGLRenderer::renderFrame()
     int texUnit = 0;
     int shader = 0; // solid color shader
     if (dc.texID > 0) {
-      // shader uses texture - determine texture unit & bind if neccessary
+      // shader uses texture - determine texture unit & bind if necessary
       // (FIXME: no max texture units check currently)
       auto itr = _textures.find(dc.texID);
       if (itr != _textures.end()) {

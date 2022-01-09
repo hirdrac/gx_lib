@@ -1,9 +1,9 @@
 //
 // gx/embed.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // command line tool to generate source with a file's contents as a static
-// array (useful for embeding default font/image data into a binary so it's
+// array (useful for embedding default font/image data into a binary so it's
 // always available for use)
 //
 

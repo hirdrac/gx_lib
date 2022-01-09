@@ -52,7 +52,7 @@ namespace gx {
   enum EntryType {
     ENTRY_TEXT,     // all characters valid
     ENTRY_CARDINAL, // positive integer
-    ENTRY_INTEGER,  // positive/negitive integer
+    ENTRY_INTEGER,  // positive/negative integer
     ENTRY_FLOAT,    // floating point number
     ENTRY_PASSWORD  // all characters valid w/ output hidden
   };
