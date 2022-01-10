@@ -61,9 +61,9 @@ static void deactivate(GuiElem& def)
   for (auto& e : def.elems) { deactivate(e); }
 }
 
-static bool activate(GuiElem& def, EventID id)
+static bool activate(GuiElem& def, ElemID id)
 {
-  if (def.id == id) {
+  if (def._id == id) {
     def._active = true;
   } else {
     // activate parent if child is activated to handle nested menus
@@ -91,11 +91,10 @@ static bool activate(GuiElem& def, EventID id)
         if (e) { return e; }
       }
     }
+  } else if ((def.eid != 0 || def.type == GUI_LISTSELECT_ITEM)
+             && popupType == GUI_NULL && contains(def, x, y)) {
+    return &def;
   } else {
-    if (popupType == GUI_NULL && def.id != 0 && contains(def, x, y)) {
-      return &def;
-    }
-
     for (GuiElem& c : def.elems) {
       GuiElem* e = findElemByXY(c, x, y, popupType);
       if (e) { return e; }
@@ -117,7 +116,7 @@ static bool activate(GuiElem& def, EventID id)
   return nullptr;
 }
 
-static void calcMaxItemSize(GuiElem& root, float& maxW, float& maxH)
+static void calcMaxItemSize(const GuiElem& root, float& maxW, float& maxH)
 {
   for (auto& e : root.elems) {
     if (e.type == GUI_LISTSELECT_ITEM) {
@@ -522,12 +521,31 @@ static std::string passwordStr(int32_t code, std::size_t len)
 }
 
 template<class T>
-static inline T* findElemT(T* root, EventID id)
+static inline T* findElemByIDT(T* root, ElemID id)
 {
   assert(id != 0);
   std::vector<T*> stack;
   T* e = root;
-  while (e->id != id) {
+  while (e->_id != id) {
+    if (!e->elems.empty()) {
+      stack.reserve(stack.size() + e->elems.size());
+      for (T& c : e->elems) { stack.push_back(&c); }
+    }
+
+    if (stack.empty()) { return nullptr; }
+    e = stack.back();
+    stack.pop_back();
+  }
+  return e;
+}
+
+template<class T>
+static inline T* findElemByEventIDT(T* root, EventID eid)
+{
+  assert(eid != 0);
+  std::vector<T*> stack;
+  T* e = root;
+  while (e->eid != eid) {
     if (!e->elems.empty()) {
       stack.reserve(stack.size() + e->elems.size());
       for (T& c : e->elems) { stack.push_back(&c); }
@@ -597,8 +615,10 @@ void Gui::lowerPanel(PanelID id)
 
 bool Gui::getPanelLayout(PanelID id, Rect& layout) const
 {
-  const Panel* p = findPanel(id);
+  Panel* p = nullptr;
+  for (auto& pPtr : _panels) { if (pPtr->id == id) { p = pPtr.get(); break; } }
   if (!p) { return false; }
+
   layout = p->layout;
   return true;
 }
@@ -633,9 +653,13 @@ void Gui::update(Window& win)
       if (_repeatDelay > 0) {
         _heldTime += _repeatDelay * ((now - _heldTime) / _repeatDelay);
       }
-      _eventID = _heldID;
-      _eventType = _heldType;
-      _eventTime = now;
+
+      const GuiElem* heldElem = findElemByID(_heldID);
+      if (heldElem) {
+        _eventID = heldElem->eid;
+        _eventType = _heldType;
+        _eventTime = now;
+      }
     }
   }
 
@@ -695,7 +719,7 @@ void Gui::deactivatePopups()
   _needRender = true;
 }
 
-void Gui::activatePopup(EventID id)
+void Gui::activatePopup(ElemID id)
 {
   assert(id != 0);
   if (_popupID != 0) { deactivatePopups(); }
@@ -713,14 +737,14 @@ void Gui::processMouseEvent(Window& win)
 
   GuiElemType popupType = GUI_NULL;
   if (_popupID != 0) {
-    GuiElem* e = findElem(_popupID);
+    GuiElem* e = findElemByID(_popupID);
     popupType = getPopupType(e->type);
   }
 
   // get elem at mouse pointer
   Panel* pPtr = nullptr;
   GuiElem* ePtr = nullptr;
-  EventID id = 0;
+  ElemID id = 0;
   GuiElemType type = GUI_NULL;
   if (win.mouseIn()) {
     for (auto& ptr : _panels) {
@@ -730,7 +754,7 @@ void Gui::processMouseEvent(Window& win)
       ePtr = findElemByXY(ptr->root, mx, my, popupType);
       if (ePtr) {
         if (ePtr->_enabled) {
-          id = ePtr->id;
+          id = ePtr->_id;
           type = ePtr->type;
           pPtr = ptr.get();
         }
@@ -752,7 +776,7 @@ void Gui::processMouseEvent(Window& win)
 
   // update hoverID
   if (_hoverID != id) {
-    const EventID hid =
+    const ElemID hid =
       (buttonDown && !isPopupItem(type) && id != _heldID) ? 0 : id;
     if (_hoverID != hid) {
       _hoverID = hid;
@@ -770,7 +794,7 @@ void Gui::processMouseEvent(Window& win)
     }
   } else if (type == GUI_MENU_ITEM) {
     if (buttonEvent) {
-      _eventID = id;
+      _eventID = ePtr->eid;
       _eventType = type;
       _eventTime = win.lastPollTime();
       deactivatePopups();
@@ -789,7 +813,7 @@ void Gui::processMouseEvent(Window& win)
         const float b = pPtr->theme->border;
         calcPos(*pPtr->theme, e0, ls._x + b, ls._y + b, ls._x + ls._w - b,
                 ls._y + ls._h - b);
-        _eventID = ls.id;
+        _eventID = ls.eid;
         _eventType = ls.type;
         _eventTime = win.lastPollTime();
         deactivatePopups();
@@ -803,7 +827,7 @@ void Gui::processMouseEvent(Window& win)
       _repeatDelay = (type == GUI_BUTTON_PRESS) ? ePtr->repeatDelay : -1;
       _needRender = true;
       if (type == GUI_BUTTON_PRESS) {
-        _eventID = id;
+        _eventID = ePtr->eid;
         _eventType = type;
         _eventTime = win.lastPollTime();
       }
@@ -815,7 +839,7 @@ void Gui::processMouseEvent(Window& win)
       if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
           && buttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
-        _eventID = id;
+        _eventID = ePtr->eid;
         _eventType = type;
         _eventTime = win.lastPollTime();
         if (type == GUI_CHECKBOX) { ePtr->checkboxSet = !ePtr->checkboxSet; }
@@ -833,7 +857,7 @@ void Gui::processMouseEvent(Window& win)
 
 void Gui::processCharEvent(Window& win)
 {
-  GuiElem* e = findElem(_focusID);
+  GuiElem* e = findElemByID(_focusID);
   if (!e) { return; }
   assert(e->type == GUI_ENTRY);
 
@@ -871,11 +895,11 @@ void Gui::processCharEvent(Window& win)
       _textChanged |= added;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       const GuiElem* next = findNextElem(_focusID, GUI_ENTRY);
-      setFocusID(win, next ? next->id : 0);
+      setFocusID(win, next ? next->_id : 0);
       usedEvent = true;
     } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
       const GuiElem* prev = findPrevElem(_focusID, GUI_ENTRY);
-      setFocusID(win, prev ? prev->id : 0);
+      setFocusID(win, prev ? prev->_id : 0);
       usedEvent = true;
     }
     // TODO: handle KEY_LEFT, KEY_RIGHT for cursor movement
@@ -890,38 +914,48 @@ void Gui::processCharEvent(Window& win)
   }
 }
 
-void Gui::setFocusID(Window& win, EventID id)
+void Gui::setFocusID(Window& win, ElemID id)
 {
   if (_focusID == id) { return; }
+
   if (_textChanged) {
     _textChanged = false;
-    _eventID = _focusID;
-    _eventType = GUI_ENTRY;
-    _eventTime = win.lastPollTime();
+    const GuiElem* focusElem = findElemByID(_focusID);
+    if (focusElem) {
+      _eventID = focusElem->eid;
+      _eventType = GUI_ENTRY;
+      _eventTime = win.lastPollTime();
+    }
   }
+
   _focusID = id;
   if (id != 0) {
     _lastCursorUpdate = win.lastPollTime();
-    const Panel* p = findPanel(_focusID);
+    const Panel* p = nullptr;
+    for (auto& pPtr : _panels) {
+      if (findElemByIDT(&pPtr->root, _focusID)) { p = pPtr.get(); break; }
+    }
+
+    assert(p != nullptr);
     _cursorBlinkTime = p ? p->theme->cursorBlinkTime : 400000;
     _cursorState = true;
   }
   _needRender = true;
 }
 
-void Gui::setElemState(EventID id, bool enable)
+void Gui::setElemState(EventID eid, bool enable)
 {
-  GuiElem* e = findElem(id);
+  GuiElem* e = findElemByEventID(eid);
   if (e && e->_enabled != enable) {
     e->_enabled = enable;
     _needRender = true;
   }
 }
 
-bool Gui::setText(EventID id, std::string_view text)
+bool Gui::setText(EventID eid, std::string_view text)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemT(&pPtr->root, id);
+    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
     if (!e) { continue; }
 
     e->text = text;
@@ -932,10 +966,10 @@ bool Gui::setText(EventID id, std::string_view text)
   return false;
 }
 
-bool Gui::setBool(EventID id, bool val)
+bool Gui::setBool(EventID eid, bool val)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemT(&pPtr->root, id);
+    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
     if (!e) { continue; }
 
     if (e->type != GUI_CHECKBOX) { break; }
@@ -946,10 +980,10 @@ bool Gui::setBool(EventID id, bool val)
   return false;
 }
 
-bool Gui::setItemNo(EventID id, int no)
+bool Gui::setItemNo(EventID eid, int no)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemT(&pPtr->root, id);
+    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
     if (!e) { continue; }
 
     if (e->type != GUI_LISTSELECT) { break; }
@@ -987,9 +1021,8 @@ void Gui::layout(Panel& p, float x, float y, AlignEnum align)
 
 void Gui::initElem(GuiElem& def)
 {
-  if (isMenu(def.type) || def.type == GUI_LISTSELECT_ITEM) {
-    def.id = --_lastUniqueID;
-  } else if (def.type == GUI_LISTSELECT) {
+  def._id = ++_lastUniqueID;
+  if (def.type == GUI_LISTSELECT) {
     GuiElem* e = findItem(def, def.itemNo);
     if (e) {
       GuiElem& e0 = def.elems[0];
@@ -1042,21 +1075,21 @@ bool Gui::drawElem(
     case GUI_BUTTON_PRESS:
       if (!def._enabled) {
         style = &thm.buttonDisable;
-      } else if (def.id == _heldID) {
-        style = (def.id == _hoverID || def.type != GUI_BUTTON)
+      } else if (def._id == _heldID) {
+        style = (def._id == _hoverID || def.type != GUI_BUTTON)
           ? &thm.buttonPress : &thm.buttonHold;
       } else {
-        style = (def.id == _hoverID) ? &thm.buttonHover : &thm.button;
+        style = (def._id == _hoverID) ? &thm.buttonHover : &thm.button;
       }
       drawRec(dc, ex, ey, ew, eh, style);
       break;
     case GUI_CHECKBOX: {
       if (!def._enabled) {
         style = &thm.checkboxDisable;
-      } else if (def.id == _heldID) {
-        style = (def.id == _hoverID) ? &thm.checkboxPress : &thm.checkboxHold;
+      } else if (def._id == _heldID) {
+        style = (def._id == _hoverID) ? &thm.checkboxPress : &thm.checkboxHold;
       } else {
-        style = (def.id == _hoverID) ? &thm.checkboxHover : &thm.checkbox;
+        style = (def._id == _hoverID) ? &thm.checkboxHover : &thm.checkbox;
       }
       const float b = thm.border;
       const float cw = thm.font->calcWidth(thm.checkCode) + (b*2.0f);
@@ -1072,14 +1105,14 @@ bool Gui::drawElem(
     }
     case GUI_MENU:
       style = def._active ? &thm.menuButtonOpen
-        : ((def.id == _hoverID) ? &thm.menuButtonHover : &thm.menuButton);
+        : ((def._id == _hoverID) ? &thm.menuButtonHover : &thm.menuButton);
       drawRec(dc, ex, ey, ew, eh, style);
       needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
       break;
     case GUI_MENU_ITEM:
       if (!def._enabled) {
         style = &thm.menuItemDisable;
-      } else if (def.id == _hoverID) {
+      } else if (def._id == _hoverID) {
         style = &thm.menuItemSelect;
         drawRec(dc, ex, ey, ew, eh, style);
       }
@@ -1101,7 +1134,7 @@ bool Gui::drawElem(
       } else if (def._active) {
         style = &thm.listSelectOpen;
       } else {
-        style = (def.id == _hoverID) ? &thm.listSelectHover : &thm.listSelect;
+        style = (def._id == _hoverID) ? &thm.listSelectHover : &thm.listSelect;
       }
       drawRec(dc, ex, ey, ew, eh, style);
       needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
@@ -1113,7 +1146,7 @@ bool Gui::drawElem(
     case GUI_LISTSELECT_ITEM:
       if (!def._enabled) {
         style = &thm.listSelectItemDisable;
-      } else if (def.id == _hoverID) {
+      } else if (def._id == _hoverID) {
         style = &thm.listSelectItemSelect;
         drawRec(dc, ex, ey, ew, eh, style);
       }
@@ -1122,7 +1155,7 @@ bool Gui::drawElem(
       if (!def._enabled) {
         style = &thm.entryDisable;
       } else {
-        style = (def.id == _focusID) ? &thm.entryFocus : &thm.entry;
+        style = (def._id == _focusID) ? &thm.entryFocus : &thm.entry;
       }
       drawRec(dc, ex, ey, ew, eh, style);
       const std::string txt = (def.entry.type == ENTRY_PASSWORD)
@@ -1137,7 +1170,7 @@ bool Gui::drawElem(
       if (tw > maxWidth) {
         // text doesn't fit in entry
         const RGBA8 c0 = textColor & 0x00ffffff;
-        if (def.id == _focusID) {
+        if (def._id == _focusID) {
           // text being edited so show text end where cursor is
           dc2.hgradient(ex, c0, tx + (fs * .5f), textColor);
           tx -= tw - maxWidth;
@@ -1157,7 +1190,7 @@ bool Gui::drawElem(
       dc2.text(TextFormatting{thm.font, float(thm.textSpacing)},
                tx, ey + thm.entryTopMargin, ALIGN_TOP_LEFT, txt,
                {ex, ey, ew, eh});
-      if (def.id == _focusID && _cursorState) {
+      if (def._id == _focusID && _cursorState) {
         // draw cursor
         dc.color(thm.cursorColor);
         dc.rectangle(tx + tw, ey + thm.entryTopMargin, cw, fs - 1.0f);
@@ -1208,55 +1241,55 @@ bool Gui::drawPopup(const Panel& p, GuiElem& def, DrawContext& dc,
   return needRedraw;
 }
 
-Gui::Panel* Gui::findPanel(PanelID id)
+GuiElem* Gui::findElemByID(ElemID id)
 {
   for (auto& pPtr : _panels) {
-    if (findElemT(&pPtr->root, id)) { return pPtr.get(); }
-  }
-  return nullptr;
-}
-
-const Gui::Panel* Gui::findPanel(PanelID id) const
-{
-  for (auto& pPtr : _panels) {
-    if (findElemT(&pPtr->root, id)) { return pPtr.get(); }
-  }
-  return nullptr;
-}
-
-GuiElem* Gui::findElem(EventID id)
-{
-  for (auto& pPtr : _panels) {
-    GuiElem* e = findElemT(&pPtr->root, id);
+    GuiElem* e = findElemByIDT(&pPtr->root, id);
     if (e) { return e; }
   }
   return nullptr;
 }
 
-const GuiElem* Gui::findElem(EventID id) const
+GuiElem* Gui::findElemByEventID(EventID eid)
 {
   for (auto& pPtr : _panels) {
-    const GuiElem* e = findElemT(&pPtr->root, id);
+    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
     if (e) { return e; }
   }
   return nullptr;
 }
 
-GuiElem* Gui::findNextElem(EventID id, GuiElemType type)
+const GuiElem* Gui::findElemByEventID(EventID eid) const
 {
-  assert(id != 0);
-  Panel* p = findPanel(id);
-  if (!p) { return nullptr; }
+  for (auto& pPtr : _panels) {
+    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
+    if (e) { return e; }
+  }
+  return nullptr;
+}
+
+GuiElem* Gui::findNextElem(ElemID id, GuiElemType type)
+{
+  Panel* p = nullptr;
+  GuiElem* focusElem = nullptr;
+  for (auto& pPtr : _panels) {
+    p = pPtr.get();
+    focusElem = findElemByIDT(&pPtr->root, id);
+    if (focusElem) { break; }
+  }
+
+  if (!focusElem) { return nullptr; }
+  const EventID eid = focusElem->eid;
 
   std::vector<GuiElem*> stack;
   GuiElem* e = &p->root;
   GuiElem* next = nullptr;
   GuiElem* first = nullptr;
   for (;;) {
-    if (e->id > 0 && e->_enabled && (type == GUI_NULL || e->type == type)) {
-      if (e->id == (id+1)) { return e; }
-      if (e->id > id && (!next || e->id < next->id)) { next = e; }
-      if (!first || e->id < first->id) { first = e; }
+    if (e->eid > 0 && e->_enabled && (type == GUI_NULL || e->type == type)) {
+      if (e->eid == (eid+1)) { return e; }
+      if (e->eid > eid && (!next || e->eid < next->eid)) { next = e; }
+      if (!first || e->eid < first->eid) { first = e; }
     }
 
     if (!e->elems.empty()) {
@@ -1270,21 +1303,28 @@ GuiElem* Gui::findNextElem(EventID id, GuiElemType type)
   }
 }
 
-GuiElem* Gui::findPrevElem(EventID id, GuiElemType type)
+GuiElem* Gui::findPrevElem(ElemID id, GuiElemType type)
 {
-  assert(id != 0);
-  Panel* p = findPanel(id);
-  if (!p) { return nullptr; }
+  Panel* p = nullptr;
+  GuiElem* focusElem = nullptr;
+  for (auto& pPtr : _panels) {
+    p = pPtr.get();
+    focusElem = findElemByIDT(&pPtr->root, id);
+    if (focusElem) { break; }
+  }
+
+  if (!focusElem) { return nullptr; }
+  const EventID eid = focusElem->eid;
 
   std::vector<GuiElem*> stack;
   GuiElem* e = &p->root;
   GuiElem* prev = nullptr;
   GuiElem* last = nullptr;
   for (;;) {
-    if (e->id > 0 && e->_enabled && (type == GUI_NULL || e->type == type)) {
-      if (e->id == (id-1)) { return e; }
-      if (e->id < id && (!prev || e->id > prev->id)) { prev = e; }
-      if (!last || e->id > last->id) { last = e; }
+    if (e->eid > 0 && e->_enabled && (type == GUI_NULL || e->type == type)) {
+      if (e->eid == (eid-1)) { return e; }
+      if (e->eid < eid && (!prev || e->eid > prev->eid)) { prev = e; }
+      if (!last || e->eid > last->eid) { last = e; }
     }
 
     if (!e->elems.empty()) {

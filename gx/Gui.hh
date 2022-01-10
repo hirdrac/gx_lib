@@ -18,8 +18,9 @@
 
 
 namespace gx {
-  using PanelID = int;
-  using EventID = int;
+  using PanelID = int;  // internal/external panel ID
+  using ElemID = int;   // internal GuiElem ID
+  using EventID = int;  // user specified event value
 
   class Window;
   class DrawContext;
@@ -66,7 +67,7 @@ struct gx::GuiElem
   std::string text;  // label/entry text
   GuiElemType type;
   AlignEnum align;
-  EventID id;
+  EventID eid;
 
   // elem type specific properties
   struct EntryProps {
@@ -91,18 +92,19 @@ struct gx::GuiElem
   };
 
   // layout state
+  ElemID _id = 0;
   float _x = 0, _y = 0;  // layout position relative to panel
   float _w = 0, _h = 0;  // layout size
   bool _active = false;  // popup/menu activated
   bool _enabled = true;
 
   GuiElem()
-    : type{GUI_NULL}, align{ALIGN_UNSPECIFIED}, id{0} { }
+    : type{GUI_NULL}, align{ALIGN_UNSPECIFIED}, eid{0} { }
   GuiElem(GuiElemType t, AlignEnum a, EventID i)
-    : type{t}, align{a}, id{i} { }
+    : type{t}, align{a}, eid{i} { }
   GuiElem(GuiElemType t, AlignEnum a, EventID i,
           std::initializer_list<GuiElem> x)
-    : elems{x}, type{t}, align{a}, id{i} { }
+    : elems{x}, type{t}, align{a}, eid{i} { }
 };
 
 
@@ -137,23 +139,23 @@ class gx::Gui
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // true if GUI needs to be redrawn
 
-  void setElemState(EventID id, bool enable);
-  void enableElem(EventID id) { setElemState(id, true); }
-  void disableElem(EventID id) { setElemState(id, false); }
+  void setElemState(EventID eid, bool enable);
+  void enableElem(EventID eid) { setElemState(eid, true); }
+  void disableElem(EventID eid) { setElemState(eid, false); }
     // enable/disable event generating elements
 
-  [[nodiscard]] std::string getText(EventID id) const {
-    const GuiElem* e = findElem(id);
+  [[nodiscard]] std::string getText(EventID eid) const {
+    const GuiElem* e = findElemByEventID(eid);
     return (e == nullptr) ? std::string() : e->text;
   }
 
-  [[nodiscard]] bool getBool(EventID id) const {
-    const GuiElem* e = findElem(id);
+  [[nodiscard]] bool getBool(EventID eid) const {
+    const GuiElem* e = findElemByEventID(eid);
     return (e == nullptr || e->type != GUI_CHECKBOX) ? false : e->checkboxSet;
   }
 
-  [[nodiscard]] int getItemNo(EventID id) const {
-    const GuiElem* e = findElem(id);
+  [[nodiscard]] int getItemNo(EventID eid) const {
+    const GuiElem* e = findElemByEventID(eid);
     return (e == nullptr || e->type != GUI_LISTSELECT) ? 0 : e->itemNo;
   }
 
@@ -161,9 +163,9 @@ class gx::Gui
   [[nodiscard]] bool eventBool() const { return getBool(_eventID); }
   [[nodiscard]] int eventItemNo() const { return getItemNo(_eventID); }
 
-  bool setText(EventID id, std::string_view text);
-  bool setBool(EventID id, bool val);
-  bool setItemNo(EventID id, int item_no);
+  bool setText(EventID eid, std::string_view text);
+  bool setBool(EventID eid, bool val);
+  bool setItemNo(EventID eid, int item_no);
 
  private:
   struct Panel {
@@ -179,10 +181,10 @@ class gx::Gui
   PanelID _lastUniqueID = 0;
 
   DrawList _dl, _dl2;
-  EventID _hoverID = 0;
-  EventID _heldID = 0;
-  EventID _focusID = 0;
-  EventID _popupID = 0;
+  ElemID _hoverID = 0;
+  ElemID _heldID = 0;
+  ElemID _focusID = 0;
+  ElemID _popupID = 0;
   EventID _eventID = 0;
   GuiElemType _eventType = GUI_NULL;
   GuiElemType _heldType = GUI_NULL;
@@ -201,21 +203,20 @@ class gx::Gui
   void layout(Panel& p, float x, float y, AlignEnum align);
   void processMouseEvent(Window& win);
   void processCharEvent(Window& win);
-  void setFocusID(Window& win, EventID id);
+  void setFocusID(Window& win, ElemID id);
   void initElem(GuiElem& def);
   void deactivatePopups();
-  void activatePopup(EventID id);
+  void activatePopup(ElemID id);
   bool drawElem(const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
                 int64_t usec, const GuiTheme::Style* style) const;
   bool drawPopup(const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
                  int64_t usec) const;
 
-  [[nodiscard]] Panel* findPanel(PanelID id);
-  [[nodiscard]] const Panel* findPanel(PanelID id) const;
-  [[nodiscard]] GuiElem* findElem(EventID id);
-  [[nodiscard]] const GuiElem* findElem(EventID id) const;
-  [[nodiscard]] GuiElem* findNextElem(EventID id, GuiElemType type = GUI_NULL);
-  [[nodiscard]] GuiElem* findPrevElem(EventID id, GuiElemType type = GUI_NULL);
+  [[nodiscard]] GuiElem* findElemByID(ElemID id);
+  [[nodiscard]] GuiElem* findElemByEventID(EventID eid);
+  [[nodiscard]] const GuiElem* findElemByEventID(EventID eid) const;
+  [[nodiscard]] GuiElem* findNextElem(ElemID id, GuiElemType type = GUI_NULL);
+  [[nodiscard]] GuiElem* findPrevElem(ElemID id, GuiElemType type = GUI_NULL);
 
   void clearHeld() {
     _heldID = 0;
