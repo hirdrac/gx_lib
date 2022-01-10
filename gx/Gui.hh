@@ -121,6 +121,8 @@ class gx::Gui
   bool getPanelLayout(PanelID id, Rect& layout) const;
   [[nodiscard]] PanelID topPanel() const {
     return _panels.empty() ? 0 : _panels.front()->id; }
+  [[nodiscard]] PanelID bottomPanel() const {
+    return _panels.empty() ? 0 : _panels.back()->id; }
 
   void update(Window& win);
     // process events & update drawLists

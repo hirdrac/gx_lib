@@ -569,6 +569,7 @@ void Gui::deletePanel(PanelID id)
 
 void Gui::raisePanel(PanelID id)
 {
+  if (id == topPanel()) { return; }
   for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
     if ((*i)->id == id) {
       auto pPtr = std::move(*i);
@@ -582,6 +583,7 @@ void Gui::raisePanel(PanelID id)
 
 void Gui::lowerPanel(PanelID id)
 {
+  if (id == bottomPanel()) { return; }
   for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
     if ((*i)->id == id) {
       auto pPtr = std::move(*i);
