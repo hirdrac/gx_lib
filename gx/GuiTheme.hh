@@ -33,6 +33,8 @@ struct gx::GuiTheme
   const Font* font = nullptr;
   Style panel = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.2f,.2f,.2f,1.0f)};
+  Style titlebar = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.3f,.3f,.3f,1.0f)};
 
   Style button = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f)};
@@ -116,4 +118,6 @@ struct gx::GuiTheme
   uint16_t frameSpacing = 4;
   uint16_t textSpacing = 1;
   uint16_t lineWidth = 2;
+  uint16_t titlebarMinHeight = 12;
+  uint16_t titlebarMinWidth = 12;
 };

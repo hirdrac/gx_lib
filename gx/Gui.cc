@@ -91,8 +91,9 @@ static bool activate(GuiElem& def, ElemID id)
         if (e) { return e; }
       }
     }
-  } else if ((def.eid != 0 || def.type == GUI_LISTSELECT_ITEM)
-             && popupType == GUI_NULL && contains(def, x, y)) {
+  } else if ((def.eid != 0 || def.type == GUI_LISTSELECT_ITEM
+              || def.type == GUI_TITLEBAR) && popupType == GUI_NULL
+             && contains(def, x, y)) {
     return &def;
   } else {
     for (GuiElem& c : def.elems) {
@@ -349,6 +350,17 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       def._h = e._h + b2;
       break;
     }
+    case GUI_TITLEBAR:
+      if (def.elems.empty()) {
+        def._w = thm.titlebarMinWidth;
+        def._h = thm.titlebarMinHeight;
+      } else {
+        GuiElem& e = def.elems[0];
+        calcSize(thm, e);
+        def._w = e._w + (b * 2.0f);
+        def._h = e._h + (b * 2.0f);
+      }
+      break;
     case GUI_LABEL: {
       const Font& fnt = *thm.font;
       def._w = fnt.calcWidth(def.text);
@@ -819,7 +831,23 @@ void Gui::processMouseEvent(Window& win)
     }
   }
 
-  if (isPopup(type)) {
+  if (buttonDown && _heldType == GUI_TITLEBAR) {
+    if (win.events() & EVENT_MOUSE_MOVE) {
+      pPtr = nullptr;
+      for (auto& ptr : _panels) {
+        if (findElemByIDT(&ptr->root, _heldID)) { pPtr = ptr.get(); break; }
+      }
+      assert(pPtr != nullptr);
+      raisePanel(pPtr->id);
+      const float mx = std::clamp(win.mouseX(), 0.0f, float(win.width()));
+      const float my = std::clamp(win.mouseY(), 0.0f, float(win.height()));
+      pPtr->layout.x += mx - _heldX;
+      pPtr->layout.y += my - _heldY;
+      _heldX = mx;
+      _heldY = my;
+      _needRender = true;
+    }
+  } else if (isPopup(type)) {
     if (pressEvent && ePtr->_active) {
       // click on open menu/listselect button closes popup
       deactivatePopups();
@@ -859,6 +887,8 @@ void Gui::processMouseEvent(Window& win)
       _heldID = id;
       _heldType = type;
       _heldTime = win.lastPollTime();
+      _heldX = win.mouseX();
+      _heldY = win.mouseY();
       _repeatDelay = (type == GUI_BUTTON_PRESS) ? ePtr->repeatDelay : -1;
       _needRender = true;
       if (type == GUI_BUTTON_PRESS) {
@@ -1085,6 +1115,9 @@ bool Gui::drawElem(
     case GUI_MENU_FRAME:
       assert(style != nullptr);
       drawRec(dc, ex, ey, ew, eh, style);
+      break;
+    case GUI_TITLEBAR:
+      drawRec(dc, ex, ey, ew, eh, &thm.titlebar);
       break;
     case GUI_LABEL:
       assert(style != nullptr);

@@ -37,6 +37,7 @@ namespace gx {
     // draw types
     GUI_PANEL, GUI_MENU_FRAME,
     GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_IMAGE,
+    GUI_TITLEBAR,
 
     // event types
     GUI_BUTTON,          // activated on release
@@ -198,6 +199,7 @@ class gx::Gui
   int64_t _repeatDelay = -1;
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0; // cached theme value
+  float _heldX = 0, _heldY = 0;
   bool _cursorState = false;
   bool _needRender = true;
   bool _needRedraw = false;
@@ -611,5 +613,21 @@ namespace gx {
     e.image.texCoord0 = t0;
     e.image.texCoord1 = t1;
     return e;
+  }
+
+  // TitleBar
+  inline GuiElem guiTitleBar()
+  {
+    return {GUI_TITLEBAR, ALIGN_HJUSTIFY, 0};
+  }
+
+  inline GuiElem guiVTitleBar()
+  {
+    return {GUI_TITLEBAR, ALIGN_VJUSTIFY, 0};
+  }
+
+  inline GuiElem guiTitleBar(std::string_view text)
+  {
+    return {GUI_TITLEBAR, ALIGN_HJUSTIFY, 0, {guiLabel(ALIGN_CENTER, text)}};
   }
 }
