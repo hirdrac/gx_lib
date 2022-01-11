@@ -236,6 +236,21 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
         if (e.align & ALIGN_HJUSTIFY) { e._w = def._w; resizedElem(thm, e); }
       }
       break;
+    case GUI_SPACER:
+      if (!def.elems.empty()) {
+        GuiElem& e = def.elems[0];
+        bool resized = false;
+        if (e.align & ALIGN_HJUSTIFY) {
+          resized = true;
+          e._w = def._w - (def.spacer.left + def.spacer.right);
+        }
+        if (e.align & ALIGN_VJUSTIFY) {
+          resized = true;
+          e._h = def._h - (def.spacer.top + def.spacer.bottom);
+        }
+        if (resized) { resizedElem(thm, e); }
+      }
+      break;
     case GUI_PANEL: {
       GuiElem& e0 = def.elems[0];
       const float b2 = thm.panelBorder * 2.0f;
@@ -308,6 +323,16 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       def._h = total_h;
       break;
     }
+    case GUI_SPACER:
+      def._w = def.spacer.left + def.spacer.right;
+      def._h = def.spacer.top + def.spacer.bottom;
+      if (!def.elems.empty()) {
+        GuiElem& e = def.elems[0];
+        calcSize(thm, e);
+        def._w += e._w;
+        def._h += e._h;
+      }
+      break;
     case GUI_PANEL: {
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
@@ -464,6 +489,13 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
       }
       break;
     }
+    case GUI_SPACER:
+      if (!def.elems.empty()) {
+        calcPos(thm, def.elems[0], left + def.spacer.left,
+                top + def.spacer.top, right - def.spacer.right,
+                bottom - def.spacer.bottom);
+      }
+      break;
     case GUI_PANEL: {
       const float b = thm.panelBorder;
       calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
@@ -1208,6 +1240,7 @@ bool Gui::drawElem(
       break;
     case GUI_HFRAME:
     case GUI_VFRAME:
+    case GUI_SPACER:
       break; // layout only - nothing to draw
     default:
       GX_LOG_ERROR("unknown type ", def.type);

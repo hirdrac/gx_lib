@@ -32,7 +32,7 @@ namespace gx {
     GUI_NULL = 0,
 
     // layout types
-    GUI_HFRAME, GUI_VFRAME,
+    GUI_HFRAME, GUI_VFRAME, GUI_SPACER,
 
     // draw types
     GUI_PANEL, GUI_MENU_FRAME,
@@ -70,6 +70,10 @@ struct gx::GuiElem
   EventID eid;
 
   // elem type specific properties
+  struct SpacerProps {
+    int16_t left, top, right, bottom;
+  };
+
   struct EntryProps {
     float size; // width in characters
     uint32_t maxLength;
@@ -87,6 +91,7 @@ struct gx::GuiElem
     int64_t repeatDelay; // BUTTON_PRESS
     bool checkboxSet;    // CHECKBOX
     int itemNo;          // LISTSELECT, LISTSELECT_ITEM
+    SpacerProps spacer;  // SPACER
     EntryProps entry;    // ENTRY
     ImageProps image;    // IMAGE
   };
@@ -270,6 +275,49 @@ namespace gx {
   inline GuiElem guiVFrame(AlignEnum align, const Elems&... elems)
   {
     return {GUI_VFRAME, align, 0, {elems...}};
+  }
+
+  // Spacer
+  inline GuiElem guiSpacer(int16_t width, int16_t height)
+  {
+    GuiElem e{GUI_SPACER, ALIGN_CENTER, 0};
+    e.spacer.left = width;
+    e.spacer.top = height;
+    e.spacer.right = 0;
+    e.spacer.bottom = 0;
+    return e;
+  }
+
+  inline GuiElem guiSpacer(AlignEnum align, int16_t width, int16_t height)
+  {
+    GuiElem e{GUI_SPACER, align, 0};
+    e.spacer.left = width;
+    e.spacer.top = height;
+    e.spacer.right = 0;
+    e.spacer.bottom = 0;
+    return e;
+  }
+
+  inline GuiElem guiSpacer(int16_t left, int16_t top, int16_t right,
+                           int16_t bottom, const GuiElem& elem)
+  {
+    GuiElem e{GUI_SPACER, ALIGN_CENTER, 0, {elem}};
+    e.spacer.left = left;
+    e.spacer.top = top;
+    e.spacer.right = right;
+    e.spacer.bottom = bottom;
+    return e;
+  }
+
+  inline GuiElem guiSpacer(AlignEnum align, int16_t left, int16_t top,
+                           int16_t right, int16_t bottom, const GuiElem& elem)
+  {
+    GuiElem e{GUI_SPACER, align, 0, {elem}};
+    e.spacer.left = left;
+    e.spacer.top = top;
+    e.spacer.right = right;
+    e.spacer.bottom = bottom;
+    return e;
   }
 
   // Label
