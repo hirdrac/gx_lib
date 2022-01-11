@@ -99,6 +99,9 @@ static bool activate(GuiElem& def, ElemID id)
       GuiElem* e = findElemByXY(c, x, y, popupType);
       if (e) { return e; }
     }
+
+    if (def.type == GUI_PANEL && popupType == GUI_NULL
+        && contains(def, x, y)) { return &def; }
   }
   return nullptr;
 }
