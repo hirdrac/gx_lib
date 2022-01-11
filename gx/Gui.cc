@@ -777,7 +777,7 @@ void Gui::processMouseEvent(Window& win)
   // update hoverID
   if (_hoverID != id) {
     const ElemID hid =
-      (buttonDown && !isPopupItem(type) && id != _heldID) ? 0 : id;
+      (!buttonDown || isPopupItem(type) || id == _heldID) ? id : 0;
     if (_hoverID != hid) {
       _hoverID = hid;
       _needRender = true;
