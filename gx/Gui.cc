@@ -31,8 +31,7 @@ using namespace gx;
 
 [[nodiscard]] static constexpr bool isPopup(GuiElemType type)
 {
-  return (type == GUI_MENU) || (type == GUI_SUBMENU)
-    || (type == GUI_LISTSELECT);
+  return isMenu(type) || (type == GUI_LISTSELECT);
 }
 
 [[nodiscard]] static constexpr GuiElemType getPopupType(GuiElemType type)
@@ -107,8 +106,47 @@ static bool activate(GuiElem& def, ElemID id)
   return nullptr;
 }
 
+template<class T>
+[[nodiscard]] static inline T* findElemByIDT(T& def, ElemID id)
+{
+  assert(id != 0);
+  std::vector<T*> stack;
+  T* e = &def;
+  while (e->_id != id) {
+    if (!e->elems.empty()) {
+      stack.reserve(stack.size() + e->elems.size());
+      for (T& c : e->elems) { stack.push_back(&c); }
+    }
+
+    if (stack.empty()) { return nullptr; }
+    e = stack.back();
+    stack.pop_back();
+  }
+  return e;
+}
+
+template<class T>
+[[nodiscard]] static inline T* findElemByEventIDT(T& def, EventID eid)
+{
+  assert(eid != 0);
+  std::vector<T*> stack;
+  T* e = &def;
+  while (e->eid != eid) {
+    if (!e->elems.empty()) {
+      stack.reserve(stack.size() + e->elems.size());
+      for (T& c : e->elems) { stack.push_back(&c); }
+    }
+
+    if (stack.empty()) { return nullptr; }
+    e = stack.back();
+    stack.pop_back();
+  }
+  return e;
+}
+
 [[nodiscard]] static GuiElem* findItem(GuiElem& root, int no)
 {
+  // NOTE: skips root in search
   for (auto& e : root.elems) {
     if (e.type == GUI_LISTSELECT_ITEM && (no == 0 || e.itemNo == no)) {
       return &e;
@@ -120,31 +158,17 @@ static bool activate(GuiElem& def, ElemID id)
   return nullptr;
 }
 
-static void calcMaxItemSize(const GuiElem& root, float& maxW, float& maxH)
+[[nodiscard]] static GuiElem* findParentListSelect(GuiElem& root, ElemID id)
 {
+  // NOTE: skips root in search
   for (auto& e : root.elems) {
-    if (e.type == GUI_LISTSELECT_ITEM) {
-      maxW = std::max(maxW, e._w);
-      maxH = std::max(maxH, e._h);
-      return;
-    } else if (!e.elems.empty()) {
-      calcMaxItemSize(e, maxW, maxH);
+    if (e.type == GUI_LISTSELECT && findElemByIDT(e.elems[1], id)) {
+      return &e;
+    } else if (!isMenu(e.type) && !e.elems.empty()) {
+      GuiElem* e2 = findParentListSelect(e, id);
+      if (e2) { return e2; }
     }
   }
-}
-
-[[nodiscard]]
-static GuiElem* findParentListSelect(GuiElem& def, int item_no)
-{
-  if (def.type == GUI_LISTSELECT) {
-    return findItem(def.elems[1], item_no) ? &def : nullptr;
-  } else if (!isMenu(def.type)) {
-    for (auto& e : def.elems) {
-      GuiElem* ptr = findParentListSelect(e, item_no);
-      if (ptr) { return ptr; }
-    }
-  }
-
   return nullptr;
 }
 
@@ -277,6 +301,20 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
     }
     default:
       break;
+  }
+}
+
+static void calcMaxItemSize(const GuiElem& root, float& maxW, float& maxH)
+{
+  // NOTE: skips root in search
+  for (auto& e : root.elems) {
+    if (e.type == GUI_LISTSELECT_ITEM) {
+      maxW = std::max(maxW, e._w);
+      maxH = std::max(maxH, e._h);
+      return;
+    } else if (!e.elems.empty()) {
+      calcMaxItemSize(e, maxW, maxH);
+    }
   }
 }
 
@@ -567,44 +605,6 @@ static std::string passwordStr(int32_t code, std::size_t len)
   return val;
 }
 
-template<class T>
-static inline T* findElemByIDT(T* root, ElemID id)
-{
-  assert(id != 0);
-  std::vector<T*> stack;
-  T* e = root;
-  while (e->_id != id) {
-    if (!e->elems.empty()) {
-      stack.reserve(stack.size() + e->elems.size());
-      for (T& c : e->elems) { stack.push_back(&c); }
-    }
-
-    if (stack.empty()) { return nullptr; }
-    e = stack.back();
-    stack.pop_back();
-  }
-  return e;
-}
-
-template<class T>
-static inline T* findElemByEventIDT(T* root, EventID eid)
-{
-  assert(eid != 0);
-  std::vector<T*> stack;
-  T* e = root;
-  while (e->eid != eid) {
-    if (!e->elems.empty()) {
-      stack.reserve(stack.size() + e->elems.size());
-      for (T& c : e->elems) { stack.push_back(&c); }
-    }
-
-    if (stack.empty()) { return nullptr; }
-    e = stack.back();
-    stack.pop_back();
-  }
-  return e;
-}
-
 
 // **** Gui class ****
 void Gui::clear()
@@ -835,7 +835,7 @@ void Gui::processMouseEvent(Window& win)
     if (win.events() & EVENT_MOUSE_MOVE) {
       pPtr = nullptr;
       for (auto& ptr : _panels) {
-        if (findElemByIDT(&ptr->root, _heldID)) { pPtr = ptr.get(); break; }
+        if (findElemByIDT(ptr->root, _heldID)) { pPtr = ptr.get(); break; }
       }
       assert(pPtr != nullptr);
       raisePanel(pPtr->id);
@@ -867,7 +867,7 @@ void Gui::processMouseEvent(Window& win)
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
     if (buttonEvent) {
-      GuiElem* parent = findParentListSelect(pPtr->root, ePtr->itemNo);
+      GuiElem* parent = findParentListSelect(pPtr->root, id);
       if (parent) {
         GuiElem& ls = *parent;
         ls.itemNo = ePtr->itemNo;
@@ -998,7 +998,7 @@ void Gui::setFocusID(Window& win, ElemID id)
     _lastCursorUpdate = win.lastPollTime();
     const Panel* p = nullptr;
     for (auto& pPtr : _panels) {
-      if (findElemByIDT(&pPtr->root, _focusID)) { p = pPtr.get(); break; }
+      if (findElemByIDT(pPtr->root, _focusID)) { p = pPtr.get(); break; }
     }
 
     assert(p != nullptr);
@@ -1020,7 +1020,7 @@ void Gui::setElemState(EventID eid, bool enable)
 bool Gui::setText(EventID eid, std::string_view text)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
+    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
     if (!e) { continue; }
 
     e->text = text;
@@ -1034,7 +1034,7 @@ bool Gui::setText(EventID eid, std::string_view text)
 bool Gui::setBool(EventID eid, bool val)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
+    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
     if (!e) { continue; }
 
     if (e->type != GUI_CHECKBOX) { break; }
@@ -1048,7 +1048,7 @@ bool Gui::setBool(EventID eid, bool val)
 bool Gui::setItemNo(EventID eid, int no)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
+    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
     if (!e) { continue; }
 
     if (e->type != GUI_LISTSELECT) { break; }
@@ -1313,7 +1313,7 @@ bool Gui::drawPopup(const Panel& p, GuiElem& def, DrawContext& dc,
 GuiElem* Gui::findElemByID(ElemID id)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByIDT(&pPtr->root, id);
+    GuiElem* e = findElemByIDT(pPtr->root, id);
     if (e) { return e; }
   }
   return nullptr;
@@ -1322,7 +1322,7 @@ GuiElem* Gui::findElemByID(ElemID id)
 GuiElem* Gui::findElemByEventID(EventID eid)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
+    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
     if (e) { return e; }
   }
   return nullptr;
@@ -1331,7 +1331,7 @@ GuiElem* Gui::findElemByEventID(EventID eid)
 const GuiElem* Gui::findElemByEventID(EventID eid) const
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(&pPtr->root, eid);
+    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
     if (e) { return e; }
   }
   return nullptr;
@@ -1343,7 +1343,7 @@ GuiElem* Gui::findNextElem(ElemID id, GuiElemType type)
   GuiElem* focusElem = nullptr;
   for (auto& pPtr : _panels) {
     p = pPtr.get();
-    focusElem = findElemByIDT(&pPtr->root, id);
+    focusElem = findElemByIDT(pPtr->root, id);
     if (focusElem) { break; }
   }
 
@@ -1378,7 +1378,7 @@ GuiElem* Gui::findPrevElem(ElemID id, GuiElemType type)
   GuiElem* focusElem = nullptr;
   for (auto& pPtr : _panels) {
     p = pPtr.get();
-    focusElem = findElemByIDT(&pPtr->root, id);
+    focusElem = findElemByIDT(pPtr->root, id);
     if (focusElem) { break; }
   }
 
