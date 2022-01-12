@@ -231,6 +231,17 @@ class gx::Gui
     _heldTime = 0;
     _repeatDelay = -1;
   }
+
+  std::unique_ptr<Panel> removePanel(PanelID id) {
+    for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
+      if ((*i)->id == id) {
+        auto ptr = std::move(*i);
+        _panels.erase(i);
+        return ptr;
+      }
+    }
+    return {};
+  }
 };
 
 // **** Inline Implementations ****

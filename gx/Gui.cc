@@ -245,6 +245,16 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
   }
 }
 
+[[nodiscard]] static constexpr uint16_t borderVal(
+  const GuiTheme& thm, GuiElemType type)
+{
+  switch (type) {
+    case GUI_PANEL:      return thm.panelBorder;
+    case GUI_MENU_FRAME: return thm.menuFrameBorder;
+    default:             return thm.border;
+  }
+}
+
 static void resizedElem(const GuiTheme& thm, GuiElem& def)
 {
   // update children element sizes based on parent resize
@@ -275,17 +285,10 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
         if (resized) { resizedElem(thm, e); }
       }
       break;
-    case GUI_PANEL: {
-      GuiElem& e0 = def.elems[0];
-      const float b2 = thm.panelBorder * 2.0f;
-      e0._w = def._w - b2;
-      e0._h = def._h - b2;
-      resizedElem(thm, e0);
-      break;
-    }
+    case GUI_PANEL:
     case GUI_MENU_FRAME: {
       GuiElem& e0 = def.elems[0];
-      const float b2 = thm.menuFrameBorder * 2.0f;
+      const float b2 = borderVal(thm, def.type) * 2;
       e0._w = def._w - b2;
       e0._h = def._h - b2;
       resizedElem(thm, e0);
@@ -305,7 +308,6 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
 
 static void calcSize(const GuiTheme& thm, GuiElem& def)
 {
-  const float b = thm.border;
   switch (def.type) {
     case GUI_HFRAME: {
       const float fs = thm.frameSpacing;
@@ -357,22 +359,6 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
         def._h += e._h;
       }
       break;
-    case GUI_PANEL: {
-      GuiElem& e = def.elems[0];
-      calcSize(thm, e);
-      const float b2 = thm.panelBorder * 2.0f;
-      def._w = e._w + b2;
-      def._h = e._h + b2;
-      break;
-    }
-    case GUI_MENU_FRAME: {
-      GuiElem& e = def.elems[0];
-      calcSize(thm, e);
-      const float b2 = thm.menuFrameBorder * 2.0f;
-      def._w = e._w + b2;
-      def._h = e._h + b2;
-      break;
-    }
     case GUI_TITLEBAR:
       if (def.elems.empty()) {
         def._w = thm.titlebarMinWidth;
@@ -380,8 +366,9 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       } else {
         GuiElem& e = def.elems[0];
         calcSize(thm, e);
-        def._w = e._w + (b * 2.0f);
-        def._h = e._h + (b * 2.0f);
+        const float b2 = thm.border * 2;
+        def._w = e._w + b2;
+        def._h = e._h + b2;
       }
       break;
     case GUI_LABEL: {
@@ -395,35 +382,39 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     }
     case GUI_HLINE:
       def._w = float(thm.font->size() - 1);
-      def._h = float(thm.lineWidth) + (b * 2.0f);
+      def._h = float(thm.lineWidth + (thm.border * 2));
       break;
     case GUI_VLINE:
-      def._w = float(thm.lineWidth) + (b * 2.0f);
+      def._w = float(thm.lineWidth + (thm.border * 2));
       def._h = float(thm.font->size() - 1);
       break;
+    case GUI_PANEL:
+    case GUI_MENU_FRAME:
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
     case GUI_MENU_ITEM: {
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
-      def._w = e._w + (b * 2.0f);
-      def._h = e._h + (b * 2.0f);
+      const float b2 = borderVal(thm, def.type) * 2;
+      def._w = e._w + b2;
+      def._h = e._h + b2;
       break;
     }
     case GUI_CHECKBOX: {
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
       const Font& fnt = *thm.font;
-      def._w = fnt.calcWidth(thm.checkCode) + (b*3.0f) + e._w;
-      def._h = std::max(float(fnt.size() - 1) + (b*2.0f), e._h);
+      def._w = fnt.calcWidth(thm.checkCode) + (thm.border * 3) + e._w;
+      def._h = std::max(float(fnt.size() - 1 + (thm.border * 2)), e._h);
       break;
     }
     case GUI_MENU: {
       // menu button
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
-      def._w = e._w + (b * 2.0f);
-      def._h = e._h + (b * 2.0f);
+      const float b2 = thm.border * 2;
+      def._w = e._w + b2;
+      def._h = e._h + b2;
       // menu items
       calcSize(thm, def.elems[1]);
       break;
@@ -432,8 +423,8 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       // menu header
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
-      def._w = e._w + (b * 3.0f) + thm.font->calcWidth(thm.subMenuCode);
-      def._h = e._h + (b * 2.0f);
+      def._w = e._w + (thm.border * 3) + thm.font->calcWidth(thm.subMenuCode);
+      def._h = e._h + (thm.border * 2);
       // menu items
       calcSize(thm, def.elems[1]);
       break;
@@ -452,8 +443,8 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     case GUI_LISTSELECT_ITEM: {
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
-      def._w = e._w + (b * 3.0f) + thm.font->calcWidth(thm.listSelectCode);
-      def._h = e._h + (b * 2.0f);
+      def._w = e._w + (thm.border * 3) + thm.font->calcWidth(thm.listSelectCode);
+      def._h = e._h + (thm.border * 2);
       break;
     }
     case GUI_ENTRY: {
@@ -472,10 +463,12 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
         + thm.entryTopMargin + thm.entryBottomMargin;
       break;
     }
-    case GUI_IMAGE:
-      def._w = def.image.width + (b * 2.0f);
-      def._h = def.image.height + (b * 2.0f);
+    case GUI_IMAGE: {
+      const float b2 = thm.border * 2;
+      def._w = def.image.width + b2;
+      def._h = def.image.height + b2;
       break;
+    }
     default:
       GX_LOG_ERROR("unknown type ", def.type);
       break;
@@ -534,25 +527,15 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
                 bottom - def.spacer.bottom);
       }
       break;
-    case GUI_PANEL: {
-      const float b = thm.panelBorder;
-      calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
-      break;
-    }
-    case GUI_MENU_FRAME: {
-      const float b = thm.menuFrameBorder;
-      calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
-      break;
-    }
     case GUI_CHECKBOX:
-      left += thm.font->calcWidth(thm.checkCode) + (thm.border*3.0f);
+      left += thm.font->calcWidth(thm.checkCode) + (thm.border * 3);
       calcPos(thm, def.elems[0], left, top, right, bottom);
       break;
     case GUI_MENU: {
       GuiElem& e0 = def.elems[0];
       calcPos(thm, e0, left, top, right, bottom);
       // always position menu frame below menu button for now
-      top  = e0._y + e0._h + thm.border;
+      top = e0._y + e0._h + thm.border;
       GuiElem& e1 = def.elems[1];
       calcPos(thm, e1, left, top, left + e1._w, top + e1._h);
       break;
@@ -574,10 +557,10 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
       break;
     }
     default:
-      // align single child element
       if (!def.elems.empty()) {
+        // align single child element
         assert(def.elems.size() == 1);
-        const float b = thm.border;
+        const float b = borderVal(thm, def.type);
         calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
       }
       break;
@@ -611,40 +594,24 @@ void Gui::clear()
 
 void Gui::deletePanel(PanelID id)
 {
-  for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
-    if ((*i)->id == id) {
-      _panels.erase(i);
-      _needRender = true;
-      break;
-    }
-  }
+  _needRender |= (removePanel(id) != nullptr);
 }
 
 void Gui::raisePanel(PanelID id)
 {
   if (id == topPanel()) { return; }
-  for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
-    if ((*i)->id == id) {
-      auto pPtr = std::move(*i);
-      _panels.erase(i);
-      _panels.insert(_panels.begin(), std::move(pPtr));
-      _needRender = true;
-      break;
-    }
+  if (auto ptr = removePanel(id); ptr != nullptr) {
+    _panels.insert(_panels.begin(), std::move(ptr));
+    _needRender = true;
   }
 }
 
 void Gui::lowerPanel(PanelID id)
 {
   if (id == bottomPanel()) { return; }
-  for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
-    if ((*i)->id == id) {
-      auto pPtr = std::move(*i);
-      _panels.erase(i);
-      _panels.insert(_panels.end(), std::move(pPtr));
-      _needRender = true;
-      break;
-    }
+  if (auto ptr = removePanel(id); ptr != nullptr) {
+    _panels.insert(_panels.end(), std::move(ptr));
+    _needRender = true;
   }
 }
 
