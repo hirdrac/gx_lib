@@ -109,7 +109,6 @@ static bool activate(GuiElem& def, ElemID id)
 template<class T>
 [[nodiscard]] static inline T* findElemByIDT(T& def, ElemID id)
 {
-  assert(id != 0);
   std::vector<T*> stack;
   T* e = &def;
   while (e->_id != id) {
@@ -304,20 +303,6 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
   }
 }
 
-static void calcMaxItemSize(const GuiElem& root, float& maxW, float& maxH)
-{
-  // NOTE: skips root in search
-  for (auto& e : root.elems) {
-    if (e.type == GUI_LISTSELECT_ITEM) {
-      maxW = std::max(maxW, e._w);
-      maxH = std::max(maxH, e._h);
-      return;
-    } else if (!e.elems.empty()) {
-      calcMaxItemSize(e, maxW, maxH);
-    }
-  }
-}
-
 static void calcSize(const GuiTheme& thm, GuiElem& def)
 {
   const float b = thm.border;
@@ -457,8 +442,11 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       calcSize(thm, def.elems[0]);
       GuiElem& e1 = def.elems[1]; // GUI_MENU_FRAME
       calcSize(thm, e1);
-      def._w = 0; def._h = 0;
-      calcMaxItemSize(e1.elems[0], def._w, def._h);
+      // base size on 1st list item (all items should be same size)
+      const GuiElem* item = findItem(e1.elems[0], 0);
+      assert(item != nullptr);
+      def._w = item->_w;
+      def._h = item->_h;
       break;
     }
     case GUI_LISTSELECT_ITEM: {
@@ -784,7 +772,7 @@ void Gui::processMouseEvent(Window& win)
 
   GuiElemType popupType = GUI_NULL;
   if (_popupID != 0) {
-    GuiElem* e = findElemByID(_popupID);
+    const GuiElem* e = findElemByID(_popupID);
     popupType = getPopupType(e->type);
   }
 
@@ -1088,7 +1076,8 @@ void Gui::initElem(GuiElem& def)
 {
   def._id = ++_lastUniqueID;
   if (def.type == GUI_LISTSELECT) {
-    GuiElem* e = findItem(def, def.itemNo);
+    const GuiElem* e = findItem(def, def.itemNo);
+    if (!e && def.itemNo != 0) { e = findItem(def, 0); }
     if (e) {
       GuiElem& e0 = def.elems[0];
       e0 = e->elems[0];
@@ -1331,7 +1320,7 @@ GuiElem* Gui::findElemByEventID(EventID eid)
 const GuiElem* Gui::findElemByEventID(EventID eid) const
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
+    const GuiElem* e = findElemByEventIDT(pPtr->root, eid);
     if (e) { return e; }
   }
   return nullptr;
@@ -1340,7 +1329,7 @@ const GuiElem* Gui::findElemByEventID(EventID eid) const
 GuiElem* Gui::findNextElem(ElemID id, GuiElemType type)
 {
   Panel* p = nullptr;
-  GuiElem* focusElem = nullptr;
+  const GuiElem* focusElem = nullptr;
   for (auto& pPtr : _panels) {
     p = pPtr.get();
     focusElem = findElemByIDT(pPtr->root, id);
@@ -1375,7 +1364,7 @@ GuiElem* Gui::findNextElem(ElemID id, GuiElemType type)
 GuiElem* Gui::findPrevElem(ElemID id, GuiElemType type)
 {
   Panel* p = nullptr;
-  GuiElem* focusElem = nullptr;
+  const GuiElem* focusElem = nullptr;
   for (auto& pPtr : _panels) {
     p = pPtr.get();
     focusElem = findElemByIDT(pPtr->root, id);
