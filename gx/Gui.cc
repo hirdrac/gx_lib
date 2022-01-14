@@ -251,6 +251,8 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
   switch (type) {
     case GUI_PANEL:      return thm.panelBorder;
     case GUI_MENU_FRAME: return thm.menuFrameBorder;
+    case GUI_VLINE:
+    case GUI_HLINE:      return thm.lineBorder;
     default:             return thm.border;
   }
 }
@@ -382,10 +384,10 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     }
     case GUI_HLINE:
       def._w = float(thm.font->size() - 1);
-      def._h = float(thm.lineWidth + (thm.border * 2));
+      def._h = float(thm.lineWidth + (thm.lineBorder * 2));
       break;
     case GUI_VLINE:
-      def._w = float(thm.lineWidth + (thm.border * 2));
+      def._w = float(thm.lineWidth + (thm.lineBorder * 2));
       def._h = float(thm.font->size() - 1);
       break;
     case GUI_PANEL:
@@ -1063,14 +1065,14 @@ bool Gui::drawElem(
                ex, ey, ALIGN_TOP_LEFT, def.text);
       break;
     case GUI_HLINE: {
-      const float b = thm.border;
+      const float b = thm.lineBorder;
       assert(style != nullptr);
       dc.color(style->textColor);
       dc.rectangle(ex, ey + b, ew, eh - (b*2));
       break;
     }
     case GUI_VLINE: {
-      const float b = thm.border;
+      const float b = thm.lineBorder;
       assert(style != nullptr);
       dc.color(style->textColor);
       dc.rectangle(ex + b, ey, ew - (b*2), eh);

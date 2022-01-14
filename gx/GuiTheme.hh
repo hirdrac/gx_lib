@@ -114,6 +114,7 @@ struct gx::GuiTheme
 
   uint16_t panelBorder = 8;
   uint16_t menuFrameBorder = 4;
+  uint16_t lineBorder = 4;
   uint16_t border = 6;
   uint16_t frameSpacing = 4;
   uint16_t textSpacing = 1;
