@@ -586,6 +586,7 @@ void Gui::clear()
   _focusID = 0;
   _popupID = 0;
   _eventID = 0;
+  _popupType = GUI_NULL;
   _eventType = GUI_NULL;
   _eventTime = 0;
   _needRender = true;
@@ -657,11 +658,7 @@ void Gui::update(Window& win)
       }
 
       const GuiElem* heldElem = findElemByID(_heldID);
-      if (heldElem) {
-        _eventID = heldElem->eid;
-        _eventType = _heldType;
-        _eventTime = now;
-      }
+      if (heldElem) { setEvent(*heldElem, now); }
     }
   }
 
@@ -718,15 +715,17 @@ void Gui::deactivatePopups()
 {
   for (auto& pPtr : _panels) { deactivate(pPtr->root); }
   _popupID = 0;
+  _popupType = GUI_NULL;
   _needRender = true;
 }
 
-void Gui::activatePopup(ElemID id)
+void Gui::activatePopup(const GuiElem& def)
 {
-  assert(id != 0);
   if (_popupID != 0) { deactivatePopups(); }
+  const ElemID id = def._id;
   for (auto& pPtr : _panels) { if (activate(pPtr->root, id)) break; }
   _popupID = id;
+  _popupType = getPopupType(def.type);
   _needRender = true;
 }
 
@@ -736,12 +735,6 @@ void Gui::processMouseEvent(Window& win)
   const bool buttonEvent = win.events() & EVENT_MOUSE_BUTTON1;
   const bool pressEvent = buttonDown & buttonEvent;
   const bool anyGuiButtonEvent = win.allEvents() & EVENT_MOUSE_BUTTON1;
-
-  GuiElemType popupType = GUI_NULL;
-  if (_popupID != 0) {
-    const GuiElem* e = findElemByID(_popupID);
-    popupType = getPopupType(e->type);
-  }
 
   // get elem at mouse pointer
   Panel* pPtr = nullptr;
@@ -753,7 +746,7 @@ void Gui::processMouseEvent(Window& win)
       const Panel& p = *ptr;
       const float mx = win.mouseX() - p.layout.x;
       const float my = win.mouseY() - p.layout.y;
-      ePtr = findElemByXY(ptr->root, mx, my, popupType);
+      ePtr = findElemByXY(ptr->root, mx, my, _popupType);
       if (ePtr) {
         if (ePtr->_enabled) {
           id = ePtr->_id;
@@ -806,19 +799,17 @@ void Gui::processMouseEvent(Window& win)
     if (pressEvent && ePtr->_active) {
       // click on open menu/listselect button closes popup
       deactivatePopups();
-    } else if (pressEvent || (isMenu(type) && popupType == GUI_MENU)) {
+    } else if (pressEvent || (isMenu(type) && _popupType == GUI_MENU)) {
       // open menu/listselect with click OR open menu/sub-menu with mouse-over
-      if (_popupID != id) { activatePopup(id); }
+      if (_popupID != id) { activatePopup(*ePtr); }
     }
   } else if (type == GUI_MENU_ITEM) {
     if (buttonEvent) {
-      _eventID = ePtr->eid;
-      _eventType = type;
-      _eventTime = win.lastPollTime();
+      setEvent(*ePtr, win.lastPollTime());
       deactivatePopups();
     } else if (_popupID != id) {
       // activate on menu item to close sub-menus if necessary
-      activatePopup(id);
+      activatePopup(*ePtr);
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
     if (buttonEvent) {
@@ -831,9 +822,7 @@ void Gui::processMouseEvent(Window& win)
         const float b = pPtr->theme->border;
         calcPos(*pPtr->theme, e0, ls._x + b, ls._y + b, ls._x + ls._w - b,
                 ls._y + ls._h - b);
-        _eventID = ls.eid;
-        _eventType = ls.type;
-        _eventTime = win.lastPollTime();
+        setEvent(ls, win.lastPollTime());
         deactivatePopups();
       }
     }
@@ -844,12 +833,10 @@ void Gui::processMouseEvent(Window& win)
       _heldTime = win.lastPollTime();
       _heldX = win.mouseX();
       _heldY = win.mouseY();
-      _repeatDelay = (type == GUI_BUTTON_PRESS) ? ePtr->repeatDelay : -1;
       _needRender = true;
       if (type == GUI_BUTTON_PRESS) {
-        _eventID = ePtr->eid;
-        _eventType = type;
-        _eventTime = win.lastPollTime();
+        _repeatDelay = ePtr->repeatDelay;
+        setEvent(*ePtr, win.lastPollTime());
       }
     } else if ((_heldType == GUI_BUTTON_PRESS) && (_heldID != id)) {
       // clear hold if cursor moves off BUTTON_PRESS
@@ -859,9 +846,7 @@ void Gui::processMouseEvent(Window& win)
       if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
           && buttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
-        _eventID = ePtr->eid;
-        _eventType = type;
-        _eventTime = win.lastPollTime();
+        setEvent(*ePtr, win.lastPollTime());
         if (type == GUI_CHECKBOX) { ePtr->checkboxSet = !ePtr->checkboxSet; }
       }
 
@@ -941,11 +926,7 @@ void Gui::setFocusID(Window& win, ElemID id)
   if (_textChanged) {
     _textChanged = false;
     const GuiElem* focusElem = findElemByID(_focusID);
-    if (focusElem) {
-      _eventID = focusElem->eid;
-      _eventType = GUI_ENTRY;
-      _eventTime = win.lastPollTime();
-    }
+    if (focusElem) { setEvent(*focusElem, win.lastPollTime()); }
   }
 
   _focusID = id;

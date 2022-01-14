@@ -192,8 +192,9 @@ class gx::Gui
   ElemID _focusID = 0;
   ElemID _popupID = 0;
   EventID _eventID = 0;
-  GuiElemType _eventType = GUI_NULL;
   GuiElemType _heldType = GUI_NULL;
+  GuiElemType _popupType = GUI_NULL;
+  GuiElemType _eventType = GUI_NULL;
   int64_t _eventTime = 0;
   int64_t _heldTime = 0;
   int64_t _repeatDelay = -1;
@@ -213,7 +214,7 @@ class gx::Gui
   void setFocusID(Window& win, ElemID id);
   void initElem(GuiElem& def);
   void deactivatePopups();
-  void activatePopup(ElemID id);
+  void activatePopup(const GuiElem& def);
   bool drawElem(const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
                 int64_t usec, const GuiTheme::Style* style) const;
   bool drawPopup(const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
@@ -230,6 +231,12 @@ class gx::Gui
     _heldType = GUI_NULL;
     _heldTime = 0;
     _repeatDelay = -1;
+  }
+
+  void setEvent(const GuiElem& e, int64_t t) {
+    _eventID = e.eid;
+    _eventType = e.type;
+    _eventTime = t;
   }
 
   std::unique_ptr<Panel> removePanel(PanelID id) {
