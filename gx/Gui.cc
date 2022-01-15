@@ -82,10 +82,12 @@ static bool activate(GuiElem& def, ElemID id)
 {
   if (isPopup(def.type)) {
     if (popupType == GUI_NULL || (getPopupType(def.type) == popupType)) {
-      // FIXME: shouldn't find listselect/listselect_item if outside of
-      //   current listselect popup (ok for menus though)
+      // special case for listselect to prevent other listselect activation
+      if (popupType == GUI_LISTSELECT && def.type == GUI_LISTSELECT
+          && !def._active) { return nullptr; }
+
       if (contains(def, x, y)) { return &def; }
-      if (def._active) {
+      else if (def._active) {
         GuiElem* e = findElemByXY(def.elems[1], x, y, GUI_NULL);
         if (e) { return e; }
       }
