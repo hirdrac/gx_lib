@@ -939,7 +939,6 @@ void Gui::setFocusID(Window& win, ElemID id)
       if (findElemByIDT(pPtr->root, _focusID)) { p = pPtr.get(); break; }
     }
 
-    assert(p != nullptr);
     _cursorBlinkTime = p ? p->theme->cursorBlinkTime : 400000;
     _cursorState = true;
   }
@@ -1024,7 +1023,7 @@ void Gui::layout(Panel& p, float x, float y, AlignEnum align)
 
 void Gui::initElem(GuiElem& def)
 {
-  def._id = ++_lastUniqueID;
+  def._id = ++_lastElemID;
   if (def.type == GUI_LISTSELECT) {
     const GuiElem* e = findItem(def, def.itemNo);
     if (!e && def.itemNo != 0) { e = findItem(def, 0); }

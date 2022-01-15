@@ -182,25 +182,31 @@ class gx::Gui
     bool needLayout = false;
   };
 
+  // element definition
   std::vector<std::unique_ptr<Panel>> _panels;
   PanelID _lastPanelID = 0;
-  PanelID _lastUniqueID = 0;
+  PanelID _lastElemID = 0;
 
+  // current state
   DrawList _dl, _dl2;
   ElemID _hoverID = 0;
-  ElemID _heldID = 0;
   ElemID _focusID = 0;
+
   ElemID _popupID = 0;
-  EventID _eventID = 0;
-  GuiElemType _heldType = GUI_NULL;
   GuiElemType _popupType = GUI_NULL;
+
+  EventID _eventID = 0;
   GuiElemType _eventType = GUI_NULL;
   int64_t _eventTime = 0;
+
+  ElemID _heldID = 0;
+  GuiElemType _heldType = GUI_NULL;
+  float _heldX = 0, _heldY = 0;
   int64_t _heldTime = 0;
   int64_t _repeatDelay = -1;
+
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0; // cached theme value
-  float _heldX = 0, _heldY = 0;
   bool _cursorState = false;
   bool _needRender = true;
   bool _needRedraw = false;
