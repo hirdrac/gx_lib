@@ -678,6 +678,8 @@ void Gui::update(Window& win)
       const GuiElem* heldElem = findElemByID(_heldID);
       if (heldElem) { setEvent(*heldElem, now); }
     }
+  } else if (_popupID != 0) {
+    deactivatePopups();
   }
 
   // entry input handling & cursor update
