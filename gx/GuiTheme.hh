@@ -17,17 +17,26 @@ namespace gx {
 struct gx::GuiTheme
 {
   enum EdgeTypeEnum : int32_t {
-    EDGE_BORDER_1px    = 0,
-    EDGE_BORDER_2px    = 1,
-    EDGE_UNDERLINE_1px = 2,
-    EDGE_UNDERLINE_2px = 3
+    EDGE_NONE          = 0,
+    EDGE_BORDER_1px    = 1,
+    EDGE_BORDER_2px    = 2,
+    EDGE_UNDERLINE_1px = 3,
+    EDGE_UNDERLINE_2px = 4
+  };
+
+  enum BackgroundTypeEnum : int32_t {
+    BG_NONE      = 0,
+    BG_SOLID     = 1, // backgroundColor only
+    BG_VGRADIENT = 2, // backgroundColor(top), backgroundColor2(bottom)
   };
 
   struct Style {
     RGBA8 textColor;
     RGBA8 backgroundColor;
+    RGBA8 backgroundColor2 = 0;
     RGBA8 edgeColor = 0;
     EdgeTypeEnum edgeType = EDGE_BORDER_1px;
+    BackgroundTypeEnum backgroundType = BG_SOLID;
   };
 
   const Font* font = nullptr;
@@ -63,7 +72,7 @@ struct gx::GuiTheme
   Style menuButtonHover = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f)};
   Style menuButtonOpen = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f),
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0,
     packRGBA8(1.0f,1.0f,1.0f,1.0f), EDGE_UNDERLINE_2px};
   Style menuFrame = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,0.0f,.85f)};
@@ -77,7 +86,7 @@ struct gx::GuiTheme
   Style listSelectHover = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f)};
   Style listSelectOpen = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f),
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0,
     packRGBA8(1.0f,1.0f,1.0f,1.0f), EDGE_UNDERLINE_2px};
   Style listSelectDisable = {
     packRGBA8(.6f,.6f,.6f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f)};
@@ -91,7 +100,9 @@ struct gx::GuiTheme
   Style entry = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,.2f,1.0f)};
   Style entryFocus = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.1f,.1f,.3f,1.0f)};
+    packRGBA8(1.0f,1.0f,1.0f,1.0f),
+    packRGBA8(0.0f,0.0f,.2f,1.0f), packRGBA8(.15f,.15f,.35f,1.0f), 0,
+    EDGE_NONE, BG_VGRADIENT};
   Style entryDisable = {
     packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.15f,.15f,.2f,1.0f)};
 
@@ -105,7 +116,8 @@ struct gx::GuiTheme
   int16_t checkYOffset = 2;
 
   int32_t passwordCode = 8226; // U+2022 (bullet)
-  int32_t subMenuCode = '>';
+  //int32_t subMenuCode = '>';
+  int32_t subMenuCode = 12299;
   int32_t listSelectCode = 8711; // U+2207
 
   RGBA8 cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);

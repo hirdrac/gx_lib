@@ -217,10 +217,22 @@ static bool addEntryChar(GuiElem& e, int32_t codepoint)
 static void drawRec(DrawContext& dc, float x, float y, float w, float h,
                     const GuiTheme::Style* style)
 {
-  if (style->backgroundColor != 0) {
-    dc.color(style->backgroundColor);
-    dc.rectangle(x, y, w, h);
-  }
+  switch (style->backgroundType) {
+    case GuiTheme::BG_SOLID:
+      if (style->backgroundColor != 0) {
+        dc.color(style->backgroundColor);
+        dc.rectangle(x, y, w, h);
+      }
+      break;
+    case GuiTheme::BG_VGRADIENT:
+      dc.quad(Vertex2C{x,   y,   style->backgroundColor},
+              Vertex2C{x+w, y,   style->backgroundColor},
+              Vertex2C{x,   y+h, style->backgroundColor2},
+              Vertex2C{x+w, y+h, style->backgroundColor2});
+      break;
+    default: // BG_NONE
+      break;
+  };
 
   if (style->edgeColor == 0) { return; }
 
@@ -243,6 +255,8 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
       break;
     case GuiTheme::EDGE_UNDERLINE_2px:
       dc.rectangle(x, y + h - 2, w, 2);
+      break;
+    default: // EDGE_NONE
       break;
   }
 }
