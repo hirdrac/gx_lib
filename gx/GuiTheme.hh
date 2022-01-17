@@ -116,8 +116,7 @@ struct gx::GuiTheme
   int16_t checkYOffset = 2;
 
   int32_t passwordCode = 8226; // U+2022 (bullet)
-  //int32_t subMenuCode = '>';
-  int32_t subMenuCode = 12299;
+  int32_t subMenuCode = '>';
   int32_t listSelectCode = 8711; // U+2207
 
   RGBA8 cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
