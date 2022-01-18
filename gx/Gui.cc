@@ -665,7 +665,7 @@ void Gui::update(Window& win)
 
   // mouse movement/button handling
   if (win.focused()) {
-    if (win.allEvents() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_BUTTON1)) {
+    if (win.allEvents() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_ANY_BUTTON)) {
       processMouseEvent(win);
     }
 
@@ -751,10 +751,13 @@ void Gui::activatePopup(const GuiElem& def)
 
 void Gui::processMouseEvent(Window& win)
 {
-  const bool buttonDown = win.buttons() & BUTTON1;
-  const bool buttonEvent = win.events() & EVENT_MOUSE_BUTTON1;
-  const bool pressEvent = buttonDown & buttonEvent;
-  const bool anyGuiButtonEvent = win.allEvents() & EVENT_MOUSE_BUTTON1;
+  const bool lbuttonDown = win.buttons() & BUTTON1;
+  const bool rbuttonDown = win.buttons() & BUTTON2;
+  const bool lbuttonEvent = win.events() & EVENT_MOUSE_BUTTON1;
+  const bool rbuttonEvent = win.events() & EVENT_MOUSE_BUTTON2;
+  const bool lpressEvent = lbuttonDown & lbuttonEvent;
+  const bool rpressEvent = rbuttonDown & rbuttonEvent;
+  const bool anyGuiButtonEvent = win.allEvents() & EVENT_MOUSE_ANY_BUTTON;
 
   // get elem at mouse pointer
   Panel* pPtr = nullptr;
@@ -774,7 +777,7 @@ void Gui::processMouseEvent(Window& win)
           pPtr = ptr.get();
         }
 
-        if (buttonEvent) { win.removeEvent(EVENT_MOUSE_BUTTON1); }
+        win.removeEvent(EVENT_MOUSE_ANY_BUTTON);
         break;
       }
     }
@@ -782,9 +785,9 @@ void Gui::processMouseEvent(Window& win)
 
   // update focus
   // FIXME: setFocusID() could trigger an event that is overridden below
-  if (pressEvent) {
+  if (lpressEvent) {
     setFocusID(win, (type == GUI_ENTRY) ? id : 0);
-  } else if (buttonDown && anyGuiButtonEvent) {
+  } else if (lbuttonDown && anyGuiButtonEvent) {
     // click in other Gui instance clears our focus
     setFocusID(win, 0);
   }
@@ -792,14 +795,14 @@ void Gui::processMouseEvent(Window& win)
   // update hoverID
   if (_hoverID != id) {
     const ElemID hid =
-      (!buttonDown || isPopupItem(type) || id == _heldID) ? id : 0;
+      (!lbuttonDown || isPopupItem(type) || id == _heldID) ? id : 0;
     if (_hoverID != hid) {
       _hoverID = hid;
       _needRender = true;
     }
   }
 
-  if (buttonDown && _heldType == GUI_TITLEBAR) {
+  if (lbuttonDown && _heldType == GUI_TITLEBAR) {
     if (win.events() & EVENT_MOUSE_MOVE) {
       pPtr = nullptr;
       for (auto& ptr : _panels) {
@@ -816,6 +819,7 @@ void Gui::processMouseEvent(Window& win)
       _needRender = true;
     }
   } else if (isPopup(type)) {
+    const bool pressEvent = lpressEvent || (type == GUI_MENU && rpressEvent);
     if (pressEvent && ePtr->_active) {
       // click on open menu/listselect button closes popup
       deactivatePopups();
@@ -824,7 +828,7 @@ void Gui::processMouseEvent(Window& win)
       if (_popupID != id) { activatePopup(*ePtr); }
     }
   } else if (type == GUI_MENU_ITEM) {
-    if (buttonEvent) {
+    if (lbuttonEvent || rbuttonEvent) {
       setEvent(*ePtr, win.lastPollTime());
       deactivatePopups();
     } else if (_popupID != id) {
@@ -832,7 +836,7 @@ void Gui::processMouseEvent(Window& win)
       activatePopup(*ePtr);
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
-    if (buttonEvent) {
+    if (lbuttonEvent) {
       GuiElem* parent = findParentListSelect(pPtr->root, id);
       if (parent) {
         GuiElem& ls = *parent;
@@ -847,7 +851,7 @@ void Gui::processMouseEvent(Window& win)
       }
     }
   } else {
-    if (pressEvent && id != 0) {
+    if (lpressEvent && id != 0) {
       _heldID = id;
       _heldType = type;
       _heldTime = win.lastPollTime();
@@ -862,9 +866,9 @@ void Gui::processMouseEvent(Window& win)
       // clear hold if cursor moves off BUTTON_PRESS
       clearHeld();
       _needRender = true;
-    } else if (!buttonDown && (_heldID != 0)) {
+    } else if (!lbuttonDown && (_heldID != 0)) {
       if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
-          && buttonEvent && (_heldID == id)) {
+          && lbuttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
         setEvent(*ePtr, win.lastPollTime());
         if (type == GUI_CHECKBOX) { ePtr->checkboxSet = !ePtr->checkboxSet; }
