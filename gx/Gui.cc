@@ -256,6 +256,12 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
     case GuiTheme::EDGE_UNDERLINE_2px:
       dc.rectangle(x, y + h - 2, w, 2);
       break;
+    case GuiTheme::EDGE_OVERLINE_1px:
+      dc.rectangle(x, y, w, 1);
+      break;
+    case GuiTheme::EDGE_OVERLINE_2px:
+      dc.rectangle(x, y, w, 2);
+      break;
     default: // EDGE_NONE
       break;
   }

@@ -21,7 +21,9 @@ struct gx::GuiTheme
     EDGE_BORDER_1px    = 1,
     EDGE_BORDER_2px    = 2,
     EDGE_UNDERLINE_1px = 3,
-    EDGE_UNDERLINE_2px = 4
+    EDGE_UNDERLINE_2px = 4,
+    EDGE_OVERLINE_1px  = 5,
+    EDGE_OVERLINE_2px  = 6,
   };
 
   enum BackgroundTypeEnum : int32_t {
@@ -117,7 +119,9 @@ struct gx::GuiTheme
 
   int32_t passwordCode = 8226; // U+2022 (bullet)
   int32_t subMenuCode = '>';
+  //int32_t subMenuCode = 9658; // LiberationSans-Regular
   int32_t listSelectCode = 8711; // U+2207
+  //int32_t listSelectCode = 9660; // LiberationSans-Regular
 
   RGBA8 cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
   uint32_t cursorBlinkTime = 400000; // 1 sec
