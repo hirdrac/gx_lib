@@ -28,8 +28,6 @@ int main(int argc, char* argv[])
   }
 
   gx::GuiTheme theme{&fnt};
-  theme.panel.edgeColor = gx::packRGBA8(.18f,.18f,.18f,1);
-  theme.panel.edgeType = gx::GuiTheme::EDGE_BORDER_1px;
 
   // button demo
   gx::Gui gui;

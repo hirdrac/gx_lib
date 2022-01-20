@@ -43,7 +43,8 @@ struct gx::GuiTheme
 
   const Font* font = nullptr;
   Style panel = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.2f,.2f,.2f,1.0f)};
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.2f,.2f,.2f,1.0f), 0,
+    packRGBA8(.18f,.18f,.18f,1), EDGE_BORDER_1px};
   Style titlebar = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.3f,.3f,.3f,1.0f)};
 
