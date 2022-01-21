@@ -18,9 +18,9 @@
 
 
 namespace gx {
-  using PanelID = int;  // internal/external panel ID
-  using ElemID = int;   // internal GuiElem ID
-  using EventID = int;  // user specified event value
+  using PanelID = int32_t;  // internal/external panel ID
+  using ElemID = int32_t;   // internal GuiElem ID
+  using EventID = int32_t;  // user specified event value
 
   class Window;
   class DrawContext;
@@ -185,7 +185,7 @@ class gx::Gui
   // element definition
   std::vector<std::unique_ptr<Panel>> _panels;
   PanelID _lastPanelID = 0;
-  PanelID _lastElemID = 0;
+  ElemID _lastElemID = 0;
 
   // current state
   DrawList _dl, _dl2;
