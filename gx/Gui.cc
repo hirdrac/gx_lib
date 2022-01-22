@@ -766,6 +766,7 @@ void Gui::processMouseEvent(Window& win)
   const bool anyGuiButtonEvent = win.allEvents() & EVENT_MOUSE_ANY_BUTTON;
 
   // get elem at mouse pointer
+  MouseShapeEnum shape = MOUSESHAPE_ARROW;
   Panel* pPtr = nullptr;
   GuiElem* ePtr = nullptr;
   ElemID id = 0;
@@ -781,12 +782,17 @@ void Gui::processMouseEvent(Window& win)
           id = ePtr->_id;
           type = ePtr->type;
           pPtr = ptr.get();
+          if (type == GUI_ENTRY) { shape = MOUSESHAPE_IBEAM; }
         }
 
         win.removeEvent(EVENT_MOUSE_ANY_BUTTON);
         break;
       }
     }
+  }
+
+  if (shape != win.mouseShape()) {
+    win.setMouseShape(shape);
   }
 
   // update focus
