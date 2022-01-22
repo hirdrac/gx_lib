@@ -1,6 +1,6 @@
 //
 // gx/Window.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // encapsulation of core graphics output & user input
 //
@@ -129,10 +129,16 @@ namespace gx {
   };
 
   enum MouseModeEnum {
-    MOUSE_NORMAL, // mouse cursor visible and behaves normally
-    MOUSE_HIDE,   // hides mouse cursor when it is over display window
-    MOUSE_DISABLE // hides & grabs mouse cursor and all movement events are
-                  //   relative position changes
+    MOUSEMODE_NORMAL, // mouse cursor visible and behaves normally
+    MOUSEMODE_HIDE,   // hides mouse cursor when it is over display window
+    MOUSEMODE_DISABLE // hides & grabs mouse cursor and all movement events are
+                      //   relative position changes
+  };
+
+  enum MouseShapeEnum {
+    MOUSESHAPE_ARROW,
+    MOUSESHAPE_IBEAM,
+    MOUSESHAPE_CROSSHAIR,
   };
 
   class Window;
@@ -157,6 +163,7 @@ class gx::Window
   void setSize(int width, int height, bool fullScreen);
   void setSizeLimits(int minWidth, int minHeight, int maxWidth, int maxHeight);
   void setMouseMode(MouseModeEnum mode);
+  void setMouseShape(MouseShapeEnum shape);
   void setMousePos(float x, float y);
   void setSamples(int samples);
   bool open(int flags = WINDOW_RESIZABLE);
@@ -190,6 +197,8 @@ class gx::Window
   [[nodiscard]] bool closed() const { return _events & EVENT_CLOSE; }
 
   // mouse state
+  [[nodiscard]] MouseModeEnum mouseMode() const { return _mouseMode; }
+  [[nodiscard]] MouseShapeEnum mouseShape() const { return _mouseShape; }
   [[nodiscard]] float mouseX() const { return _mouseX; }
   [[nodiscard]] float mouseY() const { return _mouseY; }
   [[nodiscard]] float scrollX() const { return _scrollX; }
@@ -224,7 +233,8 @@ class gx::Window
   int _maxWidth = -1, _maxHeight = -1;
   int _samples = 4; // for MSAA, 0 disables multi-sampling
   std::string _title;
-  MouseModeEnum _mouseMode = MOUSE_NORMAL;
+  MouseModeEnum _mouseMode = MOUSEMODE_NORMAL;
+  MouseShapeEnum _mouseShape = MOUSESHAPE_ARROW;
   bool _sizeSet = false;
   bool _fullScreen = false;
   bool _fixedAspectRatio = false;

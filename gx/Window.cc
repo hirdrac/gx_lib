@@ -16,6 +16,21 @@
 #include <GLFW/glfw3.h>
 using namespace gx;
 
+// NOTES:
+// changing mouse pointer(cursor):
+// GLFWcursor* ibeamCursor = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+// glfwSetCursor(win, ibeamCursor);
+// glfwSetCursor(win, nullptr);
+// glfwDestroyCursor(ibeamCursor);
+//
+// custom cursor:
+// GLFWimage image;
+// image.width = ...;
+// image.height = ...;
+// image.pixels = pointer to 32-bit RGBA value data (8-bits per color)
+// GLFWcursor* custom = glfwCreateCursor(&image, xhot, yhot);
+// glfwDestroyCursor(custom);
+
 
 namespace {
   // assumed GLFW constant values
@@ -50,10 +65,28 @@ namespace {
 
   [[nodiscard]] constexpr int cursorInputModeVal(MouseModeEnum mode) {
     switch (mode) {
-      case MOUSE_NORMAL:  return GLFW_CURSOR_NORMAL;
-      case MOUSE_HIDE:    return GLFW_CURSOR_HIDDEN;
-      case MOUSE_DISABLE: return GLFW_CURSOR_DISABLED;
-      default:            return -1;
+      case MOUSEMODE_NORMAL:  return GLFW_CURSOR_NORMAL;
+      case MOUSEMODE_HIDE:    return GLFW_CURSOR_HIDDEN;
+      case MOUSEMODE_DISABLE: return GLFW_CURSOR_DISABLED;
+      default:                return -1;
+    }
+  }
+
+  [[nodiscard]] GLFWcursor* getCursorInstance(MouseShapeEnum shape) {
+    static GLFWcursor* ibeam = nullptr;
+    static GLFWcursor* crosshair = nullptr;
+      // cursors are freed with glfwTerminate()
+
+    switch (shape) {
+      case MOUSESHAPE_IBEAM:
+        if (!ibeam) { ibeam = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR); }
+        return ibeam;
+      case MOUSESHAPE_CROSSHAIR:
+        if (!crosshair) {
+          crosshair = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR); }
+        return crosshair;
+      default: // MOUSESHAPE_ARROW
+        return nullptr;
     }
   }
 
@@ -186,6 +219,15 @@ void Window::setMouseMode(MouseModeEnum mode)
   }
 }
 
+void Window::setMouseShape(MouseShapeEnum shape)
+{
+  _mouseShape = shape;
+  if (_renderer) {
+    assert(isMainThread());
+    glfwSetCursor(_renderer->window(), getCursorInstance(shape));
+  }
+}
+
 void Window::setMousePos(float x, float y)
 {
   if (_renderer) {
@@ -269,6 +311,7 @@ bool Window::open(int flags)
 
   glfwSetWindowUserPointer(win, this);
   glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
+  glfwSetCursor(win, getCursorInstance(_mouseShape));
   if (resizable) {
     if (flags & WINDOW_LIMIT_MIN_SIZE) {
       _minWidth = width;
