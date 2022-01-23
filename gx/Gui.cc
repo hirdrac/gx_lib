@@ -10,7 +10,6 @@
 #include "Unicode.hh"
 #include "System.hh"
 #include "Logger.hh"
-#include "Print.hh"
 #include <algorithm>
 #include <cassert>
 using namespace gx;
@@ -642,7 +641,7 @@ void Gui::lowerPanel(PanelID id)
 
 bool Gui::getPanelLayout(PanelID id, Rect& layout) const
 {
-  Panel* p = nullptr;
+  const Panel* p = nullptr;
   for (auto& pPtr : _panels) { if (pPtr->id == id) { p = pPtr.get(); break; } }
   if (!p) { return false; }
 
@@ -909,7 +908,6 @@ void Gui::processCharEvent(Window& win)
         usedEvent = true;
         _needRender = true;
         _textChanged = true;
-        //println("char: ", c.codepoint);
       }
       // TODO: flash 'error' color if char isn't added
     } else if (c.key == KEY_BACKSPACE) {
@@ -922,7 +920,6 @@ void Gui::processCharEvent(Window& win)
         }
         _needRender = true;
         _textChanged = true;
-        //println("backspace");
       }
     } else if (c.key == KEY_V && c.mods == MOD_CONTROL) {
       // (CTRL-V) paste first line of clipboard
