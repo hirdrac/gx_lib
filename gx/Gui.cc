@@ -403,6 +403,14 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       // FIXME: improve line height calc (based on font ymax/ymin?)
       break;
     }
+    case GUI_VLABEL: {
+      const Font& fnt = *thm.font;
+      const int lines = calcLines(def.text);
+      def._w = float((fnt.size() - 1) * lines
+                     + (thm.textSpacing * std::max(lines - 1, 0)));
+      def._h = fnt.calcWidth(def.text);
+      break;
+    }
     case GUI_HLINE:
       def._w = float(thm.font->size() - 1);
       def._h = float(thm.lineWidth + (thm.lineBorder * 2));
@@ -1093,6 +1101,13 @@ bool Gui::drawElem(
       dc2.color(style->textColor);
       dc2.text(TextFormatting{thm.font, float(thm.textSpacing)},
                ex, ey, ALIGN_TOP_LEFT, def.text);
+      break;
+    case GUI_VLABEL:
+      assert(style != nullptr);
+      dc2.color(style->textColor);
+      dc2.text(TextFormatting{thm.font, float(thm.textSpacing),
+          Vec2(0,-1), Vec2(1,0), Vec2(0,-1), Vec2(1,0)},
+        ex, ey+eh, ALIGN_TOP_LEFT, def.text);
       break;
     case GUI_HLINE: {
       const float b = thm.lineBorder;

@@ -96,6 +96,21 @@ namespace gx {
     return e;
   }
 
+  // VLabel
+  inline GuiElem guiVLabel(std::string_view text)
+  {
+    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, 0};
+    e.text = text;
+    return e;
+  }
+
+  inline GuiElem guiVLabel(AlignEnum align, std::string_view text)
+  {
+    GuiElem e{GUI_VLABEL, align, 0};
+    e.text = text;
+    return e;
+  }
+
   // HLine
   inline GuiElem guiHLine()
   {

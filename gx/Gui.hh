@@ -36,7 +36,8 @@ namespace gx {
 
     // draw types
     GUI_PANEL, GUI_MENU_FRAME,
-    GUI_LABEL, GUI_HLINE, GUI_VLINE, GUI_IMAGE,
+    GUI_LABEL, GUI_VLABEL,
+    GUI_HLINE, GUI_VLINE, GUI_IMAGE,
     GUI_TITLEBAR,
 
     // event types
