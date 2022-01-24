@@ -1,6 +1,6 @@
 //
 // text_viewer.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // gx_lib example program for text rendering & basic event handling
 //
@@ -152,7 +152,7 @@ int main(int argc, char** argv)
   ren.setBGColor(.2f,.2f,.2f);
   fnt.makeAtlas(ren);
 
-  const float tabWidth = fnt.calcWidth(" ") * float(tabSize);
+  const float tabWidth = fnt.glyphWidth(' ') * float(tabSize);
   const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
   int topLine = 0;
 

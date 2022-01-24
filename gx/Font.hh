@@ -1,6 +1,6 @@
 //
 // gx/Font.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #pragma once
@@ -62,14 +62,18 @@ class gx::Font
   [[nodiscard]] const Texture& tex() const { return _tex; }
     // texture atlas created by engine
 
+  [[nodiscard]] const auto& glyphs() const { return _glyphs; }
+
   [[nodiscard]] const Glyph* findGlyph(int code) const {
     auto i = _glyphs.find(code);
     return (i != _glyphs.end()) ? &(i->second) : nullptr;
   }
 
-  [[nodiscard]] const auto& glyphs() const { return _glyphs; }
+  [[nodiscard]] float glyphWidth(int code) const {
+    const Glyph* g = findGlyph(code);
+    return g ? std::max(g->advX, g->width + g->left) : 0;
+  }
 
-  [[nodiscard]] float calcWidth(int code) const;
   [[nodiscard]] float calcWidth(std::string_view text) const;
     // single text line width calculation
 

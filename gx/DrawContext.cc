@@ -1,6 +1,6 @@
 //
 // gx/DrawContext.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #include "DrawContext.hh"
@@ -136,7 +136,7 @@ void DrawContext::glyph(
 
   const AlignEnum h_align = HAlign(align);
   if (h_align != ALIGN_LEFT) {
-    const float tw = f.calcWidth(code);
+    const float tw = f.glyphWidth(code);
     cursor -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
   }
 

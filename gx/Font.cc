@@ -1,6 +1,6 @@
 //
 // gx/Font.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 // TODO: investigate using stb_truetype.h
@@ -261,12 +261,6 @@ Glyph& Font::newGlyph(
   }
 
   return g;
-}
-
-float Font::calcWidth(int code) const
-{
-  const Glyph* g = findGlyph(code);
-  return g ? std::max(g->advX, g->width + g->left) : 0;
 }
 
 float Font::calcWidth(std::string_view text) const

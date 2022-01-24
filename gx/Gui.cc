@@ -435,7 +435,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
       const Font& fnt = *thm.font;
-      def._w = fnt.calcWidth(thm.checkCode) + (thm.border * 3) + e._w;
+      def._w = fnt.glyphWidth(thm.checkCode) + (thm.border * 3) + e._w;
       def._h = std::max(float(fnt.size() - 1 + (thm.border * 2)), e._h);
       break;
     }
@@ -454,7 +454,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       // menu header
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
-      def._w = e._w + (thm.border * 3) + thm.font->calcWidth(thm.subMenuCode);
+      def._w = e._w + (thm.border * 3) + thm.font->glyphWidth(thm.subMenuCode);
       def._h = e._h + (thm.border * 2);
       // menu items
       calcSize(thm, def.elems[1]);
@@ -474,7 +474,8 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     case GUI_LISTSELECT_ITEM: {
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
-      def._w = e._w + (thm.border * 3) + thm.font->calcWidth(thm.listSelectCode);
+      def._w = e._w + (thm.border * 3)
+        + thm.font->glyphWidth(thm.listSelectCode);
       def._h = e._h + (thm.border * 2);
       break;
     }
@@ -485,7 +486,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
           || def.entry.type == ENTRY_FLOAT) {
         def._w = def.entry.size * fnt.digitWidth();
       } else {
-        def._w = def.entry.size * fnt.calcWidth("A");
+        def._w = def.entry.size * fnt.glyphWidth('A');
         // FIXME: use better width value than capital A * size
       }
       def._w += float(thm.entryLeftMargin + thm.entryRightMargin
@@ -559,7 +560,7 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
       }
       break;
     case GUI_CHECKBOX:
-      left += thm.font->calcWidth(thm.checkCode) + (thm.border * 3);
+      left += thm.font->glyphWidth(thm.checkCode) + (thm.border * 3);
       calcPos(thm, def.elems[0], left, top, right, bottom);
       break;
     case GUI_MENU: {
@@ -1144,7 +1145,7 @@ bool Gui::drawElem(
         style = (def._id == _hoverID) ? &thm.checkboxHover : &thm.checkbox;
       }
       const float b = thm.border;
-      const float cw = thm.font->calcWidth(thm.checkCode) + (b*2.0f);
+      const float cw = thm.font->glyphWidth(thm.checkCode) + (b*2.0f);
       const float ch = float(thm.font->size() - 1) + (b*2.0f);
       drawRec(dc, ex, ey, cw, ch, style);
       if (def.checkboxSet) {
