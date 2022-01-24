@@ -263,24 +263,40 @@ Glyph& Font::newGlyph(
   return g;
 }
 
-float Font::calcWidth(std::string_view text) const
+float Font::calcLength(std::string_view line, float glyphSpacing) const
 {
-  float max_width = 0, width = 0;
+  float width = -glyphSpacing;
+  const Glyph* g = nullptr;
+  for (UTF8Iterator itr{line}; !itr.done(); itr.next()) {
+    int32_t ch = itr.get();
+    if (ch == '\t') {
+      ch = ' '; // tab logic should be handled outside of this function
+    } else if (ch == '\n') {
+      break;
+    }
+    g = findGlyph(ch);
+    if (g) { width += g->advX + glyphSpacing; }
+  }
+
+  return std::max(width, 0.0f);
+}
+
+float Font::calcMaxLength(std::string_view text, float glyphSpacing) const
+{
+  float max_width = 0, width = -glyphSpacing;
   const Glyph* g = nullptr;
   for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
     int32_t ch = itr.get();
     if (ch == '\t') {
-      ch = ' '; // tab logic should be handled outside of thie function
+      ch = ' '; // tab logic should be handled outside of this function
     } else if (ch == '\n') {
-      //if (g) { width += -g->advX + (float(g->width) + g->left); }
       max_width = std::max(max_width, width);
-      width = 0;
+      width = -glyphSpacing;
     }
     g = findGlyph(ch);
-    if (g) { width += g->advX; }
+    if (g) { width += g->advX + glyphSpacing; }
   }
 
-  //if (g) { width += -g->advX + (float(g->width) + g->left); }
   return std::max(max_width, width);
 }
 

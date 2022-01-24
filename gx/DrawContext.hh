@@ -31,10 +31,11 @@ namespace gx {
 struct gx::TextFormatting
 {
   const Font* font = nullptr;
-  float spacing = 0;
-  Vec2 advX = {1,0};    // dir of next character
-  Vec2 advY = {0,1};    // dir of next line
-  Vec2 glyphX = {1,0};  // glyph quad sides
+  float lineSpacing = 0;   // extra spacing between lines
+  float glyphSpacing = 0;  // extra spacing between glyphs
+  Vec2 advX = {1,0};       // dir of next glyph
+  Vec2 advY = {0,1};       // dir of next line
+  Vec2 glyphX = {1,0};     // glyph quad sides
   Vec2 glyphY = {0,1};
 };
 

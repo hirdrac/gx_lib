@@ -186,7 +186,7 @@ int main(int argc, char** argv)
             dc.text(tf, tx, ty, gx::ALIGN_TOP_LEFT, segment);
             i += segment.size() + 1;
             if (tabPos != std::string_view::npos) {
-              const float tx2 = tx + fnt.calcWidth(segment);
+              const float tx2 = tx + fnt.calcLength(segment, 0);
               tx = (std::floor(tx2 / tabWidth) + 1.0f) * tabWidth;
             }
           }

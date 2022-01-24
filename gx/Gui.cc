@@ -396,7 +396,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       break;
     case GUI_LABEL: {
       const Font& fnt = *thm.font;
-      def._w = fnt.calcWidth(def.text);
+      def._w = fnt.calcMaxLength(def.text, 0);
       const int lines = calcLines(def.text);
       def._h = float((fnt.size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
@@ -408,7 +408,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       const int lines = calcLines(def.text);
       def._w = float((fnt.size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
-      def._h = fnt.calcWidth(def.text);
+      def._h = fnt.calcMaxLength(def.text, 0);
       break;
     }
     case GUI_HLINE:
@@ -1106,7 +1106,7 @@ bool Gui::drawElem(
     case GUI_VLABEL:
       assert(style != nullptr);
       dc2.color(style->textColor);
-      dc2.text(TextFormatting{thm.font, float(thm.textSpacing),
+      dc2.text(TextFormatting{thm.font, float(thm.textSpacing), 0,
           Vec2(0,-1), Vec2(1,0), Vec2(0,-1), Vec2(1,0)},
         ex, ey+eh, ALIGN_TOP_LEFT, def.text);
       break;
@@ -1215,7 +1215,7 @@ bool Gui::drawElem(
         ? passwordStr(thm.passwordCode, def.text.size()) : def.text;
       const RGBA8 textColor = style->textColor;
       const float cw = thm.cursorWidth;
-      const float tw = thm.font->calcWidth(txt);
+      const float tw = thm.font->calcLength(txt, 0);
       const float fs = float(thm.font->size());
       const float maxWidth = ew - thm.entryLeftMargin
         - thm.entryRightMargin - cw;

@@ -74,8 +74,13 @@ class gx::Font
     return g ? std::max(g->advX, g->width + g->left) : 0;
   }
 
-  [[nodiscard]] float calcWidth(std::string_view text) const;
-    // single text line width calculation
+  [[nodiscard]] float calcLength(
+    std::string_view line, float glyphSpacing) const;
+    // returns pixel length of first line of input text
+
+  [[nodiscard]] float calcMaxLength(
+    std::string_view text, float glyphSpacing) const;
+    // returns pixel length of longest line in input text
 
   [[nodiscard]] std::size_t fitChars(
     std::string_view text, float maxWidth) const;

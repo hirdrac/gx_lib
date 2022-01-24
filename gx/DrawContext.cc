@@ -126,7 +126,7 @@ void DrawContext::glyph(
   if (v_align == ALIGN_TOP) {
     cursor += tf.advY * f.ymax();
   } else {
-    const float fs = float(f.size()) + tf.spacing;
+    const float fs = float(f.size()) + tf.lineSpacing;
     if (v_align == ALIGN_BOTTOM) {
       cursor += tf.advY * (f.ymin() - fs);
     } else { // ALIGN_VCENTER
@@ -152,7 +152,7 @@ void DrawContext::_text(
 
   assert(tf.font != nullptr);
   const Font& f = *tf.font;
-  const float fs = float(f.size()) + tf.spacing;
+  const float fs = float(f.size()) + tf.lineSpacing;
   const AlignEnum h_align = HAlign(align);
   const AlignEnum v_align = VAlign(align);
   Vec2 cursor{x,y};
@@ -180,7 +180,7 @@ void DrawContext::_text(
 
     if (!line.empty()) {
       if (h_align != ALIGN_LEFT) {
-        const float tw = f.calcWidth(line);
+        const float tw = f.calcLength(line, tf.glyphSpacing);
         cursor -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
       }
 
@@ -190,7 +190,7 @@ void DrawContext::_text(
         const Glyph* g = f.findGlyph(ch);
         if (g) {
           if (g->bitmap) { _glyph(*g, tf, cursor, clipPtr); }
-          cursor += tf.advX * g->advX;
+          cursor += tf.advX * (g->advX + tf.glyphSpacing);
         }
       }
     }
