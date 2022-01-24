@@ -1,6 +1,6 @@
 //
 // gx/GLTexture.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // wrapper for OpenGL texture object
 // (texture target as a template parameter)
@@ -488,7 +488,7 @@ template<GLenum TARGET>
 void GLTextureT<TARGET>::setUnpackAlignment(
   GLsizei width, GLenum format, GLenum type)
 {
-  int x = width * GLPixelSize(format, type);
+  const int x = width * GLPixelSize(format, type);
   int align = 8;
   if (x & 1) { align = 1; }
   else if (x & 2) { align = 2; }

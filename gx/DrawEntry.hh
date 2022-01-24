@@ -1,10 +1,10 @@
 //
 // gx/DrawEntry.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #pragma once
-#include "Types.hh"
+#include <cstdint>
 
 
 namespace gx {
@@ -45,9 +45,9 @@ namespace gx {
       uint32_t uval;
     };
 
-    DrawEntry(DrawCmd c) : cmd(c) { }
-    DrawEntry(float f) : fval(f) { }
-    DrawEntry(int32_t i) : ival(i) { }
-    DrawEntry(uint32_t u) : uval(u) { }
+    DrawEntry(DrawCmd c) : cmd{c} { }
+    DrawEntry(float f) : fval{f} { }
+    DrawEntry(int32_t i) : ival{i} { }
+    DrawEntry(uint32_t u) : uval{u} { }
   };
 }

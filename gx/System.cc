@@ -1,6 +1,6 @@
 //
 // gx/System.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #include "System.hh"
@@ -12,7 +12,7 @@
 #include <cassert>
 
 namespace {
-  std::thread::id mainThreadID = std::this_thread::get_id();
+  const std::thread::id mainThreadID = std::this_thread::get_id();
     // limitation of GLFW, most API calls must be from main thread
 
   void errorCB(int error, const char* txt)
