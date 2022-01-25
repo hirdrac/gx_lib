@@ -1,14 +1,14 @@
 //
 // gx/Image.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 // TODO: save to file
 
 #pragma once
-#include "Types.hh"
 #include <string>
 #include <memory>
+#include <cstdint>
 
 
 namespace gx {

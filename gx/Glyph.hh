@@ -1,11 +1,10 @@
 //
 // gx/Glyph.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #pragma once
 #include "Types.hh"
-#include <cstdint>
 #include <memory>
 
 
