@@ -9,7 +9,7 @@
 
 // TODO: add option to encode as 2/4/8 byte values
 // TODO: 'const' & 'constexpr' options to add const/constexpr to definitions
-// TODO: option for assemby .incbin instead of C++ array
+// TODO: option for assembly .incbin instead of C++ array
 //       - .align, .globl, .incbin
 //       - assembly include could be done with just a macro, but dependency
 //         handling would need support in build

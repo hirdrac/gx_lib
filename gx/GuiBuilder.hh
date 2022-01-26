@@ -400,7 +400,7 @@ namespace gx {
     return {GUI_TITLEBAR, ALIGN_HJUSTIFY, 0, {guiLabel(ALIGN_CENTER, text)}};
   }
 
-  // VTileBar
+  // VTitleBar
   inline GuiElem guiVTitleBar()
   {
     return {GUI_TITLEBAR, ALIGN_VJUSTIFY, 0};

@@ -1,6 +1,6 @@
 //
 // demo_draw.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 // TODO: next/previous page when all items don't fit in window
@@ -77,8 +77,8 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   functions[] = {
   {"Solid Circle", draw_circle1},
   {"Partial Circle", draw_circle2},
-  {"Gradiant Full Circle", draw_circle3},
-  {"Gradiant Partial Circle", draw_circle4},
+  {"Gradient Full Circle", draw_circle3},
+  {"Gradient Partial Circle", draw_circle4},
   {"Rounded Rectangle", draw_rrect1},
   {"Narrow Width Rounded Rect", draw_rrect2},
   {"Narrow Height Rounded Rect", draw_rrect3},
