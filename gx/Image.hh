@@ -2,8 +2,8 @@
 // gx/Image.hh
 // Copyright (C) 2022 Richard Bradley
 //
-
-// TODO: save to file
+// 8-bits per channel variable channel image
+//
 
 #pragma once
 #include <string>
