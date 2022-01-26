@@ -80,8 +80,8 @@ int main(int argc, char* argv[])
   gui.newPanel(
     theme, 60, 400, gx::ALIGN_TOP_LEFT,
     gx::guiHFrame(
-      gx::guiSpacer(gx::ALIGN_VJUSTIFY, 0,0,4,0, gx::guiVTitleBar()),
-      gx::guiVLabel(gx::ALIGN_CENTER, "Text Entry"),
+      gx::guiSpacer(
+        gx::ALIGN_VJUSTIFY, 0,0,4,0, gx::guiVTitleBar("ENTRIES")),
       gx::guiVFrame(
         gx::guiHFrame(
           gx::guiLabel(gx::ALIGN_CENTER_LEFT, " R"),

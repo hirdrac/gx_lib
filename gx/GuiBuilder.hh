@@ -395,13 +395,19 @@ namespace gx {
     return {GUI_TITLEBAR, ALIGN_HJUSTIFY, 0};
   }
 
+  inline GuiElem guiTitleBar(std::string_view text)
+  {
+    return {GUI_TITLEBAR, ALIGN_HJUSTIFY, 0, {guiLabel(ALIGN_CENTER, text)}};
+  }
+
+  // VTileBar
   inline GuiElem guiVTitleBar()
   {
     return {GUI_TITLEBAR, ALIGN_VJUSTIFY, 0};
   }
 
-  inline GuiElem guiTitleBar(std::string_view text)
+  inline GuiElem guiVTitleBar(std::string_view text)
   {
-    return {GUI_TITLEBAR, ALIGN_HJUSTIFY, 0, {guiLabel(ALIGN_CENTER, text)}};
+    return {GUI_TITLEBAR, ALIGN_VJUSTIFY, 0, {guiVLabel(ALIGN_CENTER, text)}};
   }
 }
