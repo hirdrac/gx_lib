@@ -37,6 +37,7 @@ struct gx::TextFormatting
   Vec2 advY = {0,1};       // dir of next line
   Vec2 glyphX = {1,0};     // glyph quad sides
   Vec2 glyphY = {0,1};
+  int32_t unknownCode = '*'; // code to use for values not in font
 };
 
 class gx::DrawContext

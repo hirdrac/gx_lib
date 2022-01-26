@@ -33,10 +33,10 @@ void DrawContext::rectangle(float x, float y, float w, float h)
   if (_colorMode == CM_SOLID) {
     _rect(x, y, w, h);
   } else {
-    const Vec2 A = {x,y};
-    const Vec2 B = {x+w,y};
-    const Vec2 C = {x,y+h};
-    const Vec2 D = {x+w,y+h};
+    const Vec2 A{x,y};
+    const Vec2 B{x+w,y};
+    const Vec2 C{x,y+h};
+    const Vec2 D{x+w,y+h};
     add(CMD_quad2C,
         A.x, A.y, pointColor(A),
         B.x, B.y, pointColor(B),
@@ -51,10 +51,10 @@ void DrawContext::rectangle(
   if (_colorMode == CM_SOLID) {
     add(CMD_rectangleT, x, y, t0.x, t0.y, x+w, y+h, t1.x, t1.y);
   } else {
-    const Vec2 A = {x,y};
-    const Vec2 B = {x+w,y};
-    const Vec2 C = {x,y+h};
-    const Vec2 D = {x+w,y+h};
+    const Vec2 A{x,y};
+    const Vec2 B{x+w,y};
+    const Vec2 C{x,y+h};
+    const Vec2 D{x+w,y+h};
     add(CMD_quad2TC,
         A.x, A.y, t0.x, t0.y, pointColor(A),
         B.x, B.y, t1.x, t0.y, pointColor(B),
@@ -118,10 +118,14 @@ void DrawContext::glyph(
   assert(tf.font != nullptr);
   const Font& f = *tf.font;
   const Glyph* g = f.findGlyph(code);
-  if (!g || !g->bitmap) { return; }
+  if (!g) {
+    g = f.findGlyph(tf.unknownCode);
+    assert(g != nullptr);
+  }
+
+  if (!g->bitmap) { return; }
 
   Vec2 cursor{x,y};
-
   const AlignEnum v_align = VAlign(align);
   if (v_align == ALIGN_TOP) {
     cursor += tf.advY * f.ymax();
@@ -161,7 +165,7 @@ void DrawContext::_text(
     cursor += tf.advY * f.ymax();
   } else {
     int nl = 0;
-    for (char ch : text) { nl += int(ch == '\n'); }
+    for (int ch : text) { nl += (ch == '\n'); }
     if (v_align == ALIGN_BOTTOM) {
       cursor += tf.advY * (f.ymin() - (fs*float(nl)));
     } else { // ALIGN_VCENTER
@@ -184,14 +188,17 @@ void DrawContext::_text(
         cursor -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
       }
 
-      for (UTF8Iterator itr(line); !itr.done(); itr.next()) {
+      for (UTF8Iterator itr{line}; !itr.done(); itr.next()) {
         int ch = itr.get();
         if (ch == '\t') { ch = ' '; }
         const Glyph* g = f.findGlyph(ch);
-        if (g) {
-          if (g->bitmap) { _glyph(*g, tf, cursor, clipPtr); }
-          cursor += tf.advX * (g->advX + tf.glyphSpacing);
+        if (!g) {
+          g = f.findGlyph(tf.unknownCode);
+          assert(g != nullptr);
         }
+
+        if (g->bitmap) { _glyph(*g, tf, cursor, clipPtr); }
+        cursor += tf.advX * (g->advX + tf.glyphSpacing);
       }
     }
 
@@ -219,10 +226,10 @@ void DrawContext::_glyph(
   Vec2 C = A + gy;
   Vec2 D = C + gx;
 
-  Vec2 At = {g.t0.x, g.t0.y};
-  Vec2 Bt = {g.t1.x, g.t0.y};
-  Vec2 Ct = {g.t0.x, g.t1.y};
-  Vec2 Dt = {g.t1.x, g.t1.y};
+  Vec2 At{g.t0.x, g.t0.y};
+  Vec2 Bt{g.t1.x, g.t0.y};
+  Vec2 Ct{g.t0.x, g.t1.y};
+  Vec2 Dt{g.t1.x, g.t1.y};
 
   if (clipPtr) {
     const float cx0 = clipPtr->x;
@@ -241,10 +248,10 @@ void DrawContext::_glyph(
     // 0/90/180/270 degree rotation since no new triangles are
     // created as part of the clipping
 
-    const Vec2 newA = {std::clamp(A.x,cx0,cx1), std::clamp(A.y,cy0,cy1)};
-    const Vec2 newB = {std::clamp(B.x,cx0,cx1), std::clamp(B.y,cy0,cy1)};
-    const Vec2 newC = {std::clamp(C.x,cx0,cx1), std::clamp(C.y,cy0,cy1)};
-    const Vec2 newD = {std::clamp(D.x,cx0,cx1), std::clamp(D.y,cy0,cy1)};
+    const Vec2 newA{std::clamp(A.x,cx0,cx1), std::clamp(A.y,cy0,cy1)};
+    const Vec2 newB{std::clamp(B.x,cx0,cx1), std::clamp(B.y,cy0,cy1)};
+    const Vec2 newC{std::clamp(C.x,cx0,cx1), std::clamp(C.y,cy0,cy1)};
+    const Vec2 newD{std::clamp(D.x,cx0,cx1), std::clamp(D.y,cy0,cy1)};
     Vec2 newAt = At, newBt = Bt, newCt = Ct, newDt = Dt;
 
     // use barycentric coordinates to update texture coords
@@ -315,9 +322,9 @@ void DrawContext::circleSector(
   const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
 
-  const Vec2 v0 {center.x, center.y};
+  const Vec2 v0{center.x, center.y};
 
-  Vec2 v1 {
+  Vec2 v1{
     v1.x = center.x + (radius * std::sin(angle0)),
     v1.y = center.y - (radius * std::cos(angle0))};
 
@@ -325,7 +332,7 @@ void DrawContext::circleSector(
   for (int i = 0; i < segments; ++i) {
     if (i == segments-1) { a = angle1; } else { a += segmentAngle; }
 
-    Vec2 v2 {
+    const Vec2 v2{
       center.x + (radius * std::sin(a)),
       center.y - (radius * std::cos(a))};
 
@@ -348,7 +355,7 @@ void DrawContext::circleSector(
   const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
 
-  const Vertex2C v0 {center.x, center.y, color0};
+  const Vertex2C v0{center.x, center.y, color0};
 
   Vertex2C v1;
   v1.x = center.x + (radius * std::sin(angle0));
