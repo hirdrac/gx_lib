@@ -151,6 +151,12 @@ class gx::Gui
   void disableElem(EventID eid) { setElemState(eid, false); }
     // enable/disable event generating elements
 
+  void setAllElemState(PanelID id, bool enable);
+  void enableAllElem(PanelID id = 0) { setAllElemState(id, true); }
+  void disableAllElem(PanelID id = 0) { setAllElemState(id, false); }
+    // enable/disable all event generating elements
+    // (optionally just for a specific panel if id is non-zero)
+
   [[nodiscard]] std::string getText(EventID eid) const {
     const GuiElem* e = findElemByEventID(eid);
     return (e == nullptr) ? std::string() : e->text;

@@ -70,6 +70,14 @@ static bool activate(GuiElem& def, ElemID id)
   return def._active;
 }
 
+static int allElemState(GuiElem& def, bool enable)
+{
+  int count = 0;
+  if (def.eid != 0) { def._enabled = enable; ++count; }
+  for (auto& e : def.elems) { count += allElemState(e, enable); }
+  return count;
+}
+
 [[nodiscard]] static bool contains(const GuiElem& e, float x, float y)
 {
   return (x >= e._x) && (x < (e._x + e._w))
@@ -992,6 +1000,16 @@ void Gui::setElemState(EventID eid, bool enable)
     e->_enabled = enable;
     _needRender = true;
   }
+}
+
+void Gui::setAllElemState(PanelID id, bool enable)
+{
+  int count = 0;
+  for (auto& pPtr : _panels) {
+    Panel& p = *pPtr;
+    if (id == 0 || p.id == id) { count += allElemState(p.root, enable); }
+  }
+  _needRender |= (count > 0);
 }
 
 bool Gui::setText(EventID eid, std::string_view text)
