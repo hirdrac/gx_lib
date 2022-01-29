@@ -81,8 +81,9 @@ static bool genGlyphs(Font& font, FT_Face face,
 
 
 // **** Font class ****
-bool Font::load(const char* fileName, int fontSize)
+bool Font::load(const char* fileName)
 {
+  assert(_size != 0);
   if (!initFreeType()) { return false; }
 
   FT_Face face;
@@ -91,22 +92,21 @@ bool Font::load(const char* fileName, int fontSize)
     return false;
   }
 
-  if (FT_Set_Pixel_Sizes(face, 0, FT_UInt(fontSize))) {
-    GX_LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
+  if (FT_Set_Pixel_Sizes(face, 0, FT_UInt(_size))) {
+    GX_LOG_ERROR("FT_Set_Pixel_Sizes(", _size, ") failed");
     FT_Done_Face(face);
     return false;
   }
 
   // read font glyph data
-  init(fontSize);
   const bool status = genGlyphs(*this, face);
   FT_Done_Face(face);
   return status;
 }
 
-bool Font::loadFromMemory(
-  const void* mem, std::size_t memSize, int fontSize)
+bool Font::loadFromMemory(const void* mem, std::size_t memSize)
 {
+  assert(_size != 0);
   if (!initFreeType()) { return false; }
 
   FT_Face face;
@@ -116,23 +116,20 @@ bool Font::loadFromMemory(
     return false;
   }
 
-  if (FT_Set_Pixel_Sizes(face, 0, FT_UInt(fontSize))) {
-    GX_LOG_ERROR("FT_Set_Pixel_Sizes(", fontSize, ") failed");
+  if (FT_Set_Pixel_Sizes(face, 0, FT_UInt(_size))) {
+    GX_LOG_ERROR("FT_Set_Pixel_Sizes(", _size, ") failed");
     FT_Done_Face(face);
     return false;
   }
 
   // read font glyph data
-  init(fontSize);
   const bool status = genGlyphs(*this, face);
   FT_Done_Face(face);
   return status;
 }
 
-bool Font::loadFromData(
-  const GlyphStaticData* data, int glyphs, int fontSize)
+bool Font::loadFromData(const GlyphStaticData* data, int glyphs)
 {
-  init(fontSize);
   for (int i = 0; i < glyphs; ++i) {
     const auto& d = data[i];
     addGlyph(d.code, d.width, d.height, d.left, d.top, d.advX, d.advY,
@@ -221,15 +218,6 @@ void Font::addGlyph(
     g.bitmap_copy.reset(nullptr);
     g.bitmap = bitmap;
   }
-}
-
-void Font::init(int fontSize)
-{
-  _size = fontSize;
-  _ymin = 0;
-  _ymax = 0;
-  _digitWidth = 0;
-  _glyphs.clear();
 }
 
 Glyph& Font::newGlyph(

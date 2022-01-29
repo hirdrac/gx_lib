@@ -89,8 +89,8 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
 // **** main ****
 int main(int argc, char** argv)
 {
-  gx::Font fnt;
-  if (!fnt.load("data/FreeSans.ttf", FONT_SIZE)) {
+  gx::Font fnt{FONT_SIZE};
+  if (!fnt.load("data/FreeSans.ttf")) {
     gx::println_err("failed to load font");
     return -1;
   }

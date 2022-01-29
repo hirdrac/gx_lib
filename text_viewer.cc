@@ -129,13 +129,13 @@ int main(int argc, char** argv)
   fs.close();
   if (text.empty()) { text.push_back("* FILE EMPTY *"); }
 
-  gx::Font fnt;
+  gx::Font fnt{fontSize};
   if (fontName.empty()) {
-    if (!fnt.loadFromMemory(FixedWidthFontData, FixedWidthFontDataSize, fontSize)) {
+    if (!fnt.loadFromMemory(FixedWidthFontData, FixedWidthFontDataSize)) {
       gx::println_err("ERROR: Failed to load embedded font");
       return -1;
     }
-  } else if (!fnt.load(fontName, fontSize)) {
+  } else if (!fnt.load(fontName)) {
     gx::println_err("ERROR: Failed to load font '", fontName, "'");
     return -1;
   }

@@ -1,6 +1,6 @@
 //
 // show_font.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // displays font atlas texture
 //
@@ -26,8 +26,8 @@ int main(int argc, char** argv)
   std::string fontName = argv[1];
   int fontSize = std::atoi(argv[2]);
 
-  gx::Font fnt;
-  if (!fnt.load(fontName, fontSize)) {
+  gx::Font fnt{fontSize};
+  if (!fnt.load(fontName)) {
     gx::println_err("failed to load font '", fontName, "'");
     return -1;
   }

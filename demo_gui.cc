@@ -21,8 +21,8 @@ extern unsigned long VariableWidthFontDataSize;
 
 int main(int argc, char* argv[])
 {
-  gx::Font fnt;
-  if (!fnt.loadFromMemory(VariableWidthFontData, VariableWidthFontDataSize, FONT_SIZE)) {
+  gx::Font fnt{FONT_SIZE};
+  if (!fnt.loadFromMemory(VariableWidthFontData, VariableWidthFontDataSize)) {
     gx::println_err("failed to load font");
     return -1;
   }

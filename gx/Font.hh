@@ -2,6 +2,8 @@
 // gx/Font.hh
 // Copyright (C) 2022 Richard Bradley
 //
+// Create texture atlas for font glyph rendering
+//
 
 #pragma once
 #include "Glyph.hh"
@@ -29,6 +31,7 @@ class gx::Font
 {
  public:
   Font() = default;
+  Font(int fontSize) : _size{fontSize} { }
 
   // prevent copy but allow move
   Font(const Font&) = delete;
@@ -36,20 +39,19 @@ class gx::Font
   Font(Font&&) noexcept = default;
   Font& operator=(Font&&) noexcept = default;
 
+  void setSize(int s) { _size = s; }
+  [[nodiscard]] int size() const { return _size; }
+    // font pixel size
 
-  bool load(const char* fileName, int fontSize);
-  bool load(const std::string& fn, int fontSize) {
-    return load(fn.c_str(), fontSize); }
-  bool loadFromMemory(const void* mem, std::size_t memSize, int fontSize);
-    // load TTF file
+  bool load(const char* fileName);
+  bool load(const std::string& fn) { return load(fn.c_str()); }
+  bool loadFromMemory(const void* mem, std::size_t memSize);
+    // load TTF file & render glyphs for current size
 
-  bool loadFromData(const GlyphStaticData* data, int glyphs, int fontSize);
+  bool loadFromData(const GlyphStaticData* data, int glyphs);
     // load from static glyph data
 
   bool makeAtlas(Renderer& ren);
-
-  [[nodiscard]] int size() const { return _size; }
-    // font pixel size
 
   [[nodiscard]] float ymin() const { return _ymin; }
   [[nodiscard]] float ymax() const { return _ymax; }
@@ -86,10 +88,6 @@ class gx::Font
     std::string_view text, float maxWidth) const;
     // returns size of substr to fit within specified width
 
-  void setSize(int s) { _size = s; }
-  void setYmin(float y) { _ymin = y; }
-  void setYmax(float y) { _ymax = y; }
-
   void addGlyph(int code, int width, int height, float left, float top,
 		float advX, float advY, const uint8_t* bitmap, bool copy);
 
@@ -101,7 +99,6 @@ class gx::Font
   float _digitWidth = 0;
   bool _changed = false; // change since last atlas creation
 
-  void init(int fontSize);
   Glyph& newGlyph(int code, int width, int height, float left, float top,
 		  float advX, float advY);
 };
