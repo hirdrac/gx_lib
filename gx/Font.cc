@@ -101,6 +101,7 @@ bool Font::load(const char* fileName)
   // read font glyph data
   const bool status = genGlyphs(*this, face);
   FT_Done_Face(face);
+  calcAttributes();
   return status;
 }
 
@@ -125,6 +126,7 @@ bool Font::loadFromMemory(const void* mem, std::size_t memSize)
   // read font glyph data
   const bool status = genGlyphs(*this, face);
   FT_Done_Face(face);
+  calcAttributes();
   return status;
 }
 
@@ -136,6 +138,7 @@ bool Font::loadFromData(const GlyphStaticData* data, int glyphs)
              d.bitmap, false);
   }
 
+  calcAttributes();
   return true;
 }
 
@@ -236,19 +239,27 @@ Glyph& Font::newGlyph(
   g.top = top;
   g.advX = advX;
   g.advY = advY;
-
-  if ((code > 47 && code < 94) || (code > 96 && code < 127)) {
-    // ymin/ymax adjust for a limited range of characters
-    _ymax = std::max(_ymax, top);
-    _ymin = std::min(_ymin, top - float(height));
-  }
-
-  if (std::isdigit(code) || code == '.' || code == '-') {
-    _digitWidth = std::max(
-      _digitWidth, std::max(float(g.width + g.left), g.advX));
-  }
-
   return g;
+}
+
+void Font::calcAttributes()
+{
+  _ymax = 0;
+  _ymin = 0;
+  _digitWidth = 0;
+
+  for (auto& [code,g] : _glyphs) {    
+    if ((code > 47 && code < 94) || (code > 96 && code < 127)) {
+      // ymin/ymax adjust for a limited range of characters
+      _ymax = std::max(_ymax, g.top);
+      _ymin = std::min(_ymin, g.top - float(g.height));
+    }
+
+    if (std::isdigit(code) || code == '.' || code == '-') {
+      _digitWidth = std::max(
+        _digitWidth, std::max(float(g.width + g.left), g.advX));
+    }
+  }
 }
 
 float Font::calcLength(std::string_view line, float glyphSpacing) const

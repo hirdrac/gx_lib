@@ -101,4 +101,5 @@ class gx::Font
 
   Glyph& newGlyph(int code, int width, int height, float left, float top,
 		  float advX, float advY);
+  void calcAttributes();
 };
