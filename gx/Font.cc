@@ -248,7 +248,7 @@ void Font::calcAttributes()
   _ymin = 0;
   _digitWidth = 0;
 
-  for (auto& [code,g] : _glyphs) {    
+  for (auto& [code,g] : _glyphs) {
     if ((code > 47 && code < 94) || (code > 96 && code < 127)) {
       // ymin/ymax adjust for a limited range of characters
       _ymax = std::max(_ymax, g.top);
