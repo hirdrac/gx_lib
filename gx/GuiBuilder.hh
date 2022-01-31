@@ -150,7 +150,7 @@ namespace gx {
   inline GuiElem guiButtonPress(EventID id, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
-    e.repeatDelay = -1; // disabled
+    e.button.repeatDelay = -1; // disabled
     return e;
   }
 
@@ -158,7 +158,7 @@ namespace gx {
     EventID id, AlignEnum align, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
-    e.repeatDelay = -1; // disabled
+    e.button.repeatDelay = -1; // disabled
     return e;
   }
 
@@ -166,7 +166,7 @@ namespace gx {
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
               {guiLabel(ALIGN_CENTER, text)}};
-    e.repeatDelay = -1; // disabled
+    e.button.repeatDelay = -1; // disabled
     return e;
   }
 
@@ -174,7 +174,7 @@ namespace gx {
     EventID id, AlignEnum align, std::string_view text)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
-    e.repeatDelay = -1; // disabled
+    e.button.repeatDelay = -1; // disabled
     return e;
   }
 
@@ -183,7 +183,7 @@ namespace gx {
     EventID id, int64_t repeat_delay, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
-    e.repeatDelay = repeat_delay;
+    e.button.repeatDelay = repeat_delay;
     return e;
   }
 
@@ -191,7 +191,7 @@ namespace gx {
     EventID id, AlignEnum align, int64_t repeat_delay, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
-    e.repeatDelay = repeat_delay;
+    e.button.repeatDelay = repeat_delay;
     return e;
   }
 
@@ -200,7 +200,7 @@ namespace gx {
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
               {guiLabel(ALIGN_CENTER, text)}};
-    e.repeatDelay = repeat_delay;
+    e.button.repeatDelay = repeat_delay;
     return e;
   }
 
@@ -208,7 +208,7 @@ namespace gx {
     EventID id, AlignEnum align, int64_t repeat_delay, std::string_view text)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
-    e.repeatDelay = repeat_delay;
+    e.button.repeatDelay = repeat_delay;
     return e;
   }
 

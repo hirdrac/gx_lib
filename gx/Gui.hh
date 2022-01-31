@@ -76,6 +76,10 @@ struct gx::GuiElem
     int16_t left, top, right, bottom;
   };
 
+  struct ButtonProps {
+    int64_t repeatDelay; // BUTTON_PRESS only
+  };
+
   struct EntryProps {
     float size; // width in characters
     uint32_t maxLength;
@@ -90,9 +94,9 @@ struct gx::GuiElem
   };
 
   union {
-    int64_t repeatDelay; // BUTTON_PRESS
     bool checkboxSet;    // CHECKBOX
     int itemNo;          // LISTSELECT, LISTSELECT_ITEM
+    ButtonProps button;  // BUTTON,BUTTON_PRESS
     SpacerProps spacer;  // SPACER
     EntryProps entry;    // ENTRY
     ImageProps image;    // IMAGE

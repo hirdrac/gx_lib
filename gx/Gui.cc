@@ -887,7 +887,7 @@ void Gui::processMouseEvent(Window& win)
       _heldY = win.mouseY();
       _needRender = true;
       if (type == GUI_BUTTON_PRESS) {
-        _repeatDelay = ePtr->repeatDelay;
+        _repeatDelay = ePtr->button.repeatDelay;
         setEvent(*ePtr, win.lastPollTime());
       }
     } else if ((_heldType == GUI_BUTTON_PRESS) && (_heldID != id)) {
