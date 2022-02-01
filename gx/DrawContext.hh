@@ -267,7 +267,7 @@ void gx::DrawContext::hgradient(
 
 void gx::DrawContext::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
 {
-  _colorMode = CM_HGRADIENT;
+  _colorMode = CM_VGRADIENT;
   _g0 = y0;
   _c0 = c0;
   _color0 = unpackRGBA8(c0);
@@ -279,7 +279,7 @@ void gx::DrawContext::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
 void gx::DrawContext::vgradient(
   float y0, const Color& c0, float y1, const Color& c1)
 {
-  _colorMode = CM_HGRADIENT;
+  _colorMode = CM_VGRADIENT;
   _g0 = y0;
   _c0 = packRGBA8(c0);
   _color0 = c0;
