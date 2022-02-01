@@ -3,7 +3,6 @@
 // Copyright (C) 2022 Richard Bradley
 //
 
-// TODO: support color gradient for primitives other than rectangle
 // TODO: textured roundedRectangle()
 // TODO: continuous lines [lineX <vertex count> <v1> <v2> ...]
 // TODO: lines as quads
@@ -46,7 +45,7 @@ class gx::DrawContext
   DrawContext(DrawList& dl) : _data{&dl} { init(); }
 
   // Low-level data entry
-  void clear() { init(); _data->clear(); }
+  void clear() { init(); _data->clear(); _dataColor = 0; }
   void reserve(std::size_t n) { _data->reserve(n); }
   [[nodiscard]] std::size_t size() const { return _data->size(); }
   [[nodiscard]] bool empty() const { return _data->empty(); }
@@ -72,9 +71,9 @@ class gx::DrawContext
 
   // line drawing
   void line(Vec2 a, Vec2 b) {
-    add(CMD_line2, a.x, a.y, b.x, b.y); }
+    if (checkColor()) { add(CMD_line2, a.x, a.y, b.x, b.y); } }
   void line(const Vec3& a, const Vec3& b) {
-    add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z); }
+    if (checkColor()) { add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z); } }
 
   // poly drawing
   // Triangle  Quad  Rectangle
@@ -82,35 +81,17 @@ class gx::DrawContext
   //   | /     | /|    |   H
   //   |/      |/ |    |   |
   //   C       C--D    +-W-+
-  void triangle(Vec2 a, Vec2 b, Vec2 c) {
-    add(CMD_triangle2, a.x, a.y, b.x, b.y, c.x, c.y); }
-  void triangle(const Vec3& a, const Vec3& b, const Vec3& c) {
-    add(CMD_triangle3, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z); }
-
   void triangle(const Vertex2C& a, const Vertex2C& b, const Vertex2C& c) {
     add(CMD_triangle2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c); }
   void triangle(const Vertex3C& a, const Vertex3C& b, const Vertex3C& c) {
     add(CMD_triangle3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
         c.x, c.y, c.z, c.c); }
-
-  void triangle(const Vertex2T& a, const Vertex2T& b, const Vertex2T& c) {
-    add(CMD_triangle2T, a.x, a.y, a.s, a.t,
-        b.x, b.y, b.s, b.t, c.x, c.y, c.s, c.t); }
-  void triangle(const Vertex3T& a, const Vertex3T& b, const Vertex3T& c) {
-    add(CMD_triangle3T, a.x, a.y, a.z, a.s, a.t,
-        b.x, b.y, b.z, b.s, b.t, c.x, c.y, c.z, c.s, c.t); }
-
   void triangle(const Vertex2TC& a, const Vertex2TC& b, const Vertex2TC& c) {
     add(CMD_triangle2TC, a.x, a.y, a.s, a.t, a.c,
         b.x, b.y, b.s, b.t, b.c, c.x, c.y, c.s, c.t, c.c); }
   void triangle(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c) {
     add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
         b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
-
-  void quad(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
-    add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
-  void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) {
-    add(CMD_quad3, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, d.x, d.y, d.z); }
 
   void quad(const Vertex2C& a, const Vertex2C& b,
             const Vertex2C& c, const Vertex2C& d) {
@@ -120,16 +101,6 @@ class gx::DrawContext
             const Vertex3C& c, const Vertex3C& d) {
     add(CMD_quad3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
         c.x, c.y, c.z, c.c, d.x, d.y, d.z, d.c); }
-
-  void quad(const Vertex2T& a, const Vertex2T& b,
-            const Vertex2T& c, const Vertex2T& d) {
-    add(CMD_quad2T, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t,
-        c.x, c.y, c.s, c.t, d.x, d.y, d.s, d.t); }
-  void quad(const Vertex3T& a, const Vertex3T& b,
-            const Vertex3T& c, const Vertex3T& d) {
-    add(CMD_quad3T, a.x, a.y, a.z, a.s, a.t, b.x, b.y, b.z, b.s, b.t,
-        c.x, c.y, c.z, c.s, c.t, d.x, d.y, d.z, d.s, d.t); }
-
   void quad(const Vertex2TC& a, const Vertex2TC& b,
             const Vertex2TC& c, const Vertex2TC& d) {
     add(CMD_quad2TC, a.x, a.y, a.s, a.t, a.c, b.x, b.y, b.s, b.t, b.c,
@@ -182,18 +153,18 @@ class gx::DrawContext
   float _lastLineWidth;
 
   // color/gradient properties
-  float _g0, _g1;         // x or y gradient coords
-  RGBA8 _c0, _c1;      // gradient colors (packed)
-  Color _color0, _color1; // gradient colors (full)
-  RGBA8 _lastColor;
+  float _g0, _g1;                 // x or y gradient coords
+  Color _fullcolor0, _fullcolor1; // full float colors for gradient calc
+  RGBA8 _color0, _color1;         // current colors
+  RGBA8 _dataColor = 0;           // last color set in data
   enum ColorMode { CM_SOLID, CM_HGRADIENT, CM_VGRADIENT };
   ColorMode _colorMode;
-
 
   void init() {
     _lastTexID = 0;
     _lastLineWidth = 1.0f;
-    _lastColor = 0;
+    _color0 = 0;
+    _color1 = 0;
     _colorMode = CM_SOLID;
   }
 
@@ -203,22 +174,23 @@ class gx::DrawContext
     _data->insert(_data->end(), x.begin(), x.end());
   }
 
+  void _rectangle(float x, float y, float w, float h);
+  void _rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1);
   void _text(const TextFormatting& tf, float x, float y, AlignEnum align,
              std::string_view text, const Rect* clipPtr);
   void _glyph(const Glyph& g, const TextFormatting& tf, Vec2 cursor,
               const Rect* clipPtr);
+  void _circleSector(
+    Vec2 center, float radius, float startAngle, float endAngle, int segments);
+
   void _rect(float x, float y, float w, float h) {
     add(CMD_rectangle, x, y, x + w, y + h); }
+  void _triangle(Vec2 a, Vec2 b, Vec2 c) {
+    add(CMD_triangle2, a.x, a.y, b.x, b.y, c.x, c.y); }
 
   [[nodiscard]] inline RGBA8 gradientColor(float g) const;
-
-  [[nodiscard]] RGBA8 pointColor(Vec2 pt) const {
-    switch (_colorMode) {
-      default:           return _lastColor;
-      case CM_HGRADIENT: return gradientColor(pt.x);
-      case CM_VGRADIENT: return gradientColor(pt.y);
-    }
-  }
+  [[nodiscard]] inline RGBA8 pointColor(Vec2 pt) const;
+  [[nodiscard]] inline bool checkColor();
 };
 
 
@@ -236,21 +208,19 @@ void gx::DrawContext::color(const Color& c)
 void gx::DrawContext::color(RGBA8 c)
 {
   _colorMode = CM_SOLID;
-  if (c != _lastColor) {
-    _lastColor = c;
-    add(CMD_color, c);
-  }
+  _color0 = c;
+  _color1 = 0;
 }
 
 void gx::DrawContext::hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1)
 {
   _colorMode = CM_HGRADIENT;
   _g0 = x0;
-  _c0 = c0;
-  _color0 = unpackRGBA8(c0);
+  _color0 = c0;
+  _fullcolor0 = unpackRGBA8(c0);
   _g1 = x1;
-  _c1 = c1;
-  _color1 = unpackRGBA8(c1);
+  _color1 = c1;
+  _fullcolor1 = unpackRGBA8(c1);
 }
 
 void gx::DrawContext::hgradient(
@@ -258,22 +228,22 @@ void gx::DrawContext::hgradient(
 {
   _colorMode = CM_HGRADIENT;
   _g0 = x0;
-  _c0 = packRGBA8(c0);
-  _color0 = c0;
+  _color0 = packRGBA8(c0);
+  _fullcolor0 = c0;
   _g1 = x1;
-  _c1 = packRGBA8(c1);
-  _color1 = c1;
+  _color1 = packRGBA8(c1);
+  _fullcolor1 = c1;
 }
 
 void gx::DrawContext::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
 {
   _colorMode = CM_VGRADIENT;
   _g0 = y0;
-  _c0 = c0;
-  _color0 = unpackRGBA8(c0);
+  _color0 = c0;
+  _fullcolor0 = unpackRGBA8(c0);
   _g1 = y1;
-  _c1 = c1;
-  _color1 = unpackRGBA8(c1);
+  _color1 = c1;
+  _fullcolor1 = unpackRGBA8(c1);
 }
 
 void gx::DrawContext::vgradient(
@@ -281,11 +251,11 @@ void gx::DrawContext::vgradient(
 {
   _colorMode = CM_VGRADIENT;
   _g0 = y0;
-  _c0 = packRGBA8(c0);
-  _color0 = c0;
+  _color0 = packRGBA8(c0);
+  _fullcolor0 = c0;
   _g1 = y1;
-  _c1 = packRGBA8(c1);
-  _color1 = c1;
+  _color1 = packRGBA8(c1);
+  _fullcolor1 = c1;
 }
 
 void gx::DrawContext::lineWidth(float w)
@@ -306,9 +276,28 @@ void gx::DrawContext::texture(TextureID tid)
 
 gx::RGBA8 gx::DrawContext::gradientColor(float g) const
 {
-  if (g <= _g0) { return _c0; }
-  else if (g >= _g1) { return _c1; }
+  if (g <= _g0) { return _color0; }
+  else if (g >= _g1) { return _color1; }
 
   const float t = (g - _g0) / (_g1 - _g0);
-  return packRGBA8((_color0 * (1.0f-t)) + (_color1 * t));
+  return packRGBA8((_fullcolor0 * (1.0f-t)) + (_fullcolor1 * t));
+}
+
+gx::RGBA8 gx::DrawContext::pointColor(Vec2 pt) const
+{
+  switch (_colorMode) {
+    default:           return _color0;
+    case CM_HGRADIENT: return gradientColor(pt.x);
+    case CM_VGRADIENT: return gradientColor(pt.y);
+  }
+}
+
+bool gx::DrawContext::checkColor()
+{
+  if ((_color0 | _color1) == 0) { return false; }
+  if (_colorMode == CM_SOLID && _dataColor != _color0) {
+    add(CMD_color, _color0);
+    _dataColor = _color0;
+  }
+  return true; // proceed with draw
 }

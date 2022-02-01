@@ -29,23 +29,35 @@ constexpr auto RED = gx::packRGBA8(1.0f, 0, 0, 1.0f);
 void draw_circle1(gx::DrawContext& dc, float x, float y)
 {
   dc.color(GRAY50);
-  dc.circleSector({x + 200, y + 200}, 150, 0, 0, 16);
+  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 16);
 }
 
 void draw_circle2(gx::DrawContext& dc, float x, float y)
 {
   dc.color(GRAY50);
-  dc.circleSector({x + 200, y + 200}, 150, 20, 270, 16);
+  dc.circleSector({x + 200, y + 180}, 150, 20, 270, 16);
 }
 
 void draw_circle3(gx::DrawContext& dc, float x, float y)
 {
-  dc.circleSector({x + 200, y + 200}, 150, 0, 0, 32, RED, WHITE);
+  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32, RED, WHITE);
 }
 
 void draw_circle4(gx::DrawContext& dc, float x, float y)
 {
-  dc.circleSector({x + 200, y + 200}, 150, 20, 270, 32, BLACK, WHITE);
+  dc.circleSector({x + 200, y + 180}, 150, 20, 270, 32, BLACK, WHITE);
+}
+
+void draw_circle5(gx::DrawContext& dc, float x, float y)
+{
+  dc.hgradient(x+50, BLACK, x+350, WHITE);
+  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32);
+}
+
+void draw_circle6(gx::DrawContext& dc, float x, float y)
+{
+  dc.vgradient(y+20, BLACK, y+330, WHITE);
+  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32);
 }
 
 void draw_rrect1(gx::DrawContext& dc, float x, float y)
@@ -56,17 +68,29 @@ void draw_rrect1(gx::DrawContext& dc, float x, float y)
 
 void draw_rrect2(gx::DrawContext& dc, float x, float y)
 {
+  dc.hgradient(x+20, WHITE, x+380, BLACK);
+  dc.roundedRectangle(x+20, y+30, 360, 300, 60, 4);
+}
+
+void draw_rrect3(gx::DrawContext& dc, float x, float y)
+{
+  dc.vgradient(y+30, WHITE, y+330, BLACK);
+  dc.roundedRectangle(x+20, y+30, 360, 300, 60, 4);
+}
+
+void draw_rrect4(gx::DrawContext& dc, float x, float y)
+{
   dc.color(WHITE);
   dc.roundedRectangle(x+150, y+30, 100, 300, 60, 4);
 }
 
-void draw_rrect3(gx::DrawContext& dc, float x, float y)
+void draw_rrect5(gx::DrawContext& dc, float x, float y)
 {
   dc.color(WHITE);
   dc.roundedRectangle(x+20, y+130, 360, 100, 60, 4);
 }
 
-void draw_rrect4(gx::DrawContext& dc, float x, float y)
+void draw_rrect6(gx::DrawContext& dc, float x, float y)
 {
   dc.color(WHITE);
   dc.roundedRectangle(x+150, y+130, 100, 100, 60, 4);
@@ -79,10 +103,14 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"Partial Circle", draw_circle2},
   {"Gradient Full Circle", draw_circle3},
   {"Gradient Partial Circle", draw_circle4},
+  {"HGradient Circle", draw_circle5},
+  {"VGradient Circle", draw_circle6},
   {"Rounded Rectangle", draw_rrect1},
-  {"Narrow Width Rounded Rect", draw_rrect2},
-  {"Narrow Height Rounded Rect", draw_rrect3},
-  {"Narrow Width/Height Rounded Rect", draw_rrect4},
+  {"HGradient Rounded Rect", draw_rrect2},
+  {"VGradient Rounded Rect", draw_rrect3},
+  {"Narrow Width Rounded Rect", draw_rrect4},
+  {"Narrow Height Rounded Rect", draw_rrect5},
+  {"Narrow Width/Height Rounded Rect", draw_rrect6},
 };
 
 

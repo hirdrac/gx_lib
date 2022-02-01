@@ -22,13 +22,18 @@ namespace {
 
   [[nodiscard]] constexpr float triangleArea(Vec2 a, Vec2 b, Vec2 c) {
     // triangle_area = len(cross(B-A,C-A)) / 2
-    Vec2 ba = b-a, ca = c-a;
+    const Vec2 ba = b-a, ca = c-a;
     return abs((ba.x * ca.y) - (ba.y * ca.x)) * .5f;
   }
 }
 
 
 void DrawContext::rectangle(float x, float y, float w, float h)
+{
+  if (checkColor()) { _rectangle(x, y, w, h); }
+}
+
+void DrawContext::_rectangle(float x, float y, float w, float h)
 {
   if (_colorMode == CM_SOLID) {
     _rect(x, y, w, h);
@@ -46,6 +51,12 @@ void DrawContext::rectangle(float x, float y, float w, float h)
 }
 
 void DrawContext::rectangle(
+  float x, float y, float w, float h, Vec2 t0, Vec2 t1)
+{
+  if (checkColor()) { _rectangle(x, y, w, h, t0, t1); }
+}
+
+void DrawContext::_rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1)
 {
   if (_colorMode == CM_SOLID) {
@@ -66,6 +77,8 @@ void DrawContext::rectangle(
 void DrawContext::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1, const Rect& clip)
 {
+  if (!checkColor()) { return; }
+
   float x0 = x;
   float y0 = y;
   float x1 = x + w;
@@ -115,6 +128,8 @@ void DrawContext::rectangle(
 void DrawContext::glyph(
   const TextFormatting& tf, float x, float y, AlignEnum align, int code)
 {
+  if (!checkColor()) { return; }
+
   assert(tf.font != nullptr);
   const Font& f = *tf.font;
   const Glyph* g = f.findGlyph(code);
@@ -152,7 +167,7 @@ void DrawContext::_text(
   const TextFormatting& tf, float x, float y, AlignEnum align,
   std::string_view text, const Rect* clipPtr)
 {
-  if (text.empty()) { return; }
+  if (text.empty() || !checkColor()) { return; }
 
   assert(tf.font != nullptr);
   const Font& f = *tf.font;
@@ -315,9 +330,17 @@ void DrawContext::_glyph(
 void DrawContext::circleSector(
   Vec2 center, float radius, float startAngle, float endAngle, int segments)
 {
+  if (!checkColor()) { return; }
+
   while (endAngle <= startAngle) { endAngle += 360.0f; }
   endAngle = std::min(endAngle, startAngle + 360.0f);
 
+  _circleSector(center, radius, startAngle, endAngle, segments);
+}
+
+void DrawContext::_circleSector(
+  Vec2 center, float radius, float startAngle, float endAngle, int segments)
+{
   const float angle0 = degToRad(startAngle);
   const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
@@ -336,7 +359,14 @@ void DrawContext::circleSector(
       center.x + (radius * std::sin(a)),
       center.y - (radius * std::cos(a))};
 
-    triangle(v0, v1, v2);
+    if (_colorMode == CM_SOLID) {
+      _triangle(v0, v1, v2);
+    } else {
+      add(CMD_triangle2C,
+          v0.x, v0.y, pointColor(v0),
+          v1.x, v1.y, pointColor(v1),
+          v2.x, v2.y, pointColor(v2));
+    }
 
     // setup for next iteration
     v1.x = v2.x;
@@ -348,6 +378,8 @@ void DrawContext::circleSector(
   Vec2 center, float radius, float startAngle, float endAngle, int segments,
   RGBA8 color0, RGBA8 color1)
 {
+  if (!checkColor()) { return; }
+
   while (endAngle <= startAngle) { endAngle += 360.0f; }
   endAngle = std::min(endAngle, startAngle + 360.0f);
 
@@ -383,28 +415,30 @@ void DrawContext::circleSector(
 void DrawContext::roundedRectangle(
   float x, float y, float w, float h, float curveRadius, int curveSegments)
 {
+  if (!checkColor()) { return; }
+
   const float half_w = w * .5f;
   const float half_h = h * .5f;
   const float r = std::min(curveRadius, std::min(half_w, half_h));
 
   // corners
-  circleSector({x+r,y+r}, r, 270, 0, curveSegments);      // top/left
-  circleSector({x+w-r,y+r}, r, 0, 90, curveSegments);     // top/right
-  circleSector({x+w-r,y+h-r}, r, 90, 180, curveSegments); // bottom/right
-  circleSector({x+r,y+h-r}, r, 180, 270, curveSegments);  // bottom/left
+  _circleSector({x+r,y+r}, r, 270, 360, curveSegments);    // top/left
+  _circleSector({x+w-r,y+r}, r, 0, 90, curveSegments);     // top/right
+  _circleSector({x+w-r,y+h-r}, r, 90, 180, curveSegments); // bottom/right
+  _circleSector({x+r,y+h-r}, r, 180, 270, curveSegments);  // bottom/left
 
   // borders/center
   if (r == curveRadius) {
     // can fit all borders
     const float rr = r * 2.0f;
-    _rect(x+r, y, w - rr, r);
-    _rect(x, y+r, w, h - rr);
-    _rect(x+r, y+h-r, w - rr, r);
+    _rectangle(x+r, y, w - rr, r);
+    _rectangle(x, y+r, w, h - rr);
+    _rectangle(x+r, y+h-r, w - rr, r);
   } else if (r < half_w) {
     // can only fit top/bottom borders
-    _rect(x+r, y, w - (r*2.0f), h);
+    _rectangle(x+r, y, w - (r*2.0f), h);
   } else if (r < half_h) {
     // can only fit left/right borders
-    _rect(x, y+r, w, h - (r*2.0f));
+    _rectangle(x, y+r, w, h - (r*2.0f));
   }
 }
