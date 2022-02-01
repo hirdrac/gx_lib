@@ -348,8 +348,8 @@ void DrawContext::_circleSector(
   const Vec2 v0{center.x, center.y};
 
   Vec2 v1{
-    v1.x = center.x + (radius * std::sin(angle0)),
-    v1.y = center.y - (radius * std::cos(angle0))};
+    center.x + (radius * std::sin(angle0)),
+    center.y - (radius * std::cos(angle0))};
 
   float a = angle0;
   for (int i = 0; i < segments; ++i) {
@@ -369,8 +369,7 @@ void DrawContext::_circleSector(
     }
 
     // setup for next iteration
-    v1.x = v2.x;
-    v1.y = v2.y;
+    v1 = v2;
   }
 }
 
