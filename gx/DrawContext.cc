@@ -388,10 +388,10 @@ void DrawContext::circleSector(
 
   const Vertex2C v0{center.x, center.y, color0};
 
-  Vertex2C v1;
-  v1.x = center.x + (radius * std::sin(angle0));
-  v1.y = center.y - (radius * std::cos(angle0));
-  v1.c = color1;
+  Vertex2C v1{
+    center.x + (radius * std::sin(angle0)),
+    center.y - (radius * std::cos(angle0)),
+    color1};
 
   Vertex2C v2;
   v2.c = color1;
@@ -488,5 +488,90 @@ void DrawContext::roundedRectangle(
   } else if (r < half_h) {
     // can only fit left/right borders
     _rectangle(x, y+r, w, h - (r*2.0f));
+  }
+}
+
+void DrawContext::border(float x, float y, float w, float h, float borderWidth)
+{
+  if (!checkColor()) { return; }
+
+  const Vec2 A{x,y};
+  const Vec2 B{x+w,y};
+  const Vec2 C{x,y+h};
+  const Vec2 D{x+w,y+h};
+
+  const Vec2 iA{x+borderWidth,y+borderWidth};
+  const Vec2 iB{x+w-borderWidth,y+borderWidth};
+  const Vec2 iC{x+borderWidth,y+h-borderWidth};
+  const Vec2 iD{x+w-borderWidth,y+h-borderWidth};
+
+  if (_colorMode == CM_SOLID) {
+    _quad(A,B,iA,iB); // top
+    _quad(iC,iD,C,D); // bottom
+    _quad(A,iA,C,iC); // left
+    _quad(iB,B,iD,D); // right
+  } else {
+    const RGBA8 color_A = pointColor(A);
+    const RGBA8 color_B = pointColor(B);
+    const RGBA8 color_C = pointColor(C);
+    const RGBA8 color_D = pointColor(D);
+
+    const RGBA8 color_iA = pointColor(iA);
+    const RGBA8 color_iB = pointColor(iB);
+    const RGBA8 color_iC = pointColor(iC);
+    const RGBA8 color_iD = pointColor(iD);
+
+    add(CMD_quad2C,
+        A.x, A.y, color_A,
+        B.x, B.y, color_B,
+        iA.x, iA.y, color_iA,
+        iB.x, iB.y, color_iB);
+    add(CMD_quad2C,
+        iC.x, iC.y, color_iC,
+        iD.x, iD.y, color_iD,
+        C.x, C.y, color_C,
+        D.x, C.y, color_D);
+    add(CMD_quad2C,
+        A.x, A.y, color_A,
+        iA.x, iA.y, color_iA,
+        C.x, C.y, color_C,
+        iC.x, iC.y, color_iC);
+    add(CMD_quad2C,
+        iB.x, iB.y, color_iB,
+        B.x, B.y, color_B,
+        iD.x, iD.y, color_iD,
+        D.x, C.y, color_D);
+  }
+}
+
+void DrawContext::roundedBorder(
+  float x, float y, float w, float h,
+  float curveRadius, int curveSegments, float borderWidth)
+{
+  if (!checkColor()) { return; }
+
+  const float half_w = w * .5f;
+  const float half_h = h * .5f;
+  const float r = std::min(curveRadius, std::min(half_w, half_h));
+
+  // corners
+  _arc({x+r,y+r}, r, 270, 360, curveSegments, borderWidth);    // top/left
+  _arc({x+w-r,y+r}, r, 0, 90, curveSegments, borderWidth);     // top/right
+  _arc({x+w-r,y+h-r}, r, 90, 180, curveSegments, borderWidth); // bottom/right
+  _arc({x+r,y+h-r}, r, 180, 270, curveSegments, borderWidth);  // bottom/left
+
+  // borders/center
+  if (curveRadius < half_w) {
+    // top/bottom borders
+    const float bw = w - (r * 2.0f);
+    _rectangle(x+r, y, bw, borderWidth);
+    _rectangle(x+r, y+h-borderWidth, bw, borderWidth);
+  }
+
+  if (curveRadius < half_h) {
+    // left/right borders
+    const float bh = h - (r * 2.0f);
+    _rectangle(x, y+r, borderWidth, bh);
+    _rectangle(x+w-borderWidth, y+r, borderWidth, bh);
   }
 }

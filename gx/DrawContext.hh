@@ -144,6 +144,10 @@ class gx::DrawContext
   void roundedRectangle(float x, float y, float w, float h,
                         float curveRadius, int curveSegments);
 
+  void border(float x, float y, float w, float h, float borderWidth);
+  void roundedBorder(float x, float y, float w, float h,
+                     float curveRadius, int curveSegments, float borderWidth);
+
   // Data extraction
   [[nodiscard]] const DrawList& drawList() const { return *_data; }
 

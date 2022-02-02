@@ -108,6 +108,42 @@ void draw_arc2(gx::DrawContext& dc, float x, float y)
   dc.arc({x + 200, y + 180}, 150, 20, 270, 32, 16);
 }
 
+void draw_border1(gx::DrawContext& dc, float x, float y)
+{
+  dc.color(GRAY50);
+  dc.border(x+20, y+30, 360, 300, 4.0f);
+}
+
+void draw_border2(gx::DrawContext& dc, float x, float y)
+{
+  dc.hgradient(x+20, BLACK, x+380, WHITE);
+  dc.border(x+20, y+30, 360, 300, 8.0f);
+}
+
+void draw_border3(gx::DrawContext& dc, float x, float y)
+{
+  dc.vgradient(y+30, BLACK, y+330, WHITE);
+  dc.border(x+20, y+30, 360, 300, 8.0f);
+}
+
+void draw_rborder1(gx::DrawContext& dc, float x, float y)
+{
+  dc.color(GRAY50);
+  dc.roundedBorder(x+20, y+30, 360, 300, 40, 4, 4.0f);
+}
+
+void draw_rborder2(gx::DrawContext& dc, float x, float y)
+{
+  dc.hgradient(x+20, WHITE, x+380, BLACK);
+  dc.roundedBorder(x+20, y+30, 360, 300, 40, 4, 8.0f);
+}
+
+void draw_rborder3(gx::DrawContext& dc, float x, float y)
+{
+  dc.vgradient(y+30, WHITE, y+330, BLACK);
+  dc.roundedBorder(x+20, y+30, 360, 300, 40, 4, 8.0f);
+}
+
 
 struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   functions[] = {
@@ -125,6 +161,12 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"Narrow Width/Height Rounded Rect", draw_rrect6},
   {"Full Arc", draw_arc1},
   {"Partial Arc", draw_arc2},
+  {"Border", draw_border1},
+  {"HGradient Border", draw_border2},
+  {"VGradient Border", draw_border3},
+  {"Rounded Border", draw_rborder1},
+  {"HGradient Rounded Border", draw_rborder2},
+  {"VGradient Rounded Border", draw_rborder3},
 };
 
 
@@ -155,7 +197,7 @@ int main(int argc, char** argv)
     // draw frame
     if (win.resized()) {
       gx::DrawList dl;
-      gx::DrawContext dc(dl);
+      gx::DrawContext dc{dl};
 
       // draw function & text split to reduce draw calls
       float x = 0, y = 0;
