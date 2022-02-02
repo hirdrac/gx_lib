@@ -411,6 +411,55 @@ void DrawContext::circleSector(
   }
 }
 
+void DrawContext::arc(
+  Vec2 center, float radius, float startAngle, float endAngle,
+  int segments, float arcWidth)
+{
+  if (!checkColor()) { return; }
+
+  while (endAngle <= startAngle) { endAngle += 360.0f; }
+  endAngle = std::min(endAngle, startAngle + 360.0f);
+
+  _arc(center, radius, startAngle, endAngle, segments, arcWidth);
+}
+
+void DrawContext::_arc(
+  Vec2 center, float radius, float startAngle, float endAngle,
+  int segments, float arcWidth)
+{
+  const float angle0 = degToRad(startAngle);
+  const float angle1 = degToRad(endAngle);
+  const float segmentAngle = (angle1 - angle0) / float(segments);
+  const float innerR = radius - arcWidth;
+
+  const float sa0 = std::sin(angle0), ca0 = std::cos(angle0);
+  Vec2 v0{center.x + (radius * sa0), center.y - (radius * ca0)};
+  Vec2 v1{center.x + (innerR * sa0), center.y - (innerR * ca0)};
+
+  float a = angle0;
+  for (int i = 0; i < segments; ++i) {
+    if (i == segments-1) { a = angle1; } else { a += segmentAngle; }
+
+    const float sa = std::sin(a), ca = std::cos(a);
+    const Vec2 v2{center.x + (radius * sa), center.y - (radius * ca)};
+    const Vec2 v3{center.x + (innerR * sa), center.y - (innerR * ca)};
+
+    if (_colorMode == CM_SOLID) {
+      _quad(v0, v1, v2, v3);
+    } else {
+      add(CMD_quad2C,
+          v0.x, v0.y, pointColor(v0),
+          v1.x, v1.y, pointColor(v1),
+          v2.x, v2.y, pointColor(v2),
+          v3.x, v3.y, pointColor(v3));
+    }
+
+    // setup for next iteration
+    v0 = v2;
+    v1 = v3;
+  }
+}
+
 void DrawContext::roundedRectangle(
   float x, float y, float w, float h, float curveRadius, int curveSegments)
 {

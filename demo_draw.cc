@@ -96,6 +96,18 @@ void draw_rrect6(gx::DrawContext& dc, float x, float y)
   dc.roundedRectangle(x+150, y+130, 100, 100, 60, 4);
 }
 
+void draw_arc1(gx::DrawContext& dc, float x, float y)
+{
+  dc.color(WHITE);
+  dc.arc({x + 200, y + 180}, 150, 0, 0, 32, 1);
+}
+
+void draw_arc2(gx::DrawContext& dc, float x, float y)
+{
+  dc.color(WHITE);
+  dc.arc({x + 200, y + 180}, 150, 20, 270, 32, 16);
+}
+
 
 struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   functions[] = {
@@ -111,6 +123,8 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"Narrow Width Rounded Rect", draw_rrect4},
   {"Narrow Height Rounded Rect", draw_rrect5},
   {"Narrow Width/Height Rounded Rect", draw_rrect6},
+  {"Full Arc", draw_arc1},
+  {"Partial Arc", draw_arc2},
 };
 
 

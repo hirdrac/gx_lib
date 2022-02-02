@@ -134,6 +134,8 @@ class gx::DrawContext
     Vec2 center, float radius, float startAngle, float endAngle, int segments);
   void circleSector(Vec2 center, float radius, float startAngle, float endAngle,
                     int segments, RGBA8 color0, RGBA8 color1);
+  void arc(Vec2 center, float radius, float startAngle, float endAngle,
+           int segments, float arcWidth);
     // NOTE:
     //  * make start and end angles equal for a full circle
     //  * angles are in degrees
@@ -182,11 +184,15 @@ class gx::DrawContext
               const Rect* clipPtr);
   void _circleSector(
     Vec2 center, float radius, float startAngle, float endAngle, int segments);
+  void _arc(Vec2 center, float radius, float startAngle, float endAngle,
+            int segments, float arcWidth);
 
   void _rect(float x, float y, float w, float h) {
     add(CMD_rectangle, x, y, x + w, y + h); }
   void _triangle(Vec2 a, Vec2 b, Vec2 c) {
     add(CMD_triangle2, a.x, a.y, b.x, b.y, c.x, c.y); }
+  void _quad(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
+    add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
 
   [[nodiscard]] inline RGBA8 gradientColor(float g) const;
   [[nodiscard]] inline RGBA8 pointColor(Vec2 pt) const;
