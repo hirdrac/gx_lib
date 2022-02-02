@@ -377,7 +377,7 @@ void DrawContext::circleSector(
   Vec2 center, float radius, float startAngle, float endAngle, int segments,
   RGBA8 color0, RGBA8 color1)
 {
-  if (!checkColor()) { return; }
+  if ((color0 | color1) == 0) { return; }
 
   while (endAngle <= startAngle) { endAngle += 360.0f; }
   endAngle = std::min(endAngle, startAngle + 360.0f);
