@@ -3,18 +3,17 @@
 // Copyright (C) 2022 Richard Bradley
 //
 
-// TODO: next/previous page when all items don't fit in window
-
 #include "gx/Window.hh"
 #include "gx/Renderer.hh"
 #include "gx/Font.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"
+#include "gx/StringUtil.hh"
 
 
 // **** Constants ****
 constexpr int DEFAULT_WIDTH = 1280;
-constexpr int DEFAULT_HEIGHT = 720;
+constexpr int DEFAULT_HEIGHT = 800;
 constexpr int FONT_SIZE = 20;
 constexpr int ITEM_WIDTH = 400;
 constexpr int ITEM_HEIGHT = 360;
@@ -146,7 +145,7 @@ void draw_rborder3(gx::DrawContext& dc, float x, float y)
 
 
 struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
-  functions[] = {
+  gfxData[] = {
   {"Solid Circle", draw_circle1},
   {"Partial Circle", draw_circle2},
   {"Gradient Full Circle", draw_circle3},
@@ -192,32 +191,55 @@ int main(int argc, char** argv)
   fnt.makeAtlas(ren);
 
   gx::TextFormatting tf{&fnt};
+  const int gfxCount = std::size(gfxData);
+  int page = 0, gfxPerPage = 0, maxPage = 0;
+  bool redraw = false;
 
   for (;;) {
     // draw frame
     if (win.resized()) {
+      page = 0;
+      gfxPerPage = std::max((win.width() / ITEM_WIDTH), 1) *
+        std::max((win.height() / ITEM_HEIGHT), 1);
+      maxPage = (gfxCount - 1) / gfxPerPage;
+      redraw = true;
+    }
+
+    if (redraw) {
       gx::DrawList dl;
       gx::DrawContext dc{dl};
 
+      const int start_gfx = page * gfxPerPage;
+      const int end_gfx = std::min(start_gfx + gfxPerPage, gfxCount);
+
       // draw function & text split to reduce draw calls
       float x = 0, y = 0;
-      for (auto& [desc,fn] : functions) {
-        fn(dc, x, y);
+      for (int i = start_gfx; i < end_gfx; ++i) {
+        gfxData[i].fn(dc, x, y);
         x += ITEM_WIDTH;
         if (x > float(win.width() - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }
 
       dc.color(WHITE);
       x = y = 0;
-      for (auto& [desc,fn] : functions) {
-        dc.text(tf, x+(ITEM_WIDTH/2), y+6, gx::ALIGN_TOP_CENTER, desc);
+      for (int i = start_gfx; i < end_gfx; ++i) {
+        dc.text(tf, x+(ITEM_WIDTH/2), y+6, gx::ALIGN_TOP_CENTER,
+                gfxData[i].desc);
         x += ITEM_WIDTH;
         if (x > float(win.width() - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }
 
+      if (maxPage > 0) {
+        dc.text(tf, float(win.width()-10), float(win.height()-1),
+                gx::ALIGN_BOTTOM_RIGHT,
+                gx::concat("Page ", page+1, " of ", maxPage+1));
+      }
+
       ren.clearFrame(win.width(), win.height());
       ren.draw(dl);
+      redraw = false;
     }
+
     ren.renderFrame();
 
     // handle events
@@ -229,6 +251,18 @@ int main(int argc, char** argv)
       } else {
         win.setSize(0, 0, true);
       }
+    }
+
+    int newPage = page;
+    if (win.keyPressCount(gx::KEY_LEFT, true)
+        || win.keyPressCount(gx::KEY_UP, true)
+        || win.keyPressCount(gx::KEY_PAGE_UP, true)) { --newPage; }
+    if (win.keyPressCount(gx::KEY_RIGHT, true)
+        || win.keyPressCount(gx::KEY_DOWN, true)
+        || win.keyPressCount(gx::KEY_PAGE_DOWN, true)) { ++newPage; }
+    if (newPage != page && newPage >= 0 && newPage <= maxPage) {
+      page = newPage;
+      redraw = true;
     }
   }
 
