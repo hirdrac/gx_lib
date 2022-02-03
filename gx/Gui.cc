@@ -224,53 +224,78 @@ static bool addEntryChar(GuiElem& e, int32_t codepoint)
 static void drawRec(DrawContext& dc, float x, float y, float w, float h,
                     const GuiTheme::Style* style)
 {
-  switch (style->backgroundType) {
-    case GuiTheme::BG_SOLID:
-      if (style->backgroundColor != 0) {
+  constexpr float roundedRadius = 8.0;
+  constexpr int roundedSegments = 3;
+
+  if (style->backgroundType != GuiTheme::BG_NONE) {
+    switch (style->backgroundType) {
+      default: // BG_SOLID
         dc.color(style->backgroundColor);
+        break;
+      case GuiTheme::BG_VGRADIENT:
+        dc.vgradient(y, style->backgroundColor, y+h, style->backgroundColor2);
+        break;
+    }
+
+    switch (style->shapeType) {
+      default: // SHAPE_DEFAULT
         dc.rectangle(x, y, w, h);
+        break;
+      case GuiTheme::SHAPE_ROUNDED: {
+        dc.roundedRectangle(x, y, w, h, roundedRadius, roundedSegments);
+        break;
       }
-      break;
-    case GuiTheme::BG_VGRADIENT:
-      dc.quad(Vertex2C{x,   y,   style->backgroundColor},
-              Vertex2C{x+w, y,   style->backgroundColor},
-              Vertex2C{x,   y+h, style->backgroundColor2},
-              Vertex2C{x+w, y+h, style->backgroundColor2});
-      break;
-    default: // BG_NONE
-      break;
-  };
+    }
+  }
 
-  if (style->edgeColor == 0) { return; }
-
-  dc.color(style->edgeColor);
-  switch (style->edgeType) {
-    case GuiTheme::EDGE_BORDER_1px:
-      dc.rectangle(x, y, w, 1);
-      dc.rectangle(x, y + h - 1, w, 1);
-      dc.rectangle(x, y+1, 1, h-2);
-      dc.rectangle(x + w - 1, y+1, 1, h-2);
-      break;
-    case GuiTheme::EDGE_BORDER_2px:
-      dc.rectangle(x, y, w, 2);
-      dc.rectangle(x, y + h - 2, w, 2);
-      dc.rectangle(x, y+2, 2, h-4);
-      dc.rectangle(x + w - 2, y+2, 2, h-4);
-      break;
-    case GuiTheme::EDGE_UNDERLINE_1px:
-      dc.rectangle(x, y + h - 1, w, 1);
-      break;
-    case GuiTheme::EDGE_UNDERLINE_2px:
-      dc.rectangle(x, y + h - 2, w, 2);
-      break;
-    case GuiTheme::EDGE_OVERLINE_1px:
-      dc.rectangle(x, y, w, 1);
-      break;
-    case GuiTheme::EDGE_OVERLINE_2px:
-      dc.rectangle(x, y, w, 2);
-      break;
-    default: // EDGE_NONE
-      break;
+  if (style->edgeType != GuiTheme::EDGE_NONE && style->edgeColor != 0) {
+    dc.color(style->edgeColor);
+    switch (style->shapeType) {
+      default: // SHAPE_DEFAULT
+        switch (style->edgeType) {
+          default: // EDGE_BORDER_1px
+            dc.border(x, y, w, h, 1);
+            break;
+          case GuiTheme::EDGE_BORDER_2px:
+            dc.border(x, y, w, h, 2);
+            break;
+          case GuiTheme::EDGE_UNDERLINE_1px:
+            dc.rectangle(x, y + h - 1, w, 1);
+            break;
+          case GuiTheme::EDGE_UNDERLINE_2px:
+            dc.rectangle(x, y + h - 2, w, 2);
+            break;
+          case GuiTheme::EDGE_OVERLINE_1px:
+            dc.rectangle(x, y, w, 1);
+            break;
+          case GuiTheme::EDGE_OVERLINE_2px:
+            dc.rectangle(x, y, w, 2);
+            break;
+        }
+        break;
+      case GuiTheme::SHAPE_ROUNDED:
+        switch (style->edgeType) {
+          default: // EDGE_BORDER_1px
+            dc.roundedBorder(x, y, w, h, roundedRadius, roundedSegments, 1);
+            break;
+          case GuiTheme::EDGE_BORDER_2px:
+            dc.roundedBorder(x, y, w, h, roundedRadius, roundedSegments, 2);
+            break;
+          case GuiTheme::EDGE_UNDERLINE_1px:
+            dc.rectangle(x+roundedRadius, y+h-1, w-(roundedRadius*2), 1);
+            break;
+          case GuiTheme::EDGE_UNDERLINE_2px:
+            dc.rectangle(x+roundedRadius, y+h-2, w-(roundedRadius*2), 2);
+            break;
+          case GuiTheme::EDGE_OVERLINE_1px:
+            dc.rectangle(x+roundedRadius, y, w-(roundedRadius*2), 1);
+            break;
+          case GuiTheme::EDGE_OVERLINE_2px:
+            dc.rectangle(x+roundedRadius, y, w-(roundedRadius*2), 2);
+            break;
+        }
+        break;
+    }
   }
 }
 

@@ -26,10 +26,15 @@ struct gx::GuiTheme
     EDGE_OVERLINE_2px  = 6,
   };
 
-  enum BackgroundTypeEnum : int32_t {
+  enum BackgroundTypeEnum : int16_t {
     BG_NONE      = 0,
     BG_SOLID     = 1, // backgroundColor only
     BG_VGRADIENT = 2, // backgroundColor(top), backgroundColor2(bottom)
+  };
+
+  enum ShapeTypeEnum : int16_t {
+    SHAPE_DEFAULT = 0,
+    SHAPE_ROUNDED = 1,
   };
 
   struct Style {
@@ -39,6 +44,7 @@ struct gx::GuiTheme
     RGBA8 edgeColor = 0;
     EdgeTypeEnum edgeType = EDGE_BORDER_1px;
     BackgroundTypeEnum backgroundType = BG_SOLID;
+    ShapeTypeEnum shapeType = SHAPE_DEFAULT;
   };
 
   const Font* font = nullptr;
@@ -60,15 +66,20 @@ struct gx::GuiTheme
     packRGBA8(.6f,.6f,.6f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f)};
 
   Style checkbox = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f)};
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f),
+    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
   Style checkboxHover = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f)};
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f),
+    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
   Style checkboxPress = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f)};
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f),
+    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
   Style checkboxHold = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f)};
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f),
+    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
   Style checkboxDisable = {
-    packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f)};
+    packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f),
+    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
 
   Style menuButton = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), 0};
