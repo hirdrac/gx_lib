@@ -1113,7 +1113,8 @@ bool Gui::drawElem(
       drawRec(dc, ex, ey, ew, eh, style);
       break;
     case GUI_TITLEBAR:
-      drawRec(dc, ex, ey, ew, eh, &thm.titlebar);
+      style = &thm.titlebar;
+      drawRec(dc, ex, ey, ew, eh, style);
       break;
     case GUI_LABEL:
       assert(style != nullptr);
