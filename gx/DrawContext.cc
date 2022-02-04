@@ -25,6 +25,11 @@ namespace {
     const Vec2 ba = b-a, ca = c-a;
     return abs((ba.x * ca.y) - (ba.y * ca.x)) * .5f;
   }
+
+  inline void fixAngles(float& startAngle, float& endAngle) {
+    while (endAngle <= startAngle) { endAngle += 360.0f; }
+    endAngle = std::min(endAngle, startAngle + 360.0f);
+  }
 }
 
 
@@ -332,9 +337,7 @@ void DrawContext::circleSector(
 {
   if (!checkColor()) { return; }
 
-  while (endAngle <= startAngle) { endAngle += 360.0f; }
-  endAngle = std::min(endAngle, startAngle + 360.0f);
-
+  fixAngles(startAngle, endAngle);
   _circleSector(center, radius, startAngle, endAngle, segments);
 }
 
@@ -379,9 +382,7 @@ void DrawContext::circleSector(
 {
   if ((color0 | color1) == 0) { return; }
 
-  while (endAngle <= startAngle) { endAngle += 360.0f; }
-  endAngle = std::min(endAngle, startAngle + 360.0f);
-
+  fixAngles(startAngle, endAngle);
   const float angle0 = degToRad(startAngle);
   const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
@@ -417,9 +418,7 @@ void DrawContext::arc(
 {
   if (!checkColor()) { return; }
 
-  while (endAngle <= startAngle) { endAngle += 360.0f; }
-  endAngle = std::min(endAngle, startAngle + 360.0f);
-
+  fixAngles(startAngle, endAngle);
   _arc(center, radius, startAngle, endAngle, segments, arcWidth);
 }
 
@@ -511,36 +510,20 @@ void DrawContext::border(float x, float y, float w, float h, float borderWidth)
     _quad(A,iA,C,iC); // left
     _quad(iB,B,iD,D); // right
   } else {
-    const RGBA8 color_A = pointColor(A);
-    const RGBA8 color_B = pointColor(B);
-    const RGBA8 color_C = pointColor(C);
-    const RGBA8 color_D = pointColor(D);
+    const Vertex2C v_A{A.x, A.y, pointColor(A)};
+    const Vertex2C v_B{B.x, B.y, pointColor(B)};
+    const Vertex2C v_C{C.x, C.y, pointColor(C)};
+    const Vertex2C v_D{D.x, D.y, pointColor(D)};
 
-    const RGBA8 color_iA = pointColor(iA);
-    const RGBA8 color_iB = pointColor(iB);
-    const RGBA8 color_iC = pointColor(iC);
-    const RGBA8 color_iD = pointColor(iD);
+    const Vertex2C v_iA{iA.x, iA.y, pointColor(iA)};
+    const Vertex2C v_iB{iB.x, iB.y, pointColor(iB)};
+    const Vertex2C v_iC{iC.x, iC.y, pointColor(iC)};
+    const Vertex2C v_iD{iD.x, iD.y, pointColor(iD)};
 
-    add(CMD_quad2C,
-        A.x, A.y, color_A,
-        B.x, B.y, color_B,
-        iA.x, iA.y, color_iA,
-        iB.x, iB.y, color_iB);
-    add(CMD_quad2C,
-        iC.x, iC.y, color_iC,
-        iD.x, iD.y, color_iD,
-        C.x, C.y, color_C,
-        D.x, C.y, color_D);
-    add(CMD_quad2C,
-        A.x, A.y, color_A,
-        iA.x, iA.y, color_iA,
-        C.x, C.y, color_C,
-        iC.x, iC.y, color_iC);
-    add(CMD_quad2C,
-        iB.x, iB.y, color_iB,
-        B.x, B.y, color_B,
-        iD.x, iD.y, color_iD,
-        D.x, C.y, color_D);
+    quad(v_A, v_B, v_iA, v_iB);
+    quad(v_iC, v_iD, v_C, v_D);
+    quad(v_A, v_iA, v_C, v_iC);
+    quad(v_iB, v_B, v_iD, v_D);
   }
 }
 
