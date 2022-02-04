@@ -107,6 +107,11 @@ void draw_arc2(gx::DrawContext& dc, float x, float y)
   dc.arc({x + 200, y + 180}, 150, 20, 270, 32, 16);
 }
 
+void draw_arc3(gx::DrawContext& dc, float x, float y)
+{
+  dc.arc({x + 200, y + 180}, 150, 20, 270, 32, 32, BLACK, WHITE);
+}
+
 void draw_border1(gx::DrawContext& dc, float x, float y)
 {
   dc.color(GRAY50);
@@ -160,6 +165,7 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"Narrow Width/Height Rounded Rect", draw_rrect6},
   {"Full Arc", draw_arc1},
   {"Partial Arc", draw_arc2},
+  {"Gradient Arc", draw_arc3},
   {"Border", draw_border1},
   {"HGradient Border", draw_border2},
   {"VGradient Border", draw_border3},

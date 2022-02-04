@@ -459,6 +459,49 @@ void DrawContext::_arc(
   }
 }
 
+void DrawContext::arc(
+  Vec2 center, float radius, float startAngle, float endAngle,
+  int segments, float arcWidth, RGBA8 color0, RGBA8 color1)
+{
+  if ((color0 | color1) == 0) { return; }
+
+  fixAngles(startAngle, endAngle);
+  const float angle0 = degToRad(startAngle);
+  const float angle1 = degToRad(endAngle);
+  const float segmentAngle = (angle1 - angle0) / float(segments);
+  const float innerR = radius - arcWidth;
+
+  const float sa0 = std::sin(angle0), ca0 = std::cos(angle0);
+  Vertex2C v0{center.x + (radius * sa0), center.y - (radius * ca0), color0};
+  Vertex2C v1{center.x + (innerR * sa0), center.y - (innerR * ca0), color0};
+
+  const Color full0 = unpackRGBA8(color0);
+  const Color full1 = unpackRGBA8(color1);
+
+  float a = angle0;
+  for (int i = 0; i < segments; ++i) {
+    RGBA8 c;
+    if (i == segments-1) {
+      a = angle1;
+      c = color1;
+    } else {
+      a += segmentAngle;
+      const float x = float(i+1) / float(segments);
+      c = packRGBA8((full0 * (1.0f-x)) + (full1 * x));
+    }
+
+    const float sa = std::sin(a), ca = std::cos(a);
+    const Vertex2C v2{center.x + (radius * sa), center.y - (radius * ca), c};
+    const Vertex2C v3{center.x + (innerR * sa), center.y - (innerR * ca), c};
+
+    quad(v0, v1, v2, v3);
+
+    // setup for next iteration
+    v0 = v2;
+    v1 = v3;
+  }
+}
+
 void DrawContext::roundedRectangle(
   float x, float y, float w, float h, float curveRadius, int curveSegments)
 {
