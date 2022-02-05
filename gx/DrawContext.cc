@@ -387,7 +387,7 @@ void DrawContext::circleSector(
   const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
 
-  const Vertex2C v0{center.x, center.y, color0};
+  const Vertex2C v0{center, color0};
 
   Vertex2C v1{
     center.x + (radius * std::sin(angle0)),
@@ -553,15 +553,15 @@ void DrawContext::border(float x, float y, float w, float h, float borderWidth)
     _quad(A,iA,C,iC); // left
     _quad(iB,B,iD,D); // right
   } else {
-    const Vertex2C v_A{A.x, A.y, pointColor(A)};
-    const Vertex2C v_B{B.x, B.y, pointColor(B)};
-    const Vertex2C v_C{C.x, C.y, pointColor(C)};
-    const Vertex2C v_D{D.x, D.y, pointColor(D)};
+    const Vertex2C v_A{A, pointColor(A)};
+    const Vertex2C v_B{B, pointColor(B)};
+    const Vertex2C v_C{C, pointColor(C)};
+    const Vertex2C v_D{D, pointColor(D)};
 
-    const Vertex2C v_iA{iA.x, iA.y, pointColor(iA)};
-    const Vertex2C v_iB{iB.x, iB.y, pointColor(iB)};
-    const Vertex2C v_iC{iC.x, iC.y, pointColor(iC)};
-    const Vertex2C v_iD{iD.x, iD.y, pointColor(iD)};
+    const Vertex2C v_iA{iA, pointColor(iA)};
+    const Vertex2C v_iB{iB, pointColor(iB)};
+    const Vertex2C v_iC{iC, pointColor(iC)};
+    const Vertex2C v_iD{iD, pointColor(iD)};
 
     quad(v_A, v_B, v_iA, v_iB);
     quad(v_iC, v_iD, v_C, v_D);

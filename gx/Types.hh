@@ -1,6 +1,6 @@
 //
 // gx/Types.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #pragma once
@@ -34,7 +34,14 @@ namespace gx {
   // basic types
   struct Rect { float x, y, w, h; };
 
-  struct Vertex2C { float x, y; uint32_t c; };        // 12
+  struct Vertex2C {
+    float x, y; uint32_t c;  // 12 bytes
+ 
+    Vertex2C() = default;
+    Vertex2C(Vec2 pos, uint32_t col) : x{pos.x}, y{pos.y}, c{col} { }
+    Vertex2C(float px, float py, uint32_t col) : x{px}, y{py}, c{col} { }
+  };
+
   struct Vertex2T { float x, y, s, t; };              // 16
   struct Vertex2TC { float x, y, s, t; uint32_t c; }; // 20
 
