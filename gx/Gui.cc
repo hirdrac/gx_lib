@@ -508,7 +508,8 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       GuiElem& e = def.elems[0];
       calcSize(thm, e);
       def._w = e._w + (thm.border * 3)
-        + thm.font->glyphWidth(thm.listSelectCode);
+        + std::max(thm.font->glyphWidth(thm.listSelectCode),
+                   thm.font->glyphWidth(thm.listSelectOpenCode));
       def._h = e._h + (thm.border * 2);
       break;
     }
@@ -1236,8 +1237,10 @@ bool Gui::drawElem(
       drawRec(dc, ex, ey, ew, eh, style);
       needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
       const float b = thm.border;
+      const int32_t code = def._active ?
+        thm.listSelectOpenCode : thm.listSelectCode;
       dc2.glyph(TextFormatting{thm.font, 0}, ex + ew - b, ey + b,
-                ALIGN_TOP_RIGHT, thm.listSelectCode);
+                ALIGN_TOP_RIGHT, code);
       break;
     }
     case GUI_LISTSELECT_ITEM:

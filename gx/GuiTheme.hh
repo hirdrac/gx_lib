@@ -134,6 +134,7 @@ struct gx::GuiTheme
   //int32_t subMenuCode = 9658; // LiberationSans-Regular
   int32_t listSelectCode = 8711; // U+2207
   //int32_t listSelectCode = 9660; // LiberationSans-Regular
+  int32_t listSelectOpenCode = 8710; // U+2206
 
   RGBA8 cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
   uint32_t cursorBlinkTime = 400000; // 1 sec
