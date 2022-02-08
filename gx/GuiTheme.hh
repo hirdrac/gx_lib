@@ -149,4 +149,7 @@ struct gx::GuiTheme
   uint16_t lineWidth = 2;
   uint16_t titlebarMinHeight = 12;
   uint16_t titlebarMinWidth = 12;
+
+  float    roundedRadius = 8;
+  uint16_t roundedSegments = 3;
 };
