@@ -1225,6 +1225,7 @@ bool Gui::drawElem(
       }
       needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
       const float b = thm.border;
+      dc2.color(style->textColor);
       dc2.glyph(TextFormatting{thm.font, 0}, ex + ew, ey + b,
                 ALIGN_TOP_RIGHT, thm.subMenuCode);
       break;
@@ -1242,6 +1243,7 @@ bool Gui::drawElem(
       const float b = thm.border;
       const int32_t code = def._active ?
         thm.listSelectOpenCode : thm.listSelectCode;
+      dc2.color(style->textColor);
       dc2.glyph(TextFormatting{thm.font, 0}, ex + ew - b, ey + b,
                 ALIGN_TOP_RIGHT, code);
       break;
