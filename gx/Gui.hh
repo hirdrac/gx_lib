@@ -232,9 +232,9 @@ class gx::Gui
   void initElem(GuiElem& def);
   void deactivatePopups();
   void activatePopup(const GuiElem& def);
-  bool drawElem(const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  bool drawElem(Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
                 int64_t usec, const GuiTheme::Style* style) const;
-  bool drawPopup(const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  bool drawPopup(Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
                  int64_t usec) const;
 
   [[nodiscard]] GuiElem* findElemByID(ElemID id);

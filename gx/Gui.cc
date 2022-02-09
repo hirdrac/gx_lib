@@ -1125,7 +1125,7 @@ void Gui::initElem(GuiElem& def)
 }
 
 bool Gui::drawElem(
-  const Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
   int64_t usec, const GuiTheme::Style* style) const
 {
   const GuiTheme& thm = *p.theme;
@@ -1255,6 +1255,16 @@ bool Gui::drawElem(
         style = &thm.listSelectItemSelect;
         drawRec(dc, ex, ey, ew, eh, thm, style);
       }
+
+      if (thm.listSelectItemCode != 0) {
+        const GuiElem* parent = findParentListSelect(p.root, def._id);
+        if (parent && parent->itemNo == def.itemNo) {
+          const float b = thm.border;
+          dc2.color(style->textColor);
+          dc2.glyph(TextFormatting{thm.font, 0}, ex + ew - b, ey + b,
+                    ALIGN_TOP_RIGHT, thm.listSelectItemCode);
+        }
+      }
       break;
     case GUI_ENTRY: {
       if (!def._enabled) {
@@ -1326,7 +1336,7 @@ bool Gui::drawElem(
   return needRedraw;
 }
 
-bool Gui::drawPopup(const Panel& p, GuiElem& def, DrawContext& dc,
+bool Gui::drawPopup(Panel& p, GuiElem& def, DrawContext& dc,
                     DrawContext& dc2, int64_t usec) const
 {
   bool needRedraw = false; // use for anim trigger later
