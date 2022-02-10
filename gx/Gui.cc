@@ -56,7 +56,7 @@ using namespace gx;
 static void deactivate(GuiElem& def)
 {
   def._active = false;
-  for (auto& e : def.elems) { deactivate(e); }
+  for (GuiElem& e : def.elems) { deactivate(e); }
 }
 
 static bool activate(GuiElem& def, ElemID id)
@@ -65,7 +65,7 @@ static bool activate(GuiElem& def, ElemID id)
     def._active = true;
   } else {
     // activate parent if child is activated to handle nested menus
-    for (auto& e : def.elems) { def._active |= activate(e, id); }
+    for (GuiElem& e : def.elems) { def._active |= activate(e, id); }
   }
   return def._active;
 }
@@ -74,7 +74,7 @@ static int allElemState(GuiElem& def, bool enable)
 {
   int count = 0;
   if (def.eid != 0) { def._enabled = enable; ++count; }
-  for (auto& e : def.elems) { count += allElemState(e, enable); }
+  for (GuiElem& e : def.elems) { count += allElemState(e, enable); }
   return count;
 }
 
@@ -155,7 +155,7 @@ template<class T>
 [[nodiscard]] static GuiElem* findItem(GuiElem& root, int no)
 {
   // NOTE: skips root in search
-  for (auto& e : root.elems) {
+  for (GuiElem& e : root.elems) {
     if (e.type == GUI_LISTSELECT_ITEM && (no == 0 || e.itemNo == no)) {
       return &e;
     } else if (!e.elems.empty()) {
@@ -169,7 +169,7 @@ template<class T>
 [[nodiscard]] static GuiElem* findParentListSelect(GuiElem& root, ElemID id)
 {
   // NOTE: skips root in search
-  for (auto& e : root.elems) {
+  for (GuiElem& e : root.elems) {
     if (e.type == GUI_LISTSELECT && findElemByIDT(e.elems[1], id)) {
       return &e;
     } else if (!isMenu(e.type) && !e.elems.empty()) {
@@ -332,25 +332,24 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
     case GUI_SPACER:
       if (!def.elems.empty()) {
         GuiElem& e = def.elems[0];
-        bool resized = false;
-        if (e.align & ALIGN_HJUSTIFY) {
-          resized = true;
-          e._w = def._w - (def.spacer.left + def.spacer.right);
+        if (e.align & ALIGN_JUSTIFY) {
+          if (e.align & ALIGN_HJUSTIFY) {
+            e._w = def._w - (def.spacer.left + def.spacer.right);
+          }
+          if (e.align & ALIGN_VJUSTIFY) {
+            e._h = def._h - (def.spacer.top + def.spacer.bottom);
+          }
+          resizedElem(thm, e);
         }
-        if (e.align & ALIGN_VJUSTIFY) {
-          resized = true;
-          e._h = def._h - (def.spacer.top + def.spacer.bottom);
-        }
-        if (resized) { resizedElem(thm, e); }
       }
       break;
     case GUI_PANEL:
     case GUI_MENU_FRAME: {
-      GuiElem& e0 = def.elems[0];
+      GuiElem& e = def.elems[0];
       const float b2 = borderVal(thm, def.type) * 2;
-      e0._w = def._w - b2;
-      e0._h = def._h - b2;
-      resizedElem(thm, e0);
+      e._w = def._w - b2;
+      e._h = def._h - b2;
+      resizedElem(thm, e);
       break;
     }
     case GUI_LISTSELECT: {
@@ -512,18 +511,18 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
 static void calcPos(const GuiTheme& thm, GuiElem& def,
                     float left, float top, float right, float bottom)
 {
-  switch (VAlign(def.align)) {
-    case ALIGN_TOP:    def._y = top; break;
-    case ALIGN_BOTTOM: def._y = bottom - def._h; break;
-    default: // vcenter
-      def._y = std::floor((top + bottom - def._h) * .5f + .5f); break;
-  }
-
   switch (HAlign(def.align)) {
     case ALIGN_LEFT:  def._x = left; break;
     case ALIGN_RIGHT: def._x = right - def._w; break;
     default: // hcenter
       def._x = std::floor((left + right - def._w) * .5f); break;
+  }
+
+  switch (VAlign(def.align)) {
+    case ALIGN_TOP:    def._y = top; break;
+    case ALIGN_BOTTOM: def._y = bottom - def._h; break;
+    default: // vcenter
+      def._y = std::floor((top + bottom - def._h) * .5f + .5f); break;
   }
 
   left   = def._x;
@@ -535,7 +534,7 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
     case GUI_HFRAME: {
       const float fs = thm.frameSpacing;
       float total_w = 0;
-      for (GuiElem& e : def.elems) { total_w += e._w + fs; }
+      for (const GuiElem& e : def.elems) { total_w += e._w + fs; }
       for (GuiElem& e : def.elems) {
         total_w -= e._w + fs;
         calcPos(thm, e, left, top, right - total_w, bottom);
@@ -546,7 +545,7 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
     case GUI_VFRAME: {
       const float fs = thm.frameSpacing;
       float total_h = 0;
-      for (GuiElem& e : def.elems) { total_h += e._h + fs; }
+      for (const GuiElem& e : def.elems) { total_h += e._h + fs; }
       for (GuiElem& e : def.elems) {
         total_h -= e._h + fs;
         calcPos(thm, e, left, top, right, bottom - total_h);
@@ -1294,7 +1293,7 @@ bool Gui::drawElem(
 
   // draw child elements
   if (!isPopup(def.type)) {
-    for (auto& e : def.elems) {
+    for (GuiElem& e : def.elems) {
       needRedraw |= drawElem(p, e, dc, dc2, usec, style);
     }
   }
@@ -1317,7 +1316,9 @@ bool Gui::drawPopup(Panel& p, GuiElem& def, DrawContext& dc,
       needRedraw |= drawPopup(p, e1, dc, dc2, usec);
     }
   } else {
-    for (auto& e : def.elems) { needRedraw |= drawPopup(p, e, dc, dc2, usec); }
+    for (GuiElem& e : def.elems) {
+      needRedraw |= drawPopup(p, e, dc, dc2, usec);
+    }
   }
   return needRedraw;
 }
