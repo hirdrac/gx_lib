@@ -148,8 +148,8 @@ struct gx::GuiTheme
   uint16_t frameSpacing = 4;
   uint16_t textSpacing = 1;
   uint16_t lineWidth = 2;
-  uint16_t titlebarMinHeight = 12;
-  uint16_t titlebarMinWidth = 12;
+  uint16_t emptyHeight = 12;
+  uint16_t emptyWidth = 12;
 
   float    roundedRadius = 8;
   uint16_t roundedSegments = 3;

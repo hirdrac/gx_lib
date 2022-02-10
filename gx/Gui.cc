@@ -367,42 +367,43 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
 
 static void calcSize(const GuiTheme& thm, GuiElem& def)
 {
+  // calculate child sizes before parent
+  for (GuiElem& e : def.elems) { calcSize(thm, e); }
+
   switch (def.type) {
     case GUI_HFRAME: {
-      const float fs = thm.frameSpacing;
       float max_w = 0, max_h = 0;
-      for (GuiElem& e : def.elems) {
-        calcSize(thm, e);
+      for (const GuiElem& e : def.elems) {
         max_w = std::max(max_w, e._w);
         max_h = std::max(max_h, e._h);
       }
-      float total_w = -fs;
+      float total_w = -thm.frameSpacing;
       for (GuiElem& e : def.elems) {
-        bool resized = false;
-        if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; resized = true; }
-        if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; resized = true; }
-        if (resized) { resizedElem(thm, e); }
-        total_w += e._w + fs;
+        if (e.align & ALIGN_JUSTIFY) {
+          if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; }
+          if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; }
+          resizedElem(thm, e);
+        }
+        total_w += e._w + thm.frameSpacing;
       }
       def._w = total_w;
       def._h = max_h;
       break;
     }
     case GUI_VFRAME: {
-      const float fs = thm.frameSpacing;
       float max_w = 0, max_h = 0;
-      for (GuiElem& e : def.elems) {
-        calcSize(thm, e);
+      for (const GuiElem& e : def.elems) {
         max_w = std::max(max_w, e._w);
         max_h = std::max(max_h, e._h);
       }
-      float total_h = -fs;
+      float total_h = -thm.frameSpacing;
       for (GuiElem& e : def.elems) {
-        bool resized = false;
-        if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; resized = true; }
-        if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; resized = true; }
-        if (resized) { resizedElem(thm, e); }
-        total_h += e._h + fs;
+        if (e.align & ALIGN_JUSTIFY) {
+          if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; }
+          if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; }
+          resizedElem(thm, e);
+        }
+        total_h += e._h + thm.frameSpacing;
       }
       def._w = max_w;
       def._h = total_h;
@@ -412,31 +413,17 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       def._w = def.spacer.left + def.spacer.right;
       def._h = def.spacer.top + def.spacer.bottom;
       if (!def.elems.empty()) {
-        GuiElem& e = def.elems[0];
-        calcSize(thm, e);
+        const GuiElem& e = def.elems[0];
         def._w += e._w;
         def._h += e._h;
       }
       break;
-    case GUI_TITLEBAR:
-      if (def.elems.empty()) {
-        def._w = thm.titlebarMinWidth;
-        def._h = thm.titlebarMinHeight;
-      } else {
-        GuiElem& e = def.elems[0];
-        calcSize(thm, e);
-        const float b2 = thm.border * 2;
-        def._w = e._w + b2;
-        def._h = e._h + b2;
-      }
-      break;
     case GUI_LABEL: {
       const Font& fnt = *thm.font;
-      def._w = fnt.calcMaxLength(def.text, 0);
       const int lines = calcLines(def.text);
+      def._w = fnt.calcMaxLength(def.text, 0);
       def._h = float((fnt.size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
-      // FIXME: improve line height calc (based on font ymax/ymin?)
       break;
     }
     case GUI_VLABEL: {
@@ -455,52 +442,23 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       def._w = float(thm.lineWidth + (thm.lineBorder * 2));
       def._h = float(thm.font->size() - 1);
       break;
-    case GUI_PANEL:
-    case GUI_MENU_FRAME:
-    case GUI_BUTTON:
-    case GUI_BUTTON_PRESS:
-    case GUI_MENU_ITEM: {
-      GuiElem& e = def.elems[0];
-      calcSize(thm, e);
-      const float b2 = borderVal(thm, def.type) * 2;
-      def._w = e._w + b2;
-      def._h = e._h + b2;
-      break;
-    }
     case GUI_CHECKBOX: {
-      GuiElem& e = def.elems[0];
-      calcSize(thm, e);
+      const GuiElem& e = def.elems[0];
       const Font& fnt = *thm.font;
       def._w = fnt.glyphWidth(thm.checkCode) + (thm.border * 3) + e._w;
       def._h = std::max(float(fnt.size() - 1 + (thm.border * 2)), e._h);
       break;
     }
-    case GUI_MENU: {
-      // menu button
-      GuiElem& e = def.elems[0];
-      calcSize(thm, e);
-      const float b2 = thm.border * 2;
-      def._w = e._w + b2;
-      def._h = e._h + b2;
-      // menu items
-      calcSize(thm, def.elems[1]);
-      break;
-    }
     case GUI_SUBMENU: {
       // menu header
-      GuiElem& e = def.elems[0];
-      calcSize(thm, e);
+      const GuiElem& e = def.elems[0];
       def._w = e._w + (thm.border * 3) + thm.font->glyphWidth(thm.subMenuCode);
       def._h = e._h + (thm.border * 2);
-      // menu items
-      calcSize(thm, def.elems[1]);
       break;
     }
     case GUI_LISTSELECT: {
-      calcSize(thm, def.elems[0]);
-      GuiElem& e1 = def.elems[1]; // GUI_MENU_FRAME
-      calcSize(thm, e1);
       // base size on 1st list item (all items should be same size)
+      GuiElem& e1 = def.elems[1]; // GUI_MENU_FRAME
       const GuiElem* item = findItem(e1.elems[0], 0);
       assert(item != nullptr);
       def._w = item->_w;
@@ -508,8 +466,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       break;
     }
     case GUI_LISTSELECT_ITEM: {
-      GuiElem& e = def.elems[0];
-      calcSize(thm, e);
+      const GuiElem& e = def.elems[0];
       def._w = e._w + (thm.border * 3)
         + std::max(thm.font->glyphWidth(thm.listSelectCode),
                    thm.font->glyphWidth(thm.listSelectOpenCode));
@@ -539,7 +496,15 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       break;
     }
     default:
-      GX_LOG_ERROR("unknown type ", def.type);
+      if (def.elems.empty()) {
+        def._w = thm.emptyWidth;
+        def._h = thm.emptyHeight;
+      } else {
+        const GuiElem& e = def.elems[0];
+        const float b2 = borderVal(thm, def.type) * 2;
+        def._w = e._w + b2;
+        def._h = e._h + b2;
+      }
       break;
   }
 }
