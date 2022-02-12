@@ -210,7 +210,7 @@ static bool addEntryChar(GuiElem& e, int32_t codepoint)
         return false;
       } else if (codepoint == '.') {
         int count = 0;
-        for (char ch : e.text) { count += int{ch == '.'}; }
+        for (int ch : e.text) { count += (ch == '.'); }
         if (count > 0) { return false; }
       }
       if (e.text == "0" && codepoint != '.') { e.text.clear(); }
@@ -1188,9 +1188,8 @@ bool Gui::drawElem(
         drawRec(dc, ex, ey, ew, eh, thm, style);
       }
       needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
-      const float b = thm.border;
       dc2.color(style->textColor);
-      dc2.glyph(TextFormatting{thm.font, 0}, ex + ew, ey + b,
+      dc2.glyph(TextFormatting{thm.font, 0}, ex + ew, ey + thm.border,
                 ALIGN_TOP_RIGHT, thm.subMenuCode);
       break;
     }
