@@ -1,6 +1,6 @@
 //
 // gx/Texture.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #include "Texture.hh"
@@ -8,15 +8,6 @@
 #include "Renderer.hh"
 using namespace gx;
 
-
-Texture::Texture() = default;
-
-Texture& Texture::operator=(Texture&& t) noexcept
-{
-  cleanup();
-  _texID = std::exchange(t._texID,0);
-  return *this;
-}
 
 bool Texture::init(Renderer& ren, const Image& img, int levels,
                    FilterType minFilter, FilterType magFilter)
