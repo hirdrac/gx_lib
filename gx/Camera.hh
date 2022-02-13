@@ -30,8 +30,6 @@ namespace gx {
 class gx::Camera
 {
  public:
-  Camera() = default;
-
   // methods
   [[nodiscard]] const Vec3& pos() const { return _pos; }
   [[nodiscard]] const Vec3& dir() const { return _vnormal; }
@@ -95,7 +93,7 @@ bool gx::Camera::setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup)
 }
 
 
-// Inline Implementations
+// **** Inline Implementations ****
 constexpr gx::Mat4 gx::orthoProjection(float width, float height)
 {
   // simple ortho projection for 2d rendering in screen coords

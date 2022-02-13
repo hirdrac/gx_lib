@@ -1,6 +1,6 @@
 //
 // gx/Camera.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #include "Camera.hh"
@@ -58,12 +58,12 @@ bool Camera::calcProjection(
     return false;
   }
 
-  if (!isPos(_fov) || isGTE(_fov,180.0f)) {
+  if (!isPos(_fov) || isGTE(_fov, 180.0f)) {
     GX_LOG_ERROR("bad fov value: ", _fov);
     return false;
   }
 
-  const float vlen = std::tan(degToRad(_fov / 2.0f)) / _zoom;
+  const float vlen = std::tan(degToRad(_fov * .5f)) / _zoom;
     // fov:90 == 1.0
 
   float vsideL = vlen, vtopL = vlen;
@@ -97,7 +97,7 @@ bool Camera::calcDirToScreenPt(
   float mouseX, float mouseY, Vec3& result) const
 {
   const float sw = float(screenWidth), sh = float(screenHeight);
-  const float vlen = std::tan(degToRad(_fov / 2.0f)) / _zoom;
+  const float vlen = std::tan(degToRad(_fov * .5f)) / _zoom;
   Vec3 vx = _vside * vlen;
   Vec3 vy = _vtop * vlen;
   if (screenWidth >= screenHeight) {
@@ -106,8 +106,8 @@ bool Camera::calcDirToScreenPt(
     vy *= sh / sw;
   }
 
-  const float cx = sw / 2.0f;
-  const float cy = sh / 2.0f;
+  const float cx = sw * .5f;
+  const float cy = sh * .5f;
 
   // since we are calculating a direction, just assume eye is at origin
   // and view plane center is just 1 away from eye (in direction of vnormal)
