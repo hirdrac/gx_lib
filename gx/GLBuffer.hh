@@ -1,6 +1,6 @@
 //
 // gx/GLBuffer.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // wrapper for OpenGL buffer object
 //
@@ -16,11 +16,17 @@ class GLBuffer
 {
  public:
   GLBuffer() = default;
-  inline GLBuffer(GLBuffer&& b) noexcept;
   ~GLBuffer() { if (GLInitialized) cleanup(); }
 
-  // operators
+  // prevent copy/assignment
+  GLBuffer(const GLBuffer&) = delete;
+  GLBuffer& operator=(const GLBuffer&) = delete;
+
+  // enable move
+  inline GLBuffer(GLBuffer&& b) noexcept;
   inline GLBuffer& operator=(GLBuffer&& b) noexcept;
+
+  // operators
   [[nodiscard]] explicit operator bool() const { return _buffer; }
 
   // accessors
@@ -106,16 +112,12 @@ class GLBuffer
 #endif
 
   inline void cleanup() noexcept;
-
-  // prevent copy/assignment
-  GLBuffer(const GLBuffer&) = delete;
-  GLBuffer& operator=(const GLBuffer&) = delete;
 };
 
 
 // **** Inline Implementations ****
 GLBuffer::GLBuffer(GLBuffer&& b) noexcept
-  : _buffer(b.release()), _size(b._size)
+  : _buffer{b.release()}, _size{b._size}
 {
 #ifdef GX_GL33
   _target = b._target;

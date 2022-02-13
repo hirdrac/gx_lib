@@ -1,6 +1,6 @@
 //
 // gx/GLShader.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // wrapper for OpenGL shader object
 //
@@ -18,11 +18,17 @@ class GLShader
 {
  public:
   GLShader() = default;
-  inline GLShader(GLShader&& s) noexcept;
   ~GLShader() { if (GLInitialized) cleanup(); }
 
-  // operators
+  // prevent copy/assignment
+  GLShader(const GLShader&) = delete;
+  GLShader& operator=(const GLShader&) = delete;
+
+  // enable move
+  inline GLShader(GLShader&& s) noexcept;
   inline GLShader& operator=(GLShader&& s) noexcept;
+
+  // operators
   [[nodiscard]] explicit operator bool() const { return _shader; }
 
   // accessors
@@ -38,16 +44,12 @@ class GLShader
   GLuint _shader = 0;
 
   inline void cleanup() noexcept;
-
-  // prevent copy/assignment
-  GLShader(const GLShader&) = delete;
-  GLShader& operator=(const GLShader&) = delete;
 };
 
 
 // **** Inline Implementations ****
 GLShader::GLShader(GLShader&& s) noexcept
-  : _shader(s.release()) { }
+  : _shader{s.release()} { }
 
 GLShader& GLShader::operator=(GLShader&& s) noexcept
 {

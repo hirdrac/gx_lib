@@ -1,6 +1,6 @@
 //
 // gx/GLProgram.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // wrapper for OpenGL program object
 //
@@ -19,11 +19,17 @@ class GLProgram
 {
  public:
   GLProgram() = default;
-  inline GLProgram(GLProgram&& p) noexcept;
   ~GLProgram() { if (GLInitialized) cleanup(); }
 
-  // operators
+  // prevent copy/assignment
+  GLProgram(const GLProgram&) = delete;
+  GLProgram& operator=(const GLProgram&) = delete;
+
+  // enable move
+  inline GLProgram(GLProgram&& p) noexcept;
   inline GLProgram& operator=(GLProgram&& p) noexcept;
+
+  // operators
   [[nodiscard]] explicit operator bool() const { return _prog; }
 
   // accessors
@@ -81,16 +87,12 @@ class GLProgram
   GLuint _prog = 0;
 
   inline void cleanup() noexcept;
-
-  // prevent copy/assignment
-  GLProgram(const GLProgram&) = delete;
-  GLProgram& operator=(const GLProgram&) = delete;
 };
 
 
 // **** Inline Implementations ****
 GLProgram::GLProgram(GLProgram&& p) noexcept
-  : _prog(p.release()) { }
+  : _prog{p.release()} { }
 
 GLProgram& GLProgram::operator=(GLProgram&& p) noexcept
 {

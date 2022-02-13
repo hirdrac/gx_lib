@@ -1,6 +1,6 @@
 //
 // gx/GLUniform.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #pragma once
@@ -13,7 +13,7 @@ class GLUniform1f
 {
  public:
   GLUniform1f() = default;
-  GLUniform1f(GLint loc) : _loc(loc) { }
+  GLUniform1f(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -27,7 +27,7 @@ class GLUniform2f
 {
  public:
   GLUniform2f() = default;
-  GLUniform2f(GLint loc) : _loc(loc) { }
+  GLUniform2f(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -44,7 +44,7 @@ class GLUniform3f
 {
  public:
   GLUniform3f() = default;
-  GLUniform3f(GLint loc) : _loc(loc) { }
+  GLUniform3f(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -62,7 +62,7 @@ class GLUniform4f
 {
  public:
   GLUniform4f() = default;
-  GLUniform4f(GLint loc) : _loc(loc) { }
+  GLUniform4f(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -80,7 +80,7 @@ class GLUniform1i
 {
  public:
   GLUniform1i() = default;
-  GLUniform1i(GLint loc) : _loc(loc) { }
+  GLUniform1i(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -94,7 +94,7 @@ class GLUniform2i
 {
  public:
   GLUniform2i() = default;
-  GLUniform2i(GLint loc) : _loc(loc) { }
+  GLUniform2i(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -111,7 +111,7 @@ class GLUniform3i
 {
  public:
   GLUniform3i() = default;
-  GLUniform3i(GLint loc) : _loc(loc) { }
+  GLUniform3i(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -129,7 +129,7 @@ class GLUniform4i
 {
  public:
   GLUniform4i() = default;
-  GLUniform4i(GLint loc) : _loc(loc) { }
+  GLUniform4i(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -147,7 +147,7 @@ class GLUniform1ui
 {
  public:
   GLUniform1ui() = default;
-  GLUniform1ui(GLint loc) : _loc(loc) { }
+  GLUniform1ui(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -161,7 +161,7 @@ class GLUniform2ui
 {
  public:
   GLUniform2ui() = default;
-  GLUniform2ui(GLint loc) : _loc(loc) { }
+  GLUniform2ui(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -178,7 +178,7 @@ class GLUniform3ui
 {
  public:
   GLUniform3ui() = default;
-  GLUniform3ui(GLint loc) : _loc(loc) { }
+  GLUniform3ui(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -196,7 +196,7 @@ class GLUniform4ui
 {
  public:
   GLUniform4ui() = default;
-  GLUniform4ui(GLint loc) : _loc(loc) { }
+  GLUniform4ui(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 
@@ -214,7 +214,7 @@ class GLUniformMat4f
 {
  public:
   GLUniformMat4f() = default;
-  GLUniformMat4f(GLint loc) : _loc(loc) { }
+  GLUniformMat4f(GLint loc) : _loc{loc} { }
 
   [[nodiscard]] explicit operator bool() const { return _loc != -1; }
 

@@ -1,6 +1,6 @@
 //
 // gx/GLVertexArray.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // wrapper for OpenGL vertex array object
 //
@@ -17,11 +17,17 @@ class GLVertexArray
 {
  public:
   GLVertexArray() = default;
-  inline GLVertexArray(GLVertexArray&& v) noexcept;
   ~GLVertexArray() { if (GLInitialized) cleanup(); }
 
-  // operators
+  // prevent copy/assignment
+  GLVertexArray(const GLVertexArray&) = delete;
+  GLVertexArray& operator=(const GLVertexArray&) = delete;
+
+  // enable move
+  inline GLVertexArray(GLVertexArray&& v) noexcept;
   inline GLVertexArray& operator=(GLVertexArray&& v) noexcept;
+
+  // operators
   [[nodiscard]] explicit operator bool() const { return _vao; }
 
   // accessors
@@ -63,16 +69,12 @@ class GLVertexArray
 #endif
 
   inline void cleanup() noexcept;
-
-  // prevent copy/assignment
-  GLVertexArray(const GLVertexArray&) = delete;
-  GLVertexArray& operator=(const GLVertexArray&) = delete;
 };
 
 
 // **** Inline Implementation ****
 GLVertexArray::GLVertexArray(GLVertexArray&& v) noexcept
-  : _vao(v.release()) { }
+  : _vao{v.release()} { }
 
 GLVertexArray& GLVertexArray::operator=(GLVertexArray&& v) noexcept
 {
