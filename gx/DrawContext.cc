@@ -32,6 +32,58 @@ namespace {
   }
 }
 
+void DrawContext::quad(
+  const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  switch (_colorMode) {
+    default:
+      setColor();
+      _quad(a,b,c,d);
+      break;
+    case CM_HGRADIENT:
+      add(CMD_quad2C,
+          a.x, a.y, gradientColor(a.x),
+          b.x, b.y, gradientColor(b.x),
+          c.x, c.y, gradientColor(c.x),
+          d.x, d.y, gradientColor(d.x));
+      break;
+    case CM_VGRADIENT:
+      add(CMD_quad2C,
+          a.x, a.y, gradientColor(a.y),
+          b.x, b.y, gradientColor(b.y),
+          c.x, c.y, gradientColor(c.y),
+          d.x, d.y, gradientColor(d.y));
+      break;
+  }
+}
+
+void DrawContext::quad(
+  const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  switch (_colorMode) {
+    default:
+      setColor();
+      add(CMD_quad3, a.x, a.y, a.z, b.x, b.y, b.z,
+          c.x, c.y, c.z, d.x, d.y, d.z);
+      break;
+    case CM_HGRADIENT:
+      add(CMD_quad3C,
+          a.x, a.y, a.z, gradientColor(a.x),
+          b.x, b.y, b.z, gradientColor(b.x),
+          c.x, c.y, c.z, gradientColor(c.x),
+          d.x, d.y, d.z, gradientColor(d.x));
+      break;
+    case CM_VGRADIENT:
+      add(CMD_quad3C,
+          a.x, a.y, a.z, gradientColor(a.y),
+          b.x, b.y, b.z, gradientColor(b.y),
+          c.x, c.y, c.z, gradientColor(c.y),
+          d.x, d.y, d.z, gradientColor(d.y));
+      break;
+  }
+}
 
 void DrawContext::rectangle(float x, float y, float w, float h)
 {
@@ -40,42 +92,58 @@ void DrawContext::rectangle(float x, float y, float w, float h)
 
 void DrawContext::_rectangle(float x, float y, float w, float h)
 {
-  if (_colorMode == CM_SOLID) {
-    _rect(x, y, w, h);
-  } else {
-    const Vec2 A{x,y};
-    const Vec2 B{x+w,y};
-    const Vec2 C{x,y+h};
-    const Vec2 D{x+w,y+h};
-    add(CMD_quad2C,
-        A.x, A.y, pointColor(A),
-        B.x, B.y, pointColor(B),
-        C.x, C.y, pointColor(C),
-        D.x, D.y, pointColor(D));
+  const float x1 = x + w;
+  const float y1 = y + h;
+  switch (_colorMode) {
+    case CM_HGRADIENT: {
+      const RGBA8 c0 = gradientColor(x);
+      const RGBA8 c1 = gradientColor(x1);
+      add(CMD_quad2C, x, y, c0, x1, y, c1, x, y1, c0, x1, y1, c1);
+      break;
+    }
+    case CM_VGRADIENT: {
+      const RGBA8 c0 = gradientColor(y);
+      const RGBA8 c1 = gradientColor(y1);
+      add(CMD_quad2C, x, y, c0, x1, y, c0, x, y1, c1, x1, y1, c1);
+      break;
+    }
+    default:
+      add(CMD_rectangle, x, y, x1, y1);
+      break;
   }
 }
 
 void DrawContext::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1)
 {
-  if (checkColor()) { _rectangle(x, y, w, h, t0, t1); }
-}
+  if (!checkColor()) { return; }
 
-void DrawContext::_rectangle(
-  float x, float y, float w, float h, Vec2 t0, Vec2 t1)
-{
-  if (_colorMode == CM_SOLID) {
-    add(CMD_rectangleT, x, y, t0.x, t0.y, x+w, y+h, t1.x, t1.y);
-  } else {
-    const Vec2 A{x,y};
-    const Vec2 B{x+w,y};
-    const Vec2 C{x,y+h};
-    const Vec2 D{x+w,y+h};
-    add(CMD_quad2TC,
-        A.x, A.y, t0.x, t0.y, pointColor(A),
-        B.x, B.y, t1.x, t0.y, pointColor(B),
-        C.x, C.y, t0.x, t1.y, pointColor(C),
-        D.x, D.y, t1.x, t1.y, pointColor(D));
+  const float x1 = x + w;
+  const float y1 = y + h;
+  switch (_colorMode) {
+    case CM_HGRADIENT: {
+      const RGBA8 c0 = gradientColor(x);
+      const RGBA8 c1 = gradientColor(x1);
+      add(CMD_quad2TC,
+          x, y, t0.x, t0.y, c0,
+          x1, y, t1.x, t0.y, c1,
+          x, y1, t0.x, t1.y, c0,
+          x1, y1, t1.x, t1.y, c1);
+      break;
+    }
+    case CM_VGRADIENT: {
+      const RGBA8 c0 = gradientColor(y);
+      const RGBA8 c1 = gradientColor(y1);
+      add(CMD_quad2TC,
+          x, y, t0.x, t0.y, c0,
+          x1, y, t1.x, t0.y, c0,
+          x, y1, t0.x, t1.y, c1,
+          x1, y1, t1.x, t1.y, c1);
+      break;
+    }
+    default:
+      add(CMD_rectangleT, x, y, t0.x, t0.y, x1, y1, t1.x, t1.y);
+      break;
   }
 }
 
@@ -363,7 +431,7 @@ void DrawContext::_circleSector(
       center.y - (radius * std::cos(a))};
 
     if (_colorMode == CM_SOLID) {
-      _triangle(v0, v1, v2);
+      add(CMD_triangle2, v0.x, v0.y, v1.x, v1.y, v2.x, v2.y);
     } else {
       add(CMD_triangle2C,
           v0.x, v0.y, pointColor(v0),

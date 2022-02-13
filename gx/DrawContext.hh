@@ -93,6 +93,8 @@ class gx::DrawContext
     add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
         b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
 
+  void quad(const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d);
+  void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d);
   void quad(const Vertex2C& a, const Vertex2C& b,
             const Vertex2C& c, const Vertex2C& d) {
     add(CMD_quad2C, a.x, a.y, a.c, b.x, b.y, b.c,
@@ -183,7 +185,6 @@ class gx::DrawContext
   }
 
   void _rectangle(float x, float y, float w, float h);
-  void _rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1);
   void _text(const TextFormatting& tf, float x, float y, AlignEnum align,
              std::string_view text, const Rect* clipPtr);
   void _glyph(const Glyph& g, const TextFormatting& tf, Vec2 cursor,
@@ -193,15 +194,12 @@ class gx::DrawContext
   void _arc(Vec2 center, float radius, float startAngle, float endAngle,
             int segments, float arcWidth);
 
-  void _rect(float x, float y, float w, float h) {
-    add(CMD_rectangle, x, y, x + w, y + h); }
-  void _triangle(Vec2 a, Vec2 b, Vec2 c) {
-    add(CMD_triangle2, a.x, a.y, b.x, b.y, c.x, c.y); }
   void _quad(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
     add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
 
   [[nodiscard]] inline RGBA8 gradientColor(float g) const;
   [[nodiscard]] inline RGBA8 pointColor(Vec2 pt) const;
+  inline void setColor();
   [[nodiscard]] inline bool checkColor();
 };
 
@@ -304,12 +302,17 @@ gx::RGBA8 gx::DrawContext::pointColor(Vec2 pt) const
   }
 }
 
-bool gx::DrawContext::checkColor()
+void gx::DrawContext::setColor()
 {
-  if ((_color0 | _color1) == 0) { return false; }
-  if (_colorMode == CM_SOLID && _dataColor != _color0) {
+  if (_dataColor != _color0) {
     add(CMD_color, _color0);
     _dataColor = _color0;
   }
+}
+
+bool gx::DrawContext::checkColor()
+{
+  if ((_color0 | _color1) == 0) { return false; }
+  if (_colorMode == CM_SOLID) { setColor(); }
   return true; // proceed with draw
 }
