@@ -34,7 +34,12 @@ namespace gx {
 class gx::Renderer
 {
  public:
+  Renderer() = default;
   virtual ~Renderer();
+
+  // prevent copy/assignment/move
+  Renderer(const Renderer&) = delete;
+  Renderer& operator=(const Renderer&) = delete;
 
   // setup methods
   virtual void setWindowHints(bool debug) = 0;
@@ -91,8 +96,7 @@ class gx::Renderer
 
   // draw capabilities
   static constexpr int INIT_CAPABILITIES = BLEND;
-  void setCapabilities(int layer, int c) {
-    _layers[layer].cap = c; }
+  void setCapabilities(int layer, int c) { _layers[layer].cap = c; }
 
  protected:
   GLFWwindow* _window = nullptr;

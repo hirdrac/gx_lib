@@ -1,6 +1,6 @@
 //
 // gx/OpenGLRenderer.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #pragma once
@@ -21,8 +21,6 @@ namespace gx {
 class gx::OpenGLRenderer final : public gx::Renderer
 {
  public:
-  OpenGLRenderer() = default;
-
   // gx::Renderer methods
   void setWindowHints(bool debug) override;
   bool init(GLFWwindow* win) override;
@@ -59,6 +57,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     int capabilities; // Renderer::CapabilityEnum bitfield
   };
   std::vector<DrawCall> _drawCalls;
+  int _currentGLCap = -1; // current GL capability state
 
   void addDrawCall(GLsizei count, GLenum mode, uint32_t modColor,
                    TextureID texID, float lineWidth, int transID, int cap) {
@@ -75,12 +74,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
       {count, mode, modColor, texID, lineWidth, transID, cap});
   }
 
-  int _currentGLCap = -1; // current GL capability state
   void setGLCapabilities(int cap);
   static void setCullFace(int cap);
   void setupBuffer();
-
-  // prevent copy/assignment
-  OpenGLRenderer(const OpenGLRenderer&) = delete;
-  OpenGLRenderer& operator=(const OpenGLRenderer&) = delete;
 };
