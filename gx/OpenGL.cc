@@ -1,6 +1,6 @@
 //
 // gx/OpenGL.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #include "OpenGL.hh"
@@ -30,12 +30,10 @@ static void GLCleanUp()
 }
 
 #ifndef GX_GL33
-static void APIENTRY GLDebugCB(
-  GLenum source, GLenum type, GLuint id, GLenum severity,
-  GLsizei length, const GLchar *message, const void *userParam)
+static constexpr const char* GLSourceStr(GLenum source)
 {
-  #define DEBUG_SOURCE_CASE(x) case GL_DEBUG_SOURCE_##x: sourceStr = #x; break
   const char* sourceStr = "unknown";
+  #define DEBUG_SOURCE_CASE(x) case GL_DEBUG_SOURCE_##x: sourceStr = #x; break
   switch (source) {
     DEBUG_SOURCE_CASE(API);
     DEBUG_SOURCE_CASE(WINDOW_SYSTEM);
@@ -45,9 +43,13 @@ static void APIENTRY GLDebugCB(
     DEBUG_SOURCE_CASE(OTHER);
   }
   #undef DEBUG_SOURCE_CASE
+  return sourceStr;
+}
 
-  #define DEBUG_TYPE_CASE(x) case GL_DEBUG_TYPE_##x: typeStr = #x; break
+static constexpr const char* GLTypeStr(GLenum type)
+{
   const char* typeStr = "unknown";
+  #define DEBUG_TYPE_CASE(x) case GL_DEBUG_TYPE_##x: typeStr = #x; break
   switch (type) {
     DEBUG_TYPE_CASE(ERROR);
     DEBUG_TYPE_CASE(DEPRECATED_BEHAVIOR);
@@ -57,23 +59,37 @@ static void APIENTRY GLDebugCB(
     DEBUG_TYPE_CASE(OTHER);
   }
   #undef DEBUG_TYPE_CASE
+  return typeStr;
+}
 
-  LogLevel lvl = LVL_ERROR;
-  const char* severityStr = "";
+static constexpr const char* GLSeverityStr(GLenum severity)
+{
+  switch (severity) {
+    case GL_DEBUG_SEVERITY_HIGH:   return " severity=HIGH";
+    case GL_DEBUG_SEVERITY_MEDIUM: return " severity=MEDIUM";
+    case GL_DEBUG_SEVERITY_LOW:    return " severity=LOW";
+    default:                       return "";
+  }
+}
+
+static constexpr LogLevel GLSeverityLogLevel(GLenum severity)
+{
   switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:
-      severityStr = " severity=HIGH"; break;
-    case GL_DEBUG_SEVERITY_MEDIUM:
-      severityStr = " severity=MEDIUM"; break;
-    case GL_DEBUG_SEVERITY_LOW:
-      severityStr = " severity=LOW"; lvl = LVL_WARN; break;
-    default:
-      lvl = LVL_INFO; break;
+    case GL_DEBUG_SEVERITY_MEDIUM: return LVL_ERROR;
+    case GL_DEBUG_SEVERITY_LOW:    return LVL_WARN;
+    default:                       return LVL_INFO;
   }
+}
 
+static void APIENTRY GLDebugCB(
+  GLenum source, GLenum type, GLuint id, GLenum severity,
+  GLsizei length, const GLchar* message, const void* userParam)
+{
   GX_LOGGER_LOG(
-    defaultLogger(), lvl, "GLDebug: source=", sourceStr, " type=",
-    typeStr, " id=", id, severityStr, " message=[", message, ']');
+    defaultLogger(), GLSeverityLogLevel(severity),
+    "GLDebug: source=", GLSourceStr(source), " type=", GLTypeStr(type),
+    " id=", id, GLSeverityStr(severity), " message=[", message, ']');
 }
 #endif
 
