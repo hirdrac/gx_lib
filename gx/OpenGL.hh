@@ -1,6 +1,6 @@
 //
 // gx/OpenGL.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // OpenGL API include & generic utility functions
 //
@@ -10,23 +10,29 @@
 #include <string>
 #include <string_view>
 
+
 #ifdef GX_GL33
 #define GX_GLNAMESPACE gx_gl33
+#else
+#define GX_GLNAMESPACE gx_gl45
+#endif
+
+inline namespace GX_GLNAMESPACE {
+
+// **** Constants ****
+#ifdef GX_GL33
 constexpr int GL_VERSION_MAJOR = 3;
 constexpr int GL_VERSION_MINOR = 3;
 constexpr const char* GLSL_SOURCE_HEADER =
   "#version 330 core\n"
   "#extension GL_ARB_shading_language_packing : enable\n";
 #else
-#define GX_GLNAMESPACE gx_gl45
 constexpr int GL_VERSION_MAJOR = 4;
 constexpr int GL_VERSION_MINOR = 5;
 constexpr const char* GLSL_SOURCE_HEADER =
   "#version 450 core\n";
 #endif
 
-
-inline namespace GX_GLNAMESPACE {
 
 // **** Globals ****
 extern bool GLInitialized;
@@ -113,9 +119,8 @@ int GLCheckErrors(std::string_view msg, const char* file = __FILE__,
 [[nodiscard]] constexpr int GLPixelSize(GLenum format, GLenum type)
 {
   int s = GLTypeSize(type);
-  if (type == GL_UNSIGNED_BYTE || type == GL_BYTE
-      || type == GL_UNSIGNED_SHORT || type == GL_SHORT
-      || type == GL_UNSIGNED_INT || type == GL_INT
+  if (type == GL_UNSIGNED_BYTE || type == GL_BYTE || type == GL_UNSIGNED_SHORT
+      || type == GL_SHORT || type == GL_UNSIGNED_INT || type == GL_INT
       || type == GL_FLOAT)
   {
     switch (format) {
@@ -147,7 +152,7 @@ int GLCheckErrors(std::string_view msg, const char* file = __FILE__,
 
 
 // **** Types ****
-template<typename T> struct GLType { };
+template<class T> struct GLType { };
 
 template<> struct GLType<GLfloat> {
   static constexpr GLenum value = GL_FLOAT; };
