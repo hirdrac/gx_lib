@@ -1047,8 +1047,7 @@ bool Gui::setItemNo(EventID eid, int no)
   return false;
 }
 
-PanelID Gui::addPanel(
-  std::unique_ptr<Panel> ptr, float x, float y, AlignEnum align)
+PanelID Gui::addPanel(PanelPtr ptr, float x, float y, AlignEnum align)
 {
   const PanelID id = ++_lastPanelID;
   ptr->id = id;

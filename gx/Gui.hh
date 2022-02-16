@@ -194,7 +194,8 @@ class gx::Gui
   };
 
   // element definition
-  std::vector<std::unique_ptr<Panel>> _panels;
+  using PanelPtr = std::unique_ptr<Panel>;
+  std::vector<PanelPtr> _panels;
   PanelID _lastPanelID = 0;
   ElemID _lastElemID = 0;
 
@@ -223,8 +224,7 @@ class gx::Gui
   bool _needRedraw = false;
   bool _textChanged = false;
 
-  PanelID addPanel(
-    std::unique_ptr<Panel> ptr, float x, float y, AlignEnum align);
+  PanelID addPanel(PanelPtr ptr, float x, float y, AlignEnum align);
   void layout(Panel& p, float x, float y, AlignEnum align);
   void processMouseEvent(Window& win);
   void processCharEvent(Window& win);
@@ -256,7 +256,7 @@ class gx::Gui
     _eventTime = t;
   }
 
-  std::unique_ptr<Panel> removePanel(PanelID id) {
+  PanelPtr removePanel(PanelID id) {
     for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
       if ((*i)->id == id) {
         auto ptr = std::move(*i);
@@ -272,7 +272,7 @@ class gx::Gui
 gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
                               AlignEnum align, GuiElem&& elems)
 {
-  std::unique_ptr<Panel> ptr{
+  PanelPtr ptr{
     new Panel{&theme, {GUI_PANEL, ALIGN_TOP_LEFT, 0, {std::move(elems)}}}};
   return addPanel(std::move(ptr), x, y, align);
 }
@@ -280,7 +280,7 @@ gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
 gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
                               AlignEnum align, const GuiElem& elems)
 {
-  std::unique_ptr<Panel> ptr{
+  PanelPtr ptr{
     new Panel{&theme, {GUI_PANEL, ALIGN_TOP_LEFT, 0, {elems}}}};
   return addPanel(std::move(ptr), x, y, align);
 }
