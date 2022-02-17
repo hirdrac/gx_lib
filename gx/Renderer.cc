@@ -1,6 +1,6 @@
 //
 // gx/Renderer.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #include "Renderer.hh"
@@ -14,12 +14,14 @@ using namespace gx;
 
 // **** Texture Owner data/functions ****
 namespace {
+  std::mutex _textureMutex;
   std::unordered_map<TextureID,Renderer*> _textureOwners;
-  std::mutex _textureOwnersMutex;
+  TextureID _lastTextureID = 0;
+
 
   void freeRenderer(Renderer* rPtr)
   {
-    std::lock_guard lg{_textureOwnersMutex};
+    const std::lock_guard lg{_textureMutex};
     auto itr = _textureOwners.begin();
     auto end = _textureOwners.end();
     while (itr != end) {
@@ -32,19 +34,11 @@ namespace {
   }
 }
 
-void gx::registerTextureOwner(TextureID tid, Renderer* rPtr)
-{
-  if (tid > 0) {
-    std::lock_guard lg{_textureOwnersMutex};
-    _textureOwners[tid] = rPtr;
-  }
-}
-
 bool gx::updateTexture(TextureID tid, const Image& img, int levels,
                        FilterType minFilter, FilterType magFilter)
 {
-  std::lock_guard lg{_textureOwnersMutex};
-  auto itr = _textureOwners.find(tid);
+  const std::lock_guard lg{_textureMutex};
+  const auto itr = _textureOwners.find(tid);
   if (itr == _textureOwners.end()) { return false; }
 
   itr->second->setTexture(tid, img, levels, minFilter, magFilter);
@@ -53,8 +47,8 @@ bool gx::updateTexture(TextureID tid, const Image& img, int levels,
 
 void gx::freeTexture(TextureID tid)
 {
-  std::lock_guard lg{_textureOwnersMutex};
-  auto itr = _textureOwners.find(tid);
+  const std::lock_guard lg{_textureMutex};
+  const auto itr = _textureOwners.find(tid);
   if (itr != _textureOwners.end()) {
     itr->second->freeTexture(tid);
     _textureOwners.erase(itr);
@@ -92,10 +86,10 @@ void Renderer::setOrthoProjection(int layer, float width, float height)
   setTransform(layer, Mat4Identity, orthoProjection(width, height));
 }
 
-
-// Static Methods
 TextureID Renderer::newTextureID()
 {
-  static std::atomic<TextureID> _lastID = 0;
-  return ++_lastID;
+  const std::lock_guard lg{_textureMutex};
+  const TextureID tid = ++_lastTextureID;
+  _textureOwners.insert({tid,this});
+  return tid;
 }

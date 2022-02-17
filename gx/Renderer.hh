@@ -116,12 +116,11 @@ class gx::Renderer
   struct TransformEntry { Mat4 view, proj; };
   std::vector<TransformEntry> _transforms;
 
-  static TextureID newTextureID();
+  TextureID newTextureID();
 };
 
 
 namespace gx {
-  void registerTextureOwner(TextureID tid, Renderer* rPtr);
   bool updateTexture(TextureID id, const Image& img, int levels,
                      FilterType minFilter, FilterType magFilter);
   void freeTexture(TextureID tid);

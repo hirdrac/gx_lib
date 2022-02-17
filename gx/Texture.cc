@@ -18,7 +18,6 @@ bool Texture::init(Renderer& ren, const Image& img, int levels,
   _levels = levels;
   _minFilter = minFilter;
   _magFilter = magFilter;
-  registerTextureOwner(_texID, &ren);
   return (_texID != 0);
 }
 
