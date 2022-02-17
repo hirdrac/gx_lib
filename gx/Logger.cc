@@ -1,6 +1,6 @@
 //
 // gx/Logger.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 // TODO: threaded support
@@ -43,24 +43,26 @@ namespace
 
   void logTime(std::ostream& os)
   {
-    std::time_t t = std::time(nullptr);
-    std::tm* td = std::localtime(&t);
+    const std::time_t t = std::time(nullptr);
+    const std::tm* td = std::localtime(&t);
     char str[32];
-    int len = snprintf(str, sizeof(str), "%d-%02d-%02d %02d:%02d:%02d ",
-		       td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
-		       td->tm_hour, td->tm_min, td->tm_sec);
+    const int len = snprintf(
+      str, sizeof(str), "%d-%02d-%02d %02d:%02d:%02d ",
+      td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
+      td->tm_hour, td->tm_min, td->tm_sec);
     os.write(str, std::streamsize(len));
   }
 
   [[nodiscard]] std::string fileTime()
   {
-    std::time_t t = std::time(nullptr);
-    std::tm* td = std::localtime(&t);
+    const std::time_t t = std::time(nullptr);
+    const std::tm* td = std::localtime(&t);
     char str[32];
-    int len = snprintf(str, sizeof(str), "-%d%02d%02d_%02d%02d%02d",
-		       td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
-		       td->tm_hour, td->tm_min, td->tm_sec);
-    return std::string(str, std::size_t(len));
+    const int len = snprintf(
+      str, sizeof(str), "-%d%02d%02d_%02d%02d%02d",
+      td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
+      td->tm_hour, td->tm_min, td->tm_sec);
+    return {str, std::size_t(len)};
   }
 
   [[nodiscard]] constexpr std::string_view levelStr(LogLevel l)
@@ -83,7 +85,7 @@ class gx::LoggerImpl
  public:
   void setOStream(std::ostream& os)
   {
-    std::lock_guard lg{_mutex};
+    const std::lock_guard lg{_mutex};
     _fileName.clear();
     _fileStream.close();
     _os = &os;
@@ -91,7 +93,7 @@ class gx::LoggerImpl
 
   void setFile(std::string_view fileName)
   {
-    std::lock_guard lg{_mutex};
+    const std::lock_guard lg{_mutex};
     _fileName = fileName;
     _fileStream = std::ofstream(_fileName, std::ios_base::app);
     _os = &_fileStream;
@@ -99,7 +101,7 @@ class gx::LoggerImpl
 
   void log(const char* str, std::streamsize len)
   {
-    std::lock_guard lg{_mutex};
+    const std::lock_guard lg{_mutex};
     _os->write(str, len);
     _os->flush();
   }
@@ -109,10 +111,10 @@ class gx::LoggerImpl
 
   void rotate()
   {
-    std::lock_guard lg{_mutex};
+    const std::lock_guard lg{_mutex};
     if (!_fileStream) return;
 
-    auto x = _fileName.rfind('.');
+    const std::size_t x = _fileName.rfind('.');
     std::string nf = _fileName.substr(0,x) + fileTime();
     if (x != std::string::npos) {
       nf += _fileName.substr(x);
