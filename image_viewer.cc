@@ -9,7 +9,6 @@
 // TODO: multiple image display in fullscreen (horizontal/vertical)
 // TODO: smooth scrolling when moving to next image
 // TODO: don't scroll if all images can fit on screen?
-// TODO: make texture mag filter configurable? ('smooth' mode would use linear)
 
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
@@ -35,8 +34,8 @@ std::pair<int,int> calcSize(const gx::Window& win, const gx::Image& img)
   int iw = win.width();
   int ih = win.height();
   if (win.fullScreen()) {
-    float w_ratio = float(win.width()) / float(img.width());
-    float h_ratio = float(win.height()) / float(img.height());
+    const float w_ratio = float(win.width()) / float(img.width());
+    const float h_ratio = float(win.height()) / float(img.height());
     if (w_ratio > h_ratio) {
       iw = int(float(img.width()) * h_ratio);
     } else {
@@ -103,9 +102,9 @@ int main(int argc, char* argv[])
         refresh = false;
       }
 
-      auto [iw,ih] = calcSize(win, e.img);
-      int ix = int(float(win.width() - iw) * .5f);
-      int iy = int(float(win.height() - ih) * .5f);
+      const auto [iw,ih] = calcSize(win, e.img);
+      const int ix = int(float(win.width() - iw) * .5f);
+      const int iy = int(float(win.height() - ih) * .5f);
       dc.clear();
       dc.color(gx::WHITE);
       dc.texture(e.tex);
@@ -119,10 +118,10 @@ int main(int argc, char* argv[])
         int prev_x = ix;
         for (int x = entryNo - 1; x >= 0; --x) {
           const Entry& e0 = entries[std::size_t(x)];
-          auto [iw0,ih0] = calcSize(win, e0.img);
-          int ix0 = prev_x - (iw0 + border); prev_x = ix0;
+          const auto [iw0,ih0] = calcSize(win, e0.img);
+          const int ix0 = prev_x - (iw0 + border); prev_x = ix0;
           if ((ix0+iw0) < 0) { break; }
-          int iy0 = int(float(win.height() - ih0) / 2.0f);
+          const int iy0 = int(float(win.height() - ih0) / 2.0f);
           dc.texture(e0.tex);
           dc.rectangle(float(ix0), float(iy0), float(iw0), float(ih0),
                        {0,0}, {1,1});
@@ -132,10 +131,10 @@ int main(int argc, char* argv[])
         prev_x = ix + iw + border;
         for (int x = entryNo + 1; x <= lastNo; ++x) {
           const Entry& e1 = entries[std::size_t(x)];
-          auto [iw1,ih1] = calcSize(win, e1.img);
-          int ix1 = prev_x; prev_x += iw1 + border;
+          const auto [iw1,ih1] = calcSize(win, e1.img);
+          const int ix1 = prev_x; prev_x += iw1 + border;
           if (ix1 > win.width()) { break; }
-          int iy1 = int(float(win.height() - ih1) / 2.0f);
+          const int iy1 = int(float(win.height() - ih1) / 2.0f);
           dc.texture(e1.tex);
           dc.rectangle(float(ix1), float(iy1), float(iw1), float(ih1),
                        {0,0}, {1,1});
