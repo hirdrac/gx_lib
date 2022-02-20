@@ -76,6 +76,7 @@ class gx::Camera
 };
 
 
+// **** Inline Implementations ****
 bool gx::Camera::setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup)
 {
   _pos = pos;
@@ -93,7 +94,6 @@ bool gx::Camera::setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup)
 }
 
 
-// **** Inline Implementations ****
 constexpr gx::Mat4 gx::orthoProjection(float width, float height)
 {
   // simple ortho projection for 2d rendering in screen coords
