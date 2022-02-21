@@ -13,6 +13,7 @@ namespace gx {
     CMD_color,        // <cmd c> (2)
     CMD_texture,      // <cmd id> (2)
     CMD_lineWidth,    // <cmd w> (2)
+    CMD_normal3,      // <cmd x y z> (4)
 
     // drawing commands
     CMD_line2,        // <cmd (x y)x2> (5)

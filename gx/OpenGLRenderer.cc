@@ -282,6 +282,7 @@ void OpenGLRenderer::setupBuffer()
         case CMD_color:        d += 2; break;
         case CMD_texture:      d += 2; break;
         case CMD_lineWidth:    d += 2; break;
+        case CMD_normal3:      d += 4; break;
         case CMD_line2:        d += 5;  vsize += 2; break;
         case CMD_line3:        d += 7;  vsize += 2; break;
         case CMD_triangle2:    d += 7;  vsize += 3; break;
@@ -366,6 +367,9 @@ void OpenGLRenderer::setupBuffer()
         case CMD_color:     color = uval(d); break;
         case CMD_texture:   tid   = uval(d); break;
         case CMD_lineWidth: lw    = fval(d); break;
+
+        case CMD_normal3:
+          d += 3; break; // ignored for now
 
         case CMD_line2: {
           vertex(ptr, fval2(d), color);

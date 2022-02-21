@@ -64,10 +64,12 @@ class gx::DrawContext
   inline void vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1);
   inline void vgradient(float y0, const Color& c0, float y1, const Color& c1);
 
-  inline void lineWidth(float w);
-
   inline void texture(TextureID tid);
   void texture(const Texture& t) { texture(t.id()); }
+
+  inline void lineWidth(float w);
+
+  void normal(const Vec3& n) { add(CMD_normal3, n.x, n.y, n.z); }
 
   // line drawing
   void line(Vec2 a, Vec2 b) {
