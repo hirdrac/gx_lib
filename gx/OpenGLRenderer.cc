@@ -195,13 +195,13 @@ bool OpenGLRenderer::init(GLFWwindow* win)
   // debug output
   float val[2] = {};
   glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, val);
-  println("GL_ALIASED_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
+  gx::println("GL_ALIASED_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
 
   glGetFloatv(GL_SMOOTH_LINE_WIDTH_RANGE, val);
-  println("GL_SMOOTH_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
+  gx::println("GL_SMOOTH_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
 
   glGetFloatv(GL_SMOOTH_LINE_WIDTH_GRANULARITY, val);
-  println("GL_SMOOTH_LINE_WIDTH_GRANULARITY: ", val[0]);
+  gx::println("GL_SMOOTH_LINE_WIDTH_GRANULARITY: ", val[0]);
 #endif
 
   return status;
@@ -226,7 +226,7 @@ TextureID OpenGLRenderer::setTexture(
     ePtr = &_textures[id];
   } else {
     // update existing entry
-    auto itr = _textures.find(id);
+    const auto itr = _textures.find(id);
     if (itr == _textures.end()) { return 0; }
     ePtr = &(itr->second);
   }
@@ -277,7 +277,7 @@ TextureID OpenGLRenderer::setTexture(
 void OpenGLRenderer::setupBuffer()
 {
   unsigned int vsize = 0; // vertices needed
-  for (auto& [no,layer] : _layers) {
+  for (const auto& [no,layer] : _layers) {
     const DrawEntry* data     = layer.drawData.data();
     const DrawEntry* data_end = data + layer.drawData.size();
 
@@ -356,7 +356,7 @@ void OpenGLRenderer::setupBuffer()
   int cap = INIT_CAPABILITIES;
   int transID = 0;
 
-  for (auto& [no,layer] : _layers) {
+  for (const auto& [no,layer] : _layers) {
     uint32_t color = 0;
     TextureID tid = 0;
     float lw = 1.0f;
@@ -608,9 +608,9 @@ void OpenGLRenderer::setupBuffer()
 
 #if 0
   std::size_t dsize = 0;
-  for (auto& [no,layer] : _layers) { dsize += layer.drawData.size(); }
-  println_err("drawData:", dsize, "  vertices:", vsize,
-              "  drawCalls:", _drawCalls.size());
+  for (const auto& [no,layer] : _layers) { dsize += layer.drawData.size(); }
+  gx::println_err("drawData:", dsize, "  vertices:", vsize,
+                  "  drawCalls:", _drawCalls.size());
 #endif
 }
 
@@ -657,7 +657,7 @@ void OpenGLRenderer::renderFrame()
     if (dc.texID > 0) {
       // shader uses texture - determine texture unit & bind if necessary
       // (FIXME: no max texture units check currently)
-      auto itr = _textures.find(dc.texID);
+      const auto itr = _textures.find(dc.texID);
       if (itr != _textures.end()) {
 	auto& [id,entry] = *itr;
 	if (entry.unit < 0) {
