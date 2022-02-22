@@ -32,9 +32,14 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
  private:
   GLProgram _sp[3];
-  GLUniformMat4f _sp_trans[3];
-  GLUniform1ui _sp_modColor[3];
   GLUniform1i _sp_texUnit[3];
+
+  GLBuffer _uniformBuf;
+  struct UniformData {
+    Mat4 viewT;
+    Mat4 projT;
+    uint32_t modColor;
+  };
 
   GLVertexArray _vao;
   GLBuffer _vbo;

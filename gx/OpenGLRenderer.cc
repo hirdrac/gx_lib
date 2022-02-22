@@ -122,16 +122,23 @@ bool OpenGLRenderer::init(GLFWwindow* win)
   _maxTextureSize = GLTexture2D::maxSize();
   glfwSwapInterval(1); // enable V-SYNC
 
+  _uniformBuf.init(sizeof(UniformData), nullptr);
+  #define UNIFORM_BLOCK_SRC\
+    "layout(std140) uniform ub0 {"\
+    "  mat4 viewT;"\
+    "  mat4 projT;"\
+    "  uint modColor;"\
+    "};"
+
   // solid color shader
   static const char* SP0V_SRC =
     "layout(location = 0) in vec3 in_pos;" // x,y,z
     "layout(location = 2) in uint in_color;"
-    "uniform mat4 trans;"
-    "uniform uint modColor;"
+    UNIFORM_BLOCK_SRC
     "out vec4 v_color;"
     "void main() {"
     "  v_color = unpackUnorm4x8(in_color) * unpackUnorm4x8(modColor);"
-    "  gl_Position = trans * vec4(in_pos, 1);"
+    "  gl_Position = projT * viewT * vec4(in_pos, 1);"
     "}";
   static const char* SP0F_SRC =
     "in vec4 v_color;"
@@ -144,14 +151,13 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     "layout(location = 0) in vec3 in_pos;" // x,y,z
     "layout(location = 1) in vec2 in_tc;"  // s,t
     "layout(location = 2) in uint in_color;"
-    "uniform mat4 trans;"
-    "uniform uint modColor;"
+    UNIFORM_BLOCK_SRC
     "out vec4 v_color;"
     "out vec2 v_texCoord;"
     "void main() {"
     "  v_color = unpackUnorm4x8(in_color) * unpackUnorm4x8(modColor);"
     "  v_texCoord = in_tc;"
-    "  gl_Position = trans * vec4(in_pos, 1);"
+    "  gl_Position = projT * viewT * vec4(in_pos, 1);"
     "}";
   static const char* SP1F_SRC =
     "in vec2 v_texCoord;"
@@ -177,13 +183,13 @@ bool OpenGLRenderer::init(GLFWwindow* win)
   // uniform location cache
   bool status = true;
   for (int i = 0; i < 3; ++i) {
-    status = status && _sp[i];
-    _sp_trans[i] = getUniformLoc(_sp[i], "trans");
-    _sp_modColor[i] = getUniformLoc(_sp[i], "modColor");
-    if (i > 0) {
-      _sp_texUnit[i] = getUniformLoc(_sp[i], "texUnit");
-    }
+    GLProgram& p = _sp[i];
+    status = status && p;
+    p.setUniformBlockBinding(p.getUniformBlockIndex("ub0"), 0);
+    if (i > 0) { _sp_texUnit[i] = getUniformLoc(p, "texUnit"); }
   }
+
+  #undef UNIFORM_BLOCK_SRC
 
 #if 0
   // debug output
@@ -630,11 +636,17 @@ void OpenGLRenderer::renderFrame()
   for (auto& t : _textures) { t.second.unit = -1; }
   int nextTexUnit = 0;
 
+  UniformData ud{};
+  bool udChanged = true;
+  _uniformBuf.bindBase(GL_UNIFORM_BUFFER, 0);
+
   // draw
   _vao.bind();
   GLint first = 0;
   int lastShader = -1;
+  int lastTransformID = -1;
   float lastLineWidth = 0.0f;
+
   for (const DrawCall& dc : _drawCalls) {
     if (dc.capabilities != _currentGLCap) {
       setGLCapabilities(dc.capabilities);
@@ -658,18 +670,36 @@ void OpenGLRenderer::renderFrame()
     }
 
     if (shader != lastShader) { _sp[shader].use(); }
-    if (dc.transformID >= 0) {
-      const TransformEntry& t = _transforms[std::size_t(dc.transformID)];
-      _sp_trans[shader].set(t.view * t.proj);
-    }
-    _sp_modColor[shader].set(dc.modColor);
-    if (_sp_texUnit[shader]) {_sp_texUnit[shader].set(texUnit); }
 
+    // uniform block update
+    if (dc.transformID >= 0 && dc.transformID != lastTransformID) {
+      const TransformEntry& t = _transforms[std::size_t(dc.transformID)];
+      ud.viewT = t.view;
+      ud.projT = t.proj;
+      udChanged = true;
+      lastTransformID = dc.transformID;
+    }
+
+    if (ud.modColor != dc.modColor) {
+      ud.modColor = dc.modColor;
+      udChanged = true;
+    }
+
+    if (udChanged) {
+      _uniformBuf.setSubData(0, sizeof(ud), &ud);
+      udChanged = false;
+    }
+
+    // uniform settings
+    if (_sp_texUnit[shader]) { _sp_texUnit[shader].set(texUnit); }
+
+    // line settings
     if (dc.mode == GL_LINES && dc.lineWidth != lastLineWidth) {
       GX_GLCALL(glLineWidth, dc.lineWidth);
       lastLineWidth = dc.lineWidth;
     }
 
+    // draw call
     GX_GLCALL(glDrawArrays, dc.mode, first, dc.count);
     first += dc.count;
     lastShader = shader;
