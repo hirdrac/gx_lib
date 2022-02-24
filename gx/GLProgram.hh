@@ -55,13 +55,10 @@ class GLProgram
   [[nodiscard]] inline bool validate();
   [[nodiscard]] inline std::string infoLog() const;
 
-  [[nodiscard]] GLint getAttribLocation(const char* name) const {
-    return glGetAttribLocation(_prog, name); }
-  [[nodiscard]] GLint getUniformLocation(const char* name) const {
-    return glGetUniformLocation(_prog, name); }
+  [[nodiscard]] inline GLint getAttribLocation(const char* name) const;
+  [[nodiscard]] inline GLint getUniformLocation(const char* name) const;
+  [[nodiscard]] inline GLuint getUniformBlockIndex(const char* blockName) const;
 
-  [[nodiscard]] GLuint getUniformBlockIndex(const char* blockName) const {
-    return glGetUniformBlockIndex(_prog, blockName); }
   void setUniformBlockBinding(GLuint blockIndex, GLuint blockBinding) {
     GX_GLCALL(glUniformBlockBinding, _prog, blockIndex, blockBinding); }
   void setUniformBlockBinding(const char* blockName, GLuint blockBinding) {
@@ -73,7 +70,7 @@ class GLProgram
   template<typename... Args>
   bool link(const Args&... args) {
     (attach(args),...);
-    bool status = link();
+    const bool status = link();
     (detach(args),...);
     return status;
   }
@@ -132,7 +129,7 @@ std::string GLProgram::infoLog() const
 {
   GLint logLen = 0;
   GX_GLCALL(glGetProgramiv, _prog, GL_INFO_LOG_LENGTH, &logLen);
-  if (logLen <= 0) { return std::string(); }
+  if (logLen <= 0) { return {}; }
 
   GLsizei len = 0;
   //auto tmp = std::make_unique<char[]>(logLen);
@@ -140,7 +137,37 @@ std::string GLProgram::infoLog() const
   char tmp[logLen];
   GX_GLCALL(glGetProgramInfoLog, _prog, logLen, &len, tmp);
 
-  return std::string(tmp, std::size_t(len));
+  return {tmp, std::size_t(len)};
+}
+
+GLint GLProgram::getAttribLocation(const char* name) const
+{
+  const auto loc = glGetAttribLocation(_prog, name);
+  #ifdef GX_DEBUG_GL
+  GLCheckErrors("glGetAttribLocation");
+  #endif
+  // NOTE: returns -1 if name is not an active attribute
+  return loc;
+}
+
+GLint GLProgram::getUniformLocation(const char* name) const
+{
+  const auto loc = glGetUniformLocation(_prog, name);
+  #ifdef GX_DEBUG_GL
+  GLCheckErrors("glGetUniformLocation");
+  #endif
+  // NOTE: returns -1 if name not found
+  return loc;
+}
+
+GLuint GLProgram::getUniformBlockIndex(const char* blockName) const
+{
+  const auto index = glGetUniformBlockIndex(_prog, blockName);
+  #ifdef GX_DEBUG_GL
+  GLCheckErrors("glGetUniformBlockIndex");
+  #endif
+  // NOTE: returns GL_INVALID_INDEX on error
+  return index;
 }
 
 void GLProgram::cleanup() noexcept
