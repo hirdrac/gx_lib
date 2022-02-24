@@ -84,7 +84,7 @@ std::string GLShader::infoLog()
 {
   GLint logLen = 0;
   GX_GLCALL(glGetShaderiv, _shader, GL_INFO_LOG_LENGTH, &logLen);
-  if (logLen <= 0) { return std::string(); }
+  if (logLen <= 0) { return {}; }
 
   GLsizei len = 0;
   //auto tmp = std::make_unique<char[]>(logLen);
@@ -92,7 +92,7 @@ std::string GLShader::infoLog()
   char tmp[logLen];
   GX_GLCALL(glGetShaderInfoLog, _shader, logLen, &len, tmp);
 
-  return std::string(tmp, std::size_t(len));
+  return {tmp, std::size_t(len)};
 }
 
 void GLShader::cleanup() noexcept
