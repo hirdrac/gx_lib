@@ -90,13 +90,20 @@ namespace {
 #endif
 
   // vertex output functions
-  inline void vertex(Vertex3TC*& ptr, Vec2 pt, uint32_t c) {
+  inline void vertex2d(Vertex3TC*& ptr, Vec2 pt, uint32_t c) {
     *ptr++ = {pt.x,pt.y,0.0f, 0.0f,0.0f, c}; }
-  inline void vertex(Vertex3TC*& ptr, Vec3 pt, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, 0.0f,0.0f, c}; }
-  inline void vertex(Vertex3TC*& ptr, Vec2 pt, Vec2 tx, uint32_t c) {
+  inline void vertex2d(Vertex3TC*& ptr, Vec2 pt, Vec2 tx, uint32_t c) {
     *ptr++ = {pt.x,pt.y,0.0f, tx.x,tx.y, c}; }
-  inline void vertex(Vertex3TC*& ptr, Vec3 pt, Vec2 tx, uint32_t c) {
+
+  inline void vertex3d(Vertex3TC*& ptr, const Vec3& pt, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,pt.z, 0.0f,0.0f, c}; }
+  inline void vertex3d(
+    Vertex3TC*& ptr, const Vec3& pt, const Vec3& normal, uint32_t c) {
+    // FINISH: normal ignored for now
+    *ptr++ = {pt.x,pt.y,pt.z, 0.0f,0.0f, c}; }
+  inline void vertex3d(
+    Vertex3TC*& ptr, const Vec3& pt, const Vec3& normal, Vec2 tx, uint32_t c) {
+    // FINISH: normal ignored for now
     *ptr++ = {pt.x,pt.y,pt.z, tx.x,tx.y, c}; }
 }
 
@@ -360,13 +367,14 @@ void OpenGLRenderer::setupBuffer()
     uint32_t color = 0;
     TextureID tid = 0;
     float lw = 1.0f;
+    Vec3 normal{0,0,1};
 
     const uint32_t modColor = layer.modColor;
     if (layer.cap != -1) { cap = layer.cap; }
     if (layer.transformID != -1) { transID = layer.transformID; }
 
-    const DrawEntry* data      = layer.drawData.data();
-    const DrawEntry* data_end  = data + layer.drawData.size();
+    const DrawEntry* data     = layer.drawData.data();
+    const DrawEntry* data_end = data + layer.drawData.size();
     for (const DrawEntry* d = data; d != data_end; ) {
       const DrawCmd cmd = (d++)->cmd;
       switch (cmd) {
@@ -374,32 +382,31 @@ void OpenGLRenderer::setupBuffer()
         case CMD_texture:   tid   = uval(d); break;
         case CMD_lineWidth: lw    = fval(d); break;
 
-        case CMD_normal3:
-          d += 3; break; // ignored for now
+        case CMD_normal3: normal = fval3(d); break;
 
         case CMD_line2: {
-          vertex(ptr, fval2(d), color);
-          vertex(ptr, fval2(d), color);
+          vertex2d(ptr, fval2(d), color);
+          vertex2d(ptr, fval2(d), color);
           addDrawCall(2, GL_LINES, modColor, 0, lw, transID, cap);
           break;
         }
         case CMD_line3: {
-          vertex(ptr, fval3(d), color);
-          vertex(ptr, fval3(d), color);
+          vertex3d(ptr, fval3(d), color);
+          vertex3d(ptr, fval3(d), color);
           addDrawCall(2, GL_LINES, modColor, 0, lw, transID, cap);
           break;
         }
         case CMD_triangle2: {
-          vertex(ptr, fval2(d), color);
-          vertex(ptr, fval2(d), color);
-          vertex(ptr, fval2(d), color);
+          vertex2d(ptr, fval2(d), color);
+          vertex2d(ptr, fval2(d), color);
+          vertex2d(ptr, fval2(d), color);
           addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
           break;
         }
         case CMD_triangle3: {
-          vertex(ptr, fval3(d), color);
-          vertex(ptr, fval3(d), color);
-          vertex(ptr, fval3(d), color);
+          vertex3d(ptr, fval3(d), normal, color);
+          vertex3d(ptr, fval3(d), normal, color);
+          vertex3d(ptr, fval3(d), normal, color);
           addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
           break;
         }
@@ -407,9 +414,9 @@ void OpenGLRenderer::setupBuffer()
           Vec2 p0 = fval2(d), t0 = fval2(d);
           Vec2 p1 = fval2(d), t1 = fval2(d);
           Vec2 p2 = fval2(d), t2 = fval2(d);
-          vertex(ptr, p0, t0, color);
-          vertex(ptr, p1, t1, color);
-          vertex(ptr, p2, t2, color);
+          vertex2d(ptr, p0, t0, color);
+          vertex2d(ptr, p1, t1, color);
+          vertex2d(ptr, p2, t2, color);
           addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
           break;
         }
@@ -417,9 +424,9 @@ void OpenGLRenderer::setupBuffer()
           Vec3 p0 = fval3(d); Vec2 t0 = fval2(d);
           Vec3 p1 = fval3(d); Vec2 t1 = fval2(d);
           Vec3 p2 = fval3(d); Vec2 t2 = fval2(d);
-          vertex(ptr, p0, t0, color);
-          vertex(ptr, p1, t1, color);
-          vertex(ptr, p2, t2, color);
+          vertex3d(ptr, p0, normal, t0, color);
+          vertex3d(ptr, p1, normal, t1, color);
+          vertex3d(ptr, p2, normal, t2, color);
           addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
           break;
         }
@@ -427,9 +434,9 @@ void OpenGLRenderer::setupBuffer()
           Vec2 p0 = fval2(d); uint32_t c0 = uval(d);
           Vec2 p1 = fval2(d); uint32_t c1 = uval(d);
           Vec2 p2 = fval2(d); uint32_t c2 = uval(d);
-          vertex(ptr, p0, c0);
-          vertex(ptr, p1, c1);
-          vertex(ptr, p2, c2);
+          vertex2d(ptr, p0, c0);
+          vertex2d(ptr, p1, c1);
+          vertex2d(ptr, p2, c2);
           addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
           break;
         }
@@ -437,9 +444,9 @@ void OpenGLRenderer::setupBuffer()
           Vec3 p0 = fval3(d); uint32_t c0 = uval(d);
           Vec3 p1 = fval3(d); uint32_t c1 = uval(d);
           Vec3 p2 = fval3(d); uint32_t c2 = uval(d);
-          vertex(ptr, p0, c0);
-          vertex(ptr, p1, c1);
-          vertex(ptr, p2, c2);
+          vertex3d(ptr, p0, normal, c0);
+          vertex3d(ptr, p1, normal, c1);
+          vertex3d(ptr, p2, normal, c2);
           addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
           break;
         }
@@ -447,9 +454,9 @@ void OpenGLRenderer::setupBuffer()
           Vec2 p0 = fval2(d), t0 = fval2(d); uint32_t c0 = uval(d);
           Vec2 p1 = fval2(d), t1 = fval2(d); uint32_t c1 = uval(d);
           Vec2 p2 = fval2(d), t2 = fval2(d); uint32_t c2 = uval(d);
-          vertex(ptr, p0, t0, c0);
-          vertex(ptr, p1, t1, c1);
-          vertex(ptr, p2, t2, c2);
+          vertex2d(ptr, p0, t0, c0);
+          vertex2d(ptr, p1, t1, c1);
+          vertex2d(ptr, p2, t2, c2);
           addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
           break;
         }
@@ -457,33 +464,33 @@ void OpenGLRenderer::setupBuffer()
           Vec3 p0 = fval3(d); Vec2 t0 = fval2(d); uint32_t c0 = uval(d);
           Vec3 p1 = fval3(d); Vec2 t1 = fval2(d); uint32_t c1 = uval(d);
           Vec3 p2 = fval3(d); Vec2 t2 = fval2(d); uint32_t c2 = uval(d);
-          vertex(ptr, p0, t0, c0);
-          vertex(ptr, p1, t1, c1);
-          vertex(ptr, p2, t2, c2);
+          vertex3d(ptr, p0, normal, t0, c0);
+          vertex3d(ptr, p1, normal, t1, c1);
+          vertex3d(ptr, p2, normal, t2, c2);
           addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
           break;
         }
         case CMD_quad2: {
           Vec2 p0 = fval2(d), p1 = fval2(d);
           Vec2 p2 = fval2(d), p3 = fval2(d);
-          vertex(ptr, p0, color);
-          vertex(ptr, p1, color);
-          vertex(ptr, p2, color);
-          vertex(ptr, p1, color);
-          vertex(ptr, p3, color);
-          vertex(ptr, p2, color);
+          vertex2d(ptr, p0, color);
+          vertex2d(ptr, p1, color);
+          vertex2d(ptr, p2, color);
+          vertex2d(ptr, p1, color);
+          vertex2d(ptr, p3, color);
+          vertex2d(ptr, p2, color);
           addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
           break;
         }
         case CMD_quad3: {
           Vec3 p0 = fval3(d), p1 = fval3(d);
           Vec3 p2 = fval3(d), p3 = fval3(d);
-          vertex(ptr, p0, color);
-          vertex(ptr, p1, color);
-          vertex(ptr, p2, color);
-          vertex(ptr, p1, color);
-          vertex(ptr, p3, color);
-          vertex(ptr, p2, color);
+          vertex3d(ptr, p0, normal, color);
+          vertex3d(ptr, p1, normal, color);
+          vertex3d(ptr, p2, normal, color);
+          vertex3d(ptr, p1, normal, color);
+          vertex3d(ptr, p3, normal, color);
+          vertex3d(ptr, p2, normal, color);
           addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
           break;
         }
@@ -492,12 +499,12 @@ void OpenGLRenderer::setupBuffer()
           Vec2 p1 = fval2(d), t1 = fval2(d);
           Vec2 p2 = fval2(d), t2 = fval2(d);
           Vec2 p3 = fval2(d), t3 = fval2(d);
-          vertex(ptr, p0, t0, color);
-          vertex(ptr, p1, t1, color);
-          vertex(ptr, p2, t2, color);
-          vertex(ptr, p1, t1, color);
-          vertex(ptr, p3, t3, color);
-          vertex(ptr, p2, t2, color);
+          vertex2d(ptr, p0, t0, color);
+          vertex2d(ptr, p1, t1, color);
+          vertex2d(ptr, p2, t2, color);
+          vertex2d(ptr, p1, t1, color);
+          vertex2d(ptr, p3, t3, color);
+          vertex2d(ptr, p2, t2, color);
           addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
           break;
         }
@@ -506,12 +513,12 @@ void OpenGLRenderer::setupBuffer()
           Vec3 p1 = fval3(d); Vec2 t1 = fval2(d);
           Vec3 p2 = fval3(d); Vec2 t2 = fval2(d);
           Vec3 p3 = fval3(d); Vec2 t3 = fval2(d);
-          vertex(ptr, p0, t0, color);
-          vertex(ptr, p1, t1, color);
-          vertex(ptr, p2, t2, color);
-          vertex(ptr, p1, t1, color);
-          vertex(ptr, p3, t3, color);
-          vertex(ptr, p2, t2, color);
+          vertex3d(ptr, p0, normal, t0, color);
+          vertex3d(ptr, p1, normal, t1, color);
+          vertex3d(ptr, p2, normal, t2, color);
+          vertex3d(ptr, p1, normal, t1, color);
+          vertex3d(ptr, p3, normal, t3, color);
+          vertex3d(ptr, p2, normal, t2, color);
           addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
           break;
         }
@@ -520,12 +527,12 @@ void OpenGLRenderer::setupBuffer()
           Vec2 p1 = fval2(d); uint32_t c1 = uval(d);
           Vec2 p2 = fval2(d); uint32_t c2 = uval(d);
           Vec2 p3 = fval2(d); uint32_t c3 = uval(d);
-          vertex(ptr, p0, c0);
-          vertex(ptr, p1, c1);
-          vertex(ptr, p2, c2);
-          vertex(ptr, p1, c1);
-          vertex(ptr, p3, c3);
-          vertex(ptr, p2, c2);
+          vertex2d(ptr, p0, c0);
+          vertex2d(ptr, p1, c1);
+          vertex2d(ptr, p2, c2);
+          vertex2d(ptr, p1, c1);
+          vertex2d(ptr, p3, c3);
+          vertex2d(ptr, p2, c2);
           addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
           break;
         }
@@ -534,12 +541,12 @@ void OpenGLRenderer::setupBuffer()
           Vec3 p1 = fval3(d); uint32_t c1 = uval(d);
           Vec3 p2 = fval3(d); uint32_t c2 = uval(d);
           Vec3 p3 = fval3(d); uint32_t c3 = uval(d);
-          vertex(ptr, p0, c0);
-          vertex(ptr, p1, c1);
-          vertex(ptr, p2, c2);
-          vertex(ptr, p1, c1);
-          vertex(ptr, p3, c3);
-          vertex(ptr, p2, c2);
+          vertex3d(ptr, p0, normal, c0);
+          vertex3d(ptr, p1, normal, c1);
+          vertex3d(ptr, p2, normal, c2);
+          vertex3d(ptr, p1, normal, c1);
+          vertex3d(ptr, p3, normal, c3);
+          vertex3d(ptr, p2, normal, c2);
           addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
           break;
         }
@@ -548,12 +555,12 @@ void OpenGLRenderer::setupBuffer()
           Vec2 p1 = fval2(d), t1 = fval2(d); uint32_t c1 = uval(d);
           Vec2 p2 = fval2(d), t2 = fval2(d); uint32_t c2 = uval(d);
           Vec2 p3 = fval2(d), t3 = fval2(d); uint32_t c3 = uval(d);
-          vertex(ptr, p0, t0, c0);
-          vertex(ptr, p1, t1, c1);
-          vertex(ptr, p2, t2, c2);
-          vertex(ptr, p1, t1, c1);
-          vertex(ptr, p3, t3, c3);
-          vertex(ptr, p2, t2, c2);
+          vertex2d(ptr, p0, t0, c0);
+          vertex2d(ptr, p1, t1, c1);
+          vertex2d(ptr, p2, t2, c2);
+          vertex2d(ptr, p1, t1, c1);
+          vertex2d(ptr, p3, t3, c3);
+          vertex2d(ptr, p2, t2, c2);
           addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
           break;
         }
@@ -562,24 +569,24 @@ void OpenGLRenderer::setupBuffer()
           Vec3 p1 = fval3(d); Vec2 t1 = fval2(d); uint32_t c1 = uval(d);
           Vec3 p2 = fval3(d); Vec2 t2 = fval2(d); uint32_t c2 = uval(d);
           Vec3 p3 = fval3(d); Vec2 t3 = fval2(d); uint32_t c3 = uval(d);
-          vertex(ptr, p0, t0, c0);
-          vertex(ptr, p1, t1, c1);
-          vertex(ptr, p2, t2, c2);
-          vertex(ptr, p1, t1, c1);
-          vertex(ptr, p3, t3, c3);
-          vertex(ptr, p2, t2, c2);
+          vertex3d(ptr, p0, normal, t0, c0);
+          vertex3d(ptr, p1, normal, t1, c1);
+          vertex3d(ptr, p2, normal, t2, c2);
+          vertex3d(ptr, p1, normal, t1, c1);
+          vertex3d(ptr, p3, normal, t3, c3);
+          vertex3d(ptr, p2, normal, t2, c2);
           addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
           break;
         }
         case CMD_rectangle: {
           Vec2 p0 = fval2(d), p3 = fval2(d);
           Vec2 p1 = {p3.x,p0.y}, p2 = {p0.x,p3.y};
-          vertex(ptr, p0, color);
-          vertex(ptr, p1, color);
-          vertex(ptr, p2, color);
-          vertex(ptr, p1, color);
-          vertex(ptr, p3, color);
-          vertex(ptr, p2, color);
+          vertex2d(ptr, p0, color);
+          vertex2d(ptr, p1, color);
+          vertex2d(ptr, p2, color);
+          vertex2d(ptr, p1, color);
+          vertex2d(ptr, p3, color);
+          vertex2d(ptr, p2, color);
           addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
           break;
         }
@@ -588,12 +595,12 @@ void OpenGLRenderer::setupBuffer()
           Vec2 p3 = fval2(d), t3 = fval2(d);
           Vec2 p1 = {p3.x,p0.y}, t1 = {t3.x,t0.y};
           Vec2 p2 = {p0.x,p3.y}, t2 = {t0.x,t3.y};
-          vertex(ptr, p0, t0, color);
-          vertex(ptr, p1, t1, color);
-          vertex(ptr, p2, t2, color);
-          vertex(ptr, p1, t1, color);
-          vertex(ptr, p3, t3, color);
-          vertex(ptr, p2, t2, color);
+          vertex2d(ptr, p0, t0, color);
+          vertex2d(ptr, p1, t1, color);
+          vertex2d(ptr, p2, t2, color);
+          vertex2d(ptr, p1, t1, color);
+          vertex2d(ptr, p3, t3, color);
+          vertex2d(ptr, p2, t2, color);
           addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
           break;
         }
