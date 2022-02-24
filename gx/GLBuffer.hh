@@ -254,12 +254,12 @@ void* GLBuffer::map(GLenum access)
 #ifdef GX_GL33
   bindCheck();
   void* result = glMapBuffer(_target, access);
-  #if GX_DEBUG_GL
+  #ifdef GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapBuffer"); }
   #endif
 #else
   void* result = glMapNamedBuffer(_buffer, access);
-  #if GX_DEBUG_GL
+  #ifdef GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapNamedBuffer"); }
   #endif
 #endif
@@ -271,12 +271,12 @@ bool GLBuffer::unmap()
 #ifdef GX_GL33
   bindCheck();
   bool result = glUnmapBuffer(_target);
-  #if GX_DEBUG_GL
+  #ifdef GX_DEBUG_GL
   GLCheckErrors("glUnmapBuffer");
   #endif
 #else
   bool result = glUnmapNamedBuffer(_buffer);
-  #if GX_DEBUG_GL
+  #ifdef GX_DEBUG_GL
   GLCheckErrors("glUnmapNamedBuffer");
   #endif
 #endif
@@ -288,12 +288,12 @@ void* GLBuffer::mapRange(GLintptr offset, GLsizeiptr length, GLbitfield access)
 #ifdef GX_GL33
   bindCheck();
   void* result = glMapBufferRange(_target, offset, length, access);
-  #if GX_DEBUG_GL
+  #ifdef GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapBufferRange"); }
   #endif
 #else
   void* result = glMapNamedBufferRange(_buffer, offset, length, access);
-  #if GX_DEBUG_GL
+  #ifdef GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapNamedBufferRange"); }
   #endif
 #endif
