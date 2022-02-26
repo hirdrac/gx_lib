@@ -59,15 +59,6 @@ namespace {
     return prog;
   }
 
-  [[nodiscard]] GLint getUniformLoc(const GLProgram& p, const char* name)
-  {
-    GLint loc = p.getUniformLocation(name);
-    if (loc < 0) {
-      GX_LOG_ERROR("unknown uniform location '", name, "' for prog ", p.id());
-    }
-    return loc;
-  }
-
   // DrawEntry iterator reading helper functions
   inline uint32_t uval(const DrawEntry*& ptr) {
     return (ptr++)->uval; }
@@ -193,7 +184,7 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     GLProgram& p = _sp[i];
     status = status && p;
     p.setUniformBlockBinding(p.getUniformBlockIndex("ub0"), 0);
-    if (i > 0) { _sp_texUnit[i] = getUniformLoc(p, "texUnit"); }
+    _sp_texUnit[i] = p.getUniformLocation("texUnit");
   }
 
   #undef UNIFORM_BLOCK_SRC
