@@ -48,4 +48,6 @@ namespace gx {
   struct Vertex3C { float x, y, z; uint32_t c; };        // 16
   struct Vertex3T { float x, y, z, s, t; };              // 20
   struct Vertex3TC { float x, y, z, s, t; uint32_t c; }; // 24
+
+  struct Vertex3NTC { float x,y,z,nx,ny,nz,s,t; uint32_t c; }; // 36
 }
