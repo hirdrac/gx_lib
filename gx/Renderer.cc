@@ -86,6 +86,15 @@ void Renderer::setOrthoProjection(int layer, float width, float height)
   setTransform(layer, Mat4Identity, orthoProjection(width, height));
 }
 
+void Renderer::draw(int layer, const DrawEntry* data, std::size_t dataSize)
+{
+  if (dataSize == 0) { return; }
+
+  DrawList& dl = _layers[layer].drawData;
+  dl.insert(dl.end(), data, data + dataSize);
+  _changed = true;
+}
+
 TextureID Renderer::newTextureID()
 {
   const std::lock_guard lg{_textureMutex};

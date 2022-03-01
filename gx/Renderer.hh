@@ -73,22 +73,11 @@ class gx::Renderer
   void setScreenOrthoProjection(int layer);
   void setOrthoProjection(int layer, float width, float height);
 
-  void draw(int layer, const DrawEntry* data, std::size_t dataSize) {
-    if (dataSize != 0) {
-      DrawList& dl = _layers[layer].drawData;
-      dl.insert(dl.end(), data, data + dataSize);
-      _changed = true;
-    }
-  }
-
+  void draw(int layer, const DrawEntry* data, std::size_t dataSize);
   void draw(int layer, const DrawList& dl) {
     draw(layer, dl.data(), dl.size()); }
   void draw(const DrawList& dl) {
     draw(0, dl.data(), dl.size()); }
-
-  void draw(int baseLayer, const DrawListMap& dlm) {
-    for (auto& [id,dl] : dlm) { draw(baseLayer + id, dl); } }
-  void draw(const DrawListMap& dlm) { draw(0, dlm); }
 
   // general accessors
   [[nodiscard]] GLFWwindow* window() { return _window; }
