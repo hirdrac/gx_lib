@@ -642,6 +642,7 @@ void OpenGLRenderer::renderFrame()
   int lastShader = -1;
   float lastLineWidth = 0.0f;
   int nextTexUnit = 0;
+  const Renderer::Layer* lastLayer = nullptr;
 
   for (const DrawCall& dc : _drawCalls) {
     const Renderer::Layer* lPtr = dc.layerPtr;
@@ -667,20 +668,23 @@ void OpenGLRenderer::renderFrame()
     if (shader != lastShader) { _sp[shader].use(); }
 
     // uniform block update
-    if (lPtr->transformSet) {
-      ud.viewT = lPtr->view;
-      ud.projT = lPtr->proj;
-      udChanged = true;
-    }
+    if (lastLayer != lPtr) {
+      lastLayer = lPtr;
+      if (lPtr->transformSet) {
+        ud.viewT = lPtr->view;
+        ud.projT = lPtr->proj;
+        udChanged = true;
+      }
 
-    if (lPtr->modColor != ud.modColor) {
-      ud.modColor = lPtr->modColor;
-      udChanged = true;
-    }
+      if (lPtr->modColor != ud.modColor) {
+        ud.modColor = lPtr->modColor;
+        udChanged = true;
+      }
 
-    if (udChanged) {
-      _uniformBuf.setSubData(0, sizeof(ud), &ud);
-      udChanged = false;
+      if (udChanged) {
+        _uniformBuf.setSubData(0, sizeof(ud), &ud);
+        udChanged = false;
+      }
     }
 
     // uniform settings
