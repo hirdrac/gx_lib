@@ -323,11 +323,6 @@ void OpenGLRenderer::setupBuffer()
     return;
   }
 
-  if (_transforms.empty()) {
-    _transforms.push_back(
-      {Mat4Identity, orthoProjection(float(_width), float(_height))});
-  }
-
   if (!_vbo) {
     _vbo.init();
     _vao.init();
@@ -351,18 +346,11 @@ void OpenGLRenderer::setupBuffer()
   //  |/ |
   //  2--3
 
-  int cap = INIT_CAPABILITIES;
-  int transID = 0;
-
   for (const auto& [no,layer] : _layers) {
     uint32_t color = 0;
     TextureID tid = 0;
     float lw = 1.0f;
     Vec3 normal{0,0,1};
-
-    const uint32_t modColor = layer.modColor;
-    if (layer.cap != -1) { cap = layer.cap; }
-    if (layer.transformID != -1) { transID = layer.transformID; }
 
     const DrawEntry* data     = layer.drawData.data();
     const DrawEntry* data_end = data + layer.drawData.size();
@@ -378,27 +366,27 @@ void OpenGLRenderer::setupBuffer()
         case CMD_line2: {
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
-          addDrawCall(2, GL_LINES, modColor, 0, lw, transID, cap);
+          addDrawCall(2, GL_LINES, 0, lw, &layer);
           break;
         }
         case CMD_line3: {
           vertex3d(ptr, fval3(d), color);
           vertex3d(ptr, fval3(d), color);
-          addDrawCall(2, GL_LINES, modColor, 0, lw, transID, cap);
+          addDrawCall(2, GL_LINES, 0, lw, &layer);
           break;
         }
         case CMD_triangle2: {
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
-          addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          addDrawCall(3, GL_TRIANGLES, 0, lw, &layer);
           break;
         }
         case CMD_triangle3: {
           vertex3d(ptr, fval3(d), normal, color);
           vertex3d(ptr, fval3(d), normal, color);
           vertex3d(ptr, fval3(d), normal, color);
-          addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          addDrawCall(3, GL_TRIANGLES, 0, lw, &layer);
           break;
         }
         case CMD_triangle2T: {
@@ -408,7 +396,7 @@ void OpenGLRenderer::setupBuffer()
           vertex2d(ptr, p0, t0, color);
           vertex2d(ptr, p1, t1, color);
           vertex2d(ptr, p2, t2, color);
-          addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          addDrawCall(3, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
         case CMD_triangle3T: {
@@ -418,7 +406,7 @@ void OpenGLRenderer::setupBuffer()
           vertex3d(ptr, p0, normal, t0, color);
           vertex3d(ptr, p1, normal, t1, color);
           vertex3d(ptr, p2, normal, t2, color);
-          addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          addDrawCall(3, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
         case CMD_triangle2C: {
@@ -428,7 +416,7 @@ void OpenGLRenderer::setupBuffer()
           vertex2d(ptr, p0, c0);
           vertex2d(ptr, p1, c1);
           vertex2d(ptr, p2, c2);
-          addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          addDrawCall(3, GL_TRIANGLES, 0, lw, &layer);
           break;
         }
         case CMD_triangle3C: {
@@ -438,7 +426,7 @@ void OpenGLRenderer::setupBuffer()
           vertex3d(ptr, p0, normal, c0);
           vertex3d(ptr, p1, normal, c1);
           vertex3d(ptr, p2, normal, c2);
-          addDrawCall(3, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          addDrawCall(3, GL_TRIANGLES, 0, lw, &layer);
           break;
         }
         case CMD_triangle2TC: {
@@ -448,7 +436,7 @@ void OpenGLRenderer::setupBuffer()
           vertex2d(ptr, p0, t0, c0);
           vertex2d(ptr, p1, t1, c1);
           vertex2d(ptr, p2, t2, c2);
-          addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          addDrawCall(3, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
         case CMD_triangle3TC: {
@@ -458,7 +446,7 @@ void OpenGLRenderer::setupBuffer()
           vertex3d(ptr, p0, normal, t0, c0);
           vertex3d(ptr, p1, normal, t1, c1);
           vertex3d(ptr, p2, normal, t2, c2);
-          addDrawCall(3, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          addDrawCall(3, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
         case CMD_quad2: {
@@ -470,7 +458,7 @@ void OpenGLRenderer::setupBuffer()
           vertex2d(ptr, p1, color);
           vertex2d(ptr, p3, color);
           vertex2d(ptr, p2, color);
-          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, 0, lw, &layer);
           break;
         }
         case CMD_quad3: {
@@ -482,7 +470,7 @@ void OpenGLRenderer::setupBuffer()
           vertex3d(ptr, p1, normal, color);
           vertex3d(ptr, p3, normal, color);
           vertex3d(ptr, p2, normal, color);
-          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, 0, lw, &layer);
           break;
         }
         case CMD_quad2T: {
@@ -496,7 +484,7 @@ void OpenGLRenderer::setupBuffer()
           vertex2d(ptr, p1, t1, color);
           vertex2d(ptr, p3, t3, color);
           vertex2d(ptr, p2, t2, color);
-          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
         case CMD_quad3T: {
@@ -510,7 +498,7 @@ void OpenGLRenderer::setupBuffer()
           vertex3d(ptr, p1, normal, t1, color);
           vertex3d(ptr, p3, normal, t3, color);
           vertex3d(ptr, p2, normal, t2, color);
-          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
         case CMD_quad2C: {
@@ -524,7 +512,7 @@ void OpenGLRenderer::setupBuffer()
           vertex2d(ptr, p1, c1);
           vertex2d(ptr, p3, c3);
           vertex2d(ptr, p2, c2);
-          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, 0, lw, &layer);
           break;
         }
         case CMD_quad3C: {
@@ -538,7 +526,7 @@ void OpenGLRenderer::setupBuffer()
           vertex3d(ptr, p1, normal, c1);
           vertex3d(ptr, p3, normal, c3);
           vertex3d(ptr, p2, normal, c2);
-          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, 0, lw, &layer);
           break;
         }
         case CMD_quad2TC: {
@@ -552,7 +540,7 @@ void OpenGLRenderer::setupBuffer()
           vertex2d(ptr, p1, t1, c1);
           vertex2d(ptr, p3, t3, c3);
           vertex2d(ptr, p2, t2, c2);
-          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
         case CMD_quad3TC: {
@@ -566,7 +554,7 @@ void OpenGLRenderer::setupBuffer()
           vertex3d(ptr, p1, normal, t1, c1);
           vertex3d(ptr, p3, normal, t3, c3);
           vertex3d(ptr, p2, normal, t2, c2);
-          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
         case CMD_rectangle: {
@@ -578,7 +566,7 @@ void OpenGLRenderer::setupBuffer()
           vertex2d(ptr, p1, color);
           vertex2d(ptr, p3, color);
           vertex2d(ptr, p2, color);
-          addDrawCall(6, GL_TRIANGLES, modColor, 0, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, 0, lw, &layer);
           break;
         }
         case CMD_rectangleT: {
@@ -592,7 +580,7 @@ void OpenGLRenderer::setupBuffer()
           vertex2d(ptr, p1, t1, color);
           vertex2d(ptr, p3, t3, color);
           vertex2d(ptr, p2, t2, color);
-          addDrawCall(6, GL_TRIANGLES, modColor, tid, lw, transID, cap);
+          addDrawCall(6, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
         default:
@@ -624,31 +612,40 @@ void OpenGLRenderer::renderFrame()
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
   GX_GLCALL(glFrontFace, GL_CW);
 
+  // clear texture unit assignments
+  for (auto& t : _textures) { t.second.unit = -1; }
+
   // vbo/vao setup & draw call generation
   if (_changed) {
     _changed = false;
     setupBuffer();
   }
 
-  // clear texture unit assignments
-  for (auto& t : _textures) { t.second.unit = -1; }
-  int nextTexUnit = 0;
+  if (_layers.empty()) { return; }
 
-  UniformData ud{};
-  bool udChanged = true;
+  const Renderer::Layer& firstLayer = _layers.begin()->second;
+  if (firstLayer.cap < 0) { setGLCapabilities(BLEND); }
+
   _uniformBuf.bindBase(GL_UNIFORM_BUFFER, 0);
+
+  bool udChanged = true;
+  UniformData ud{};
+  if (!firstLayer.transformSet) {
+    // default 2D projection
+    ud.viewT = Mat4Identity;
+    ud.projT = orthoProjection(float(_width), float(_height));
+  }
 
   // draw
   _vao.bind();
   GLint first = 0;
   int lastShader = -1;
-  int lastTransformID = -1;
   float lastLineWidth = 0.0f;
+  int nextTexUnit = 0;
 
   for (const DrawCall& dc : _drawCalls) {
-    if (dc.capabilities != _currentGLCap) {
-      setGLCapabilities(dc.capabilities);
-    }
+    const Renderer::Layer* lPtr = dc.layerPtr;
+    if (lPtr->cap >= 0) { setGLCapabilities(lPtr->cap); }
 
     int texUnit = 0;
     int shader = 0; // solid color shader
@@ -670,16 +667,14 @@ void OpenGLRenderer::renderFrame()
     if (shader != lastShader) { _sp[shader].use(); }
 
     // uniform block update
-    if (dc.transformID >= 0 && dc.transformID != lastTransformID) {
-      const TransformEntry& t = _transforms[std::size_t(dc.transformID)];
-      ud.viewT = t.view;
-      ud.projT = t.proj;
+    if (lPtr->transformSet) {
+      ud.viewT = lPtr->view;
+      ud.projT = lPtr->proj;
       udChanged = true;
-      lastTransformID = dc.transformID;
     }
 
-    if (ud.modColor != dc.modColor) {
-      ud.modColor = dc.modColor;
+    if (lPtr->modColor != ud.modColor) {
+      ud.modColor = lPtr->modColor;
       udChanged = true;
     }
 

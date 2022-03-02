@@ -66,8 +66,10 @@ class gx::Renderer
     setModColor(layer, packRGBA8(c)); }
 
   void setTransform(int layer, const Mat4& view, const Mat4& proj) {
-    _layers[layer].transformID = int(_transforms.size());
-    _transforms.push_back({view, proj});
+    Layer& lyr = _layers[layer];
+    lyr.view = view;
+    lyr.proj = proj;
+    lyr.transformSet = true;
   }
 
   void setScreenOrthoProjection(int layer);
@@ -91,21 +93,19 @@ class gx::Renderer
   GLFWwindow* _window = nullptr;
   int _maxTextureSize = 0;
   int _width = 0, _height = 0;
-  Vec3 _bgColor = {0,0,0};
+  Vec3 _bgColor{};
   bool _changed = true;
 
   struct Layer {
     DrawList drawData;
-    int transformID = -1;
     uint32_t modColor = 0xffffffff;
     int cap = -1;
+    Mat4 view, proj;
+    bool transformSet = false;
   };
   std::map<int,Layer> _layers;
 
-  struct TransformEntry { Mat4 view, proj; };
-  std::vector<TransformEntry> _transforms;
-
-  TextureID newTextureID();
+  [[nodiscard]] TextureID newTextureID();
 };
 
 

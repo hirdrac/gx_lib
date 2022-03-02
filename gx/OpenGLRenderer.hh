@@ -55,28 +55,24 @@ class gx::OpenGLRenderer final : public gx::Renderer
   struct DrawCall {
     GLsizei count;
     GLenum mode; // GL_LINES, GL_TRIANGLES
-    uint32_t modColor;
     TextureID texID;
     float lineWidth;
-    int transformID;
-    int capabilities; // Renderer::CapabilityEnum bitfield
+    const Renderer::Layer* layerPtr = nullptr;
   };
   std::vector<DrawCall> _drawCalls;
   int _currentGLCap = -1; // current GL capability state
 
-  void addDrawCall(GLsizei count, GLenum mode, uint32_t modColor,
-                   TextureID texID, float lineWidth, int transID, int cap) {
+  void addDrawCall(GLsizei count, GLenum mode, TextureID texID,
+                   float lineWidth, const Renderer::Layer* layerPtr) {
     if (!_drawCalls.empty()) {
       DrawCall& dc = _drawCalls.back();
-      if (mode == dc.mode && modColor == dc.modColor && texID == dc.texID
-          && lineWidth == dc.lineWidth && transID == dc.transformID
-          && cap == dc.capabilities) {
+      if (mode == dc.mode && texID == dc.texID && lineWidth == dc.lineWidth
+          && layerPtr == dc.layerPtr) {
 	dc.count += count;
 	return;
       }
     }
-    _drawCalls.push_back(
-      {count, mode, modColor, texID, lineWidth, transID, cap});
+    _drawCalls.push_back({count, mode, texID, lineWidth, layerPtr});
   }
 
   void setGLCapabilities(int cap);
