@@ -643,12 +643,13 @@ void OpenGLRenderer::renderFrame()
   float lastLineWidth = 0.0f;
   int nextTexUnit = 0;
   const Renderer::Layer* lastLayer = nullptr;
+  int texUnit = -1;
 
   for (const DrawCall& dc : _drawCalls) {
     const Renderer::Layer* lPtr = dc.layerPtr;
     if (lPtr->cap >= 0) { setGLCapabilities(lPtr->cap); }
 
-    int texUnit = 0;
+    bool setUnit = false;
     int shader = 0; // solid color shader
     if (dc.texID > 0) {
       // shader uses texture - determine texture unit & bind if necessary
@@ -660,12 +661,18 @@ void OpenGLRenderer::renderFrame()
 	  entry.unit = nextTexUnit++;
 	  entry.tex.bindUnit(GLuint(entry.unit));
 	}
-	texUnit = entry.unit;
+        setUnit = (entry.unit != texUnit);
+        texUnit = entry.unit;
 	shader = entry.shader; // mono or color texture shader (1 or 2)
       }
     }
 
-    if (shader != lastShader) { _sp[shader].use(); }
+    // shader setup
+    if (shader != lastShader) {
+      _sp[shader].use();
+      setUnit = bool(_sp_texUnit[shader]);
+    }
+    if (setUnit) { _sp_texUnit[shader].set(texUnit); }
 
     // uniform block update
     if (lastLayer != lPtr) {
@@ -686,9 +693,6 @@ void OpenGLRenderer::renderFrame()
         udChanged = false;
       }
     }
-
-    // uniform settings
-    if (_sp_texUnit[shader]) { _sp_texUnit[shader].set(texUnit); }
 
     // line settings
     if (dc.mode == GL_LINES && dc.lineWidth != lastLineWidth) {
