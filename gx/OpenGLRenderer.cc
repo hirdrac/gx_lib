@@ -41,19 +41,19 @@ namespace {
     GLShader vshader;
     if (!vshader.init(GL_VERTEX_SHADER, vsrc, GLSL_SOURCE_HEADER)) {
       GX_LOG_ERROR("vshader error: ", vshader.infoLog());
-      return GLProgram();
+      return {};
     }
 
     GLShader fshader;
     if (!fshader.init(GL_FRAGMENT_SHADER, fsrc, GLSL_SOURCE_HEADER)) {
       GX_LOG_ERROR("fshader error: ", fshader.infoLog());
-      return GLProgram();
+      return {};
     }
 
     GLProgram prog;
     if (!prog.init(vshader, fshader)) {
       GX_LOG_ERROR("program link error: ", prog.infoLog());
-      return GLProgram();
+      return {};
     }
 
     return prog;
@@ -607,11 +607,6 @@ void OpenGLRenderer::renderFrame()
   GX_GLCALL(glClearColor, _bgColor.r, _bgColor.g, _bgColor.b, 0);
   GX_GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  _currentGLCap = -1; // force all capabilities to be set at first drawcall
-  GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  GX_GLCALL(glEnable, GL_LINE_SMOOTH);
-  GX_GLCALL(glFrontFace, GL_CW);
-
   // clear texture unit assignments
   for (auto& t : _textures) { t.second.unit = -1; }
 
@@ -622,8 +617,13 @@ void OpenGLRenderer::renderFrame()
   }
 
   if (_layers.empty()) { return; }
-
   const Renderer::Layer& firstLayer = _layers.begin()->second;
+
+  GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GX_GLCALL(glEnable, GL_LINE_SMOOTH);
+  GX_GLCALL(glFrontFace, GL_CW);
+
+  _currentGLCap = -1; // force all capabilities to be set at first drawcall
   if (firstLayer.cap < 0) { setGLCapabilities(BLEND); }
 
   _uniformBuf.bindBase(GL_UNIFORM_BUFFER, 0);
@@ -715,6 +715,7 @@ void OpenGLRenderer::renderFrame()
 void OpenGLRenderer::setGLCapabilities(int cap)
 {
   constexpr int CULL = CULL_CW | CULL_CCW;
+  assert(cap >= 0);
 
   if (_currentGLCap < 0)
   {
