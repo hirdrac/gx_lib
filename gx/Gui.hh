@@ -163,7 +163,7 @@ class gx::Gui
 
   [[nodiscard]] std::string getText(EventID eid) const {
     const GuiElem* e = findElemByEventID(eid);
-    return (e == nullptr) ? std::string() : e->text;
+    return (e == nullptr) ? std::string{} : e->text;
   }
 
   [[nodiscard]] bool getBool(EventID eid) const {

@@ -1,6 +1,6 @@
 //
 // gx/Unicode.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #include "Unicode.hh"
@@ -47,7 +47,7 @@ std::string gx::toUTF8(int32_t num)
     *ptr++ = char(0b11000000);
     *ptr++ = char(0b10000000);
   }
-  return std::string{str, ptr};
+  return {str, ptr};
 }
 
 std::size_t gx::lengthUTF8(std::string_view sv)
