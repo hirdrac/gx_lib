@@ -94,6 +94,14 @@ namespace {
   inline void vertex3d(
     Vertex3NTC*& ptr, const Vec3& pt, const Vec3& n, Vec2 tx, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, n.x,n.y,n.z, tx.x,tx.y, c}; }
+
+  inline void vertex3d(Vertex3NTC*& dst, const DrawEntry*& src) {
+    *dst++ = {
+      fval(src), fval(src), fval(src), // x,y,z
+      fval(src), fval(src), fval(src), // nx,ny,nz
+      fval(src), fval(src), uval(src), // s,t,c
+    };
+  }
 }
 
 void OpenGLRenderer::setWindowHints(bool debug)
@@ -295,6 +303,7 @@ void OpenGLRenderer::setupBuffer()
         case CMD_triangle3C:   d += 13; vsize += 3; break;
         case CMD_triangle2TC:  d += 16; vsize += 3; break;
         case CMD_triangle3TC:  d += 19; vsize += 3; break;
+        case CMD_triangle3NTC: d += 28; vsize += 3; break;
         case CMD_quad2:        d += 9;  vsize += 6; break;
         case CMD_quad3:        d += 13; vsize += 6; break;
         case CMD_quad2T:       d += 17; vsize += 6; break;
@@ -303,6 +312,7 @@ void OpenGLRenderer::setupBuffer()
         case CMD_quad3C:       d += 17; vsize += 6; break;
         case CMD_quad2TC:      d += 21; vsize += 6; break;
         case CMD_quad3TC:      d += 25; vsize += 6; break;
+        case CMD_quad3NTC:     d += 37; vsize += 6; break;
         case CMD_rectangle:    d += 5;  vsize += 6; break;
         case CMD_rectangleT:   d += 9;  vsize += 6; break;
 
@@ -449,6 +459,12 @@ void OpenGLRenderer::setupBuffer()
           addDrawCall(3, GL_TRIANGLES, tid, lw, &layer);
           break;
         }
+        case CMD_triangle3NTC: {
+          vertex3d(ptr, d);
+          vertex3d(ptr, d);
+          vertex3d(ptr, d);
+          break;
+        }
         case CMD_quad2: {
           Vec2 p0 = fval2(d), p1 = fval2(d);
           Vec2 p2 = fval2(d), p3 = fval2(d);
@@ -555,6 +571,13 @@ void OpenGLRenderer::setupBuffer()
           vertex3d(ptr, p3, normal, t3, c3);
           vertex3d(ptr, p2, normal, t2, c2);
           addDrawCall(6, GL_TRIANGLES, tid, lw, &layer);
+          break;
+        }
+        case CMD_quad3NTC: {
+          vertex3d(ptr, d);
+          vertex3d(ptr, d);
+          vertex3d(ptr, d);
+          vertex3d(ptr, d);
           break;
         }
         case CMD_rectangle: {

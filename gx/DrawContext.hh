@@ -94,6 +94,10 @@ class gx::DrawContext
   void triangle(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c) {
     add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
         b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
+  void triangle(const Vertex3NTC& a, const Vertex3NTC& b, const Vertex3NTC& c) {
+    add(CMD_triangle3NTC, a.x, a.y, a.z, a.nx, a.ny, a.nz, a.s, a.t, a.c,
+        b.x, b.y, b.z, b.nx, b.ny, b.nz, b.s, b.t, b.c,
+        c.x, c.y, c.z, c.nx, c.ny, c.nz, c.s, c.t, c.c); }
 
   void quad(const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d);
   void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d);
@@ -113,6 +117,12 @@ class gx::DrawContext
             const Vertex3TC& c, const Vertex3TC& d) {
     add(CMD_quad3TC, a.x, a.y, a.z, a.s, a.t, a.c, b.x, b.y, b.z, b.s, b.t, b.c,
         c.x, c.y, c.z, c.s, c.t, c.c, d.x, d.y, d.z, d.s, d.t, d.c); }
+  void quad(const Vertex3NTC& a, const Vertex3NTC& b,
+            const Vertex3NTC& c, const Vertex3NTC& d) {
+    add(CMD_quad3NTC, a.x, a.y, a.z, a.nx, a.ny, a.nz, a.s, a.t, a.c,
+        b.x, b.y, b.z, b.nx, b.ny, b.nz, b.s, b.t, b.c,
+        c.x, c.y, c.z, c.nx, c.ny, c.nz, c.s, c.t, c.c,
+        d.x, d.y, d.z, d.nx, d.ny, d.nz, d.s, d.t, d.c); }
 
   void rectangle(float x, float y, float w, float h);
   void rectangle(const Rect& r) { rectangle(r.x, r.y, r.w, r.h); }
