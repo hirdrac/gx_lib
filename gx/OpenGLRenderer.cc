@@ -69,15 +69,16 @@ namespace {
   inline Vec3 fval3(const DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
 
+  inline Vertex3NTC vertex_val(const DrawEntry*& ptr) {
+    return {fval(ptr), fval(ptr), fval(ptr),  // x,y,z
+            fval(ptr), fval(ptr), fval(ptr),  // nx,ny,nz
+            fval(ptr), fval(ptr), uval(ptr)}; // s,t,c
+  }
+
 #if 0
   // unused for now
   inline int32_t ival(const DrawEntry*& ptr) {
     return (ptr++)->ival; }
-  inline Mat4 mat4_val(const DrawEntry*& ptr) {
-    return {fval(ptr), fval(ptr), fval(ptr), fval(ptr),
-            fval(ptr), fval(ptr), fval(ptr), fval(ptr),
-            fval(ptr), fval(ptr), fval(ptr), fval(ptr),
-            fval(ptr), fval(ptr), fval(ptr), fval(ptr)}; }
 #endif
 
   // vertex output functions
@@ -94,14 +95,6 @@ namespace {
   inline void vertex3d(
     Vertex3NTC*& ptr, const Vec3& pt, const Vec3& n, Vec2 tx, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, n.x,n.y,n.z, tx.x,tx.y, c}; }
-
-  inline void vertex3d(Vertex3NTC*& dst, const DrawEntry*& src) {
-    *dst++ = {
-      fval(src), fval(src), fval(src), // x,y,z
-      fval(src), fval(src), fval(src), // nx,ny,nz
-      fval(src), fval(src), uval(src), // s,t,c
-    };
-  }
 }
 
 void OpenGLRenderer::setWindowHints(bool debug)
@@ -460,9 +453,9 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_triangle3NTC: {
-          vertex3d(ptr, d);
-          vertex3d(ptr, d);
-          vertex3d(ptr, d);
+          *ptr++ = vertex_val(d);
+          *ptr++ = vertex_val(d);
+          *ptr++ = vertex_val(d);
           break;
         }
         case CMD_quad2: {
@@ -574,10 +567,16 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_quad3NTC: {
-          vertex3d(ptr, d);
-          vertex3d(ptr, d);
-          vertex3d(ptr, d);
-          vertex3d(ptr, d);
+          const Vertex3NTC v0 = vertex_val(d);
+          const Vertex3NTC v1 = vertex_val(d);
+          const Vertex3NTC v2 = vertex_val(d);
+          const Vertex3NTC v3 = vertex_val(d);
+          *ptr++ = v0;
+          *ptr++ = v1;
+          *ptr++ = v2;
+          *ptr++ = v1;
+          *ptr++ = v3;
+          *ptr++ = v2;
           break;
         }
         case CMD_rectangle: {
