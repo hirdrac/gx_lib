@@ -14,7 +14,6 @@
 #include "DrawList.hh"
 #include "Types.hh"
 #include <map>
-#include <vector>
 
 
 struct GLFWwindow;
