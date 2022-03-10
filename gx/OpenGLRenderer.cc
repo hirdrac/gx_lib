@@ -627,6 +627,7 @@ void OpenGLRenderer::renderFrame()
   setCurrentContext(_window);
   GX_GLCALL(glViewport, 0, 0, _width, _height);
   GX_GLCALL(glClearColor, _bgColor.r, _bgColor.g, _bgColor.b, 0);
+  GX_GLCALL(glClearDepth, 1.0);
   GX_GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // clear texture unit assignments
@@ -699,6 +700,11 @@ void OpenGLRenderer::renderFrame()
     // uniform block update
     if (lastLayer != lPtr) {
       lastLayer = lPtr;
+      if (lPtr->clearDepth) {
+        GX_GLCALL(glClear, GL_DEPTH_BUFFER_BIT);
+      }
+
+      // layer specific uniform data
       if (lPtr->transformSet) {
         ud.viewT = lPtr->view;
         ud.projT = lPtr->proj;

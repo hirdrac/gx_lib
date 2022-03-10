@@ -101,6 +101,7 @@ class gx::Renderer
     int cap = -1;
     Mat4 view, proj;
     bool transformSet = false;
+    bool clearDepth = false;
   };
   std::map<int,Layer> _layers;
 
