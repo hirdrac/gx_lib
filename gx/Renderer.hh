@@ -59,6 +59,8 @@ class gx::Renderer
   void setBGColor(float r, float g, float b) { _bgColor.set(r,g,b); }
   void setBGColor(const Color& c) { _bgColor.set(c.r, c.g, c.b); }
 
+  void setClearDepth(int layer, bool enable) {
+    _layers[layer].clearDepth = enable; }
   void setModColor(int layer, uint32_t c) {
     _layers[layer].modColor = c; }
   void setModColor(int layer, const Color& c) {
