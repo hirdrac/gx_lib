@@ -275,8 +275,8 @@ void OpenGLRenderer::setupBuffer()
 {
   unsigned int vsize = 0; // vertices needed
   for (const auto& [no,layer] : _layers) {
-    const DrawEntry* data     = layer.drawData.data();
-    const DrawEntry* data_end = data + layer.drawData.size();
+    const DrawEntry* data     = layer.entries.data();
+    const DrawEntry* data_end = data + layer.entries.size();
 
     const DrawEntry* d = data;
     while (d < data_end) {
@@ -355,8 +355,8 @@ void OpenGLRenderer::setupBuffer()
     float lw = 1.0f;
     Vec3 normal{0,0,1};
 
-    const DrawEntry* data     = layer.drawData.data();
-    const DrawEntry* data_end = data + layer.drawData.size();
+    const DrawEntry* data     = layer.entries.data();
+    const DrawEntry* data_end = data + layer.entries.size();
     for (const DrawEntry* d = data; d != data_end; ) {
       const DrawCmd cmd = (d++)->cmd;
       switch (cmd) {
@@ -616,8 +616,8 @@ void OpenGLRenderer::setupBuffer()
 
 #if 0
   std::size_t dsize = 0;
-  for (const auto& [no,layer] : _layers) { dsize += layer.drawData.size(); }
-  gx::println_err("drawData:", dsize, "  vertices:", vsize,
+  for (const auto& [no,layer] : _layers) { dsize += layer.entries.size(); }
+  gx::println_err("entries:", dsize, "  vertices:", vsize,
                   "  drawCalls:", _drawCalls.size());
 #endif
 }
@@ -640,7 +640,7 @@ void OpenGLRenderer::renderFrame()
   }
 
   if (_layers.empty()) { return; }
-  const Renderer::Layer& firstLayer = _layers.begin()->second;
+  const DrawLayer& firstLayer = _layers.begin()->second;
 
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
@@ -665,11 +665,11 @@ void OpenGLRenderer::renderFrame()
   int lastShader = -1;
   float lastLineWidth = 0.0f;
   int nextTexUnit = 0;
-  const Renderer::Layer* lastLayer = nullptr;
+  const DrawLayer* lastLayer = nullptr;
   int texUnit = -1;
 
   for (const DrawCall& dc : _drawCalls) {
-    const Renderer::Layer* lPtr = dc.layerPtr;
+    const DrawLayer* lPtr = dc.layerPtr;
     if (lPtr->cap >= 0) { setGLCapabilities(lPtr->cap); }
 
     bool setUnit = false;

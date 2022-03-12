@@ -57,13 +57,13 @@ class gx::OpenGLRenderer final : public gx::Renderer
     GLenum mode; // GL_LINES, GL_TRIANGLES
     TextureID texID;
     float lineWidth;
-    const Renderer::Layer* layerPtr = nullptr;
+    const DrawLayer* layerPtr = nullptr;
   };
   std::vector<DrawCall> _drawCalls;
   int _currentGLCap = -1; // current GL capability state
 
   void addDrawCall(GLsizei count, GLenum mode, TextureID texID,
-                   float lineWidth, const Renderer::Layer* layerPtr) {
+                   float lineWidth, const DrawLayer* layerPtr) {
     if (!_drawCalls.empty()) {
       DrawCall& dc = _drawCalls.back();
       if (mode == dc.mode && texID == dc.texID && lineWidth == dc.lineWidth

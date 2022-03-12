@@ -10,8 +10,9 @@
 // TODO: clear draw data from single layer/layer range
 
 #pragma once
-#include "Color.hh"
+#include "DrawLayer.hh"
 #include "DrawList.hh"
+#include "Color.hh"
 #include "Types.hh"
 #include <map>
 
@@ -21,13 +22,6 @@ namespace gx {
   class Image;
   struct DrawEntry;
   class Renderer;
-
-  enum CapabilityEnum {
-    BLEND = 1,
-    DEPTH_TEST = 2,
-    CULL_CW = 4,
-    CULL_CCW = 8,
-  };
 }
 
 class gx::Renderer
@@ -67,7 +61,7 @@ class gx::Renderer
     setModColor(layer, packRGBA8(c)); }
 
   void setTransform(int layer, const Mat4& view, const Mat4& proj) {
-    Layer& lyr = _layers[layer];
+    DrawLayer& lyr = _layers[layer];
     lyr.view = view;
     lyr.proj = proj;
     lyr.transformSet = true;
@@ -96,16 +90,7 @@ class gx::Renderer
   int _width = 0, _height = 0;
   Vec3 _bgColor{};
   bool _changed = true;
-
-  struct Layer {
-    DrawList drawData;
-    uint32_t modColor = 0xffffffff;
-    int cap = -1;
-    Mat4 view, proj;
-    bool transformSet = false;
-    bool clearDepth = false;
-  };
-  std::map<int,Layer> _layers;
+  std::map<int,DrawLayer> _layers;
 
   [[nodiscard]] TextureID newTextureID();
 };

@@ -89,7 +89,7 @@ void Renderer::draw(int layer, const DrawEntry* data, std::size_t dataSize)
 {
   if (dataSize == 0) { return; }
 
-  DrawList& dl = _layers[layer].drawData;
+  DrawList& dl = _layers[layer].entries;
   dl.insert(dl.end(), data, data + dataSize);
   _changed = true;
 }
