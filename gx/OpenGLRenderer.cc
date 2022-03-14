@@ -393,9 +393,9 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_triangle2T: {
-          Vec2 p0 = fval2(d), t0 = fval2(d);
-          Vec2 p1 = fval2(d), t1 = fval2(d);
-          Vec2 p2 = fval2(d), t2 = fval2(d);
+          const Vec2 p0 = fval2(d), t0 = fval2(d);
+          const Vec2 p1 = fval2(d), t1 = fval2(d);
+          const Vec2 p2 = fval2(d), t2 = fval2(d);
           vertex2d(ptr, p0, t0, color);
           vertex2d(ptr, p1, t1, color);
           vertex2d(ptr, p2, t2, color);
@@ -403,9 +403,9 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_triangle3T: {
-          Vec3 p0 = fval3(d); Vec2 t0 = fval2(d);
-          Vec3 p1 = fval3(d); Vec2 t1 = fval2(d);
-          Vec3 p2 = fval3(d); Vec2 t2 = fval2(d);
+          const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
+          const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
+          const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
           vertex3d(ptr, p0, normal, t0, color);
           vertex3d(ptr, p1, normal, t1, color);
           vertex3d(ptr, p2, normal, t2, color);
@@ -413,9 +413,9 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_triangle2C: {
-          Vec2 p0 = fval2(d); uint32_t c0 = uval(d);
-          Vec2 p1 = fval2(d); uint32_t c1 = uval(d);
-          Vec2 p2 = fval2(d); uint32_t c2 = uval(d);
+          const Vec2 p0 = fval2(d); const uint32_t c0 = uval(d);
+          const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
+          const Vec2 p2 = fval2(d); const uint32_t c2 = uval(d);
           vertex2d(ptr, p0, c0);
           vertex2d(ptr, p1, c1);
           vertex2d(ptr, p2, c2);
@@ -423,9 +423,9 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_triangle3C: {
-          Vec3 p0 = fval3(d); uint32_t c0 = uval(d);
-          Vec3 p1 = fval3(d); uint32_t c1 = uval(d);
-          Vec3 p2 = fval3(d); uint32_t c2 = uval(d);
+          const Vec3 p0 = fval3(d); const uint32_t c0 = uval(d);
+          const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
+          const Vec3 p2 = fval3(d); const uint32_t c2 = uval(d);
           vertex3d(ptr, p0, normal, c0);
           vertex3d(ptr, p1, normal, c1);
           vertex3d(ptr, p2, normal, c2);
@@ -433,9 +433,9 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_triangle2TC: {
-          Vec2 p0 = fval2(d), t0 = fval2(d); uint32_t c0 = uval(d);
-          Vec2 p1 = fval2(d), t1 = fval2(d); uint32_t c1 = uval(d);
-          Vec2 p2 = fval2(d), t2 = fval2(d); uint32_t c2 = uval(d);
+          const Vec2 p0 = fval2(d), t0 = fval2(d); const uint32_t c0 = uval(d);
+          const Vec2 p1 = fval2(d), t1 = fval2(d); const uint32_t c1 = uval(d);
+          const Vec2 p2 = fval2(d), t2 = fval2(d); const uint32_t c2 = uval(d);
           vertex2d(ptr, p0, t0, c0);
           vertex2d(ptr, p1, t1, c1);
           vertex2d(ptr, p2, t2, c2);
@@ -443,9 +443,12 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_triangle3TC: {
-          Vec3 p0 = fval3(d); Vec2 t0 = fval2(d); uint32_t c0 = uval(d);
-          Vec3 p1 = fval3(d); Vec2 t1 = fval2(d); uint32_t c1 = uval(d);
-          Vec3 p2 = fval3(d); Vec2 t2 = fval2(d); uint32_t c2 = uval(d);
+          const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
+          const uint32_t c0 = uval(d);
+          const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
+          const uint32_t c1 = uval(d);
+          const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
+          const uint32_t c2 = uval(d);
           vertex3d(ptr, p0, normal, t0, c0);
           vertex3d(ptr, p1, normal, t1, c1);
           vertex3d(ptr, p2, normal, t2, c2);
@@ -459,8 +462,8 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_quad2: {
-          Vec2 p0 = fval2(d), p1 = fval2(d);
-          Vec2 p2 = fval2(d), p3 = fval2(d);
+          const Vec2 p0 = fval2(d), p1 = fval2(d);
+          const Vec2 p2 = fval2(d), p3 = fval2(d);
           vertex2d(ptr, p0, color);
           vertex2d(ptr, p1, color);
           vertex2d(ptr, p2, color);
@@ -471,8 +474,8 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_quad3: {
-          Vec3 p0 = fval3(d), p1 = fval3(d);
-          Vec3 p2 = fval3(d), p3 = fval3(d);
+          const Vec3 p0 = fval3(d), p1 = fval3(d);
+          const Vec3 p2 = fval3(d), p3 = fval3(d);
           vertex3d(ptr, p0, normal, color);
           vertex3d(ptr, p1, normal, color);
           vertex3d(ptr, p2, normal, color);
@@ -483,10 +486,10 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_quad2T: {
-          Vec2 p0 = fval2(d), t0 = fval2(d);
-          Vec2 p1 = fval2(d), t1 = fval2(d);
-          Vec2 p2 = fval2(d), t2 = fval2(d);
-          Vec2 p3 = fval2(d), t3 = fval2(d);
+          const Vec2 p0 = fval2(d), t0 = fval2(d);
+          const Vec2 p1 = fval2(d), t1 = fval2(d);
+          const Vec2 p2 = fval2(d), t2 = fval2(d);
+          const Vec2 p3 = fval2(d), t3 = fval2(d);
           vertex2d(ptr, p0, t0, color);
           vertex2d(ptr, p1, t1, color);
           vertex2d(ptr, p2, t2, color);
@@ -497,10 +500,10 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_quad3T: {
-          Vec3 p0 = fval3(d); Vec2 t0 = fval2(d);
-          Vec3 p1 = fval3(d); Vec2 t1 = fval2(d);
-          Vec3 p2 = fval3(d); Vec2 t2 = fval2(d);
-          Vec3 p3 = fval3(d); Vec2 t3 = fval2(d);
+          const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
+          const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
+          const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
+          const Vec3 p3 = fval3(d); const Vec2 t3 = fval2(d);
           vertex3d(ptr, p0, normal, t0, color);
           vertex3d(ptr, p1, normal, t1, color);
           vertex3d(ptr, p2, normal, t2, color);
@@ -511,10 +514,10 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_quad2C: {
-          Vec2 p0 = fval2(d); uint32_t c0 = uval(d);
-          Vec2 p1 = fval2(d); uint32_t c1 = uval(d);
-          Vec2 p2 = fval2(d); uint32_t c2 = uval(d);
-          Vec2 p3 = fval2(d); uint32_t c3 = uval(d);
+          const Vec2 p0 = fval2(d); const uint32_t c0 = uval(d);
+          const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
+          const Vec2 p2 = fval2(d); const uint32_t c2 = uval(d);
+          const Vec2 p3 = fval2(d); const uint32_t c3 = uval(d);
           vertex2d(ptr, p0, c0);
           vertex2d(ptr, p1, c1);
           vertex2d(ptr, p2, c2);
@@ -525,10 +528,10 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_quad3C: {
-          Vec3 p0 = fval3(d); uint32_t c0 = uval(d);
-          Vec3 p1 = fval3(d); uint32_t c1 = uval(d);
-          Vec3 p2 = fval3(d); uint32_t c2 = uval(d);
-          Vec3 p3 = fval3(d); uint32_t c3 = uval(d);
+          const Vec3 p0 = fval3(d); const uint32_t c0 = uval(d);
+          const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
+          const Vec3 p2 = fval3(d); const uint32_t c2 = uval(d);
+          const Vec3 p3 = fval3(d); const uint32_t c3 = uval(d);
           vertex3d(ptr, p0, normal, c0);
           vertex3d(ptr, p1, normal, c1);
           vertex3d(ptr, p2, normal, c2);
@@ -539,10 +542,10 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_quad2TC: {
-          Vec2 p0 = fval2(d), t0 = fval2(d); uint32_t c0 = uval(d);
-          Vec2 p1 = fval2(d), t1 = fval2(d); uint32_t c1 = uval(d);
-          Vec2 p2 = fval2(d), t2 = fval2(d); uint32_t c2 = uval(d);
-          Vec2 p3 = fval2(d), t3 = fval2(d); uint32_t c3 = uval(d);
+          const Vec2 p0 = fval2(d), t0 = fval2(d); const uint32_t c0 = uval(d);
+          const Vec2 p1 = fval2(d), t1 = fval2(d); const uint32_t c1 = uval(d);
+          const Vec2 p2 = fval2(d), t2 = fval2(d); const uint32_t c2 = uval(d);
+          const Vec2 p3 = fval2(d), t3 = fval2(d); const uint32_t c3 = uval(d);
           vertex2d(ptr, p0, t0, c0);
           vertex2d(ptr, p1, t1, c1);
           vertex2d(ptr, p2, t2, c2);
@@ -553,10 +556,14 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_quad3TC: {
-          Vec3 p0 = fval3(d); Vec2 t0 = fval2(d); uint32_t c0 = uval(d);
-          Vec3 p1 = fval3(d); Vec2 t1 = fval2(d); uint32_t c1 = uval(d);
-          Vec3 p2 = fval3(d); Vec2 t2 = fval2(d); uint32_t c2 = uval(d);
-          Vec3 p3 = fval3(d); Vec2 t3 = fval2(d); uint32_t c3 = uval(d);
+          const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
+          const uint32_t c0 = uval(d);
+          const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
+          const uint32_t c1 = uval(d);
+          const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
+          const uint32_t c2 = uval(d);
+          const Vec3 p3 = fval3(d); const Vec2 t3 = fval2(d);
+          const uint32_t c3 = uval(d);
           vertex3d(ptr, p0, normal, t0, c0);
           vertex3d(ptr, p1, normal, t1, c1);
           vertex3d(ptr, p2, normal, t2, c2);
@@ -580,8 +587,8 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_rectangle: {
-          Vec2 p0 = fval2(d), p3 = fval2(d);
-          Vec2 p1 = {p3.x,p0.y}, p2 = {p0.x,p3.y};
+          const Vec2 p0 = fval2(d), p3 = fval2(d);
+          const Vec2 p1{p3.x,p0.y}, p2{p0.x,p3.y};
           vertex2d(ptr, p0, color);
           vertex2d(ptr, p1, color);
           vertex2d(ptr, p2, color);
@@ -592,10 +599,10 @@ void OpenGLRenderer::setupBuffer()
           break;
         }
         case CMD_rectangleT: {
-          Vec2 p0 = fval2(d), t0 = fval2(d);
-          Vec2 p3 = fval2(d), t3 = fval2(d);
-          Vec2 p1 = {p3.x,p0.y}, t1 = {t3.x,t0.y};
-          Vec2 p2 = {p0.x,p3.y}, t2 = {t0.x,t3.y};
+          const Vec2 p0 = fval2(d), t0 = fval2(d);
+          const Vec2 p3 = fval2(d), t3 = fval2(d);
+          const Vec2 p1{p3.x,p0.y}, t1{t3.x,t0.y};
+          const Vec2 p2{p0.x,p3.y}, t2{t0.x,t3.y};
           vertex2d(ptr, p0, t0, color);
           vertex2d(ptr, p1, t1, color);
           vertex2d(ptr, p2, t2, color);
