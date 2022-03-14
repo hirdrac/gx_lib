@@ -200,6 +200,8 @@ int main(int argc, char** argv)
   const int gfxCount = std::size(gfxData);
   int page = 0, gfxPerPage = 0, maxPage = 0;
   bool redraw = false;
+  gx::DrawLayer dl;
+  gx::DrawContext dc{dl.entries};
 
   for (;;) {
     // draw frame
@@ -212,11 +214,9 @@ int main(int argc, char** argv)
     }
 
     if (redraw) {
-      gx::DrawList dl;
-      gx::DrawContext dc{dl};
-
       const int start_gfx = page * gfxPerPage;
       const int end_gfx = std::min(start_gfx + gfxPerPage, gfxCount);
+      dc.clear();
 
       // draw function & text split to reduce draw calls
       float x = 0, y = 0;
@@ -241,8 +241,7 @@ int main(int argc, char** argv)
                 gx::concat("Page ", page+1, " of ", maxPage+1));
       }
 
-      ren.clearFrame(win.width(), win.height());
-      ren.draw(dl);
+      ren.draw(win.width(), win.height(), {&dl});
       redraw = false;
     }
 

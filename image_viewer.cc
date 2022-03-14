@@ -1,6 +1,6 @@
 //
 // image_viewer.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 // TODO: fullscreen zoom w/ mouse wheel
@@ -14,7 +14,7 @@
 #include "gx/Logger.hh"
 #include "gx/Window.hh"
 #include "gx/Renderer.hh"
-#include "gx/DrawList.hh"
+#include "gx/DrawLayer.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Texture.hh"
 #include "gx/Print.hh"
@@ -86,8 +86,8 @@ int main(int argc, char* argv[])
     e.tex.init(ren, e.img, 3, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
   }
 
-  gx::DrawList dl;
-  gx::DrawContext dc{dl};
+  gx::DrawLayer dl;
+  gx::DrawContext dc{dl.entries};
   bool refresh = true;
   constexpr int border = 8;
 
@@ -141,8 +141,7 @@ int main(int argc, char* argv[])
         }
       }
 
-      ren.clearFrame(win.width(), win.height());
-      ren.draw(dl);
+      ren.draw(win.width(), win.height(), {&dl});
     }
 
     ren.renderFrame();

@@ -138,14 +138,15 @@ int main(int argc, char* argv[])
   fnt.makeAtlas(ren);
   bool running = true;
   bool needRedraw = true;
+  gx::DrawLayer dl;
 
   // **** MAIN LOOP ****
   while (running) {
     // draw frame
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
-      ren.clearFrame(win.width(), win.height());
-      ren.draw(gui.drawList());
+      dl.entries = gui.drawList();
+      ren.draw(win.width(), win.height(), {&dl});
       needRedraw = false;
     }
     ren.renderFrame();

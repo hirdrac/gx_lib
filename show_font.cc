@@ -9,7 +9,7 @@
 #include "gx/Renderer.hh"
 #include "gx/Font.hh"
 #include "gx/Texture.hh"
-#include "gx/DrawList.hh"
+#include "gx/DrawLayer.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
@@ -46,8 +46,8 @@ int main(int argc, char** argv)
 
   win.setSize(t.width(), t.height(), false);
 
-  gx::DrawList dl;
-  gx::DrawContext dc{dl};
+  gx::DrawLayer dl;
+  gx::DrawContext dc{dl.entries};
   int lastCode = 0;
 
   // main loop
@@ -59,8 +59,7 @@ int main(int argc, char** argv)
       dc.texture(t);
       dc.rectangle(0, 0, float(win.width()), float(win.height()), {0,0}, {1,1});
 
-      ren.clearFrame(win.width(), win.height());
-      ren.draw(dl);
+      ren.draw(win.width(), win.height(), {&dl});
     }
 
     ren.renderFrame();

@@ -28,9 +28,12 @@ class gx::OpenGLRenderer final : public gx::Renderer
   TextureID setTexture(TextureID id, const Image& img, int levels,
                        FilterType minFilter, FilterType magFilter) override;
   void freeTexture(TextureID id) override { _textures.erase(id); }
+  void draw(int width, int height,
+            std::initializer_list<DrawLayer*> dl) override;
   void renderFrame() override;
 
  private:
+  int _width = 0, _height = 0;
   GLProgram _sp[3];
   GLUniform1i _sp_texUnit[3];
 
@@ -77,5 +80,4 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   void setGLCapabilities(int cap);
   static void setCullFace(int cap);
-  void setupBuffer();
 };

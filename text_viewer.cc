@@ -156,8 +156,9 @@ int main(int argc, char** argv)
   const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
   int topLine = 0;
 
-  gx::DrawList dl;
-  gx::DrawContext dc{dl};
+  //gx::DrawList dl;
+  gx::DrawLayer dl;
+  gx::DrawContext dc{dl.entries};
   gx::TextFormatting tf{&fnt};
 
   // main loop
@@ -195,8 +196,7 @@ int main(int argc, char** argv)
         ++lineNo;
       }
 
-      ren.clearFrame(win.width(), win.height());
-      ren.draw(dl);
+      ren.draw(win.width(), win.height(), {&dl});
       redraw = false;
     }
     ren.renderFrame();

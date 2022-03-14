@@ -11,10 +11,9 @@
 
 #pragma once
 #include "DrawLayer.hh"
-#include "DrawList.hh"
 #include "Color.hh"
 #include "Types.hh"
-#include <map>
+#include <initializer_list>
 
 
 struct GLFWwindow;
@@ -44,53 +43,22 @@ class gx::Renderer
   virtual void freeTexture(TextureID id) = 0;
 
   // draw methods
+  virtual void draw(
+    int width, int height, std::initializer_list<DrawLayer*> dl) = 0;
   virtual void renderFrame() = 0;
 
-
   // general functions
-  void clearFrame(int width, int height);
-
   void setBGColor(float r, float g, float b) { _bgColor.set(r,g,b); }
   void setBGColor(const Color& c) { _bgColor.set(c.r, c.g, c.b); }
-
-  void setClearDepth(int layer, bool enable) {
-    _layers[layer].clearDepth = enable; }
-  void setModColor(int layer, uint32_t c) {
-    _layers[layer].modColor = c; }
-  void setModColor(int layer, const Color& c) {
-    setModColor(layer, packRGBA8(c)); }
-
-  void setTransform(int layer, const Mat4& view, const Mat4& proj) {
-    DrawLayer& lyr = _layers[layer];
-    lyr.view = view;
-    lyr.proj = proj;
-    lyr.transformSet = true;
-  }
-
-  void setScreenOrthoProjection(int layer);
-  void setOrthoProjection(int layer, float width, float height);
-
-  void draw(int layer, const DrawEntry* data, std::size_t dataSize);
-  void draw(int layer, const DrawList& dl) {
-    draw(layer, dl.data(), dl.size()); }
-  void draw(const DrawList& dl) {
-    draw(0, dl.data(), dl.size()); }
 
   // general accessors
   [[nodiscard]] GLFWwindow* window() { return _window; }
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
 
-  // draw capabilities
-  static constexpr int INIT_CAPABILITIES = BLEND;
-  void setCapabilities(int layer, int c) { _layers[layer].cap = c; }
-
  protected:
   GLFWwindow* _window = nullptr;
   int _maxTextureSize = 0;
-  int _width = 0, _height = 0;
   Vec3 _bgColor{};
-  bool _changed = true;
-  std::map<int,DrawLayer> _layers;
 
   [[nodiscard]] TextureID newTextureID();
 };

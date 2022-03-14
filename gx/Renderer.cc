@@ -66,34 +66,6 @@ Renderer::~Renderer()
   freeRenderer(this);
 }
 
-void Renderer::clearFrame(int width, int height)
-{
-  _width = width;
-  _height = height;
-  _layers.clear();
-  _changed = true;
-}
-
-void Renderer::setScreenOrthoProjection(int layer)
-{
-  setTransform(
-    layer, Mat4Identity, orthoProjection(float(_width), float(_height)));
-}
-
-void Renderer::setOrthoProjection(int layer, float width, float height)
-{
-  setTransform(layer, Mat4Identity, orthoProjection(width, height));
-}
-
-void Renderer::draw(int layer, const DrawEntry* data, std::size_t dataSize)
-{
-  if (dataSize == 0) { return; }
-
-  DrawList& dl = _layers[layer].entries;
-  dl.insert(dl.end(), data, data + dataSize);
-  _changed = true;
-}
-
 TextureID Renderer::newTextureID()
 {
   const std::lock_guard lg{_textureMutex};
