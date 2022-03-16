@@ -25,9 +25,9 @@ struct gx::DrawLayer
   DrawList entries;
 
   // layer specific attributes/flags
-  RGBA8 modColor = 0xffffffff;
-  int cap = -1;
   Mat4 view, proj;
+  RGBA8 modColor = packRGBA8(WHITE);
+  int32_t cap = -1;
   bool transformSet = false;
   bool clearDepth = false;
 };
