@@ -149,7 +149,6 @@ int main(int argc, char** argv)
   }
 
   gx::Renderer& ren = win.renderer();
-  ren.setBGColor(.2f,.2f,.2f);
   fnt.makeAtlas(ren);
 
   const float tabWidth = fnt.glyphWidth(' ') * float(tabSize);
@@ -157,6 +156,8 @@ int main(int argc, char** argv)
   int topLine = 0;
 
   gx::DrawLayer dl;
+  dl.setBGColor(.2f,.2f,.2f);
+
   gx::DrawContext dc{dl};
   gx::TextFormatting tf{&fnt};
 

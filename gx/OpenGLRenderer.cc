@@ -327,6 +327,11 @@ void OpenGLRenderer::draw(
   if (vsize == 0) {
     _vbo = GLBuffer();
     _vao = GLVertexArray();
+
+    if (dl.size() != 0) {
+      // use state of first layer only
+      addDrawCall(0, 0, 0, 0, *dl.begin());
+    }
     return;
   }
 
@@ -354,6 +359,12 @@ void OpenGLRenderer::draw(
   //  2--3
 
   for (const DrawLayer* lPtr : dl) {
+    if (lPtr->entries.empty()) {
+      // add dummy drawcall for state changes of layer
+      addDrawCall(0, 0, 0, 0, lPtr);
+      continue;
+    }
+
     uint32_t color = 0;
     TextureID tid = 0;
     float lw = 1.0f;
@@ -637,9 +648,7 @@ void OpenGLRenderer::renderFrame()
 {
   setCurrentContext(_window);
   GX_GLCALL(glViewport, 0, 0, _width, _height);
-  GX_GLCALL(glClearColor, _bgColor.r, _bgColor.g, _bgColor.b, 0);
   GX_GLCALL(glClearDepth, 1.0);
-  GX_GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   // clear texture unit assignments
   for (auto& t : _textures) { t.second.unit = -1; }
@@ -671,16 +680,16 @@ void OpenGLRenderer::renderFrame()
   const DrawLayer* lastLayer = nullptr;
   int texUnit = -1;
 
-  for (const DrawCall& dc : _drawCalls) {
-    const DrawLayer* lPtr = dc.layerPtr;
+  for (const DrawCall& call : _drawCalls) {
+    const DrawLayer* lPtr = call.layerPtr;
     if (lPtr->cap >= 0) { setGLCapabilities(lPtr->cap); }
 
     bool setUnit = false;
     int shader = 0; // solid color shader
-    if (dc.texID > 0) {
+    if (call.texID > 0) {
       // shader uses texture - determine texture unit & bind if necessary
       // (FIXME: no max texture units check currently)
-      const auto itr = _textures.find(dc.texID);
+      const auto itr = _textures.find(call.texID);
       if (itr != _textures.end()) {
 	auto& [id,entry] = *itr;
 	if (entry.unit < 0) {
@@ -703,8 +712,20 @@ void OpenGLRenderer::renderFrame()
     // uniform block update
     if (lastLayer != lPtr) {
       lastLayer = lPtr;
+
+      GLbitfield clearMask = 0;
+      if (lPtr->bgColor != 0) {
+        const Color c = unpackRGBA8(lPtr->bgColor);
+        GX_GLCALL(glClearColor, c.r, c.g, c.b, c.a);
+        clearMask |= GL_COLOR_BUFFER_BIT;
+      }
+
       if (lPtr->clearDepth) {
-        GX_GLCALL(glClear, GL_DEPTH_BUFFER_BIT);
+        clearMask |= GL_DEPTH_BUFFER_BIT;
+      }
+
+      if (clearMask != 0) {
+        GX_GLCALL(glClear, clearMask);
       }
 
       // layer specific uniform data
@@ -725,15 +746,18 @@ void OpenGLRenderer::renderFrame()
       }
     }
 
-    // line settings
-    if (dc.mode == GL_LINES && dc.lineWidth != lastLineWidth) {
-      GX_GLCALL(glLineWidth, dc.lineWidth);
-      lastLineWidth = dc.lineWidth;
+    if (call.count != 0) {
+      // line settings
+      if (call.mode == GL_LINES && call.lineWidth != lastLineWidth) {
+        GX_GLCALL(glLineWidth, call.lineWidth);
+        lastLineWidth = call.lineWidth;
+      }
+
+      // draw call
+      GX_GLCALL(glDrawArrays, call.mode, first, call.count);
+      first += call.count;
     }
 
-    // draw call
-    GX_GLCALL(glDrawArrays, dc.mode, first, dc.count);
-    first += dc.count;
     lastShader = shader;
   }
 

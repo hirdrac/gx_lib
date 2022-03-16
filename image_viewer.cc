@@ -79,7 +79,6 @@ int main(int argc, char* argv[])
   }
 
   gx::Renderer& ren = win.renderer();
-  ren.setBGColor(gx::BLACK);
 
   int entryNo = 0;
   for (Entry& e : entries) {
@@ -87,6 +86,8 @@ int main(int argc, char* argv[])
   }
 
   gx::DrawLayer dl;
+  dl.setBGColor(gx::BLACK);
+
   gx::DrawContext dc{dl};
   bool refresh = true;
   constexpr int border = 8;

@@ -47,10 +47,6 @@ class gx::Renderer
     int width, int height, std::initializer_list<DrawLayer*> dl) = 0;
   virtual void renderFrame() = 0;
 
-  // general functions
-  void setBGColor(float r, float g, float b) { _bgColor.set(r,g,b); }
-  void setBGColor(const Color& c) { _bgColor.set(c.r, c.g, c.b); }
-
   // general accessors
   [[nodiscard]] GLFWwindow* window() { return _window; }
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
@@ -58,7 +54,6 @@ class gx::Renderer
  protected:
   GLFWwindow* _window = nullptr;
   int _maxTextureSize = 0;
-  Vec3 _bgColor{};
 
   [[nodiscard]] TextureID newTextureID();
 };

@@ -193,14 +193,16 @@ int main(int argc, char** argv)
   }
 
   gx::Renderer& ren = win.renderer();
-  ren.setBGColor(.2f,.2f,.5f);
   fnt.makeAtlas(ren);
 
   gx::TextFormatting tf{&fnt};
   const int gfxCount = std::size(gfxData);
   int page = 0, gfxPerPage = 0, maxPage = 0;
   bool redraw = false;
+
   gx::DrawLayer dl;
+  dl.setBGColor(.2f,.2f,.5f);
+
   gx::DrawContext dc{dl};
 
   for (;;) {

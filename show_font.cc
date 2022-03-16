@@ -40,13 +40,13 @@ int main(int argc, char** argv)
   }
 
   gx::Renderer& ren = win.renderer();
-  ren.setBGColor(.3f,.1f,.1f);
   fnt.makeAtlas(ren);
   const gx::Texture& t = fnt.tex();
 
   win.setSize(t.width(), t.height(), false);
 
   gx::DrawLayer dl;
+  dl.setBGColor(.3f,.1f,.1f);
   gx::DrawContext dc{dl};
   int lastCode = 0;
 
