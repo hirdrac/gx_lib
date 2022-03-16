@@ -11,6 +11,7 @@
 // TODO: gradient function instead of set gradient/color points
 
 #pragma once
+#include "DrawLayer.hh"
 #include "DrawList.hh"
 #include "Texture.hh"
 #include "Color.hh"
@@ -43,6 +44,7 @@ class gx::DrawContext
 {
  public:
   DrawContext(DrawList& dl) : _data{&dl} { init(); }
+  DrawContext(DrawLayer& dl) : DrawContext(dl.entries) { }
 
   // Low-level data entry
   void clear() { init(); _data->clear(); _dataColor = 0; }

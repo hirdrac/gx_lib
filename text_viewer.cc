@@ -157,7 +157,7 @@ int main(int argc, char** argv)
   int topLine = 0;
 
   gx::DrawLayer dl;
-  gx::DrawContext dc{dl.entries};
+  gx::DrawContext dc{dl};
   gx::TextFormatting tf{&fnt};
 
   // main loop

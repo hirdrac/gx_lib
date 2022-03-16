@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
   }
 
   gx::DrawLayer dl;
-  gx::DrawContext dc{dl.entries};
+  gx::DrawContext dc{dl};
   bool refresh = true;
   constexpr int border = 8;
 

@@ -201,7 +201,7 @@ int main(int argc, char** argv)
   int page = 0, gfxPerPage = 0, maxPage = 0;
   bool redraw = false;
   gx::DrawLayer dl;
-  gx::DrawContext dc{dl.entries};
+  gx::DrawContext dc{dl};
 
   for (;;) {
     // draw frame
