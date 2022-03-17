@@ -12,7 +12,7 @@
 #include "DrawEntry.hh"
 #include "Image.hh"
 #include "Color.hh"
-#include "Camera.hh"
+#include "Projection.hh"
 #include "Logger.hh"
 #include "OpenGL.hh"
 //#include "Print.hh"
