@@ -5,9 +5,7 @@
 
 #include "Renderer.hh"
 #include "System.hh"
-#include "Camera.hh"
 #include <GLFW/glfw3.h>
-#include <atomic>
 #include <mutex>
 using namespace gx;
 
