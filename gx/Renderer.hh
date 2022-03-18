@@ -4,10 +4,8 @@
 //
 
 // TODO: texture wrap settings
-// TODO: frame stats (draw calls, buffer size, layers)
+// TODO: frame stats (draw calls, buffer size)
 // TODO: additional mem stats (textures, combined texture size)
-// TODO: optional clear depth for layer
-// TODO: clear draw data from single layer/layer range
 
 #pragma once
 #include "DrawLayer.hh"
