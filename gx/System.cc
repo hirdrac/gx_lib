@@ -61,7 +61,7 @@ std::string gx::getClipboardFull()
 
   initGLFW();
   const char* txt = glfwGetClipboardString(nullptr);
-  return (txt == nullptr) ? std::string() : txt;
+  return (txt == nullptr) ? std::string{} : txt;
 }
 
 std::string gx::getClipboardFirstLine()
@@ -70,9 +70,9 @@ std::string gx::getClipboardFirstLine()
 
   initGLFW();
   const char* txt = glfwGetClipboardString(nullptr);
-  if (txt == nullptr) { return std::string(); }
+  if (txt == nullptr) { return {}; }
 
-  std::string_view sv{txt};
+  const std::string_view sv{txt};
   return std::string{sv.substr(0, sv.find('\n'))};
 }
 
