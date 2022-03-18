@@ -11,7 +11,6 @@
 
 #pragma once
 #include "DrawLayer.hh"
-#include "Color.hh"
 #include "Types.hh"
 #include <initializer_list>
 
@@ -19,7 +18,6 @@
 struct GLFWwindow;
 namespace gx {
   class Image;
-  struct DrawEntry;
   class Renderer;
 }
 
