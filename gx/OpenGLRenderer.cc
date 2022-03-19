@@ -654,22 +654,27 @@ void OpenGLRenderer::renderFrame()
   for (auto& t : _textures) { t.second.unit = -1; }
 
   if (_drawCalls.empty()) { return; }
+  const DrawCall& firstCall = _drawCalls.front();
 
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
   GX_GLCALL(glFrontFace, GL_CW);
 
   _currentGLCap = -1; // force all capabilities to be set at first drawcall
-  setGLCapabilities(BLEND);
+  if (firstCall.layerPtr->cap == -1) {
+    setGLCapabilities(BLEND);
+  }
 
   _uniformBuf.bindBase(GL_UNIFORM_BUFFER, 0);
 
   bool udChanged = true;
   UniformData ud{};
 
-  // default 2D projection
-  ud.viewT = Mat4Identity;
-  ud.projT = orthoProjection(float(_width), float(_height));
+  if (!firstCall.layerPtr->transformSet) {
+    // default 2D projection
+    ud.viewT = Mat4Identity;
+    ud.projT = orthoProjection(float(_width), float(_height));
+  }
 
   // draw
   _vao.bind();
