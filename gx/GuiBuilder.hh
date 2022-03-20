@@ -1,5 +1,5 @@
 //
-// GuiBuilder.hh
+// gx/GuiBuilder.hh
 // Copyright (C) 2022 Richard Bradley
 //
 // Functions for creating GuiElem objects for use with Gui class
@@ -7,6 +7,9 @@
 
 #pragma once
 #include "Gui.hh"
+#include "Align.hh"
+#include "Types.hh"
+#include <string_view>
 
 
 namespace gx {
