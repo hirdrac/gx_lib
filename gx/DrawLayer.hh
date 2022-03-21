@@ -26,6 +26,8 @@ struct gx::DrawLayer
 
   // layer specific attributes/flags
   Mat4 view, proj;
+  Vec3 lightPos{};
+  RGBA8 lightVal = 0;
   RGBA8 modColor = packRGBA8(WHITE);
   RGBA8 bgColor = 0;
   int32_t cap = -1;
