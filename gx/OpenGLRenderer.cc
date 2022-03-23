@@ -124,6 +124,9 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     "layout(std140) uniform ub0 {"\
     "  mat4 viewT;"\
     "  mat4 projT;"\
+    "  vec3 lightPos;"\
+    "  uint lightA;"\
+    "  uint lightD;"\
     "  uint modColor;"\
     "};"
 
@@ -177,9 +180,45 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }";
   _sp[2] = makeProgram(SP1V_SRC, SP2F_SRC);
 
+  // **** 3d shading w/ lighting ****
+  static const char* SP3V_SRC =
+    "layout(location = 0) in vec3 in_pos;"   // x,y,z
+    "layout(location = 1) in vec3 in_norm;"  // nx,ny,nz
+    "layout(location = 3) in uint in_color;"
+    UNIFORM_BLOCK_SRC
+    "out vec3 v_pos;"
+    "out vec3 v_norm;"
+    "out vec4 v_color;"
+    "out vec3 v_lightPos;"
+    "out vec3 v_lightA;"
+    "out vec3 v_lightD;"
+    "void main() {"
+    "  v_pos = in_pos;"
+    "  v_norm = in_norm;"
+    "  v_color = unpackUnorm4x8(in_color) * unpackUnorm4x8(modColor);"
+    "  v_lightPos = lightPos;"
+    "  v_lightA = unpackUnorm4x8(lightA).rgb;"
+    "  v_lightD = unpackUnorm4x8(lightD).rgb;"
+    "  gl_Position = projT * viewT * vec4(in_pos, 1);"
+    "}";
+  static const char* SP3F_SRC =
+    "in vec3 v_pos;"
+    "in vec3 v_norm;"
+    "in vec4 v_color;"
+    "in vec3 v_lightPos;"
+    "in vec3 v_lightA;"
+    "in vec3 v_lightD;"
+    "out vec4 fragColor;"
+    "void main() {"
+    "  vec3 lightDir = normalize(v_lightPos - v_pos);"
+    "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
+    "  fragColor = v_color * vec4((v_lightD * lt) + v_lightA, 1.0);"
+    "}";
+    _sp[3] = makeProgram(SP3V_SRC, SP3F_SRC);
+
   // uniform location cache
   bool status = true;
-  for (int i = 0; i < 3; ++i) {
+  for (int i = 0; i < SHADER_COUNT; ++i) {
     GLProgram& p = _sp[i];
     status = status && p;
     p.setUniformBlockBinding(p.getUniformBlockIndex("ub0"), 0);
@@ -233,7 +272,7 @@ TextureID OpenGLRenderer::setTexture(
   if (!t || t.width() != img.width() || t.height() != img.height()
       || t.internalFormat() != texformat) {
     t.init(std::max(1, levels), texformat, img.width(), img.height());
-    ePtr->shader = (img.channels() == 1) ? 1 : 2;
+    ePtr->channels = img.channels();
   }
 
   t.setSubImage2D(
@@ -690,8 +729,8 @@ void OpenGLRenderer::renderFrame()
     if (lPtr->cap >= 0) { setGLCapabilities(lPtr->cap); }
 
     bool setUnit = false;
-    int shader = 0; // solid color shader
-    if (call.texID > 0) {
+    int shader = lPtr->useLight ? 3 : 0; // solid color shader
+    if (call.texID != 0) {
       // shader uses texture - determine texture unit & bind if necessary
       // (FIXME: no max texture units check currently)
       const auto itr = _textures.find(call.texID);
@@ -703,7 +742,8 @@ void OpenGLRenderer::renderFrame()
 	}
         setUnit = (entry.unit != texUnit);
         texUnit = entry.unit;
-	shader = entry.shader; // mono or color texture shader (1 or 2)
+        // set mono or color texture shader
+        shader = (entry.channels == 1) ? 1 : 2;
       }
     }
 
@@ -737,6 +777,13 @@ void OpenGLRenderer::renderFrame()
       if (lPtr->transformSet) {
         ud.viewT = lPtr->view;
         ud.projT = lPtr->proj;
+        udChanged = true;
+      }
+
+      if (lPtr->useLight) {
+        ud.lightPos = lPtr->lightPos;
+        ud.lightA = lPtr->lightA;
+        ud.lightD = lPtr->lightD;
         udChanged = true;
       }
 

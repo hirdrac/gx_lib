@@ -34,13 +34,18 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
  private:
   int _width = 0, _height = 0;
-  GLProgram _sp[3];
-  GLUniform1i _sp_texUnit[3];
+
+  static constexpr int SHADER_COUNT = 4;
+  GLProgram _sp[SHADER_COUNT];
+  GLUniform1i _sp_texUnit[SHADER_COUNT];
 
   GLBuffer _uniformBuf;
   struct UniformData {
     Mat4 viewT;
     Mat4 projT;
+    Vec3 lightPos;
+    uint32_t lightA;
+    uint32_t lightD;
     uint32_t modColor;
   };
 
@@ -51,7 +56,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     GLTexture2D tex;
     int flags = 0;
     int unit = -1;
-    int shader = 0; // 1-mono, 2-color
+    int channels = 0;
   };
   std::unordered_map<TextureID,TextureEntry> _textures;
 
