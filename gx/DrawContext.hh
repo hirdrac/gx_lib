@@ -31,12 +31,12 @@ namespace gx {
 struct gx::TextFormatting
 {
   const Font* font = nullptr;
-  float lineSpacing = 0;   // extra spacing between lines
-  float glyphSpacing = 0;  // extra spacing between glyphs
-  Vec2 advX = {1,0};       // dir of next glyph
-  Vec2 advY = {0,1};       // dir of next line
-  Vec2 glyphX = {1,0};     // glyph quad sides
-  Vec2 glyphY = {0,1};
+  float lineSpacing = 0;  // extra spacing between lines
+  float glyphSpacing = 0; // extra spacing between glyphs
+  Vec2 advX{1,0};         // dir of next glyph
+  Vec2 advY{0,1};         // dir of next line
+  Vec2 glyphX{1,0};       // glyph quad sides
+  Vec2 glyphY{0,1};
   int32_t unknownCode = '*'; // code to use for values not in font
 };
 
@@ -71,7 +71,11 @@ class gx::DrawContext
 
   inline void lineWidth(float w);
 
-  void normal(const Vec3& n) { add(CMD_normal3, n.x, n.y, n.z); }
+  void normal(float x, float y, float z) { add(CMD_normal3, x, y, z); }
+  template<class T> void normal(const T& n) {
+    static_assert(std::size(n) >= 3);
+    normal(n[0], n[1], n[2]);
+  }
 
   // line drawing
   void line(Vec2 a, Vec2 b) {
