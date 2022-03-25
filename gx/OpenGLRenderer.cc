@@ -407,7 +407,7 @@ void OpenGLRenderer::draw(
     uint32_t color = 0;
     TextureID tid = 0;
     float lw = 1.0f;
-    Vec3 normal{0,0,1};
+    Vec3 normal{0,0,0};
 
     const DrawEntry* data     = lPtr->entries.data();
     const DrawEntry* data_end = data + lPtr->entries.size();
