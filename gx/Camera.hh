@@ -55,11 +55,11 @@ class gx::Camera
  private:
   // view config
   CoordSystemType _coordSystem = LEFT_HANDED;
-  Vec3 _pos = {0,0,0};
-  Vec3 _vnormal = {0,0,1};
-  Vec3 _vup = {0,1,0};
-  Vec3 _vtop = {0,1,0};
-  Vec3 _vside = {1,0,0};
+  Vec3 _pos{0,0,0};
+  Vec3 _vnormal{0,0,1};
+  Vec3 _vup{0,1,0};
+  Vec3 _vtop{0,1,0};
+  Vec3 _vside{1,0,0};
 
   // projection config
   ProjectionType _projection = PERSPECTIVE;
