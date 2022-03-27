@@ -110,6 +110,7 @@ void OpenGLRenderer::setWindowHints(bool debug)
 
 bool OpenGLRenderer::init(GLFWwindow* win)
 {
+  std::lock_guard lg{_glMutex};
   _window = win;
   setCurrentContext(win);
   if (!GLSetupContext(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
@@ -216,6 +217,8 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     "}";
     _sp[3] = makeProgram(SP3V_SRC, SP3F_SRC);
 
+  #undef UNIFORM_BLOCK_SRC
+
   // uniform location cache
   bool status = true;
   for (int i = 0; i < SHADER_COUNT; ++i) {
@@ -224,8 +227,6 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     p.setUniformBlockBinding(p.getUniformBlockIndex("ub0"), 0);
     _sp_texUnit[i] = p.getUniformLocation("texUnit");
   }
-
-  #undef UNIFORM_BLOCK_SRC
 
 #if 0
   // debug output
@@ -255,10 +256,15 @@ TextureID OpenGLRenderer::setTexture(
     default: return 0;
   }
 
-  TextureEntry* ePtr;
+  bool newTexture = false;
   if (id <= 0) {
-    // new texture entry
     id = newTextureID();
+    newTexture = true;
+  }
+
+  std::lock_guard lg{_glMutex};
+  TextureEntry* ePtr;
+  if (newTexture) {
     ePtr = &_textures[id];
   } else {
     // update existing entry
@@ -310,12 +316,15 @@ TextureID OpenGLRenderer::setTexture(
   return id;
 }
 
+void OpenGLRenderer::freeTexture(TextureID id)
+{
+  std::lock_guard lg{_glMutex};
+  _textures.erase(id);
+}
+
 void OpenGLRenderer::draw(
   int width, int height, std::initializer_list<DrawLayer*> dl)
 {
-  _width = width;
-  _height = height;
-
   unsigned int vsize = 0; // vertices needed
   for (const DrawLayer* lPtr : dl) {
     const DrawEntry* data     = lPtr->entries.data();
@@ -362,7 +371,11 @@ void OpenGLRenderer::draw(
     assert(d == data_end);
   }
 
+  std::lock_guard lg{_glMutex};
   _drawCalls.clear();
+  _width = width;
+  _height = height;
+
   if (vsize == 0) {
     _vbo = GLBuffer();
     _vao = GLVertexArray();
@@ -685,6 +698,7 @@ void OpenGLRenderer::draw(
 
 void OpenGLRenderer::renderFrame()
 {
+  std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
   GX_GLCALL(glViewport, 0, 0, _width, _height);
   GX_GLCALL(glClearDepth, 1.0);

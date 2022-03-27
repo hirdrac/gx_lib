@@ -12,6 +12,7 @@
 #include "GLTexture.hh"
 #include <vector>
 #include <unordered_map>
+#include <mutex>
 
 
 namespace gx {
@@ -27,7 +28,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   TextureID setTexture(TextureID id, const Image& img, int levels,
                        FilterType minFilter, FilterType magFilter) override;
-  void freeTexture(TextureID id) override { _textures.erase(id); }
+  void freeTexture(TextureID id) override;
   void draw(int width, int height,
             std::initializer_list<DrawLayer*> dl) override;
   void renderFrame() override;
@@ -69,6 +70,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   };
   std::vector<DrawCall> _drawCalls;
   int _currentGLCap = -1; // current GL capability state
+  std::mutex _glMutex;
 
   void addDrawCall(GLsizei count, GLenum mode, TextureID texID,
                    float lineWidth, const DrawLayer* layerPtr) {
