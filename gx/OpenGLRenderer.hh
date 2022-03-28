@@ -66,7 +66,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     GLenum mode; // GL_LINES, GL_TRIANGLES
     TextureID texID;
     float lineWidth;
-    const DrawLayer* layerPtr = nullptr;
+    const DrawLayer* layerPtr;
   };
   std::vector<DrawCall> _drawCalls;
   int _currentGLCap = -1; // current GL capability state
