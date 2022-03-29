@@ -61,28 +61,93 @@ class gx::OpenGLRenderer final : public gx::Renderer
   };
   std::unordered_map<TextureID,TextureEntry> _textures;
 
-  struct DrawCall {
-    GLsizei count;
-    GLenum mode; // GL_LINES, GL_TRIANGLES
-    TextureID texID;
-    float lineWidth;
-    const DrawLayer* layerPtr;
+  enum GLOperation : uint32_t {
+    OP_null,
+
+    // set uniform data
+    OP_viewT,         // <OP val*16> (17)
+    OP_projT,         // <OP val*16> (17)
+    OP_modColor,      // <OP rgba8> (2)
+    OP_light,         // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
+    OP_no_light,      // <OP> (1)
+
+    // set GL state
+    OP_capabilities,  // <OP cap> (2)
+    OP_lineWidth,     // <OP width> (2)
+    OP_bgColor,       // <OP rgba8> (2)
+
+    // draw
+    OP_clear_color,    // <OP> (1)
+    OP_clear_depth,    // <OP> (1)
+    OP_clear_all,      // <OP> (1)
+    OP_draw_lines,     // <OP first count> (3)
+    OP_draw_triangles, // <OP first count texID> (4)
   };
-  std::vector<DrawCall> _drawCalls;
+
+  struct OpEntry {
+    union {
+      GLOperation op;
+      float    fval;
+      int32_t  ival;
+      uint32_t uval;
+    };
+
+    OpEntry(GLOperation o) : op{o} { }
+    OpEntry(float f) : fval{f} { }
+    OpEntry(int32_t i) : ival{i} { }
+    OpEntry(uint32_t u) : uval{u} { }
+  };
+  static_assert(sizeof(OpEntry) == 4);
+
+  std::vector<OpEntry> _opData;
+  GLOperation _lastOp = OP_null;
   int _currentGLCap = -1; // current GL capability state
   std::mutex _glMutex;
 
-  void addDrawCall(GLsizei count, GLenum mode, TextureID texID,
-                   float lineWidth, const DrawLayer* layerPtr) {
-    if (!_drawCalls.empty()) {
-      DrawCall& dc = _drawCalls.back();
-      if (mode == dc.mode && texID == dc.texID && lineWidth == dc.lineWidth
-          && layerPtr == dc.layerPtr) {
-	dc.count += count;
-	return;
+  void addOp(GLOperation op, const Mat4& m) {
+    _opData.reserve(_opData.size() + 17);
+    _opData.push_back(op);
+    for (float v : m) { _opData.push_back(v); }
+    _lastOp = op;
+  }
+
+  template<class... Args>
+  void addOp(GLOperation op, const Args&... args) {
+    _opData.reserve(_opData.size() + sizeof...(args) + 1);
+    _opData.push_back(op);
+    (_opData.push_back(args), ...);
+    _lastOp = op;
+  }
+
+  void addDrawLines(int32_t& first, int32_t count) {
+    if (_lastOp == OP_draw_lines) {
+      const std::size_t s = _opData.size();
+      const int32_t last_first = _opData[s - 2].ival;
+      int32_t& last_count = _opData[s - 1].ival;
+      if (first == (last_first + last_count)) {
+        last_count += count;
+        first += count;
+        return;
       }
     }
-    _drawCalls.push_back({count, mode, texID, lineWidth, layerPtr});
+    addOp(OP_draw_lines, first, count);
+    first += count;
+  }
+
+  void addDrawTriangles(int32_t& first, int32_t count, TextureID tid) {
+    if (_lastOp == OP_draw_triangles) {
+      const std::size_t s = _opData.size();
+      const int32_t last_first = _opData[s - 3].ival;
+      int32_t& last_count = _opData[s - 2].ival;
+      const TextureID last_tid = _opData[s - 1].uval;
+      if (first == (last_first + last_count) && last_tid == tid) {
+        last_count += count;
+        first += count;
+        return;
+      }
+    }
+    addOp(OP_draw_triangles, first, count, tid);
+    first += count;
   }
 
   void setGLCapabilities(int cap);

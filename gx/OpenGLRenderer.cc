@@ -18,6 +18,7 @@
 //#include "Print.hh"
 #include <GLFW/glfw3.h>
 #include <cassert>
+#include <cstring>
 using namespace gx;
 
 
@@ -74,12 +75,6 @@ namespace {
             fval(ptr), fval(ptr), fval(ptr),  // nx,ny,nz
             fval(ptr), fval(ptr), uval(ptr)}; // s,t,c
   }
-
-#if 0
-  // unused for now
-  inline int32_t ival(const DrawEntry*& ptr) {
-    return (ptr++)->ival; }
-#endif
 
   // vertex output functions
   inline void vertex2d(Vertex3NTC*& ptr, Vec2 pt, uint32_t c) {
@@ -372,22 +367,15 @@ void OpenGLRenderer::draw(
   }
 
   std::lock_guard lg{_glMutex};
-  _drawCalls.clear();
+  _opData.clear();
+  _lastOp = OP_null;
   _width = width;
   _height = height;
 
   if (vsize == 0) {
-    _vbo = GLBuffer();
-    _vao = GLVertexArray();
-
-    if (dl.size() != 0) {
-      // use state of first layer only
-      addDrawCall(0, 0, 0, 0, *dl.begin());
-    }
-    return;
-  }
-
-  if (!_vbo) {
+    _vbo = GLBuffer{};
+    _vao = GLVertexArray{};
+  } else if (!_vbo) {
     _vbo.init();
     _vao.init();
     _vao.enableAttrib(0); // vec3 (x,y,z)
@@ -400,9 +388,12 @@ void OpenGLRenderer::draw(
     _vao.setAttribI(3, _vbo, 32, 36, 1, GL_UNSIGNED_INT);
   }
 
-  _vbo.setData(GLsizei(vsize * sizeof(Vertex3NTC)), nullptr, GL_STREAM_DRAW);
-  Vertex3NTC* ptr = static_cast<Vertex3NTC*>(_vbo.map(GL_WRITE_ONLY));
-  assert(ptr != nullptr);
+  Vertex3NTC* ptr = nullptr;
+  if (_vbo) {
+    _vbo.setData(GLsizei(vsize * sizeof(Vertex3NTC)), nullptr, GL_STREAM_DRAW);
+    ptr = static_cast<Vertex3NTC*>(_vbo.map(GL_WRITE_ONLY));
+    assert(ptr != nullptr);
+  }
 
   // general triangle layout
   //  0--1
@@ -410,16 +401,47 @@ void OpenGLRenderer::draw(
   //  |/ |
   //  2--3
 
+  int32_t first = 0;
   for (const DrawLayer* lPtr : dl) {
+    if (lPtr->transformSet) {
+      addOp(OP_viewT, lPtr->view);
+      addOp(OP_projT, lPtr->proj);
+    }
+
+    if (lPtr->useLight) {
+      addOp(OP_light, lPtr->lightPos.x, lPtr->lightPos.y, lPtr->lightPos.z,
+            lPtr->lightA, lPtr->lightD);
+    } else {
+      addOp(OP_no_light);
+    }
+
+    if (lPtr->modColor != 0) {
+      addOp(OP_modColor, lPtr->modColor);
+    }
+
+    if (lPtr->clearDepth && lPtr->bgColor != 0) {
+      addOp(OP_bgColor, lPtr->bgColor);
+      addOp(OP_clear_all);
+    } else if (lPtr->clearDepth) {
+      addOp(OP_clear_depth);
+    } else if (lPtr->bgColor != 0) {
+      addOp(OP_bgColor, lPtr->bgColor);
+      addOp(OP_clear_color);
+    }
+
+    if (lPtr->cap >= 0) {
+      addOp(OP_capabilities, lPtr->cap);
+    } else if (lPtr == *dl.begin()) {
+      // set default initial capabilities
+      addOp(OP_capabilities, BLEND);
+    }
+
     if (lPtr->entries.empty()) {
-      // add dummy drawcall for state changes of layer
-      addDrawCall(0, 0, 0, 0, lPtr);
       continue;
     }
 
     uint32_t color = 0;
     TextureID tid = 0;
-    float lw = 1.0f;
     Vec3 normal{0,0,0};
 
     const DrawEntry* data     = lPtr->entries.data();
@@ -427,36 +449,38 @@ void OpenGLRenderer::draw(
     for (const DrawEntry* d = data; d != data_end; ) {
       const DrawCmd cmd = (d++)->cmd;
       switch (cmd) {
-        case CMD_color:     color = uval(d); break;
-        case CMD_texture:   tid   = uval(d); break;
-        case CMD_lineWidth: lw    = fval(d); break;
-
+        case CMD_color:   color  = uval(d); break;
+        case CMD_texture: tid    = uval(d); break;
         case CMD_normal3: normal = fval3(d); break;
+
+        case CMD_lineWidth:
+          addOp(OP_lineWidth, fval(d));
+          break;
 
         case CMD_line2: {
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
-          addDrawCall(2, GL_LINES, 0, lw, lPtr);
+          addDrawLines(first, 2);
           break;
         }
         case CMD_line3: {
           vertex3d(ptr, fval3(d), color);
           vertex3d(ptr, fval3(d), color);
-          addDrawCall(2, GL_LINES, 0, lw, lPtr);
+          addDrawLines(first, 2);
           break;
         }
         case CMD_triangle2: {
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
-          addDrawCall(3, GL_TRIANGLES, 0, lw, lPtr);
+          addDrawTriangles(first, 3, 0);
           break;
         }
         case CMD_triangle3: {
           vertex3d(ptr, fval3(d), normal, color);
           vertex3d(ptr, fval3(d), normal, color);
           vertex3d(ptr, fval3(d), normal, color);
-          addDrawCall(3, GL_TRIANGLES, 0, lw, lPtr);
+          addDrawTriangles(first, 3, 0);
           break;
         }
         case CMD_triangle2T: {
@@ -466,7 +490,7 @@ void OpenGLRenderer::draw(
           vertex2d(ptr, p0, t0, color);
           vertex2d(ptr, p1, t1, color);
           vertex2d(ptr, p2, t2, color);
-          addDrawCall(3, GL_TRIANGLES, tid, lw, lPtr);
+          addDrawTriangles(first, 3, tid);
           break;
         }
         case CMD_triangle3T: {
@@ -476,7 +500,7 @@ void OpenGLRenderer::draw(
           vertex3d(ptr, p0, normal, t0, color);
           vertex3d(ptr, p1, normal, t1, color);
           vertex3d(ptr, p2, normal, t2, color);
-          addDrawCall(3, GL_TRIANGLES, tid, lw, lPtr);
+          addDrawTriangles(first, 3, tid);
           break;
         }
         case CMD_triangle2C: {
@@ -486,7 +510,7 @@ void OpenGLRenderer::draw(
           vertex2d(ptr, p0, c0);
           vertex2d(ptr, p1, c1);
           vertex2d(ptr, p2, c2);
-          addDrawCall(3, GL_TRIANGLES, 0, lw, lPtr);
+          addDrawTriangles(first, 3, 0);
           break;
         }
         case CMD_triangle3C: {
@@ -496,7 +520,7 @@ void OpenGLRenderer::draw(
           vertex3d(ptr, p0, normal, c0);
           vertex3d(ptr, p1, normal, c1);
           vertex3d(ptr, p2, normal, c2);
-          addDrawCall(3, GL_TRIANGLES, 0, lw, lPtr);
+          addDrawTriangles(first, 3, 0);
           break;
         }
         case CMD_triangle2TC: {
@@ -506,7 +530,7 @@ void OpenGLRenderer::draw(
           vertex2d(ptr, p0, t0, c0);
           vertex2d(ptr, p1, t1, c1);
           vertex2d(ptr, p2, t2, c2);
-          addDrawCall(3, GL_TRIANGLES, tid, lw, lPtr);
+          addDrawTriangles(first, 3, tid);
           break;
         }
         case CMD_triangle3TC: {
@@ -519,13 +543,14 @@ void OpenGLRenderer::draw(
           vertex3d(ptr, p0, normal, t0, c0);
           vertex3d(ptr, p1, normal, t1, c1);
           vertex3d(ptr, p2, normal, t2, c2);
-          addDrawCall(3, GL_TRIANGLES, tid, lw, lPtr);
+          addDrawTriangles(first, 3, tid);
           break;
         }
         case CMD_triangle3NTC: {
           *ptr++ = vertex_val(d);
           *ptr++ = vertex_val(d);
           *ptr++ = vertex_val(d);
+          addDrawTriangles(first, 3, tid);
           break;
         }
         case CMD_quad2: {
@@ -537,7 +562,7 @@ void OpenGLRenderer::draw(
           vertex2d(ptr, p1, color);
           vertex2d(ptr, p3, color);
           vertex2d(ptr, p2, color);
-          addDrawCall(6, GL_TRIANGLES, 0, lw, lPtr);
+          addDrawTriangles(first, 6, 0);
           break;
         }
         case CMD_quad3: {
@@ -549,7 +574,7 @@ void OpenGLRenderer::draw(
           vertex3d(ptr, p1, normal, color);
           vertex3d(ptr, p3, normal, color);
           vertex3d(ptr, p2, normal, color);
-          addDrawCall(6, GL_TRIANGLES, 0, lw, lPtr);
+          addDrawTriangles(first, 6, 0);
           break;
         }
         case CMD_quad2T: {
@@ -563,7 +588,7 @@ void OpenGLRenderer::draw(
           vertex2d(ptr, p1, t1, color);
           vertex2d(ptr, p3, t3, color);
           vertex2d(ptr, p2, t2, color);
-          addDrawCall(6, GL_TRIANGLES, tid, lw, lPtr);
+          addDrawTriangles(first, 6, tid);
           break;
         }
         case CMD_quad3T: {
@@ -577,7 +602,7 @@ void OpenGLRenderer::draw(
           vertex3d(ptr, p1, normal, t1, color);
           vertex3d(ptr, p3, normal, t3, color);
           vertex3d(ptr, p2, normal, t2, color);
-          addDrawCall(6, GL_TRIANGLES, tid, lw, lPtr);
+          addDrawTriangles(first, 6, tid);
           break;
         }
         case CMD_quad2C: {
@@ -591,7 +616,7 @@ void OpenGLRenderer::draw(
           vertex2d(ptr, p1, c1);
           vertex2d(ptr, p3, c3);
           vertex2d(ptr, p2, c2);
-          addDrawCall(6, GL_TRIANGLES, 0, lw, lPtr);
+          addDrawTriangles(first, 6, 0);
           break;
         }
         case CMD_quad3C: {
@@ -605,7 +630,7 @@ void OpenGLRenderer::draw(
           vertex3d(ptr, p1, normal, c1);
           vertex3d(ptr, p3, normal, c3);
           vertex3d(ptr, p2, normal, c2);
-          addDrawCall(6, GL_TRIANGLES, 0, lw, lPtr);
+          addDrawTriangles(first, 6, 0);
           break;
         }
         case CMD_quad2TC: {
@@ -619,7 +644,7 @@ void OpenGLRenderer::draw(
           vertex2d(ptr, p1, t1, c1);
           vertex2d(ptr, p3, t3, c3);
           vertex2d(ptr, p2, t2, c2);
-          addDrawCall(6, GL_TRIANGLES, tid, lw, lPtr);
+          addDrawTriangles(first, 6, tid);
           break;
         }
         case CMD_quad3TC: {
@@ -637,7 +662,7 @@ void OpenGLRenderer::draw(
           vertex3d(ptr, p1, normal, t1, c1);
           vertex3d(ptr, p3, normal, t3, c3);
           vertex3d(ptr, p2, normal, t2, c2);
-          addDrawCall(6, GL_TRIANGLES, tid, lw, lPtr);
+          addDrawTriangles(first, 6, tid);
           break;
         }
         case CMD_quad3NTC: {
@@ -651,6 +676,7 @@ void OpenGLRenderer::draw(
           *ptr++ = v1;
           *ptr++ = v3;
           *ptr++ = v2;
+          addDrawTriangles(first, 6, tid);
           break;
         }
         case CMD_rectangle: {
@@ -662,7 +688,7 @@ void OpenGLRenderer::draw(
           vertex2d(ptr, p1, color);
           vertex2d(ptr, p3, color);
           vertex2d(ptr, p2, color);
-          addDrawCall(6, GL_TRIANGLES, 0, lw, lPtr);
+          addDrawTriangles(first, 6, 0);
           break;
         }
         case CMD_rectangleT: {
@@ -676,7 +702,7 @@ void OpenGLRenderer::draw(
           vertex2d(ptr, p1, t1, color);
           vertex2d(ptr, p3, t3, color);
           vertex2d(ptr, p2, t2, color);
-          addDrawCall(6, GL_TRIANGLES, tid, lw, lPtr);
+          addDrawTriangles(first, 6, tid);
           break;
         }
         default:
@@ -686,13 +712,13 @@ void OpenGLRenderer::draw(
     }
   }
 
-  _vbo.unmap();
+  if (_vbo) { _vbo.unmap(); }
 
 #if 0
   std::size_t dsize = 0;
   for (const DrawLayer* lPtr : dl) { dsize += lPtr->entries.size(); }
   gx::println_err("entries:", dsize, "  vertices:", vsize,
-                  "  drawCalls:", _drawCalls.size());
+                  "  opData:", _opData.size());
 #endif
 }
 
@@ -706,125 +732,133 @@ void OpenGLRenderer::renderFrame()
   // clear texture unit assignments
   for (auto& t : _textures) { t.second.unit = -1; }
 
-  if (_drawCalls.empty()) { return; }
-  const DrawCall& firstCall = _drawCalls.front();
+  if (_opData.empty()) { return; }
 
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
   GX_GLCALL(glFrontFace, GL_CW);
 
-  _currentGLCap = -1; // force all capabilities to be set at first drawcall
-  if (firstCall.layerPtr->cap == -1) {
-    setGLCapabilities(BLEND);
-  }
-
+  _currentGLCap = -1; // force all capabilities to be set initially
   _uniformBuf.bindBase(GL_UNIFORM_BUFFER, 0);
 
   bool udChanged = true;
   UniformData ud{};
-
-  if (!firstCall.layerPtr->transformSet) {
-    // default 2D projection
-    ud.viewT = Mat4Identity;
-    ud.projT = orthoProjection(float(_width), float(_height));
-  }
+  // default 2D projection
+  ud.viewT = Mat4Identity;
+  ud.projT = orthoProjection(float(_width), float(_height));
 
   // draw
   _vao.bind();
-  GLint first = 0;
   int lastShader = -1;
-  float lastLineWidth = 0.0f;
   int nextTexUnit = 0;
-  const DrawLayer* lastLayer = nullptr;
   int texUnit = -1;
+  bool useLight = false;
+  bool setUnit = false;
 
-  for (const DrawCall& call : _drawCalls) {
-    const DrawLayer* lPtr = call.layerPtr;
-    if (lPtr->cap >= 0) { setGLCapabilities(lPtr->cap); }
-
-    bool setUnit = false;
-    int shader = lPtr->useLight ? 3 : 0; // solid color shader
-    if (call.texID != 0) {
-      // shader uses texture - determine texture unit & bind if necessary
-      // (FIXME: no max texture units check currently)
-      const auto itr = _textures.find(call.texID);
-      if (itr != _textures.end()) {
-	auto& [id,entry] = *itr;
-	if (entry.unit < 0) {
-	  entry.unit = nextTexUnit++;
-	  entry.tex.bindUnit(GLuint(entry.unit));
-	}
-        setUnit = (entry.unit != texUnit);
-        texUnit = entry.unit;
-        // set mono or color texture shader
-        shader = (entry.channels == 1) ? 1 : 2;
-      }
-    }
-
-    // shader setup
-    if (shader != lastShader) {
-      _sp[shader].use();
-      setUnit = bool(_sp_texUnit[shader]);
-    }
-    if (setUnit) { _sp_texUnit[shader].set(texUnit); }
-
-    // uniform block update
-    if (lastLayer != lPtr) {
-      lastLayer = lPtr;
-
-      GLbitfield clearMask = 0;
-      if (lPtr->bgColor != 0) {
-        const Color c = unpackRGBA8(lPtr->bgColor);
+  const OpEntry* data     = _opData.data();
+  const OpEntry* data_end = data + _opData.size();
+  for (const OpEntry* d = data; d < data_end; ) {
+    const GLOperation op = (d++)->op;
+    switch (op) {
+      case OP_viewT:
+        std::memcpy(ud.viewT.data(), d, sizeof(float)*16); d += 16;
+        udChanged = true;
+        break;
+      case OP_projT:
+        std::memcpy(ud.projT.data(), d, sizeof(float)*16); d += 16;
+        udChanged = true;
+        break;
+      case OP_modColor:
+        ud.modColor = (d++)->uval;
+        udChanged = true;
+        break;
+      case OP_light:
+        std::memcpy(ud.lightPos.data(), d, sizeof(float)*3); d += 3;
+        ud.lightA = (d++)->uval;
+        ud.lightD = (d++)->uval;
+        useLight = udChanged = true;
+        break;
+      case OP_no_light:
+        useLight = false;
+        break;
+      case OP_capabilities:
+        setGLCapabilities((d++)->ival);
+        break;
+      case OP_lineWidth:
+        GX_GLCALL(glLineWidth, (d++)->fval);
+        break;
+      case OP_bgColor: {
+        const Color c = unpackRGBA8((d++)->uval);
         GX_GLCALL(glClearColor, c.r, c.g, c.b, c.a);
-        clearMask |= GL_COLOR_BUFFER_BIT;
+        break;
       }
+      case OP_clear_color:
+        GX_GLCALL(glClear, GL_COLOR_BUFFER_BIT);
+        break;
+      case OP_clear_depth:
+        GX_GLCALL(glClear, GL_DEPTH_BUFFER_BIT);
+        break;
+      case OP_clear_all:
+        GX_GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        break;
+      case OP_draw_lines: {
+        const GLint first = (d++)->ival;
+        const GLsizei count = (d++)->ival;
+        if (udChanged) {
+          _uniformBuf.setSubData(0, sizeof(ud), &ud);
+          udChanged = false;
+        }
 
-      if (lPtr->clearDepth) {
-        clearMask |= GL_DEPTH_BUFFER_BIT;
-      }
+        if (lastShader != 0) {
+          lastShader = 0;
+          _sp[0].use();
+        }
 
-      if (clearMask != 0) {
-        GX_GLCALL(glClear, clearMask);
+        GX_GLCALL(glDrawArrays, GL_LINES, first, count);
+        break;
       }
+      case OP_draw_triangles: {
+        const GLint first = (d++)->ival;
+        const GLsizei count = (d++)->ival;
+        const TextureID tid = (d++)->uval;
+        if (udChanged) {
+          _uniformBuf.setSubData(0, sizeof(ud), &ud);
+          udChanged = false;
+        }
 
-      // layer specific uniform data
-      if (lPtr->transformSet) {
-        ud.viewT = lPtr->view;
-        ud.projT = lPtr->proj;
-        udChanged = true;
-      }
+        int shader = useLight ? 3 : 0;
+        if (tid != 0) {
+          // shader uses texture - determine texture unit & bind if necessary
+          // (FIXME: no max texture units check currently)
+          const auto itr = _textures.find(tid);
+          if (itr != _textures.end()) {
+            auto& [id,entry] = *itr;
+            if (entry.unit < 0) {
+              entry.unit = nextTexUnit++;
+              entry.tex.bindUnit(GLuint(entry.unit));
+            }
+            setUnit = (entry.unit != texUnit);
+            texUnit = entry.unit;
+            // set mono or color texture shader
+            shader = (entry.channels == 1) ? 1 : 2;
+          }
+        }
 
-      if (lPtr->useLight) {
-        ud.lightPos = lPtr->lightPos;
-        ud.lightA = lPtr->lightA;
-        ud.lightD = lPtr->lightD;
-        udChanged = true;
-      }
+        // shader setup
+        if (shader != lastShader) {
+          lastShader = shader;
+          _sp[shader].use();
+          setUnit = bool(_sp_texUnit[shader]);
+        }
+        if (setUnit) { _sp_texUnit[shader].set(texUnit); }
 
-      if (lPtr->modColor != ud.modColor) {
-        ud.modColor = lPtr->modColor;
-        udChanged = true;
+        GX_GLCALL(glDrawArrays, GL_TRIANGLES, first, count);
+        break;
       }
-
-      if (udChanged) {
-        _uniformBuf.setSubData(0, sizeof(ud), &ud);
-        udChanged = false;
-      }
+      default:
+        assert(op == OP_null);
+        break;
     }
-
-    if (call.count != 0) {
-      // line settings
-      if (call.mode == GL_LINES && call.lineWidth != lastLineWidth) {
-        GX_GLCALL(glLineWidth, call.lineWidth);
-        lastLineWidth = call.lineWidth;
-      }
-
-      // draw call
-      GX_GLCALL(glDrawArrays, call.mode, first, call.count);
-      first += call.count;
-    }
-
-    lastShader = shader;
   }
 
   // swap buffers & finish
