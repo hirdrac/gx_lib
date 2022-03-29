@@ -268,8 +268,9 @@ TextureID OpenGLRenderer::setTexture(
     ePtr = &(itr->second);
   }
 
-  GLTexture2D& t = ePtr->tex;
   setCurrentContext(_window);
+
+  GLTexture2D& t = ePtr->tex;
   if (!t || t.width() != img.width() || t.height() != img.height()
       || t.internalFormat() != texformat) {
     t.init(std::max(1, levels), texformat, img.width(), img.height());
@@ -290,17 +291,18 @@ TextureID OpenGLRenderer::setTexture(
     // GL_MIRROR_CLAMP_TO_EDGE
 
   if (minFilter != FILTER_UNSPECIFIED) {
+    GLint val;
     if (levels <= 1) {
-      t.setParameter(GL_TEXTURE_MIN_FILTER,
-                     (minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
+      val = (minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST;
     } else {
-      t.setParameter(GL_TEXTURE_MIN_FILTER,
-                     (minFilter == FILTER_LINEAR)
-                     ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR);
+      val = (minFilter == FILTER_LINEAR)
+        ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR;
       // other values:
       // GL_NEAREST_MIPMAP_NEAREST
       // GL_LINEAR_MIPMAP_NEAREST
     }
+
+    t.setParameter(GL_TEXTURE_MIN_FILTER, val);
   }
 
   if (magFilter != FILTER_UNSPECIFIED) {
@@ -314,6 +316,7 @@ TextureID OpenGLRenderer::setTexture(
 void OpenGLRenderer::freeTexture(TextureID id)
 {
   std::lock_guard lg{_glMutex};
+  setCurrentContext(_window);
   _textures.erase(id);
 }
 
@@ -367,6 +370,8 @@ void OpenGLRenderer::draw(
   }
 
   std::lock_guard lg{_glMutex};
+  setCurrentContext(_window);
+
   _opData.clear();
   _lastOp = OP_null;
   _width = width;
@@ -726,6 +731,7 @@ void OpenGLRenderer::renderFrame()
 {
   std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
+
   GX_GLCALL(glViewport, 0, 0, _width, _height);
   GX_GLCALL(glClearDepth, 1.0);
 
