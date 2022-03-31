@@ -2,7 +2,7 @@
 // gx/Window.hh
 // Copyright (C) 2022 Richard Bradley
 //
-// encapsulation of core graphics output & user input
+// encapsulation of OS specific window handling & user input
 //
 
 #pragma once
