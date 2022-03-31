@@ -408,9 +408,14 @@ void OpenGLRenderer::draw(
 
   int32_t first = 0;
   for (const DrawLayer* lPtr : dl) {
+    const bool firstLayer = (lPtr == *dl.begin());
     if (lPtr->transformSet) {
       addOp(OP_viewT, lPtr->view);
       addOp(OP_projT, lPtr->proj);
+    } else if (firstLayer) {
+      // default 2D projection
+      addOp(OP_viewT, Mat4Identity);
+      addOp(OP_projT, orthoProjection(float(_width), float(_height)));
     }
 
     if (lPtr->useLight) {
@@ -436,13 +441,9 @@ void OpenGLRenderer::draw(
 
     if (lPtr->cap >= 0) {
       addOp(OP_capabilities, lPtr->cap);
-    } else if (lPtr == *dl.begin()) {
+    } else if (firstLayer) {
       // set default initial capabilities
       addOp(OP_capabilities, BLEND);
-    }
-
-    if (lPtr->entries.empty()) {
-      continue;
     }
 
     uint32_t color = 0;
@@ -749,9 +750,6 @@ void OpenGLRenderer::renderFrame()
 
   bool udChanged = true;
   UniformData ud{};
-  // default 2D projection
-  ud.viewT = Mat4Identity;
-  ud.projT = orthoProjection(float(_width), float(_height));
 
   // draw
   _vao.bind();
