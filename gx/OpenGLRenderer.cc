@@ -9,6 +9,7 @@
 //     glfwSwapInterval(), glfwSwapBuffers() calls
 
 #include "OpenGLRenderer.hh"
+#include "DrawLayer.hh"
 #include "DrawEntry.hh"
 #include "Image.hh"
 #include "Color.hh"

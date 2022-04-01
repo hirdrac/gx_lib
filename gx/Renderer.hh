@@ -8,7 +8,6 @@
 // TODO: additional mem stats (textures, combined texture size)
 
 #pragma once
-#include "DrawLayer.hh"
 #include "Types.hh"
 #include <initializer_list>
 
@@ -17,6 +16,7 @@ struct GLFWwindow;
 namespace gx {
   class Image;
   class Renderer;
+  struct DrawLayer;
 }
 
 class gx::Renderer
