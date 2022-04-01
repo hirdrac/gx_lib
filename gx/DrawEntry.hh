@@ -17,7 +17,9 @@ namespace gx {
 
     // drawing commands
     CMD_line2,        // <cmd (x y)x2> (5)
+    CMD_line2C,       // <cmd (x y c)x2> (7)
     CMD_line3,        // <cmd (x y z)x2> (7)
+    CMD_line3C,       // <cmd (x y z c)x2> (9)
     CMD_triangle2,    // <cmd (x y)x3> (7)
     CMD_triangle3,    // <cmd (x y z)x3> (10)
     CMD_triangle2T,   // <cmd (x y s t)x3> (13)
