@@ -338,8 +338,8 @@ void OpenGLRenderer::draw(
         case CMD_lineWidth:    d += 2; break;
         case CMD_normal3:      d += 4; break;
         case CMD_line2:        d += 5;  vsize += 2; break;
-        case CMD_line2C:       d += 7;  vsize += 2; break;
         case CMD_line3:        d += 7;  vsize += 2; break;
+        case CMD_line2C:       d += 7;  vsize += 2; break;
         case CMD_line3C:       d += 9;  vsize += 2; break;
         case CMD_triangle2:    d += 7;  vsize += 3; break;
         case CMD_triangle3:    d += 10; vsize += 3; break;
@@ -472,17 +472,17 @@ void OpenGLRenderer::draw(
           addDrawLines(first, 2);
           break;
         }
+        case CMD_line3: {
+          vertex3d(ptr, fval3(d), color);
+          vertex3d(ptr, fval3(d), color);
+          addDrawLines(first, 2);
+          break;
+        }
         case CMD_line2C: {
           const Vec2 p0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
           vertex2d(ptr, p0, c0);
           vertex2d(ptr, p1, c1);
-          addDrawLines(first, 2);
-          break;
-        }
-        case CMD_line3: {
-          vertex3d(ptr, fval3(d), color);
-          vertex3d(ptr, fval3(d), color);
           addDrawLines(first, 2);
           break;
         }
