@@ -32,6 +32,48 @@ namespace {
   }
 }
 
+void DrawContext::line(Vec2 a, Vec2 b)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  switch (_colorMode) {
+    default:
+      setColor();
+      add(CMD_line2, a.x, a.y, b.x, b.y);
+      break;
+    case CM_HGRADIENT:
+      add(CMD_line2C,
+          a.x, a.y, gradientColor(a.x),
+          b.x, b.y, gradientColor(b.x));
+      break;
+    case CM_VGRADIENT:
+      add(CMD_line2C,
+          a.x, a.y, gradientColor(a.y),
+          b.x, b.y, gradientColor(b.y));
+      break;
+  }
+}
+
+void DrawContext::line(const Vec3& a, const Vec3& b)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  switch (_colorMode) {
+    default:
+      setColor();
+      add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z);
+      break;
+    case CM_HGRADIENT:
+      add(CMD_line3C,
+          a.x, a.y, a.z, gradientColor(a.x),
+          b.x, b.y, b.z, gradientColor(b.x));
+      break;
+    case CM_VGRADIENT:
+      add(CMD_line3C,
+          a.x, a.y, a.z, gradientColor(a.y),
+          b.x, b.y, b.z, gradientColor(b.y));
+      break;
+  }
+}
+
 void DrawContext::quad(
   const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d)
 {

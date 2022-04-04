@@ -9,7 +9,6 @@
 //   - any width supported
 //   - multi-line corner types: squared, angled, rounded
 // TODO: gradient function instead of set gradient/color points
-// TODO: gradient support for lines
 
 #pragma once
 #include "DrawLayer.hh"
@@ -79,10 +78,8 @@ class gx::DrawContext
   }
 
   // line drawing
-  void line(Vec2 a, Vec2 b) {
-    if (checkColor()) { add(CMD_line2, a.x, a.y, b.x, b.y); } }
-  void line(const Vec3& a, const Vec3& b) {
-    if (checkColor()) { add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z); } }
+  void line(Vec2 a, Vec2 b);
+  void line(const Vec3& a, const Vec3& b);
   void line(const Vertex2C& a, const Vertex2C& b) {
     add(CMD_line2C, a.x, a.y, a.c, b.x, b.y, b.c); }
   void line(const Vertex3C& a, const Vertex3C& b) {
