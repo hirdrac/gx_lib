@@ -84,10 +84,9 @@ class gx::DrawContext
   void line(const Vec3& a, const Vec3& b) {
     if (checkColor()) { add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z); } }
   void line(const Vertex2C& a, const Vertex2C& b) {
-    if (checkColor()) { add(CMD_line2C, a.x, a.y, a.c, b.x, b.y, b.c); } }
+    add(CMD_line2C, a.x, a.y, a.c, b.x, b.y, b.c); }
   void line(const Vertex3C& a, const Vertex3C& b) {
-    if (checkColor()) {
-      add(CMD_line3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c); } }
+    add(CMD_line3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c); }
 
   // poly drawing
   // Triangle  Quad  Rectangle
