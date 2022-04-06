@@ -219,6 +219,7 @@ class gx::DrawContext
 
   [[nodiscard]] inline RGBA8 gradientColor(float g) const;
   [[nodiscard]] inline RGBA8 pointColor(Vec2 pt) const;
+  [[nodiscard]] inline RGBA8 pointColor(const Vec3& pt) const;
   inline void setColor();
   [[nodiscard]] inline bool checkColor();
 };
@@ -314,6 +315,15 @@ gx::RGBA8 gx::DrawContext::gradientColor(float g) const
 }
 
 gx::RGBA8 gx::DrawContext::pointColor(Vec2 pt) const
+{
+  switch (_colorMode) {
+    default:           return _color0;
+    case CM_HGRADIENT: return gradientColor(pt.x);
+    case CM_VGRADIENT: return gradientColor(pt.y);
+  }
+}
+
+gx::RGBA8 gx::DrawContext::pointColor(const Vec3& pt) const
 {
   switch (_colorMode) {
     default:           return _color0;

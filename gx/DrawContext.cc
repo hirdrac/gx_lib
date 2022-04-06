@@ -35,42 +35,26 @@ namespace {
 void DrawContext::line(Vec2 a, Vec2 b)
 {
   if ((_color0 | _color1) == 0) { return; }
-  switch (_colorMode) {
-    default:
-      setColor();
-      add(CMD_line2, a.x, a.y, b.x, b.y);
-      break;
-    case CM_HGRADIENT:
-      add(CMD_line2C,
-          a.x, a.y, gradientColor(a.x),
-          b.x, b.y, gradientColor(b.x));
-      break;
-    case CM_VGRADIENT:
-      add(CMD_line2C,
-          a.x, a.y, gradientColor(a.y),
-          b.x, b.y, gradientColor(b.y));
-      break;
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    add(CMD_line2, a.x, a.y, b.x, b.y);
+  } else {
+    add(CMD_line2C,
+        a.x, a.y, pointColor(a),
+        b.x, b.y, pointColor(b));
   }
 }
 
 void DrawContext::line(const Vec3& a, const Vec3& b)
 {
   if ((_color0 | _color1) == 0) { return; }
-  switch (_colorMode) {
-    default:
-      setColor();
-      add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z);
-      break;
-    case CM_HGRADIENT:
-      add(CMD_line3C,
-          a.x, a.y, a.z, gradientColor(a.x),
-          b.x, b.y, b.z, gradientColor(b.x));
-      break;
-    case CM_VGRADIENT:
-      add(CMD_line3C,
-          a.x, a.y, a.z, gradientColor(a.y),
-          b.x, b.y, b.z, gradientColor(b.y));
-      break;
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z);
+  } else {
+    add(CMD_line3C,
+        a.x, a.y, a.z, pointColor(a),
+        b.x, b.y, b.z, pointColor(b));
   }
 }
 
@@ -78,25 +62,15 @@ void DrawContext::quad(
   const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d)
 {
   if ((_color0 | _color1) == 0) { return; }
-  switch (_colorMode) {
-    default:
-      setColor();
-      _quad(a,b,c,d);
-      break;
-    case CM_HGRADIENT:
-      add(CMD_quad2C,
-          a.x, a.y, gradientColor(a.x),
-          b.x, b.y, gradientColor(b.x),
-          c.x, c.y, gradientColor(c.x),
-          d.x, d.y, gradientColor(d.x));
-      break;
-    case CM_VGRADIENT:
-      add(CMD_quad2C,
-          a.x, a.y, gradientColor(a.y),
-          b.x, b.y, gradientColor(b.y),
-          c.x, c.y, gradientColor(c.y),
-          d.x, d.y, gradientColor(d.y));
-      break;
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    _quad(a,b,c,d);
+  } else {
+    add(CMD_quad2C,
+        a.x, a.y, pointColor(a),
+        b.x, b.y, pointColor(b),
+        c.x, c.y, pointColor(c),
+        d.x, d.y, pointColor(d));
   }
 }
 
@@ -104,26 +78,16 @@ void DrawContext::quad(
   const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d)
 {
   if ((_color0 | _color1) == 0) { return; }
-  switch (_colorMode) {
-    default:
-      setColor();
-      add(CMD_quad3, a.x, a.y, a.z, b.x, b.y, b.z,
-          c.x, c.y, c.z, d.x, d.y, d.z);
-      break;
-    case CM_HGRADIENT:
-      add(CMD_quad3C,
-          a.x, a.y, a.z, gradientColor(a.x),
-          b.x, b.y, b.z, gradientColor(b.x),
-          c.x, c.y, c.z, gradientColor(c.x),
-          d.x, d.y, d.z, gradientColor(d.x));
-      break;
-    case CM_VGRADIENT:
-      add(CMD_quad3C,
-          a.x, a.y, a.z, gradientColor(a.y),
-          b.x, b.y, b.z, gradientColor(b.y),
-          c.x, c.y, c.z, gradientColor(c.y),
-          d.x, d.y, d.z, gradientColor(d.y));
-      break;
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    add(CMD_quad3, a.x, a.y, a.z, b.x, b.y, b.z,
+        c.x, c.y, c.z, d.x, d.y, d.z);
+  } else {
+    add(CMD_quad3C,
+        a.x, a.y, a.z, pointColor(a),
+        b.x, b.y, b.z, pointColor(b),
+        c.x, c.y, c.z, pointColor(c),
+        d.x, d.y, d.z, pointColor(d));
   }
 }
 
