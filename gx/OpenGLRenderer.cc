@@ -247,6 +247,7 @@ TextureID OpenGLRenderer::setTexture(
   GLenum texformat, imgformat;
   switch (img.channels()) {
     case 1: texformat = GL_R8;    imgformat = GL_RED;  break;
+    case 2: texformat = GL_RG8;   imgformat = GL_RG;   break;
     case 3: texformat = GL_RGB8;  imgformat = GL_RGB;  break;
     case 4: texformat = GL_RGBA8; imgformat = GL_RGBA; break;
     default: return 0;
