@@ -123,7 +123,7 @@ class GLTextureT
     // not valid for GL_TEXTURE_RECTANGLE, GL_TEXTURE_BUFFER,
     //   GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_2D_MULTISAMPLE_ARRAY
 
-  inline void clear(GLint level, GLenum format);
+  inline void clear(GLint level);
     // not valid for GL_TEXTURE_BUFFER
 
   [[nodiscard]] inline float coordX(float x) const;
@@ -447,11 +447,16 @@ void GLTextureT<TARGET>::generateMipmap()
 }
 
 template<GLenum TARGET>
-void GLTextureT<TARGET>::clear(GLint level, GLenum format)
+void GLTextureT<TARGET>::clear(GLint level)
 {
+  const GLenum format = GLBaseFormat(_internalformat);
+  const GLenum type = (format == GL_DEPTH_STENCIL)
+    ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
+
 #ifdef GX_GL33
-  auto empty = std::make_unique<GLubyte[]>(
-    _width * std::max(_height,1) * std::max(_depth,1) * 4);
+  const int pixel_size = GLPixelSize(format, type);
+  const auto empty = std::make_unique<GLubyte[]>(
+    _width * std::max(_height,1) * std::max(_depth,1) * pixel_size);
   if (_depth > 0) {
     setSubImage3D(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
   } else if (_height > 0) {
@@ -460,7 +465,7 @@ void GLTextureT<TARGET>::clear(GLint level, GLenum format)
     setSubImage1D(level, 0, _width, format, empty.get());
   }
 #else
-  GX_GLCALL(glClearTexImage, _tex, level, format, GL_UNSIGNED_BYTE, nullptr);
+  GX_GLCALL(glClearTexImage, _tex, level, format, type, nullptr);
 #endif
 }
 
