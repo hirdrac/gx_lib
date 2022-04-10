@@ -28,5 +28,5 @@ bool Texture::update(const Image& img)
 
 void Texture::cleanup()
 {
-  freeTexture(_texID);
+  if (_texID != 0) { freeTexture(_texID); }
 }
