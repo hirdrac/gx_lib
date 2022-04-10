@@ -723,7 +723,7 @@ void Gui::update(Window& win)
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
       Panel& p = **it;
-      _needRender |= drawElem(p, p.root, dc, dc2, now, &(p.theme->panel));
+      _needRender |= drawElem(win, p, p.root, dc, dc2, &(p.theme->panel));
 
       if (!dc2.empty()) {
         dc.append(dc2);
@@ -734,7 +734,7 @@ void Gui::update(Window& win)
     if (_popupID != 0) {
       for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
         Panel& p = **it;
-        _needRender |= drawPopup(p, p.root, dc, dc2, now);
+        _needRender |= drawPopup(win, p, p.root, dc, dc2);
 
         if (!dc2.empty()) {
           dc.append(dc2);
@@ -1095,8 +1095,8 @@ void Gui::initElem(GuiElem& def)
 }
 
 bool Gui::drawElem(
-  Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
-  int64_t usec, const GuiTheme::Style* style) const
+  Window& win, Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  const GuiTheme::Style* style) const
 {
   const GuiTheme& thm = *p.theme;
   const float ex = def._x + p.layout.x;
@@ -1178,7 +1178,7 @@ bool Gui::drawElem(
       style = def._active ? &thm.menuButtonOpen
         : ((def._id == _hoverID) ? &thm.menuButtonHover : &thm.menuButton);
       drawRec(dc, ex, ey, ew, eh, thm, style);
-      needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
+      needRedraw |= drawElem(win, p, def.elems[0], dc, dc2, style);
       break;
     case GUI_MENU_ITEM:
       if (!def._enabled) {
@@ -1193,7 +1193,7 @@ bool Gui::drawElem(
         style = &thm.menuItemSelect;
         drawRec(dc, ex, ey, ew, eh, thm, style);
       }
-      needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
+      needRedraw |= drawElem(win, p, def.elems[0], dc, dc2, style);
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
                 ex + ew, ey + thm.border, ALIGN_TOP_RIGHT, thm.subMenuCode);
@@ -1208,7 +1208,7 @@ bool Gui::drawElem(
         style = (def._id == _hoverID) ? &thm.listSelectHover : &thm.listSelect;
       }
       drawRec(dc, ex, ey, ew, eh, thm, style);
-      needRedraw |= drawElem(p, def.elems[0], dc, dc2, usec, style);
+      needRedraw |= drawElem(win, p, def.elems[0], dc, dc2, style);
       const float b = thm.border;
       const int32_t code = def._active ?
         thm.listSelectOpenCode : thm.listSelectCode;
@@ -1299,14 +1299,14 @@ bool Gui::drawElem(
   // draw child elements
   if (!isPopup(def.type)) {
     for (GuiElem& e : def.elems) {
-      needRedraw |= drawElem(p, e, dc, dc2, usec, style);
+      needRedraw |= drawElem(win, p, e, dc, dc2, style);
     }
   }
   return needRedraw;
 }
 
-bool Gui::drawPopup(Panel& p, GuiElem& def, DrawContext& dc,
-                    DrawContext& dc2, int64_t usec) const
+bool Gui::drawPopup(Window& win, Panel& p, GuiElem& def,
+                    DrawContext& dc, DrawContext& dc2) const
 {
   bool needRedraw = false; // use for anim trigger later
   if (isPopup(def.type)) {
@@ -1315,14 +1315,14 @@ bool Gui::drawPopup(Panel& p, GuiElem& def, DrawContext& dc,
       const GuiTheme& thm = *p.theme;
       GuiElem& e1 = def.elems[1];
       needRedraw |= drawElem(
-        p, e1, dc, dc2, usec,
+        win, p, e1, dc, dc2,
         isMenu(def.type) ? &thm.menuFrame : &thm.listSelectFrame);
       // continue popup draw for possible active sub-menu
-      needRedraw |= drawPopup(p, e1, dc, dc2, usec);
+      needRedraw |= drawPopup(win, p, e1, dc, dc2);
     }
   } else {
     for (GuiElem& e : def.elems) {
-      needRedraw |= drawPopup(p, e, dc, dc2, usec);
+      needRedraw |= drawPopup(win, p, e, dc, dc2);
     }
   }
   return needRedraw;
