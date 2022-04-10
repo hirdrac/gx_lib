@@ -863,7 +863,10 @@ void Gui::processMouseEvent(Window& win)
         GuiElem& ls = *parent;
         ls.itemNo = ePtr->itemNo;
         GuiElem& e0 = ls.elems[0];
-        e0 = ePtr->elems[0];
+        const GuiElem& src = ePtr->elems[0];
+        //e0 = src;
+        e0.text = src.text;
+        e0.eid  = src.eid;
         const float b = pPtr->theme->border;
         calcPos(*pPtr->theme, e0, ls._x + b, ls._y + b, ls._x + ls._w - b,
                 ls._y + ls._h - b);
@@ -1079,8 +1082,12 @@ void Gui::initElem(GuiElem& def)
     if (!e && def.itemNo != 0) { e = findItem(def, 0); }
     if (e) {
       GuiElem& e0 = def.elems[0];
-      e0 = e->elems[0];
+      const GuiElem& src = e->elems[0];
+      //e0 = src;
+      e0.text  = src.text;
+      e0.type  = src.type;
       e0.align = ALIGN_CENTER_LEFT;
+      e0.eid   = src.eid;
       def.itemNo = e->itemNo;
     }
   }
