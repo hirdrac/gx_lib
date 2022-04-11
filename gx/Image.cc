@@ -102,7 +102,7 @@ bool gx::Image::stamp(int x, int y, const Image& sub_image)
   assert(y >= 0 && sub_image.height() <= (_height - y));
   // TODO: clip source image against destination image
 
-  uint8_t* dst = &_storage[(((y * _width) + x) * _channels)];
+  uint8_t* dst = &_storage[std::size_t(((y * _width) + x) * _channels)];
   const uint8_t* src = sub_image.data();
   const int dw = _width * _channels;
   const std::size_t sw = std::size_t(sub_image.width() * sub_image.channels());
@@ -123,7 +123,7 @@ bool gx::Image::stamp(int x, int y, const Glyph& g)
   assert(y >= 0 && g.height <= (_height - y));
   // TODO: clip source image against destination image
 
-  uint8_t* dst = &_storage[(y * _width) + x];
+  uint8_t* dst = &_storage[std::size_t((y * _width) + x)];
   const uint8_t* src = g.bitmap;
   for (int sy = 0; sy < g.height; ++sy) {
     std::memcpy(dst, src, g.width);
