@@ -659,7 +659,7 @@ bool Gui::getPanelLayout(PanelID id, Rect& layout) const
   return true;
 }
 
-void Gui::update(Window& win)
+bool Gui::update(Window& win)
 {
   const int64_t now = win.lastPollTime();
 
@@ -744,6 +744,8 @@ void Gui::update(Window& win)
     }
     _needRedraw = true;
   }
+
+  return _needRedraw;
 }
 
 void Gui::deactivatePopups()

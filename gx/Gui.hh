@@ -137,8 +137,9 @@ class gx::Gui
   [[nodiscard]] PanelID bottomPanel() const {
     return _panels.empty() ? 0 : _panels.back()->id; }
 
-  void update(Window& win);
+  bool update(Window& win);
     // process events & update drawLists
+    // returns true if redraw is required (same as needRedraw())
 
   [[nodiscard]] const DrawList& drawList() const { return _dl; }
 

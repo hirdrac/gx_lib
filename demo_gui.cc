@@ -165,8 +165,7 @@ int main(int argc, char* argv[])
     }
 
     // update gui
-    gui.update(win);
-    needRedraw |= gui.needRedraw();
+    needRedraw |= gui.update(win);
     if (gui.eventID() > 0) {
       gx::print_err("GUI event:", gui.eventID());
       switch (gui.eventType()) {
