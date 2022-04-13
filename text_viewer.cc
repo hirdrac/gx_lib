@@ -78,7 +78,7 @@ int main(int argc, char** argv)
   int lineSpacing = DEFAULT_LINE_SPACING;
   int tabSize = DEFAULT_TAB_SIZE;
 
-  for (gx::CmdLineParser p(argc, argv); p; ++p) {
+  for (gx::CmdLineParser p{argc, argv}; p; ++p) {
     if (p.option()) {
       if (p.option('h',"help")) {
         return showUsage(argv);
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
     return errorUsage(argv);
   }
 
-  std::ifstream fs(file);
+  std::ifstream fs{file};
   if (!fs) {
     gx::println_err("ERROR: Can't read file '", file, "'");
     return -1;
