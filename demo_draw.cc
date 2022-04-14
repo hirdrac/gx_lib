@@ -148,6 +148,18 @@ void draw_rborder3(gx::DrawContext& dc, float x, float y)
   dc.roundedBorder(x+20, y+30, 360, 300, 40, 4, 8.0f);
 }
 
+void draw_lines1(gx::DrawContext& dc, float x, float y)
+{
+  x += .5f; y += .5f;
+  dc.color(WHITE);
+  //dc.lineWidth(.5f);
+  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+379,y+30});
+  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+379,y+180});
+  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+379,y+329});
+  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+200,y+329});
+  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+20,y+329});
+}
+
 
 struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   gfxData[] = {
@@ -172,6 +184,7 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"Rounded Border", draw_rborder1},
   {"HGradient Rounded Border", draw_rborder2},
   {"VGradient Rounded Border", draw_rborder3},
+  {"Lines", draw_lines1},
 };
 
 
