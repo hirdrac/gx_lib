@@ -153,11 +153,23 @@ void draw_lines1(gx::DrawContext& dc, float x, float y)
   x += .5f; y += .5f;
   dc.color(WHITE);
   //dc.lineWidth(.5f);
-  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+379,y+30});
-  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+379,y+180});
-  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+379,y+329});
-  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+200,y+329});
-  dc.line(gx::Vec2{x+20,y+30},gx::Vec2{x+20,y+329});
+  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+379,y+30});
+  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+379,y+180});
+  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+379,y+329});
+  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+200,y+329});
+  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+20,y+329});
+}
+
+void draw_lines2(gx::DrawContext& dc, float x, float y)
+{
+  x += .5f; y += .5f;
+  const gx::Vertex2C origin{x+20,y+20,RED};
+
+  dc.line(origin, gx::Vertex2C{x+379,y+30,WHITE});
+  dc.line(origin, gx::Vertex2C{x+379,y+180,WHITE});
+  dc.line(origin, gx::Vertex2C{x+379,y+329,WHITE});
+  dc.line(origin, gx::Vertex2C{x+200,y+329,WHITE});
+  dc.line(origin, gx::Vertex2C{x+20,y+329,WHITE});
 }
 
 
@@ -185,6 +197,7 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"HGradient Rounded Border", draw_rborder2},
   {"VGradient Rounded Border", draw_rborder3},
   {"Lines", draw_lines1},
+  {"Colored Lines", draw_lines2},    
 };
 
 
