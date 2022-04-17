@@ -58,6 +58,34 @@ void DrawContext::line(const Vec3& a, const Vec3& b)
   }
 }
 
+void DrawContext::triangle(Vec2 a, Vec2 b, Vec2 c)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    add(CMD_triangle2, a.x, a.y, b.x, b.y, c.x, c.y);
+  } else {
+    add(CMD_triangle2C,
+        a.x, a.y, pointColor(a),
+        b.x, b.y, pointColor(b),
+        c.x, c.y, pointColor(c));
+  }
+}
+
+void DrawContext::triangle(const Vec3& a, const Vec3& b, const Vec3& c)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    add(CMD_triangle3, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+  } else {
+    add(CMD_triangle3C,
+        a.x, a.y, a.z, pointColor(a),
+        b.x, b.y, b.z, pointColor(b),
+        c.x, c.y, c.z, pointColor(c));
+  }
+}
+
 void DrawContext::quad(
   const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d)
 {

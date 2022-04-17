@@ -91,6 +91,8 @@ class gx::DrawContext
   //   | /     | /|    |   H
   //   |/      |/ |    |   |
   //   C       C--D    +-W-+
+  void triangle(Vec2 a, Vec2 b, Vec2 c);
+  void triangle(const Vec3& a, const Vec3& b, const Vec3& c);
   void triangle(const Vertex2C& a, const Vertex2C& b, const Vertex2C& c) {
     add(CMD_triangle2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c); }
   void triangle(const Vertex3C& a, const Vertex3C& b, const Vertex3C& c) {
