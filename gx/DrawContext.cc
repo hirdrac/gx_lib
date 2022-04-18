@@ -388,9 +388,9 @@ void DrawContext::_glyph(
     //   or only vertical clipping)
 
     if (A != newA) {
-      // A-B   u-v
-      // |/    |/
-      // C     w
+      // A-B   u-v .
+      // |/    |/  .
+      // C     w   .
       const float area = triangleArea(A,B,C);
       const float u = triangleArea(B,C,newA) / area;
       const float v = triangleArea(C,A,newA) / area;
@@ -399,9 +399,9 @@ void DrawContext::_glyph(
     }
 
     if (B != newB) {
-      // A-B   w-u
-      //  \|    \|
-      //   D     v
+      // A-B   w-u .
+      //  \|    \| .
+      //   D     v .
       const float area = triangleArea(B,D,A);
       const float u = triangleArea(D,A,newB) / area;
       const float v = triangleArea(A,B,newB) / area;
@@ -410,9 +410,9 @@ void DrawContext::_glyph(
     }
 
     if (C != newC) {
-      // A     v
-      // |\    |\
-      // C-D   u-w
+      // A     v   .
+      // |\    |\  .
+      // C-D   u-w .
       const float area = triangleArea(C,A,D);
       const float u = triangleArea(A,D,newC) / area;
       const float v = triangleArea(D,C,newC) / area;
@@ -421,9 +421,9 @@ void DrawContext::_glyph(
     }
 
     if (D != newD) {
-      //   B     w
-      //  /|    /|
-      // C-D   v-u
+      //   B     w .
+      //  /|    /| .
+      // C-D   v-u .
       const float area = triangleArea(D,C,B);
       const float u = triangleArea(C,B,newD) / area;
       const float v = triangleArea(B,D,newD) / area;
