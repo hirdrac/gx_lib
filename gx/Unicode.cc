@@ -57,6 +57,13 @@ std::size_t gx::lengthUTF8(std::string_view sv)
   return len;
 }
 
+std::size_t gx::indexUTF8(std::string_view sv, std::size_t pos)
+{
+  UTF8Iterator itr{sv};
+  while (!itr.done() && itr.pos() < pos) { itr.next(); }
+  return (itr.pos() < pos) ? std::string::npos : itr.pos();
+}
+
 void gx::popbackUTF8(std::string& str)
 {
   while (!str.empty()) {
@@ -66,6 +73,35 @@ void gx::popbackUTF8(std::string& str)
     // stop pop back if char isn't the 2/3/4 char in a multi-char encoding
     if (!isMultiChar(ch)) { break; }
   }
+}
+
+bool gx::eraseUTF8(std::string& str, std::size_t pos)
+{
+  if (pos == std::string::npos) {
+    if (str.empty()) { return false; }
+    popbackUTF8(str);
+    return true;
+  }
+
+  const std::size_t i = indexUTF8(str, pos);
+  if (i == std::string::npos) { return false; }
+
+  std::size_t count = 0;
+  for (;;) {
+    if ((i + count) >= str.size()) { count = std::string::npos; break; }
+    else if (!isMultiChar(str[i+count++])) { break; }
+  }
+
+  str.erase(i, count);
+  return true;
+}
+
+bool gx::insertUTF8(std::string& str, std::size_t pos, uint32_t code)
+{
+  std::size_t i = indexUTF8(str, pos);
+  if (i == std::string::npos) { return false; }
+  str.insert(i, toUTF8(code));
+  return true;
 }
 
 
@@ -86,7 +122,7 @@ int32_t gx::UTF8Iterator::get() const
 {
   if (done()) { return -1; }
 
-  int ch = uint8_t(*_itr);
+  const int ch = uint8_t(*_itr);
   if (ch < 0x80) {
     return ch;  // 1 byte ascii value
   }
@@ -112,9 +148,9 @@ int32_t gx::UTF8Iterator::get() const
   const char* ptr_end = _itr + bytes;
   while (++ptr != ptr_end) {
     if (ptr == _end) { return -1; }
-    ch = uint8_t(*ptr);
-    if (!isMultiChar(ch)) { return -1; }
-    val = (val << 6) | (ch & 0b111111);
+    const int c = uint8_t(*ptr);
+    if (!isMultiChar(c)) { return -1; }
+    val = (val << 6) | (c & 0b111111);
   }
 
   if (val < minVal && (bytes != 2 || val != 0)) {

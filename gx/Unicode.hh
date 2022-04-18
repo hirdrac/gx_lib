@@ -1,6 +1,6 @@
 //
 // gx/Unicode.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // Unicode/UTF-8 utilities
 //
@@ -19,11 +19,22 @@ namespace gx
     return toUTF8(int32_t(code)); }
     // returns UTF-8 encoded value (1-4 characters) of a unicode character
 
-  [[nodiscard]] std::size_t lengthUTF8(std::string_view str);
+  [[nodiscard]] std::size_t lengthUTF8(std::string_view sv);
     // returns UTF8 string length
+
+  [[nodiscard]] std::size_t indexUTF8(std::string_view sv, std::size_t pos);
+    // returns string index of specified position for UTF8 encoded string
+    // (returns string::npos if pos >= number of UTF8 encoded chars in input)
 
   void popbackUTF8(std::string& str);
     // removes last trailing UTF-8 character
+
+  bool eraseUTF8(std::string& str, std::size_t pos);
+    // remove character at pos
+    // (pos == string::npos will delete the last character)
+
+  bool insertUTF8(std::string& str, std::size_t pos, uint32_t code);
+    // add UTF8 character to UTF8 string at specified character position
 
   class UTF8Iterator;
 }
