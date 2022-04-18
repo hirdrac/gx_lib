@@ -199,10 +199,12 @@ class gx::Window
   // mouse state
   [[nodiscard]] MouseModeEnum mouseMode() const { return _mouseMode; }
   [[nodiscard]] MouseShapeEnum mouseShape() const { return _mouseShape; }
-  [[nodiscard]] float mouseX() const { return _mouseX; }
-  [[nodiscard]] float mouseY() const { return _mouseY; }
-  [[nodiscard]] float scrollX() const { return _scrollX; }
-  [[nodiscard]] float scrollY() const { return _scrollY; }
+  [[nodiscard]] float mouseX() const { return _mousePt.x; }
+  [[nodiscard]] float mouseY() const { return _mousePt.y; }
+  [[nodiscard]] Vec2 mousePt() const { return _mousePt; }
+  [[nodiscard]] float scrollX() const { return _scrollPt.x; }
+  [[nodiscard]] float scrollY() const { return _scrollPt.y; }
+  [[nodiscard]] Vec2 scrollPt() const { return _scrollPt; }
   [[nodiscard]] int buttons() const { return _buttons; }
   [[nodiscard]] int mods() const { return _mods; }
   [[nodiscard]] bool mouseIn() const { return _mouseIn; }
@@ -243,8 +245,7 @@ class gx::Window
   int _events = 0, _removedEvents = 0;
   std::vector<KeyState> _keyStates;
   std::vector<CharInfo> _chars;
-  float _mouseX = 0, _mouseY = 0;
-  float _scrollX = 0, _scrollY = 0;
+  Vec2 _mousePt{0,0}, _scrollPt{0,0};
   int _buttons = 0, _mods = 0;
   int _buttonsPress = 0, _buttonsRelease = 0;
   bool _mouseIn = false, _iconified = false, _focused = true;

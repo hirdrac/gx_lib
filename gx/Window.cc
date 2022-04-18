@@ -230,11 +230,10 @@ void Window::setMouseShape(MouseShapeEnum shape)
 
 void Window::setMousePos(float x, float y)
 {
+  _mousePt.set(x, y);
   if (_renderer) {
     assert(isMainThread());
     glfwSetCursorPos(_renderer->window(), double(x), double(y));
-    _mouseX = x;
-    _mouseY = y;
   }
 }
 
@@ -370,8 +369,7 @@ void Window::updateMouseState(GLFWwindow* w)
 {
   double mx = 0, my = 0;
   glfwGetCursorPos(w, &mx, &my);
-  _mouseX = float(mx);
-  _mouseY = float(my);
+  _mousePt.set(float(mx), float(my));
   _mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
 }
 
@@ -379,8 +377,7 @@ void Window::resetEventState()
 {
   _events = 0;
   _removedEvents = 0;
-  _scrollX = 0;
-  _scrollY = 0;
+  _scrollPt.set(0,0);
   _chars.clear();
   for (auto i = _keyStates.begin(); i != _keyStates.end(); ) {
     if (i->pressed) {
@@ -574,8 +571,7 @@ void Window::cursorPosCB(GLFWwindow* win, double xpos, double ypos)
   //println("cursor pos event: ", xpos, ' ', ypos);
   auto& e = *static_cast<Window*>(ePtr);
   e._events |= EVENT_MOUSE_MOVE;
-  e._mouseX = float(xpos);
-  e._mouseY = float(ypos);
+  e._mousePt.set(float(xpos), float(ypos));
 }
 
 void Window::mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
@@ -617,8 +613,8 @@ void Window::scrollCB(GLFWwindow* win, double xoffset, double yoffset)
   //println("scroll event: ", xoffset, ' ', yoffset);
   auto& e = *static_cast<Window*>(ePtr);
   e._events |= EVENT_MOUSE_SCROLL;
-  e._scrollX += float(xoffset);
-  e._scrollY += float(yoffset);
+  e._scrollPt.x += float(xoffset);
+  e._scrollPt.y += float(yoffset);
 }
 
 void Window::iconifyCB(GLFWwindow* win, int iconified)
