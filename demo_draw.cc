@@ -197,7 +197,7 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"HGradient Rounded Border", draw_rborder2},
   {"VGradient Rounded Border", draw_rborder3},
   {"Lines", draw_lines1},
-  {"Colored Lines", draw_lines2},    
+  {"Colored Lines", draw_lines2},
 };
 
 
