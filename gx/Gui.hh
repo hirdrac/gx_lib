@@ -145,7 +145,7 @@ class gx::Gui
 
   [[nodiscard]] EventID eventID() const { return _eventID; }
   [[nodiscard]] GuiElemType eventType() const { return _eventType; }
-  [[nodiscard]] int64_t lastEventTime() const { return _eventTime; }
+  [[nodiscard]] int64_t eventTime() const { return _eventTime; }
     // id/type of element triggering an event
 
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
@@ -216,11 +216,11 @@ class gx::Gui
   GuiElemType _heldType = GUI_NULL;
   float _heldX = 0, _heldY = 0;
   int64_t _heldTime = 0;
-  int64_t _repeatDelay = -1;
+  int64_t _repeatDelay = -1;  // negative value disables repeat
 
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0; // cached theme value
-  bool _cursorState = false;
+  bool _cursorState = false;  // track cursor blinking
   bool _needRender = true;
   bool _needRedraw = false;
   bool _textChanged = false;
