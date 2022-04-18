@@ -474,12 +474,12 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     }
     case GUI_ENTRY: {
       const Font& fnt = *thm.font;
-      if (def.entry.type == ENTRY_CARDINAL
-          || def.entry.type == ENTRY_INTEGER
-          || def.entry.type == ENTRY_FLOAT) {
-        def._w = def.entry.size * fnt.digitWidth();
+      const auto& ep = def.entry;
+      if (ep.type == ENTRY_CARDINAL || ep.type == ENTRY_INTEGER
+          || ep.type == ENTRY_FLOAT) {
+        def._w = ep.size * fnt.digitWidth();
       } else {
-        def._w = def.entry.size * fnt.glyphWidth('A');
+        def._w = ep.size * fnt.glyphWidth('A');
         // FIXME: use better width value than capital A * size
       }
       def._w += float(thm.entryLeftMargin + thm.entryRightMargin
@@ -807,12 +807,12 @@ void Gui::processMouseEvent(Window& win)
   }
 
   // update focus
-  // FIXME: setFocusID() could trigger an event that is overridden below
+  // FIXME: setFocus() could trigger an event that is overridden below
   if (lpressEvent) {
-    setFocusID(win, (type == GUI_ENTRY) ? id : 0);
+    setFocus(win, (type == GUI_ENTRY) ? ePtr : nullptr);
   } else if (lbuttonDown && anyGuiButtonEvent) {
     // click in other Gui instance clears our focus
-    setFocusID(win, 0);
+    setFocus(win, nullptr);
   }
 
   // update hoverID
@@ -919,8 +919,8 @@ void Gui::processCharEvent(Window& win)
   bool usedEvent = false;
   for (const CharInfo& c : win.charData()) {
     if (c.codepoint) {
+      usedEvent = true;
       if (addEntryChar(*e, int32_t(c.codepoint))) {
-        usedEvent = true;
         _needRender = true;
         _textChanged = true;
       }
@@ -947,13 +947,11 @@ void Gui::processCharEvent(Window& win)
       _needRender |= added;
       _textChanged |= added;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
-      const GuiElem* next = findNextElem(_focusID, GUI_ENTRY);
-      setFocusID(win, next ? next->_id : 0);
       usedEvent = true;
+      setFocus(win, findNextElem(_focusID, GUI_ENTRY));
     } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
-      const GuiElem* prev = findPrevElem(_focusID, GUI_ENTRY);
-      setFocusID(win, prev ? prev->_id : 0);
       usedEvent = true;
+      setFocus(win, findPrevElem(_focusID, GUI_ENTRY));
     }
     // TODO: handle KEY_LEFT, KEY_RIGHT for cursor movement
   }
@@ -961,14 +959,15 @@ void Gui::processCharEvent(Window& win)
   if (usedEvent) {
     win.removeEvent(EVENT_CHAR);
     // reset cursor blink state
-    _lastCursorUpdate = win.lastPollTime();
     _needRender |= !_cursorState;
+    _lastCursorUpdate = win.lastPollTime();
     _cursorState = true;
   }
 }
 
-void Gui::setFocusID(Window& win, ElemID id)
+void Gui::setFocus(Window& win, const GuiElem* ePtr)
 {
+  const ElemID id = ePtr ? ePtr->_id : 0;
   if (_focusID == id) { return; }
 
   if (_textChanged) {
