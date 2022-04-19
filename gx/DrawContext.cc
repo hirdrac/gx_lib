@@ -23,7 +23,26 @@ namespace {
   [[nodiscard]] constexpr float triangleArea(Vec2 a, Vec2 b, Vec2 c) {
     // triangle_area = len(cross(B-A,C-A)) / 2
     const Vec2 ba = b-a, ca = c-a;
-    return abs((ba.x * ca.y) - (ba.y * ca.x)) * .5f;
+    return abs((ba.x * ca.y) - (ba.y * ca.x)); // * .5f
+  }
+
+  bool barycentricCoord(Vec2 pt, Vec2 A, Vec2 B, Vec2 C,
+                        float& u, float& v, float& w)
+  {
+    // P = uA + vB + wC
+    // u = triangle_BCP_area / triangle_ABC_area
+    // v = triangle_CAP_area / triangle_ABC_area
+    // w = triangle_ABP_area / triangle_ABC_area
+    //     (if inside triangle, w = 1 - u - v)
+
+    // A-B  u-v
+    // |/   |/
+    // C    w
+    const float area = triangleArea(A,B,C);
+    u = triangleArea(pt, B, C) / area;
+    v = triangleArea(A, pt, C) / area;
+    w = triangleArea(A, B, pt) / area;
+    return isOne(u + v + w);
   }
 
   inline void fixAngles(float& startAngle, float& endAngle) {
@@ -374,61 +393,56 @@ void DrawContext::_glyph(
     const Vec2 newB{std::clamp(B.x,cx0,cx1), std::clamp(B.y,cy0,cy1)};
     const Vec2 newC{std::clamp(C.x,cx0,cx1), std::clamp(C.y,cy0,cy1)};
     const Vec2 newD{std::clamp(D.x,cx0,cx1), std::clamp(D.y,cy0,cy1)};
-    Vec2 newAt = At, newBt = Bt, newCt = Ct, newDt = Dt;
 
     // use barycentric coordinates to update texture coords
-    // P = uA + vB + wC
-    // u = triangle_BCP_area / triangle_ABC_area
-    // v = triangle_CAP_area / triangle_ABC_area
-    // w = triangle_ABP_area / triangle_ABC_area
-    //     (if inside triangle, w = 1 - u - v)
-    //
-    // FIXME: new coord outside of chosen triangle not handled
-    //  (chosen triangles will handle all cases of only horizontal
-    //   or only vertical clipping)
+    Vec2 newAt = At, newBt = Bt, newCt = Ct, newDt = Dt;
 
     if (A != newA) {
-      // A-B   u-v .
-      // |/    |/  .
-      // C     w   .
-      const float area = triangleArea(A,B,C);
-      const float u = triangleArea(B,C,newA) / area;
-      const float v = triangleArea(C,A,newA) / area;
-      const float w = 1.0f - u - v; // A,B,newA
-      newAt = At*u + Bt*v + Ct*w;
+      // A-B   u-v .   B     w .
+      // |/    |/  .  /|    /| .
+      // C     w   . C-D   v-u .
+      float u, v, w;
+      if (barycentricCoord(newA, A, B, C, u, v, w)) {
+        newAt = At*u + Bt*v + Ct*w;
+      } else if (barycentricCoord(newA, D, C, B, u, v, w)) {
+        newAt = Dt*u + Ct*v + Bt*w;
+      }
     }
 
     if (B != newB) {
-      // A-B   w-u .
-      //  \|    \| .
-      //   D     v .
-      const float area = triangleArea(B,D,A);
-      const float u = triangleArea(D,A,newB) / area;
-      const float v = triangleArea(A,B,newB) / area;
-      const float w = 1.0f - u - v; // B,D,newB
-      newBt = Bt*u + Dt*v + At*w;
+      // A-B   w-u . A     v   .
+      //  \|    \| . |\    |\  .
+      //   D     v . C-D   u-w .
+      float u, v, w;
+      if (barycentricCoord(newB, B, D, A, u, v, w)) {
+        newBt = Bt*u + Dt*v + At*w;
+      } else if (barycentricCoord(newB, C, A, D, u, v, w)) {
+        newBt = Ct*u + At*v + Dt*w;
+      }
     }
 
     if (C != newC) {
-      // A     v   .
-      // |\    |\  .
-      // C-D   u-w .
-      const float area = triangleArea(C,A,D);
-      const float u = triangleArea(A,D,newC) / area;
-      const float v = triangleArea(D,C,newC) / area;
-      const float w = 1.0f - u - v; // C,A,newC
-      newCt = Ct*u + At*v + Dt*w;
+      // A     v   . A-B   w-u .
+      // |\    |\  .  \|    \| .
+      // C-D   u-w .   D     v .
+      float u, v, w;
+      if (barycentricCoord(newC, C, A, D, u, v, w)) {
+        newCt = Ct*u + At*v + Dt*w;
+      } else if (barycentricCoord(newC, B, D, A, u, v, w)) {
+        newCt = Bt*u + Dt*v + At*w;
+      }
     }
 
     if (D != newD) {
-      //   B     w .
-      //  /|    /| .
-      // C-D   v-u .
-      const float area = triangleArea(D,C,B);
-      const float u = triangleArea(C,B,newD) / area;
-      const float v = triangleArea(B,D,newD) / area;
-      const float w = 1.0f - u - v; // D,C,newD
-      newDt = Dt*u + Ct*v + Bt*w;
+      //   B     w . A-B   u-v .
+      //  /|    /| . |/    |/  .
+      // C-D   v-u . C     w   .
+      float u, v, w;
+      if (barycentricCoord(newD, D, C, B, u, v, w)) {
+        newDt = Dt*u + Ct*v + Bt*w;
+      } else if (barycentricCoord(newD, A, B, C, u, v, w)) {
+        newDt = At*u + Bt*v + Ct*w;
+      }
     }
 
     A = newA; B = newB; C = newC; D = newD;
