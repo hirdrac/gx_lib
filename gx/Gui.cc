@@ -180,47 +180,6 @@ template<class T>
   return nullptr;
 }
 
-static bool addEntryChar(GuiElem& e, int32_t codepoint)
-{
-  assert(e.type == GUI_ENTRY);
-  if (e.entry.maxLength != 0 && lengthUTF8(e.text) >= e.entry.maxLength) {
-    return false; // no space for character
-  }
-
-  switch (e.entry.type) {
-    default: // ENTRY_TEXT, ENTRY_PASSWORD
-      if (codepoint <= 31) { return false; }
-      break;
-    case ENTRY_CARDINAL:
-      if (!std::isdigit(codepoint)
-          || (e.text == "0" && codepoint == '0')) { return false; }
-      if (e.text == "0") { e.text.clear(); }
-      break;
-    case ENTRY_INTEGER:
-      if ((!std::isdigit(codepoint) && codepoint != '-')
-          || (codepoint == '-' && !e.text.empty() && e.text != "0")
-          || (codepoint == '0' && (e.text == "0" || e.text == "-"))) {
-        return false; }
-      if (e.text == "0") { e.text.clear(); }
-      break;
-    case ENTRY_FLOAT:
-      if ((!std::isdigit(codepoint) && codepoint != '-' && codepoint != '.')
-          || (codepoint == '-' && !e.text.empty() && e.text != "0")
-          || (codepoint == '0' && (e.text == "0" || e.text == "-0"))) {
-        return false;
-      } else if (codepoint == '.') {
-        int count = 0;
-        for (int ch : e.text) { count += (ch == '.'); }
-        if (count > 0) { return false; }
-      }
-      if (e.text == "0" && codepoint != '.') { e.text.clear(); }
-      break;
-  }
-
-  e.text += toUTF8(codepoint);
-  return true;
-}
-
 static void drawRec(DrawContext& dc, float x, float y, float w, float h,
                     const GuiTheme& thm, const GuiTheme::Style* style)
 {
@@ -963,6 +922,47 @@ void Gui::processCharEvent(Window& win)
     _lastCursorUpdate = win.lastPollTime();
     _cursorState = true;
   }
+}
+
+bool Gui::addEntryChar(GuiElem& e, int32_t codepoint)
+{
+  assert(e.type == GUI_ENTRY);
+  if (e.entry.maxLength != 0 && lengthUTF8(e.text) >= e.entry.maxLength) {
+    return false; // no space for character
+  }
+
+  switch (e.entry.type) {
+    default: // ENTRY_TEXT, ENTRY_PASSWORD
+      if (codepoint <= 31) { return false; }
+      break;
+    case ENTRY_CARDINAL:
+      if (!std::isdigit(codepoint)
+          || (e.text == "0" && codepoint == '0')) { return false; }
+      if (e.text == "0") { e.text.clear(); }
+      break;
+    case ENTRY_INTEGER:
+      if ((!std::isdigit(codepoint) && codepoint != '-')
+          || (codepoint == '-' && !e.text.empty() && e.text != "0")
+          || (codepoint == '0' && (e.text == "0" || e.text == "-"))) {
+        return false; }
+      if (e.text == "0") { e.text.clear(); }
+      break;
+    case ENTRY_FLOAT:
+      if ((!std::isdigit(codepoint) && codepoint != '-' && codepoint != '.')
+          || (codepoint == '-' && !e.text.empty() && e.text != "0")
+          || (codepoint == '0' && (e.text == "0" || e.text == "-0"))) {
+        return false;
+      } else if (codepoint == '.') {
+        int count = 0;
+        for (int ch : e.text) { count += (ch == '.'); }
+        if (count > 0) { return false; }
+      }
+      if (e.text == "0" && codepoint != '.') { e.text.clear(); }
+      break;
+  }
+
+  e.text += toUTF8(codepoint);
+  return true;
 }
 
 void Gui::setFocus(Window& win, const GuiElem* ePtr)

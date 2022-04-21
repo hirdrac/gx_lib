@@ -229,6 +229,7 @@ class gx::Gui
   void layout(Panel& p, float x, float y, AlignEnum align);
   void processMouseEvent(Window& win);
   void processCharEvent(Window& win);
+  bool addEntryChar(GuiElem& e, int32_t codepoint);
   void setFocus(Window& win, const GuiElem* e);
   void initElem(GuiElem& def);
   void deactivatePopups();
