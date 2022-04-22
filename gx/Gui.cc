@@ -10,6 +10,7 @@
 #include "Unicode.hh"
 #include "System.hh"
 #include "Logger.hh"
+#include "Print.hh"
 #include <algorithm>
 #include <cassert>
 using namespace gx;
@@ -886,15 +887,21 @@ void Gui::processCharEvent(Window& win)
       // TODO: flash 'error' color if char isn't added
     } else if (c.key == KEY_BACKSPACE) {
       usedEvent = true;
-      if (!e->text.empty()) {
-        if (c.mods == MOD_ALT) {
-          e->text.clear();
-        } else {
-          popbackUTF8(e->text);
-        }
+      if (_cursorPos > 0) {
+        assert(!e->text.empty());
+        eraseUTF8(e->text, --_cursorPos);
         _needRender = true;
         _textChanged = true;
       }
+      // TODO: ctrl-backspace, erase from start to cursor pos
+    } else if (c.key == KEY_DELETE) {
+      usedEvent = true;
+      if (_cursorPos < e->text.size()) {
+        eraseUTF8(e->text, _cursorPos);
+        _needRender = true;
+        _textChanged = true;
+      }
+      // TODO: ctrl-delete, erase from cursor pos to end
     } else if (c.key == KEY_V && c.mods == MOD_CONTROL) {
       // (CTRL-V) paste first line of clipboard
       usedEvent = true;
@@ -911,8 +918,21 @@ void Gui::processCharEvent(Window& win)
     } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
       usedEvent = true;
       setFocus(win, findPrevElem(_focusID, GUI_ENTRY));
+    } else if (c.key == KEY_LEFT && c.mods == 0) {
+      usedEvent = true;
+      if (_cursorPos > 0) { --_cursorPos; _needRender = true; }
+    } else if (c.key == KEY_RIGHT && c.mods == 0) {
+      usedEvent = true;
+      if (_cursorPos < e->text.size()) { ++_cursorPos; _needRender = true; }
+    } else if (c.key == KEY_HOME && c.mods == 0) {
+      usedEvent = true;
+      if (_cursorPos > 0) { _cursorPos = 0; _needRender = true; }
+    } else if (c.key == KEY_END && c.mods == 0) {
+      usedEvent = true;
+      if (_cursorPos < e->text.size()) {
+        _cursorPos = e->text.size(); _needRender = true;
+      }
     }
-    // TODO: handle KEY_LEFT, KEY_RIGHT for cursor movement
   }
 
   if (usedEvent) {
@@ -938,14 +958,14 @@ bool Gui::addEntryChar(GuiElem& e, int32_t codepoint)
     case ENTRY_CARDINAL:
       if (!std::isdigit(codepoint)
           || (e.text == "0" && codepoint == '0')) { return false; }
-      if (e.text == "0") { e.text.clear(); }
+      if (e.text == "0") { e.text.clear(); _cursorPos = 0; }
       break;
     case ENTRY_INTEGER:
       if ((!std::isdigit(codepoint) && codepoint != '-')
           || (codepoint == '-' && !e.text.empty() && e.text != "0")
           || (codepoint == '0' && (e.text == "0" || e.text == "-"))) {
         return false; }
-      if (e.text == "0") { e.text.clear(); }
+      if (e.text == "0") { e.text.clear(); _cursorPos = 0; }
       break;
     case ENTRY_FLOAT:
       if ((!std::isdigit(codepoint) && codepoint != '-' && codepoint != '.')
@@ -957,11 +977,12 @@ bool Gui::addEntryChar(GuiElem& e, int32_t codepoint)
         for (int ch : e.text) { count += (ch == '.'); }
         if (count > 0) { return false; }
       }
-      if (e.text == "0" && codepoint != '.') { e.text.clear(); }
+      if (e.text == "0" && codepoint != '.') { e.text.clear(); _cursorPos = 0; }
       break;
   }
 
-  e.text += toUTF8(codepoint);
+  insertUTF8(e.text, _cursorPos, codepoint);
+  ++_cursorPos;
   return true;
 }
 
@@ -987,6 +1008,8 @@ void Gui::setFocus(Window& win, const GuiElem* ePtr)
     _cursorBlinkTime = p ? p->theme->cursorBlinkTime : 400000;
     _cursorState = true;
   }
+
+  _cursorPos = ePtr ? ePtr->text.size() : 0;
   _needRender = true;
 }
 
@@ -1016,7 +1039,11 @@ bool Gui::setText(EventID eid, std::string_view text)
     if (!e) { continue; }
 
     e->text = text;
-    pPtr->needLayout |= (e->type != GUI_ENTRY);
+    if (e->type == GUI_ENTRY) {
+      _cursorPos = e->text.size();
+    } else {
+      pPtr->needLayout = true;
+    }
     _needRender = true;
     return true;
   }
@@ -1251,34 +1278,44 @@ bool Gui::drawElem(
       const float fs = float(thm.font->size());
       const float maxWidth = ew - thm.entryLeftMargin
         - thm.entryRightMargin - cw;
-      float tx = ex + thm.entryLeftMargin;
+      const float leftEdge = ex + thm.entryLeftMargin;
+      float tx = leftEdge;
       if (tw > maxWidth) {
         // text doesn't fit in entry
-        const RGBA8 c0 = textColor & 0x00ffffff;
+        //const RGBA8 c0 = textColor & 0x00ffffff;
         if (def._id == _focusID) {
           // text being edited so show text end where cursor is
-          dc2.hgradient(ex, c0, tx + (fs * .5f), textColor);
+          //dc2.hgradient(ex, c0, tx + (fs * .5f), textColor);
           tx -= tw - maxWidth;
-        } else {
+          //} else {
           // show text start when not in focus
-          dc2.hgradient(ex + ew - thm.entryRightMargin - (fs * .5f),
-                        textColor, ex + ew, c0);
+          //dc2.hgradient(ex + ew - thm.entryRightMargin - (fs * .5f),
+          //              textColor, ex + ew, c0);
         }
       } else {
-        dc2.color(textColor);
+        //dc2.color(textColor);
         if (HAlign(def.entry.align) == ALIGN_RIGHT) {
           tx = ex + ew - (tw + cw + thm.entryRightMargin);
         } else if (HAlign(def.entry.align) != ALIGN_LEFT) { // HCENTER
           tx = ex + ((ew - tw) * .5f);
         }
       }
+      float cx = tx + tw;
+      if (def._id == _focusID && _cursorPos != txt.size()) {
+        cx = tx + thm.font->calcLength({txt.c_str(), _cursorPos}, 0);
+        if (cx < leftEdge) {
+          tx += leftEdge - cx;
+          cx = leftEdge;
+        }
+      }
+      dc2.color(textColor);
       dc2.text({thm.font, float(thm.textSpacing)},
                tx, ey + thm.entryTopMargin, ALIGN_TOP_LEFT, txt,
                {ex, ey, ew, eh});
       if (def._id == _focusID && _cursorState) {
         // draw cursor
         dc.color(thm.cursorColor);
-        dc.rectangle(tx + tw, ey + thm.entryTopMargin, cw, fs - 1.0f);
+        dc.rectangle(cx, ey + thm.entryTopMargin, cw, fs - 1.0f);
       }
       break;
     }
