@@ -22,27 +22,27 @@
 
 
 // functions
-std::string gx::toUTF8(int32_t num)
+std::string gx::toUTF8(int32_t code)
 {
   char str[8];
   char* ptr = str;
-  if (num > 0) {
-    if (num <= 0x7f) {
-      *ptr++ = char(num);
-    } else if (num <= 0x7ff) {
-      *ptr++ = char(0b11000000 | (num>>6));
-      *ptr++ = char(0b10000000 | (num&63));
-    } else if (num <= 0xffff) {
-      *ptr++ = char(0b11100000 | (num>>12));
-      *ptr++ = char(0b10000000 | ((num>>6)&63));
-      *ptr++ = char(0b10000000 | (num&63));
-    } else if (num <= 0x10ffff) {
-      *ptr++ = char(0b11110000 | (num>>18));
-      *ptr++ = char(0b10000000 | ((num>>12)&63));
-      *ptr++ = char(0b10000000 | ((num>>6)&63));
-      *ptr++ = char(0b10000000 | (num&63));
+  if (code > 0) {
+    if (code <= 0x7f) {
+      *ptr++ = char(code);
+    } else if (code <= 0x7ff) {
+      *ptr++ = char(0b11000000 | (code>>6));
+      *ptr++ = char(0b10000000 | (code&63));
+    } else if (code <= 0xffff) {
+      *ptr++ = char(0b11100000 | (code>>12));
+      *ptr++ = char(0b10000000 | ((code>>6)&63));
+      *ptr++ = char(0b10000000 | (code&63));
+    } else if (code <= 0x10ffff) {
+      *ptr++ = char(0b11110000 | (code>>18));
+      *ptr++ = char(0b10000000 | ((code>>12)&63));
+      *ptr++ = char(0b10000000 | ((code>>6)&63));
+      *ptr++ = char(0b10000000 | (code&63));
     }
-  } else if (num == 0) {
+  } else if (code == 0) {
     // modified UTF-8 encoding of null character
     *ptr++ = char(0b11000000);
     *ptr++ = char(0b10000000);
@@ -96,9 +96,9 @@ bool gx::eraseUTF8(std::string& str, std::size_t pos)
   return true;
 }
 
-bool gx::insertUTF8(std::string& str, std::size_t pos, uint32_t code)
+bool gx::insertUTF8(std::string& str, std::size_t pos, int32_t code)
 {
-  std::size_t i = indexUTF8(str, pos);
+  const std::size_t i = indexUTF8(str, pos);
   if (i == std::string::npos) { return false; }
   str.insert(i, toUTF8(code));
   return true;

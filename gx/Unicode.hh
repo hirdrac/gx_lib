@@ -33,7 +33,7 @@ namespace gx
     // remove character at pos
     // (pos == string::npos will delete the last character)
 
-  bool insertUTF8(std::string& str, std::size_t pos, uint32_t code);
+  bool insertUTF8(std::string& str, std::size_t pos, int32_t code);
     // add UTF8 character to UTF8 string at specified character position
 
   class UTF8Iterator;
