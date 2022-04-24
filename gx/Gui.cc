@@ -1305,10 +1305,11 @@ bool Gui::drawElem(
             cx += rightEdge - tEnd;
           }
         }
+        tx += _entryOffset;
       }
       dc2.color(style->textColor);
       // TODO: add gradient color if text is off left/right edges
-      dc2.text({thm.font, float(thm.textSpacing)}, tx + _entryOffset,
+      dc2.text({thm.font, float(thm.textSpacing)}, tx,
                ey + thm.entryTopMargin, ALIGN_TOP_LEFT, txt, {ex, ey, ew, eh});
       if (def._id == _focusID && _cursorState) {
         // draw cursor
