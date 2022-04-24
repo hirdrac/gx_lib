@@ -217,7 +217,8 @@ class gx::Gui
   float _heldX = 0, _heldY = 0;
   int64_t _heldTime = 0;
   int64_t _repeatDelay = -1;  // negative value disables repeat
-  std::size_t _cursorPos = 0;
+  std::size_t _cursorPos = 0; // character pos of cursor
+  float _entryOffset = 0;     // text render offset because of cursor
 
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0; // cached theme value
@@ -237,9 +238,9 @@ class gx::Gui
   void activatePopup(const GuiElem& def);
   bool drawElem(
     Window& win, Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
-    const GuiTheme::Style* style) const;
+    const GuiTheme::Style* style);
   bool drawPopup(Window& win, Panel& p, GuiElem& def,
-                 DrawContext& dc, DrawContext& dc2) const;
+                 DrawContext& dc, DrawContext& dc2);
 
   [[nodiscard]] GuiElem* findElemByID(ElemID id);
   [[nodiscard]] GuiElem* findElemByEventID(EventID eid);

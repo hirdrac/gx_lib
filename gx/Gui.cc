@@ -1010,6 +1010,7 @@ void Gui::setFocus(Window& win, const GuiElem* ePtr)
   }
 
   _cursorPos = ePtr ? ePtr->text.size() : 0;
+  _entryOffset = 0;
   _needRender = true;
 }
 
@@ -1041,6 +1042,7 @@ bool Gui::setText(EventID eid, std::string_view text)
     e->text = text;
     if (e->type == GUI_ENTRY) {
       _cursorPos = e->text.size();
+      _entryOffset = 0;
     } else {
       pPtr->needLayout = true;
     }
@@ -1124,7 +1126,7 @@ void Gui::initElem(GuiElem& def)
 
 bool Gui::drawElem(
   Window& win, Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
-  const GuiTheme::Style* style) const
+  const GuiTheme::Style* style)
 {
   const GuiTheme& thm = *p.theme;
   const float ex = def._x + p.layout.x;
@@ -1272,50 +1274,47 @@ bool Gui::drawElem(
       drawRec(dc, ex, ey, ew, eh, thm, style);
       const std::string txt = (def.entry.type == ENTRY_PASSWORD)
         ? passwordStr(thm.passwordCode, def.text.size()) : def.text;
-      const RGBA8 textColor = style->textColor;
       const float cw = thm.cursorWidth;
       const float tw = thm.font->calcLength(txt, 0);
-      const float fs = float(thm.font->size());
       const float maxWidth = ew - thm.entryLeftMargin
         - thm.entryRightMargin - cw;
       const float leftEdge = ex + thm.entryLeftMargin;
+      const float rightEdge = leftEdge + maxWidth;
       float tx = leftEdge;
-      if (tw > maxWidth) {
-        // text doesn't fit in entry
-        //const RGBA8 c0 = textColor & 0x00ffffff;
-        if (def._id == _focusID) {
-          // text being edited so show text end where cursor is
-          //dc2.hgradient(ex, c0, tx + (fs * .5f), textColor);
-          tx -= tw - maxWidth;
-          //} else {
-          // show text start when not in focus
-          //dc2.hgradient(ex + ew - thm.entryRightMargin - (fs * .5f),
-          //              textColor, ex + ew, c0);
-        }
-      } else {
-        //dc2.color(textColor);
+      if (tw <= maxWidth) {
         if (HAlign(def.entry.align) == ALIGN_RIGHT) {
           tx = ex + ew - (tw + cw + thm.entryRightMargin);
         } else if (HAlign(def.entry.align) != ALIGN_LEFT) { // HCENTER
           tx = ex + ((ew - tw) * .5f);
         }
       }
-      float cx = tx + tw;
-      if (def._id == _focusID && _cursorPos != txt.size()) {
-        cx = tx + thm.font->calcLength({txt.c_str(), _cursorPos}, 0);
+      float cx = 0;
+      if (def._id == _focusID) {
+        if (tw <= maxWidth) { _entryOffset = 0; }
+        cx = tx + _entryOffset
+          + thm.font->calcLength({txt.c_str(), _cursorPos}, 0);
         if (cx < leftEdge) {
-          tx += leftEdge - cx;
-          cx = leftEdge;
+          _entryOffset += leftEdge - cx; cx = leftEdge;
+        } else if (cx > rightEdge) {
+          _entryOffset -= cx - rightEdge; cx = rightEdge;
+        } else if (tw > maxWidth) {
+          // special case to keep max amount of entry text visible
+          const float tEnd = tx + _entryOffset + tw;
+          if (tEnd < rightEdge) {
+            _entryOffset += rightEdge - tEnd;
+            cx += rightEdge - tEnd;
+          }
         }
       }
-      dc2.color(textColor);
-      dc2.text({thm.font, float(thm.textSpacing)},
-               tx, ey + thm.entryTopMargin, ALIGN_TOP_LEFT, txt,
-               {ex, ey, ew, eh});
+      dc2.color(style->textColor);
+      // TODO: add gradient color if text is off left/right edges
+      dc2.text({thm.font, float(thm.textSpacing)}, tx + _entryOffset,
+               ey + thm.entryTopMargin, ALIGN_TOP_LEFT, txt, {ex, ey, ew, eh});
       if (def._id == _focusID && _cursorState) {
         // draw cursor
         dc.color(thm.cursorColor);
-        dc.rectangle(cx, ey + thm.entryTopMargin, cw, fs - 1.0f);
+        dc.rectangle(cx, ey + thm.entryTopMargin,
+                     cw, float(thm.font->size() - 1));
       }
       break;
     }
@@ -1344,7 +1343,7 @@ bool Gui::drawElem(
 }
 
 bool Gui::drawPopup(Window& win, Panel& p, GuiElem& def,
-                    DrawContext& dc, DrawContext& dc2) const
+                    DrawContext& dc, DrawContext& dc2)
 {
   bool needRedraw = false; // use for anim trigger later
   if (isPopup(def.type)) {
