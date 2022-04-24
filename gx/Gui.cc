@@ -1193,8 +1193,8 @@ bool Gui::drawElem(
         style = (def._id == _hoverID) ? &thm.checkboxHover : &thm.checkbox;
       }
       const float b = thm.border;
-      const float cw = thm.font->glyphWidth(thm.checkCode) + (b*2.0f);
-      const float ch = float(thm.font->size() - 1) + (b*2.0f);
+      const float cw = thm.font->glyphWidth(thm.checkCode) + (b*2);
+      const float ch = float(thm.font->size() - 1) + (b*2);
       drawRec(dc, ex, ey, cw, ch, thm, style);
       if (def.checkboxSet) {
         dc2.color(style->textColor);
@@ -1240,8 +1240,8 @@ bool Gui::drawElem(
       drawRec(dc, ex, ey, ew, eh, thm, style);
       needRedraw |= drawElem(win, p, def.elems[0], dc, dc2, style);
       const float b = thm.border;
-      const int32_t code = def._active ?
-        thm.listSelectOpenCode : thm.listSelectCode;
+      const int32_t code = def._active
+        ? thm.listSelectOpenCode : thm.listSelectCode;
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
                 ex + ew - b, ey + b, ALIGN_TOP_RIGHT, code);
@@ -1254,7 +1254,6 @@ bool Gui::drawElem(
         style = &thm.listSelectItemSelect;
         drawRec(dc, ex, ey, ew, eh, thm, style);
       }
-
       if (thm.listSelectItemCode != 0) {
         const GuiElem* parent = findParentListSelect(p.root, def._id);
         if (parent && parent->itemNo == def.itemNo) {
