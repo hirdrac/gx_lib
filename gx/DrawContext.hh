@@ -157,7 +157,7 @@ class gx::DrawContext
   void circleSector(
     Vec2 center, float radius, float startAngle, float endAngle, int segments);
   void circleSector(Vec2 center, float radius, float startAngle, float endAngle,
-                    int segments, RGBA8 color0, RGBA8 color1);
+                    int segments, RGBA8 innerColor, RGBA8 outerColor);
   void arc(Vec2 center, float radius, float startAngle, float endAngle,
            int segments, float arcWidth);
   void arc(Vec2 center, float radius, float startAngle, float endAngle,
@@ -171,6 +171,9 @@ class gx::DrawContext
                         float curveRadius, int curveSegments);
 
   void border(float x, float y, float w, float h, float borderWidth);
+  void border(float x, float y, float w, float h, float borderWidth,
+              RGBA8 innerColor, RGBA8 outerColor);
+
   void roundedBorder(float x, float y, float w, float h,
                      float curveRadius, int curveSegments, float borderWidth);
 

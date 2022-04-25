@@ -130,6 +130,11 @@ void draw_border3(gx::DrawContext& dc, float x, float y)
   dc.border(x+20, y+30, 360, 300, 8.0f);
 }
 
+void draw_border4(gx::DrawContext& dc, float x, float y)
+{
+  dc.border(x+20, y+30, 360, 300, 16.0f, WHITE, gx::packRGBA8(1,1,1,0));
+}
+
 void draw_rborder1(gx::DrawContext& dc, float x, float y)
 {
   dc.color(GRAY50);
@@ -193,6 +198,7 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"Border", draw_border1},
   {"HGradient Border", draw_border2},
   {"VGradient Border", draw_border3},
+  {"Shaded Border", draw_border4},
   {"Rounded Border", draw_rborder1},
   {"HGradient Rounded Border", draw_rborder2},
   {"VGradient Rounded Border", draw_rborder3},

@@ -510,24 +510,24 @@ void DrawContext::_circleSector(
 
 void DrawContext::circleSector(
   Vec2 center, float radius, float startAngle, float endAngle, int segments,
-  RGBA8 color0, RGBA8 color1)
+  RGBA8 innerColor, RGBA8 outerColor)
 {
-  if ((color0 | color1) == 0) { return; }
+  if ((innerColor | outerColor) == 0) { return; }
 
   fixAngles(startAngle, endAngle);
   const float angle0 = degToRad(startAngle);
   const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
 
-  const Vertex2C v0{center, color0};
+  const Vertex2C v0{center, innerColor};
 
   Vertex2C v1{
     center.x + (radius * std::sin(angle0)),
     center.y - (radius * std::cos(angle0)),
-    color1};
+    outerColor};
 
   Vertex2C v2;
-  v2.c = color1;
+  v2.c = outerColor;
 
   float a = angle0;
   for (int i = 0; i < segments; ++i) {
@@ -700,6 +700,30 @@ void DrawContext::border(float x, float y, float w, float h, float borderWidth)
     quad(v_A, v_iA, v_C, v_iC);
     quad(v_iB, v_B, v_iD, v_D);
   }
+}
+
+void DrawContext::border(float x, float y, float w, float h, float borderWidth,
+                         RGBA8 innerColor, RGBA8 outerColor)
+{
+  if ((innerColor | outerColor) == 0) { return; }
+
+  float x0 = x, y0 = y, x1 = x+w, y1 = y+h;
+  const Vertex2C v_A{x0, y0, outerColor};
+  const Vertex2C v_B{x1, y0, outerColor};
+  const Vertex2C v_C{x0, y1, outerColor};
+  const Vertex2C v_D{x1, y1, outerColor};
+
+  x0 += borderWidth; y0 += borderWidth;
+  x1 -= borderWidth; y1 -= borderWidth;
+  const Vertex2C v_iA{x0, y0, innerColor};
+  const Vertex2C v_iB{x1, y0, innerColor};
+  const Vertex2C v_iC{x0, y1, innerColor};
+  const Vertex2C v_iD{x1, y1, innerColor};
+
+  quad(v_A, v_B, v_iA, v_iB);
+  quad(v_iC, v_iD, v_C, v_D);
+  quad(v_A, v_iA, v_C, v_iC);
+  quad(v_iB, v_B, v_iD, v_D);
 }
 
 void DrawContext::roundedBorder(
