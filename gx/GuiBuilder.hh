@@ -252,8 +252,7 @@ namespace gx {
   {
     return {GUI_MENU, ALIGN_TOP_LEFT, 0,
             {guiLabel(ALIGN_CENTER, text),
-             GuiElem{GUI_MENU_FRAME, ALIGN_TOP_LEFT, 0,
-                     {guiVFrame(items...)}}}};
+             GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
   }
 
   inline GuiElem guiMenuItem(EventID id, std::string_view text)
@@ -267,8 +266,7 @@ namespace gx {
   {
     return {GUI_SUBMENU, ALIGN_JUSTIFY, 0,
             {guiLabel(ALIGN_CENTER_LEFT, text),
-             GuiElem{GUI_MENU_FRAME, ALIGN_TOP_LEFT, 0,
-                     {guiVFrame(items...)}}}};
+             GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
   }
 
   // List Select
@@ -277,8 +275,7 @@ namespace gx {
   {
     GuiElem e{GUI_LISTSELECT, ALIGN_TOP_LEFT, id,
               {GuiElem{},
-               GuiElem{GUI_MENU_FRAME, ALIGN_TOP_LEFT, 0,
-                       {guiVFrame(items...)}}}};
+               GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
     e.itemNo = 0; // unset (default to first item)
     return e;
   }
@@ -289,8 +286,7 @@ namespace gx {
   {
     GuiElem e{GUI_LISTSELECT, align, id,
               {GuiElem{},
-               GuiElem{GUI_MENU_FRAME, ALIGN_TOP_LEFT, 0,
-                       {guiVFrame(items...)}}}};
+               GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
     e.itemNo = 0; // unset (default to first item)
     return e;
   }

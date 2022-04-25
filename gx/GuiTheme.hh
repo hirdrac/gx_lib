@@ -142,7 +142,7 @@ struct gx::GuiTheme
   uint16_t cursorWidth = 3;
 
   uint16_t panelBorder = 8;
-  uint16_t menuFrameBorder = 4;
+  uint16_t popupBorder = 4; // for menuFrame,listSelectFrame
   uint16_t lineBorder = 4;
   uint16_t border = 6;
   uint16_t frameSpacing = 4;

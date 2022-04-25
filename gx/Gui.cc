@@ -266,11 +266,11 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
   const GuiTheme& thm, GuiElemType type)
 {
   switch (type) {
-    case GUI_PANEL:      return thm.panelBorder;
-    case GUI_MENU_FRAME: return thm.menuFrameBorder;
+    case GUI_PANEL: return thm.panelBorder;
+    case GUI_POPUP: return thm.popupBorder;
     case GUI_VLINE:
-    case GUI_HLINE:      return thm.lineBorder;
-    default:             return thm.border;
+    case GUI_HLINE: return thm.lineBorder;
+    default:        return thm.border;
   }
 }
 
@@ -304,7 +304,7 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
       }
       break;
     case GUI_PANEL:
-    case GUI_MENU_FRAME: {
+    case GUI_POPUP: {
       GuiElem& e = def.elems[0];
       const float b2 = borderVal(thm, def.type) * 2;
       e._w = def._w - b2;
@@ -314,8 +314,8 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
     }
     case GUI_LISTSELECT: {
       // listselect popup list width
-      GuiElem& e1 = def.elems[1]; // GUI_MENU_FRAME
-      e1._w = def._w + (thm.menuFrameBorder * 2.0f);
+      GuiElem& e1 = def.elems[1]; // GUI_POPUP
+      e1._w = def._w + (thm.popupBorder * 2.0f);
       resizedElem(thm, e1);
       break;
     }
@@ -417,7 +417,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     }
     case GUI_LISTSELECT: {
       // base size on 1st list item (all items should be same size)
-      GuiElem& e1 = def.elems[1]; // GUI_MENU_FRAME
+      GuiElem& e1 = def.elems[1]; // GUI_POPUP
       const GuiElem* item = findItem(e1.elems[0], 0);
       assert(item != nullptr);
       def._w = item->_w;
@@ -545,7 +545,7 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
     case GUI_LISTSELECT: {
       const float b = thm.border;
       calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
-      calcPos(thm, def.elems[1], left - thm.menuFrameBorder, top + def._h,
+      calcPos(thm, def.elems[1], left - thm.popupBorder, top + def._h,
               right, bottom);
       break;
     }
@@ -1137,7 +1137,7 @@ bool Gui::drawElem(
   bool needRedraw = false; // use for anim trigger later
   switch (def.type) {
     case GUI_PANEL:
-    case GUI_MENU_FRAME:
+    case GUI_POPUP:
       assert(style != nullptr);
       drawRec(dc, ex, ey, ew, eh, thm, style);
       break;
