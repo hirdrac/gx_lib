@@ -33,30 +33,30 @@ void draw_circle1(gx::DrawContext& dc, float x, float y)
 
 void draw_circle2(gx::DrawContext& dc, float x, float y)
 {
-  dc.color(GRAY50);
-  dc.circleSector({x + 200, y + 180}, 150, 20, 270, 16);
-}
-
-void draw_circle3(gx::DrawContext& dc, float x, float y)
-{
-  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32, RED, WHITE);
-}
-
-void draw_circle4(gx::DrawContext& dc, float x, float y)
-{
-  dc.circleSector({x + 200, y + 180}, 150, 20, 270, 32, BLACK, WHITE);
-}
-
-void draw_circle5(gx::DrawContext& dc, float x, float y)
-{
   dc.hgradient(x+50, BLACK, x+350, WHITE);
   dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32);
 }
 
-void draw_circle6(gx::DrawContext& dc, float x, float y)
+void draw_circle3(gx::DrawContext& dc, float x, float y)
 {
   dc.vgradient(y+20, BLACK, y+330, WHITE);
   dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32);
+}
+
+void draw_circle4(gx::DrawContext& dc, float x, float y)
+{
+  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32, RED, WHITE);
+}
+
+void draw_circle5(gx::DrawContext& dc, float x, float y)
+{
+  dc.color(GRAY50);
+  dc.circleSector({x + 200, y + 180}, 150, 20, 270, 16);
+}
+
+void draw_circle6(gx::DrawContext& dc, float x, float y)
+{
+  dc.circleSector({x + 200, y + 180}, 150, 20, 270, 32, BLACK, WHITE);
 }
 
 void draw_rrect1(gx::DrawContext& dc, float x, float y)
@@ -175,12 +175,12 @@ void draw_lines2(gx::DrawContext& dc, float x, float y)
 
 struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   gfxData[] = {
-  {"Solid Circle", draw_circle1},
-  {"Partial Circle", draw_circle2},
-  {"Gradient Full Circle", draw_circle3},
-  {"Gradient Partial Circle", draw_circle4},
-  {"HGradient Circle", draw_circle5},
-  {"VGradient Circle", draw_circle6},
+  {"Circle", draw_circle1},
+  {"HGradient Circle", draw_circle2},
+  {"VGradient Circle", draw_circle3},
+  {"Shaded Circle", draw_circle4},
+  {"Partial Circle", draw_circle5},
+  {"Shaded Partial Circle", draw_circle6},
   {"Rounded Rectangle", draw_rrect1},
   {"HGradient Rounded Rect", draw_rrect2},
   {"VGradient Rounded Rect", draw_rrect3},
