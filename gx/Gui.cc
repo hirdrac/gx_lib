@@ -881,27 +881,31 @@ void Gui::processCharEvent(Window& win)
     if (c.codepoint) {
       usedEvent = true;
       if (addEntryChar(*e, int32_t(c.codepoint))) {
-        _needRender = true;
-        _textChanged = true;
+        _needRender = _textChanged = true;
       }
       // TODO: flash 'error' color if char isn't added
     } else if (c.key == KEY_BACKSPACE) {
       usedEvent = true;
       if (_cursorPos > 0) {
         assert(!e->text.empty());
-        eraseUTF8(e->text, --_cursorPos);
-        _needRender = true;
-        _textChanged = true;
+        if (c.mods == MOD_CONTROL) {
+          e->text.erase(0, indexUTF8(e->text, _cursorPos));
+          _cursorPos = 0;
+        } else {
+          eraseUTF8(e->text, --_cursorPos);
+        }
+        _needRender = _textChanged = true;
       }
-      // TODO: ctrl-backspace, erase from start to cursor pos
     } else if (c.key == KEY_DELETE) {
       usedEvent = true;
       if (_cursorPos < e->text.size()) {
-        eraseUTF8(e->text, _cursorPos);
-        _needRender = true;
-        _textChanged = true;
+        if (c.mods == MOD_CONTROL) {
+          e->text.erase(indexUTF8(e->text, _cursorPos), std::string::npos);
+        } else {
+          eraseUTF8(e->text, _cursorPos);
+        }
+        _needRender = _textChanged = true;
       }
-      // TODO: ctrl-delete, erase from cursor pos to end
     } else if (c.key == KEY_V && c.mods == MOD_CONTROL) {
       // (CTRL-V) paste first line of clipboard
       usedEvent = true;
@@ -929,9 +933,8 @@ void Gui::processCharEvent(Window& win)
       if (_cursorPos > 0) { _cursorPos = 0; _needRender = true; }
     } else if (c.key == KEY_END && c.mods == 0) {
       usedEvent = true;
-      if (_cursorPos < e->text.size()) {
-        _cursorPos = e->text.size(); _needRender = true;
-      }
+      const std::size_t ts = e->text.size();
+      if (_cursorPos < ts) { _cursorPos = ts; _needRender = true; }
     }
   }
 
