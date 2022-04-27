@@ -10,7 +10,6 @@
 #include "Unicode.hh"
 #include "System.hh"
 #include "Logger.hh"
-#include "Print.hh"
 #include <algorithm>
 #include <cassert>
 using namespace gx;
@@ -946,7 +945,7 @@ void Gui::processCharEvent(Window& win)
   }
 }
 
-bool Gui::addEntryChar(GuiElem& e, int32_t codepoint)
+bool Gui::addEntryChar(GuiElem& e, int32_t code)
 {
   assert(e.type == GUI_ENTRY);
   if (e.entry.maxLength != 0 && lengthUTF8(e.text) >= e.entry.maxLength) {
@@ -955,35 +954,35 @@ bool Gui::addEntryChar(GuiElem& e, int32_t codepoint)
 
   switch (e.entry.type) {
     default: // ENTRY_TEXT, ENTRY_PASSWORD
-      if (codepoint <= 31) { return false; }
+      if (code <= 31) { return false; }
       break;
     case ENTRY_CARDINAL:
-      if (!std::isdigit(codepoint)
-          || (e.text == "0" && codepoint == '0')) { return false; }
+      if (!std::isdigit(code)
+          || (e.text == "0" && code == '0')) { return false; }
       if (e.text == "0") { e.text.clear(); _cursorPos = 0; }
       break;
     case ENTRY_INTEGER:
-      if ((!std::isdigit(codepoint) && codepoint != '-')
-          || (codepoint == '-' && !e.text.empty() && e.text != "0")
-          || (codepoint == '0' && (e.text == "0" || e.text == "-"))) {
+      if ((!std::isdigit(code) && code != '-')
+          || (code == '-' && !e.text.empty() && e.text != "0")
+          || (code == '0' && (e.text == "0" || e.text == "-"))) {
         return false; }
       if (e.text == "0") { e.text.clear(); _cursorPos = 0; }
       break;
     case ENTRY_FLOAT:
-      if ((!std::isdigit(codepoint) && codepoint != '-' && codepoint != '.')
-          || (codepoint == '-' && !e.text.empty() && e.text != "0")
-          || (codepoint == '0' && (e.text == "0" || e.text == "-0"))) {
+      if ((!std::isdigit(code) && code != '-' && code != '.')
+          || (code == '-' && !e.text.empty() && e.text != "0")
+          || (code == '0' && (e.text == "0" || e.text == "-0"))) {
         return false;
-      } else if (codepoint == '.') {
+      } else if (code == '.') {
         int count = 0;
         for (int ch : e.text) { count += (ch == '.'); }
         if (count > 0) { return false; }
       }
-      if (e.text == "0" && codepoint != '.') { e.text.clear(); _cursorPos = 0; }
+      if (e.text == "0" && code != '.') { e.text.clear(); _cursorPos = 0; }
       break;
   }
 
-  insertUTF8(e.text, _cursorPos, codepoint);
+  insertUTF8(e.text, _cursorPos, code);
   ++_cursorPos;
   return true;
 }
@@ -1056,30 +1055,22 @@ bool Gui::setText(EventID eid, std::string_view text)
 
 bool Gui::setBool(EventID eid, bool val)
 {
-  for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
-    if (!e) { continue; }
+  GuiElem* e = findElemByEventID(eid);
+  if (!e || e->type != GUI_CHECKBOX) { return false; }
 
-    if (e->type != GUI_CHECKBOX) { break; }
-    e->checkboxSet = val;
-    _needRender = true;
-    return true;
-  }
-  return false;
+  e->checkboxSet = val;
+  _needRender = true;
+  return true;
 }
 
 bool Gui::setItemNo(EventID eid, int no)
 {
-  for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
-    if (!e) { continue; }
+  GuiElem* e = findElemByEventID(eid);
+  if (!e || e->type != GUI_LISTSELECT) { return false; }
 
-    if (e->type != GUI_LISTSELECT) { break; }
-    e->itemNo = no;
-    _needRender = true;
-    return true;
-  }
-  return false;
+  e->itemNo = no;
+  _needRender = true;
+  return true;
 }
 
 PanelID Gui::addPanel(PanelPtr ptr, float x, float y, AlignEnum align)
