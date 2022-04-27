@@ -826,7 +826,6 @@ void Gui::processMouseEvent(Window& win)
         ls.itemNo = ePtr->itemNo;
         GuiElem& e0 = ls.elems[0];
         const GuiElem& src = ePtr->elems[0];
-        //e0 = src;
         e0.text = src.text;
         e0.eid  = src.eid;
         const float b = pPtr->theme->border;
@@ -1116,7 +1115,6 @@ void Gui::initElem(GuiElem& def)
     if (e) {
       GuiElem& e0 = def.elems[0];
       const GuiElem& src = e->elems[0];
-      //e0 = src;
       e0.text  = src.text;
       e0.type  = src.type;
       e0.align = ALIGN_CENTER_LEFT;
@@ -1211,7 +1209,6 @@ bool Gui::drawElem(
       style = def._active ? &thm.menuButtonOpen
         : ((def._id == _hoverID) ? &thm.menuButtonHover : &thm.menuButton);
       drawRec(dc, ex, ey, ew, eh, thm, style);
-      needRedraw |= drawElem(win, p, def.elems[0], dc, dc2, style);
       break;
     case GUI_MENU_ITEM:
       if (!def._enabled) {
@@ -1221,17 +1218,15 @@ bool Gui::drawElem(
         drawRec(dc, ex, ey, ew, eh, thm, style);
       }
       break;
-    case GUI_SUBMENU: {
+    case GUI_SUBMENU:
       if (def._active) {
         style = &thm.menuItemSelect;
         drawRec(dc, ex, ey, ew, eh, thm, style);
       }
-      needRedraw |= drawElem(win, p, def.elems[0], dc, dc2, style);
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
                 ex + ew, ey + thm.border, ALIGN_TOP_RIGHT, thm.subMenuCode);
       break;
-    }
     case GUI_LISTSELECT: {
       if (!def._enabled) {
         style = &thm.listSelectDisable;
@@ -1241,7 +1236,6 @@ bool Gui::drawElem(
         style = (def._id == _hoverID) ? &thm.listSelectHover : &thm.listSelect;
       }
       drawRec(dc, ex, ey, ew, eh, thm, style);
-      needRedraw |= drawElem(win, p, def.elems[0], dc, dc2, style);
       const float b = thm.border;
       const int32_t code = def._active
         ? thm.listSelectOpenCode : thm.listSelectCode;
@@ -1337,8 +1331,8 @@ bool Gui::drawElem(
   }
 
   // draw child elements
-  if (!isPopup(def.type)) {
-    for (GuiElem& e : def.elems) {
+  for (GuiElem& e : def.elems) {
+    if (e.type != GUI_POPUP) {
       needRedraw |= drawElem(win, p, e, dc, dc2, style);
     }
   }
@@ -1349,21 +1343,14 @@ bool Gui::drawPopup(Window& win, Panel& p, GuiElem& def,
                     DrawContext& dc, DrawContext& dc2)
 {
   bool needRedraw = false; // use for anim trigger later
-  if (isPopup(def.type)) {
-    // menu/listselect frame & items
-    if (def._active) {
+  for (GuiElem& e : def.elems) {
+    if (def._active && e.type == GUI_POPUP) {
       const GuiTheme& thm = *p.theme;
-      GuiElem& e1 = def.elems[1];
       needRedraw |= drawElem(
-        win, p, e1, dc, dc2,
+        win, p, e, dc, dc2,
         isMenu(def.type) ? &thm.menuFrame : &thm.listSelectFrame);
-      // continue popup draw for possible active sub-menu
-      needRedraw |= drawPopup(win, p, e1, dc, dc2);
     }
-  } else {
-    for (GuiElem& e : def.elems) {
-      needRedraw |= drawPopup(win, p, e, dc, dc2);
-    }
+    needRedraw |= drawPopup(win, p, e, dc, dc2);
   }
   return needRedraw;
 }
