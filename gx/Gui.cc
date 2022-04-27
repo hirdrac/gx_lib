@@ -1213,16 +1213,14 @@ bool Gui::drawElem(
     case GUI_MENU_ITEM:
       if (!def._enabled) {
         style = &thm.menuItemDisable;
-      } else if (def._id == _hoverID) {
-        style = &thm.menuItemSelect;
-        drawRec(dc, ex, ey, ew, eh, thm, style);
+      } else {
+        style = (def._id == _hoverID) ? &thm.menuItemSelect : &thm.menuItem;
       }
+      drawRec(dc, ex, ey, ew, eh, thm, style);
       break;
     case GUI_SUBMENU:
-      if (def._active) {
-        style = &thm.menuItemSelect;
-        drawRec(dc, ex, ey, ew, eh, thm, style);
-      }
+      style = (def._active) ? &thm.menuItemSelect : &thm.menuItem;
+      drawRec(dc, ex, ey, ew, eh, thm, style);
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
                 ex + ew, ey + thm.border, ALIGN_TOP_RIGHT, thm.subMenuCode);
@@ -1247,10 +1245,11 @@ bool Gui::drawElem(
     case GUI_LISTSELECT_ITEM:
       if (!def._enabled) {
         style = &thm.listSelectItemDisable;
-      } else if (def._id == _hoverID) {
-        style = &thm.listSelectItemSelect;
-        drawRec(dc, ex, ey, ew, eh, thm, style);
+      } else {
+        style = (def._id == _hoverID)
+          ? &thm.listSelectItemSelect : &thm.listSelectItem;
       }
+      drawRec(dc, ex, ey, ew, eh, thm, style);
       if (thm.listSelectItemCode != 0) {
         const GuiElem* parent = findParentListSelect(p.root, def._id);
         if (parent && parent->itemNo == def.itemNo) {

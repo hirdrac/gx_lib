@@ -89,7 +89,9 @@ struct gx::GuiTheme
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0,
     packRGBA8(1.0f,1.0f,1.0f,1.0f), EDGE_UNDERLINE_2px};
   Style menuFrame = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,0.0f,.85f)};
+    packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(0.0f,0.0f,0.0f,.85f)};
+  Style menuItem = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), 0};
   Style menuItemSelect = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f)};
   Style menuItemDisable = {
@@ -105,7 +107,9 @@ struct gx::GuiTheme
   Style listSelectDisable = {
     packRGBA8(.6f,.6f,.6f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f)};
   Style listSelectFrame = {
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(0.0f,0.0f,0.0f,.85f)};
+    packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(0.0f,0.0f,0.0f,.85f)};
+  Style listSelectItem = {
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), 0};
   Style listSelectItemSelect = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f)};
   Style listSelectItemDisable = {
