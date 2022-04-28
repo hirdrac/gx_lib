@@ -183,7 +183,7 @@ class gx::Gui
 
   bool setText(EventID eid, std::string_view text);
   bool setBool(EventID eid, bool val);
-  bool setItemNo(EventID eid, int item_no);
+  bool setItemNo(EventID eid, int itemNo);
 
  private:
   struct Panel {

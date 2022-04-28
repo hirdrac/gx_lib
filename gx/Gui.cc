@@ -1121,49 +1121,10 @@ bool Gui::drawElem(
   const GuiTheme::Style* style)
 {
   const GuiTheme& thm = *p.theme;
-  const float ex = def._x + p.layout.x;
-  const float ey = def._y + p.layout.y;
-  const float ew = def._w;
-  const float eh = def._h;
-
-  bool needRedraw = false; // use for anim trigger later
   switch (def.type) {
-    case GUI_PANEL:
-    case GUI_POPUP:
-      assert(style != nullptr);
-      drawRec(dc, ex, ey, ew, eh, thm, style);
-      break;
     case GUI_TITLEBAR:
       style = &thm.titlebar;
-      drawRec(dc, ex, ey, ew, eh, thm, style);
       break;
-    case GUI_LABEL:
-      assert(style != nullptr);
-      dc2.color(style->textColor);
-      dc2.text({thm.font, float(thm.textSpacing)},
-               ex, ey, ALIGN_TOP_LEFT, def.text);
-      break;
-    case GUI_VLABEL:
-      assert(style != nullptr);
-      dc2.color(style->textColor);
-      dc2.text({thm.font, float(thm.textSpacing), 0,
-                {0,-1}, {1,0}, {0,-1}, {1,0}},
-               ex, ey+eh, ALIGN_TOP_LEFT, def.text);
-      break;
-    case GUI_HLINE: {
-      const float b = thm.lineBorder;
-      assert(style != nullptr);
-      dc.color(style->textColor);
-      dc.rectangle(ex, ey + b, ew, eh - (b*2));
-      break;
-    }
-    case GUI_VLINE: {
-      const float b = thm.lineBorder;
-      assert(style != nullptr);
-      dc.color(style->textColor);
-      dc.rectangle(ex + b, ey, ew - (b*2), eh);
-      break;
-    }
     case GUI_BUTTON:
     case GUI_BUTTON_PRESS:
       if (!def._enabled) {
@@ -1174,9 +1135,8 @@ bool Gui::drawElem(
       } else {
         style = (def._id == _hoverID) ? &thm.buttonHover : &thm.button;
       }
-      drawRec(dc, ex, ey, ew, eh, thm, style);
       break;
-    case GUI_CHECKBOX: {
+    case GUI_CHECKBOX:
       if (!def._enabled) {
         style = &thm.checkboxDisable;
       } else if (def._id == _heldID) {
@@ -1184,6 +1144,78 @@ bool Gui::drawElem(
       } else {
         style = (def._id == _hoverID) ? &thm.checkboxHover : &thm.checkbox;
       }
+      break;
+    case GUI_MENU:
+      style = def._active ? &thm.menuButtonOpen
+        : ((def._id == _hoverID) ? &thm.menuButtonHover : &thm.menuButton);
+      break;
+    case GUI_MENU_ITEM:
+    case GUI_SUBMENU:
+      if (!def._enabled) {
+        style = &thm.menuItemDisable;
+      } else {
+        style = def._active ? &thm.menuItemSelect : &thm.menuItem;
+      }
+      break;
+    case GUI_LISTSELECT:
+      if (!def._enabled) {
+        style = &thm.listSelectDisable;
+      } else {
+        style = def._active ? &thm.listSelectOpen
+          : ((def._id == _hoverID) ? &thm.listSelectHover : &thm.listSelect);
+      }
+      break;
+    case GUI_LISTSELECT_ITEM:
+      if (!def._enabled) {
+        style = &thm.listSelectItemDisable;
+      } else {
+        style = (def._id == _hoverID)
+          ? &thm.listSelectItemSelect : &thm.listSelectItem;
+      }
+      break;
+    case GUI_ENTRY:
+      if (!def._enabled) {
+        style = &thm.entryDisable;
+      } else {
+        style = (def._id == _focusID) ? &thm.entryFocus : &thm.entry;
+      }
+      break;
+    default:
+      assert(style != nullptr);
+      break;
+  }
+
+  const float ex = def._x + p.layout.x;
+  const float ey = def._y + p.layout.y;
+  const float ew = def._w;
+  const float eh = def._h;
+
+  bool needRedraw = false; // use for anim trigger later
+  switch (def.type) {
+    case GUI_LABEL:
+      dc2.color(style->textColor);
+      dc2.text({thm.font, float(thm.textSpacing)},
+               ex, ey, ALIGN_TOP_LEFT, def.text);
+      break;
+    case GUI_VLABEL:
+      dc2.color(style->textColor);
+      dc2.text({thm.font, float(thm.textSpacing), 0,
+                {0,-1}, {1,0}, {0,-1}, {1,0}},
+               ex, ey+eh, ALIGN_TOP_LEFT, def.text);
+      break;
+    case GUI_HLINE: {
+      const float b = thm.lineBorder;
+      dc.color(style->textColor);
+      dc.rectangle(ex, ey + b, ew, eh - (b*2));
+      break;
+    }
+    case GUI_VLINE: {
+      const float b = thm.lineBorder;
+      dc.color(style->textColor);
+      dc.rectangle(ex + b, ey, ew - (b*2), eh);
+      break;
+    }
+    case GUI_CHECKBOX: {
       const float b = thm.border;
       const float cw = thm.font->glyphWidth(thm.checkCode) + (b*2);
       const float ch = float(thm.font->size() - 1) + (b*2);
@@ -1196,34 +1228,13 @@ bool Gui::drawElem(
       }
       break;
     }
-    case GUI_MENU:
-      style = def._active ? &thm.menuButtonOpen
-        : ((def._id == _hoverID) ? &thm.menuButtonHover : &thm.menuButton);
-      drawRec(dc, ex, ey, ew, eh, thm, style);
-      break;
-    case GUI_MENU_ITEM:
-      if (!def._enabled) {
-        style = &thm.menuItemDisable;
-      } else {
-        style = (def._id == _hoverID) ? &thm.menuItemSelect : &thm.menuItem;
-      }
-      drawRec(dc, ex, ey, ew, eh, thm, style);
-      break;
     case GUI_SUBMENU:
-      style = (def._active) ? &thm.menuItemSelect : &thm.menuItem;
       drawRec(dc, ex, ey, ew, eh, thm, style);
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
                 ex + ew, ey + thm.border, ALIGN_TOP_RIGHT, thm.subMenuCode);
       break;
     case GUI_LISTSELECT: {
-      if (!def._enabled) {
-        style = &thm.listSelectDisable;
-      } else if (def._active) {
-        style = &thm.listSelectOpen;
-      } else {
-        style = (def._id == _hoverID) ? &thm.listSelectHover : &thm.listSelect;
-      }
       drawRec(dc, ex, ey, ew, eh, thm, style);
       const float b = thm.border;
       const int32_t code = def._active
@@ -1234,12 +1245,6 @@ bool Gui::drawElem(
       break;
     }
     case GUI_LISTSELECT_ITEM:
-      if (!def._enabled) {
-        style = &thm.listSelectItemDisable;
-      } else {
-        style = (def._id == _hoverID)
-          ? &thm.listSelectItemSelect : &thm.listSelectItem;
-      }
       drawRec(dc, ex, ey, ew, eh, thm, style);
       if (thm.listSelectItemCode != 0) {
         const GuiElem* parent = findParentListSelect(p.root, def._id);
@@ -1252,11 +1257,6 @@ bool Gui::drawElem(
       }
       break;
     case GUI_ENTRY: {
-      if (!def._enabled) {
-        style = &thm.entryDisable;
-      } else {
-        style = (def._id == _focusID) ? &thm.entryFocus : &thm.entry;
-      }
       drawRec(dc, ex, ey, ew, eh, thm, style);
       const std::string txt = (def.entry.type == ENTRY_PASSWORD)
         ? passwordStr(thm.passwordCode, def.text.size()) : def.text;
@@ -1316,7 +1316,7 @@ bool Gui::drawElem(
     case GUI_SPACER:
       break; // layout only - nothing to draw
     default:
-      GX_LOG_ERROR("unknown type ", def.type);
+      drawRec(dc, ex, ey, ew, eh, thm, style);
       break;
   }
 
