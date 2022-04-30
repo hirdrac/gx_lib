@@ -113,6 +113,8 @@ struct gx::GuiElem
     : type{GUI_NULL}, align{ALIGN_UNSPECIFIED}, eid{0} { }
   GuiElem(GuiElemType t, AlignEnum a, EventID i)
     : type{t}, align{a}, eid{i} { }
+  GuiElem(GuiElemType t, AlignEnum a, EventID i, std::string_view txt)
+    : text{txt}, type{t}, align{a}, eid{i} { }
   GuiElem(GuiElemType t, AlignEnum a, EventID i,
           std::initializer_list<GuiElem> x)
     : elems{x}, type{t}, align{a}, eid{i} { }

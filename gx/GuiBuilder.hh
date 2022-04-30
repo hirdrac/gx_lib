@@ -87,59 +87,43 @@ namespace gx {
   // Label
   inline GuiElem guiLabel(std::string_view text)
   {
-    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, 0};
-    e.text = text;
-    return e;
+    return {GUI_LABEL, ALIGN_TOP_LEFT, 0, text};
   }
 
   inline GuiElem guiLabel(AlignEnum align, std::string_view text)
   {
-    GuiElem e{GUI_LABEL, align, 0};
-    e.text = text;
-    return e;
+    return {GUI_LABEL, align, 0, text};
   }
 
   inline GuiElem guiLabel(EventID id, std::string_view text)
   {
-    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, id};
-    e.text = text;
-    return e;
+    return {GUI_LABEL, ALIGN_TOP_LEFT, id, text};
   }
 
   inline GuiElem guiLabel(EventID id, AlignEnum align, std::string_view text)
   {
-    GuiElem e{GUI_LABEL, align, id};
-    e.text = text;
-    return e;
+    return {GUI_LABEL, align, id, text};
   }
 
   // VLabel
   inline GuiElem guiVLabel(std::string_view text)
   {
-    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, 0};
-    e.text = text;
-    return e;
+    return {GUI_VLABEL, ALIGN_BOTTOM_LEFT, 0, text};
   }
 
   inline GuiElem guiVLabel(AlignEnum align, std::string_view text)
   {
-    GuiElem e{GUI_VLABEL, align, 0};
-    e.text = text;
-    return e;
+    return {GUI_VLABEL, align, 0, text};
   }
 
   inline GuiElem guiVLabel(EventID id, std::string_view text)
   {
-    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, id};
-    e.text = text;
-    return e;
+    return {GUI_VLABEL, ALIGN_BOTTOM_LEFT, id, text};
   }
 
   inline GuiElem guiVLabel(EventID id, AlignEnum align, std::string_view text)
   {
-    GuiElem e{GUI_VLABEL, align, id};
-    e.text = text;
-    return e;
+    return {GUI_VLABEL, align, id, text};
   }
 
   // HLine
