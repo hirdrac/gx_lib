@@ -99,6 +99,20 @@ namespace gx {
     return e;
   }
 
+  inline GuiElem guiLabel(EventID id, std::string_view text)
+  {
+    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, id};
+    e.text = text;
+    return e;
+  }
+
+  inline GuiElem guiLabel(EventID id, AlignEnum align, std::string_view text)
+  {
+    GuiElem e{GUI_LABEL, align, id};
+    e.text = text;
+    return e;
+  }
+
   // VLabel
   inline GuiElem guiVLabel(std::string_view text)
   {
@@ -110,6 +124,20 @@ namespace gx {
   inline GuiElem guiVLabel(AlignEnum align, std::string_view text)
   {
     GuiElem e{GUI_VLABEL, align, 0};
+    e.text = text;
+    return e;
+  }
+
+  inline GuiElem guiVLabel(EventID id, std::string_view text)
+  {
+    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, id};
+    e.text = text;
+    return e;
+  }
+
+  inline GuiElem guiVLabel(EventID id, AlignEnum align, std::string_view text)
+  {
+    GuiElem e{GUI_VLABEL, align, id};
     e.text = text;
     return e;
   }
