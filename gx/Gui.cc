@@ -1040,13 +1040,16 @@ bool Gui::setText(EventID eid, std::string_view text)
     GuiElem* e = findElemByEventIDT(pPtr->root, eid);
     if (!e) { continue; }
 
-    e->text = text;
     if (e->type == GUI_ENTRY) {
       _cursorPos = e->text.size();
       _entryOffset = 0;
-    } else {
+    } else if (e->type == GUI_LABEL || e->type == GUI_VLABEL) {
       pPtr->needLayout = true;
+    } else {
+      break;
     }
+
+    e->text = text;
     _needRender = true;
     return true;
   }
