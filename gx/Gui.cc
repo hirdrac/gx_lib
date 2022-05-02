@@ -959,14 +959,18 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
     case ENTRY_CARDINAL:
       if (!std::isdigit(code)
           || (e.text == "0" && code == '0')) { return false; }
-      if (e.text == "0") { e.text.clear(); _cursorPos = 0; }
+      if (e.text == "0" && _cursorPos == 1) {
+        e.text.clear(); _cursorPos = 0;
+      }
       break;
     case ENTRY_INTEGER:
       if ((!std::isdigit(code) && code != '-')
           || (code == '-' && !e.text.empty() && e.text != "0")
           || (code == '0' && (e.text == "0" || e.text == "-"))) {
         return false; }
-      if (e.text == "0") { e.text.clear(); _cursorPos = 0; }
+      if (e.text == "0" && _cursorPos == 1) {
+        e.text.clear(); _cursorPos = 0;
+      }
       break;
     case ENTRY_FLOAT:
       if ((!std::isdigit(code) && code != '-' && code != '.')
@@ -978,7 +982,9 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
         for (int ch : e.text) { count += (ch == '.'); }
         if (count > 0) { return false; }
       }
-      if (e.text == "0" && code != '.') { e.text.clear(); _cursorPos = 0; }
+      if (e.text == "0" && code != '.' && _cursorPos == 1) {
+        e.text.clear(); _cursorPos = 0;
+      }
       break;
   }
 
