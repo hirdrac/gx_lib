@@ -954,6 +954,7 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
 
   switch (e.entry.type) {
     default: // ENTRY_TEXT, ENTRY_PASSWORD
+      // valid character check
       if (code <= 31) { return false; }
       break;
     case ENTRY_CARDINAL:
