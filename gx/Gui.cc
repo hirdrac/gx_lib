@@ -957,32 +957,37 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
       if (code <= 31) { return false; }
       break;
     case ENTRY_CARDINAL:
-      if (!std::isdigit(code)
-          || (e.text == "0" && code == '0')) { return false; }
-      if (e.text == "0" && _cursorPos == 1) {
-        e.text.clear(); _cursorPos = 0;
-      }
+      // valid character check
+      if (!std::isdigit(code)) { return false; }
+      // allowed sequence check
+      if (code == '0'
+          && (e.text == "0" || (_cursorPos == 0 && !e.text.empty()))) {
+        return false; }
+      // special case to reset entry
+      if (e.text == "0" && _cursorPos == 1) { e.text.clear(); _cursorPos = 0; }
       break;
     case ENTRY_INTEGER:
-      if ((!std::isdigit(code) && code != '-')
-          || (code == '-' && !e.text.empty() && e.text != "0")
-          || (code == '0' && (e.text == "0" || e.text == "-"))) {
-        return false; }
-      if (e.text == "0" && _cursorPos == 1) {
-        e.text.clear(); _cursorPos = 0;
-      }
+      // valid character check
+      if (!std::isdigit(code) && code != '-') { return false; }
+      // allowed sequence check
+      if ((code == '-' && !e.text.empty() && e.text != "0")
+          || (code == '0' && (e.text == "0" || e.text == "-"))) { return false; }
+      // special case to reset entry
+      if (e.text == "0" && _cursorPos == 1) { e.text.clear(); _cursorPos = 0; }
       break;
     case ENTRY_FLOAT:
-      if ((!std::isdigit(code) && code != '-' && code != '.')
-          || (code == '-' && !e.text.empty() && e.text != "0")
+      // valid character check
+      if (!std::isdigit(code) && code != '-' && code != '.') { return false; }
+      // allowed sequence check
+      if ((code == '-' && !e.text.empty() && e.text != "0")
           || (code == '0' && (e.text == "0" || e.text == "-0"))) {
-        return false;
-      } else if (code == '.') {
+        return false; }
+      // decimal handling and special case to reset entry
+      if (code == '.') {
         int count = 0;
         for (int ch : e.text) { count += (ch == '.'); }
         if (count > 0) { return false; }
-      }
-      if (e.text == "0" && code != '.' && _cursorPos == 1) {
+      } else if (e.text == "0"  && _cursorPos == 1) {
         e.text.clear(); _cursorPos = 0;
       }
       break;
