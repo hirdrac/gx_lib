@@ -59,6 +59,10 @@ namespace gx {
     ENTRY_FLOAT,    // floating point number
     ENTRY_PASSWORD  // all characters valid w/ output hidden
   };
+
+  enum GuiAction {
+    ACTION_NONE = 0,
+  };
 }
 
 
@@ -78,6 +82,8 @@ struct gx::GuiElem
 
   struct ButtonProps {
     int64_t repeatDelay; // BUTTON_PRESS only
+    GuiAction action;
+    EventID target;
   };
 
   struct EntryProps {
