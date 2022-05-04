@@ -142,22 +142,38 @@ namespace gx {
   // (triggered on button release)
   inline GuiElem guiButton(EventID id, const GuiElem& elem)
   {
-    return {GUI_BUTTON, ALIGN_TOP_LEFT, id, {elem}};
+    GuiElem e{GUI_BUTTON, ALIGN_TOP_LEFT, id, {elem}};
+    e.button.repeatDelay = -1; // disabled
+    e.button.action = ACTION_NONE;
+    e.button.target = 0;
+    return e;
   }
 
   inline GuiElem guiButton(EventID id, AlignEnum align, const GuiElem& elem)
   {
-    return {GUI_BUTTON, align, id, {elem}};
+    GuiElem e{GUI_BUTTON, align, id, {elem}};
+    e.button.repeatDelay = -1; // disabled
+    e.button.action = ACTION_NONE;
+    e.button.target = 0;
+    return e;
   }
 
   inline GuiElem guiButton(EventID id, std::string_view text)
   {
-    return {GUI_BUTTON, ALIGN_TOP_LEFT, id, {guiLabel(ALIGN_CENTER, text)}};
+    GuiElem e{GUI_BUTTON, ALIGN_TOP_LEFT, id, {guiLabel(ALIGN_CENTER, text)}};
+    e.button.repeatDelay = -1; // disabled
+    e.button.action = ACTION_NONE;
+    e.button.target = 0;
+    return e;
   }
 
   inline GuiElem guiButton(EventID id, AlignEnum align, std::string_view text)
   {
-    return {GUI_BUTTON, align, id, {guiLabel(ALIGN_CENTER, text)}};
+    GuiElem e{GUI_BUTTON, align, id, {guiLabel(ALIGN_CENTER, text)}};
+    e.button.repeatDelay = -1; // disabled
+    e.button.action = ACTION_NONE;
+    e.button.target = 0;
+    return e;
   }
 
   // ButtonPress
