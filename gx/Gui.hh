@@ -83,7 +83,7 @@ struct gx::GuiElem
   struct ButtonProps {
     int64_t repeatDelay; // BUTTON_PRESS only
     GuiAction action;
-    EventID target;
+    EventID targetID;
   };
 
   struct EntryProps {

@@ -145,7 +145,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON, ALIGN_TOP_LEFT, id, {elem}};
     e.button.repeatDelay = -1; // disabled
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -154,7 +154,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON, align, id, {elem}};
     e.button.repeatDelay = -1; // disabled
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -163,7 +163,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON, ALIGN_TOP_LEFT, id, {guiLabel(ALIGN_CENTER, text)}};
     e.button.repeatDelay = -1; // disabled
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -172,7 +172,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON, align, id, {guiLabel(ALIGN_CENTER, text)}};
     e.button.repeatDelay = -1; // disabled
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -183,7 +183,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
     e.button.repeatDelay = -1; // disabled
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -193,7 +193,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
     e.button.repeatDelay = -1; // disabled
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -203,7 +203,7 @@ namespace gx {
               {guiLabel(ALIGN_CENTER, text)}};
     e.button.repeatDelay = -1; // disabled
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -213,7 +213,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
     e.button.repeatDelay = -1; // disabled
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -224,7 +224,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
     e.button.repeatDelay = repeat_delay;
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -234,7 +234,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
     e.button.repeatDelay = repeat_delay;
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -245,7 +245,7 @@ namespace gx {
               {guiLabel(ALIGN_CENTER, text)}};
     e.button.repeatDelay = repeat_delay;
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
@@ -255,7 +255,7 @@ namespace gx {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
     e.button.repeatDelay = repeat_delay;
     e.button.action = ACTION_NONE;
-    e.button.target = 0;
+    e.button.targetID = 0;
     return e;
   }
 
