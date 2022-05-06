@@ -76,6 +76,10 @@ struct gx::GuiElem
   EventID eid;
 
   // elem type specific properties
+  struct LabelProps {
+    float minLength;
+  };
+
   struct SpacerProps {
     int16_t left, top, right, bottom;
   };
@@ -102,8 +106,9 @@ struct gx::GuiElem
   union {
     bool checkboxSet;    // CHECKBOX
     int itemNo;          // LISTSELECT, LISTSELECT_ITEM
-    ButtonProps button;  // BUTTON,BUTTON_PRESS
+    LabelProps label;    // LABEL,VLABEL
     SpacerProps spacer;  // SPACER
+    ButtonProps button;  // BUTTON,BUTTON_PRESS
     EntryProps entry;    // ENTRY
     ImageProps image;    // IMAGE
   };

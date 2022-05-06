@@ -379,7 +379,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
     case GUI_LABEL: {
       const Font& fnt = *thm.font;
       const int lines = calcLines(def.text);
-      def._w = fnt.calcMaxLength(def.text, 0);
+      def._w = std::max(fnt.calcMaxLength(def.text, 0), def.label.minLength);
       def._h = float((fnt.size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
       break;
@@ -389,7 +389,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       const int lines = calcLines(def.text);
       def._w = float((fnt.size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
-      def._h = fnt.calcMaxLength(def.text, 0);
+      def._h = std::max(fnt.calcMaxLength(def.text, 0), def.label.minLength);
       break;
     }
     case GUI_HLINE:

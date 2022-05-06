@@ -85,45 +85,65 @@ namespace gx {
   }
 
   // Label
-  inline GuiElem guiLabel(std::string_view text)
+  inline GuiElem guiLabel(std::string_view text, float minLen = 0)
   {
-    return {GUI_LABEL, ALIGN_TOP_LEFT, 0, text};
+    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, 0, text};
+    e.label.minLength = minLen;
+    return e;
   }
 
-  inline GuiElem guiLabel(AlignEnum align, std::string_view text)
+  inline GuiElem guiLabel(AlignEnum align, std::string_view text,
+                          float minLen = 0)
   {
-    return {GUI_LABEL, align, 0, text};
+    GuiElem e{GUI_LABEL, align, 0, text};
+    e.label.minLength = minLen;
+    return e;
   }
 
-  inline GuiElem guiLabel(EventID id, std::string_view text)
+  inline GuiElem guiLabel(EventID id, std::string_view text, float minLen = 0)
   {
-    return {GUI_LABEL, ALIGN_TOP_LEFT, id, text};
+    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, id, text};
+    e.label.minLength = minLen;
+    return e;
   }
 
-  inline GuiElem guiLabel(EventID id, AlignEnum align, std::string_view text)
+  inline GuiElem guiLabel(EventID id, AlignEnum align, std::string_view text,
+                          float minLen = 0)
   {
-    return {GUI_LABEL, align, id, text};
+    GuiElem e{GUI_LABEL, align, id, text};
+    e.label.minLength = minLen;
+    return e;
   }
 
   // VLabel
-  inline GuiElem guiVLabel(std::string_view text)
+  inline GuiElem guiVLabel(std::string_view text, float minLen = 0)
   {
-    return {GUI_VLABEL, ALIGN_BOTTOM_LEFT, 0, text};
+    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, 0, text};
+    e.label.minLength = minLen;
+    return e;
   }
 
-  inline GuiElem guiVLabel(AlignEnum align, std::string_view text)
+  inline GuiElem guiVLabel(AlignEnum align, std::string_view text,
+                           float minLen = 0)
   {
-    return {GUI_VLABEL, align, 0, text};
+    GuiElem e{GUI_VLABEL, align, 0, text};
+    e.label.minLength = minLen;
+    return e;
   }
 
-  inline GuiElem guiVLabel(EventID id, std::string_view text)
+  inline GuiElem guiVLabel(EventID id, std::string_view text, float minLen = 0)
   {
-    return {GUI_VLABEL, ALIGN_BOTTOM_LEFT, id, text};
+    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, id, text};
+    e.label.minLength = minLen;
+    return e;
   }
 
-  inline GuiElem guiVLabel(EventID id, AlignEnum align, std::string_view text)
+  inline GuiElem guiVLabel(EventID id, AlignEnum align, std::string_view text,
+                           float minLen = 0)
   {
-    return {GUI_VLABEL, align, id, text};
+    GuiElem e{GUI_VLABEL, align, id, text};
+    e.label.minLength = minLen;
+    return e;
   }
 
   // HLine
