@@ -17,27 +17,23 @@ namespace gx {
 
   // HFrame
   template<typename... Elems>
-  inline GuiElem guiHFrame(const Elems&... elems)
-  {
+  inline GuiElem guiHFrame(const Elems&... elems) {
     return {GUI_HFRAME, ALIGN_TOP_LEFT, 0, {elems...}};
   }
 
   template<typename... Elems>
-  inline GuiElem guiHFrame(AlignEnum align, const Elems&... elems)
-  {
+  inline GuiElem guiHFrame(AlignEnum align, const Elems&... elems) {
     return {GUI_HFRAME, align, 0, {elems...}};
   }
 
   // VFrame
   template<typename... Elems>
-  inline GuiElem guiVFrame(const Elems&... elems)
-  {
+  inline GuiElem guiVFrame(const Elems&... elems) {
     return {GUI_VFRAME, ALIGN_TOP_LEFT, 0, {elems...}};
   }
 
   template<typename... Elems>
-  inline GuiElem guiVFrame(AlignEnum align, const Elems&... elems)
-  {
+  inline GuiElem guiVFrame(AlignEnum align, const Elems&... elems) {
     return {GUI_VFRAME, align, 0, {elems...}};
   }
 
@@ -147,16 +143,10 @@ namespace gx {
   }
 
   // HLine
-  inline GuiElem guiHLine()
-  {
-    return {GUI_HLINE, ALIGN_HJUSTIFY, 0};
-  }
+  inline GuiElem guiHLine() { return {GUI_HLINE, ALIGN_HJUSTIFY, 0}; }
 
   // VLine
-  inline GuiElem guiVLine()
-  {
-    return {GUI_VLINE, ALIGN_VJUSTIFY, 0};
-  }
+  inline GuiElem guiVLine() { return {GUI_VLINE, ALIGN_VJUSTIFY, 0}; }
 
   // Button
   // (triggered on button release)
@@ -312,22 +302,19 @@ namespace gx {
 
   // Menu
   template<typename... Elems>
-  inline GuiElem guiMenu(std::string_view text, const Elems&... items)
-  {
+  inline GuiElem guiMenu(std::string_view text, const Elems&... items) {
     return {GUI_MENU, ALIGN_TOP_LEFT, 0,
             {guiLabel(ALIGN_CENTER, text),
              GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
   }
 
-  inline GuiElem guiMenuItem(EventID id, std::string_view text)
-  {
+  inline GuiElem guiMenuItem(EventID id, std::string_view text) {
     return {GUI_MENU_ITEM, ALIGN_JUSTIFY, id,
             {guiLabel(ALIGN_CENTER_LEFT, text)}};
   }
 
   template<typename... Elems>
-  inline GuiElem guiSubMenu(std::string_view text, const Elems&... items)
-  {
+  inline GuiElem guiSubMenu(std::string_view text, const Elems&... items) {
     return {GUI_SUBMENU, ALIGN_JUSTIFY, 0,
             {guiLabel(ALIGN_CENTER_LEFT, text),
              GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
@@ -376,67 +363,57 @@ namespace gx {
   }
 
   inline GuiElem guiTextEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT)
-  {
+    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_TEXT, size, maxLen, textAlign);
   }
 
   inline GuiElem guiTextEntry(
     EventID id, AlignEnum align, float size, uint32_t maxLen,
-    AlignEnum textAlign = ALIGN_LEFT)
-  {
+    AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, align, ENTRY_TEXT, size, maxLen, textAlign);
   }
 
   inline GuiElem guiCardinalEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT)
-  {
+    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_CARDINAL, size, maxLen, textAlign);
   }
 
   inline GuiElem guiCardinalEntry(
     EventID id, AlignEnum align, float size, uint32_t maxLen,
-    AlignEnum textAlign = ALIGN_LEFT)
-  {
+    AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, align, ENTRY_CARDINAL, size, maxLen, textAlign);
   }
 
   inline GuiElem guiIntegerEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT)
-  {
+    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_INTEGER, size, maxLen, textAlign);
   }
 
   inline GuiElem guiIntegerEntry(
     EventID id, AlignEnum align, float size, uint32_t maxLen,
-    AlignEnum textAlign = ALIGN_LEFT)
-  {
+    AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, align, ENTRY_INTEGER, size, maxLen, textAlign);
   }
 
   inline GuiElem guiFloatEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT)
-  {
+    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_FLOAT, size, maxLen, textAlign);
   }
 
   inline GuiElem guiFloatEntry(
     EventID id, AlignEnum align, float size, uint32_t maxLen,
-    AlignEnum textAlign = ALIGN_LEFT)
-  {
+    AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, align, ENTRY_FLOAT, size, maxLen, textAlign);
   }
 
   inline GuiElem guiPasswordEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT)
-  {
+    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_PASSWORD, size, maxLen, textAlign);
   }
 
   inline GuiElem guiPasswordEntry(
     EventID id, AlignEnum align, float size, uint32_t maxLen,
-    AlignEnum textAlign = ALIGN_LEFT)
-  {
+    AlignEnum textAlign = ALIGN_LEFT) {
     return guiEntry(id, align, ENTRY_PASSWORD, size, maxLen, textAlign);
   }
 
@@ -453,24 +430,16 @@ namespace gx {
   }
 
   // TitleBar
-  inline GuiElem guiTitleBar()
-  {
-    return {GUI_TITLEBAR, ALIGN_HJUSTIFY, 0};
-  }
+  inline GuiElem guiTitleBar() { return {GUI_TITLEBAR, ALIGN_HJUSTIFY, 0}; }
 
-  inline GuiElem guiTitleBar(std::string_view text)
-  {
+  inline GuiElem guiTitleBar(std::string_view text) {
     return {GUI_TITLEBAR, ALIGN_HJUSTIFY, 0, {guiLabel(ALIGN_CENTER, text)}};
   }
 
   // VTitleBar
-  inline GuiElem guiVTitleBar()
-  {
-    return {GUI_TITLEBAR, ALIGN_VJUSTIFY, 0};
-  }
+  inline GuiElem guiVTitleBar() { return {GUI_TITLEBAR, ALIGN_VJUSTIFY, 0}; }
 
-  inline GuiElem guiVTitleBar(std::string_view text)
-  {
+  inline GuiElem guiVTitleBar(std::string_view text) {
     return {GUI_TITLEBAR, ALIGN_VJUSTIFY, 0, {guiVLabel(ALIGN_CENTER, text)}};
   }
 }
