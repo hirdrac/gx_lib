@@ -6,7 +6,7 @@
 //
 
 #pragma once
-#include "Gui.hh"
+#include "GuiElem.hh"
 #include "Align.hh"
 #include "Types.hh"
 #include <string_view>

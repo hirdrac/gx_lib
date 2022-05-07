@@ -7,6 +7,7 @@
 #include "gx/Renderer.hh"
 #include "gx/Font.hh"
 #include "gx/GuiBuilder.hh"
+#include "gx/Gui.hh"
 #include "gx/DrawLayer.hh"
 #include "gx/Print.hh"
 
