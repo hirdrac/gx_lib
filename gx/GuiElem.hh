@@ -53,7 +53,7 @@ namespace gx {
   enum GuiAction {
     ACTION_NONE = 0,
   };
-};
+}
 
 
 struct gx::GuiElem
