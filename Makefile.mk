@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 43 (2022/5/7)
+# Makefile.mk - revision 43 (2022/5/9)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -82,7 +82,8 @@
 #  OPT_LEVEL_DEBUG optimization level for debug builds
 #  SUBSYSTEM       subsystem value for Windows binary builds
 #  WARN            C/C++ compile warning flags (-W optional)
-#  WARN_C          C specific warnings (WARN setting used for C code if unset)
+#  WARN_C          C specific warnings (defaults to WARN or C specific list)
+#  WARN_CXX        C++ specific warnings (defaults to WARN or C++ specific list)
 #  PACKAGES        list of packages for pkg-config
 #  PACKAGES_TEST   additional packages for all tests
 #  INCLUDE         includes needed not covered by pkg-config (-I optional)
@@ -177,10 +178,11 @@ OPT_LEVEL ?= 3
 OPT_LEVEL_DEBUG ?= g
 ifndef WARN
   override _common_warn := all extra missing-include-dirs no-unused-parameter
-  WARN = $(_common_warn) non-virtual-dtor overloaded-virtual $(_$(COMPILER)_warn)
-  WARN_C ?= $(_common_warn) write-strings $(_$(COMPILER)_warn)
+  WARN_C ?= $(_common_warn) write-strings $(_$(COMPILER)_warn) $(WARN_EXTRA)
+  WARN_CXX ?= $(_common_warn) non-virtual-dtor overloaded-virtual $(_$(COMPILER)_warn) $(WARN_EXTRA)
 else
-  WARN_C ?= $(WARN)
+  WARN_C ?= $(WARN) $(WARN_EXTRA)
+  WARN_CXX ?= $(WARN) $(WARN_EXTRA)
 endif
 PACKAGES ?=
 PACKAGES_TEST ?=
@@ -213,8 +215,8 @@ override SFX := SFX
 override BUILD_TMP := BUILD_TMP
 override LIBPREFIX := lib
 
-# apply *_EXTRA setting values
-$(foreach x,WARN WARN_C PACKAGES PACKAGES_TEST INCLUDE LIBS LIBS_TEST DEFINE OPTIONS FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE,\
+# apply *_EXTRA setting values (WARN_EXTRA handled above)
+$(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE LIBS LIBS_TEST DEFINE OPTIONS FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE,\
   $(if $($x_EXTRA),$(eval override $x += $($x_EXTRA))))
 
 
@@ -668,7 +670,7 @@ else ifneq ($(_build_env),)
 
   override _define := $(call _format_define,$(DEFINE))
   override _include := $(call _format_include,$(INCLUDE))
-  override _warn := $(call _format_warn,$(WARN))
+  override _warn := $(call _format_warn,$(WARN_CXX))
   override _warn_c := $(call _format_warn,$(WARN_C))
 
   # setup compile flags for each build path
