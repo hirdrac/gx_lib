@@ -607,14 +607,10 @@ STBIDEF int   stbi_zlib_decode_noheader_buffer(char *obuffer, int olen, const ch
 #endif
 
 
-#ifndef _MSC_VER
-   #ifdef __cplusplus
-   #define stbi_inline inline
-   #else
-   #define stbi_inline
-   #endif
-#else
+#ifdef _MSC_VER
    #define stbi_inline __forceinline
+#else
+   #define stbi_inline inline
 #endif
 
 #ifndef STBI_NO_THREAD_LOCALS
