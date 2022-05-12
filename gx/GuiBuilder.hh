@@ -378,6 +378,8 @@ namespace gx {
     uint32_t maxLen, AlignEnum textAlign)
   {
     GuiElem e{GUI_ENTRY, align, id};
+    if (type == ENTRY_CARDINAL || type == ENTRY_INTEGER
+        || type == ENTRY_FLOAT) { e.text = "0"; }
     e.entry.size = size;
     e.entry.maxLength = maxLen;
     e.entry.type = type;

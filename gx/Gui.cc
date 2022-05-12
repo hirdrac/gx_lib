@@ -1006,8 +1006,16 @@ void Gui::setFocus(Window& win, const GuiElem* ePtr)
 
   if (_textChanged) {
     _textChanged = false;
-    const GuiElem* focusElem = findElemByID(_focusID);
-    if (focusElem) { setEvent(*focusElem, win.lastPollTime()); }
+    GuiElem* focusElem = findElemByID(_focusID);
+    if (focusElem) {
+      if (focusElem->text.empty()) {
+        EntryType t = focusElem->entry.type;
+        if (t == ENTRY_CARDINAL || t == ENTRY_INTEGER || t == ENTRY_FLOAT) {
+          focusElem->text = "0";
+        }
+      }
+      setEvent(*focusElem, win.lastPollTime());
+    }
   }
 
   _focusID = id;
