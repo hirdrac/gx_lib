@@ -577,10 +577,13 @@ void Gui::clear()
   _hoverID = 0;
   _focusID = 0;
   _popupID = 0;
-  _eventID = 0;
   _popupType = GUI_NULL;
+  _eventID = 0;
   _eventType = GUI_NULL;
   _eventTime = 0;
+  _eventID2 = 0;
+  _eventType2 = GUI_NULL;
+  _eventTime2 = 0;
   _needRender = true;
   _textChanged = false;
 }
@@ -622,9 +625,13 @@ bool Gui::update(Window& win)
 {
   const int64_t now = win.lastPollTime();
 
-  // clear state that only persists for a single update
-  _eventID = 0;
-  _eventType = GUI_NULL;
+  // make saved event active
+  _eventID = _eventID2;
+  _eventType = _eventType2;
+  _eventTime = _eventTime2;
+  _eventID2 = 0;
+  _eventType2 = GUI_NULL;
+  _eventTime2 = 0;
   _needRedraw = false;
 
   for (auto& pPtr : _panels) {
@@ -650,7 +657,7 @@ bool Gui::update(Window& win)
       }
 
       const GuiElem* heldElem = findElemByID(_heldID);
-      if (heldElem) { setEvent(*heldElem, now); }
+      if (heldElem) { addEvent(*heldElem, now); }
     }
   } else if (_popupID != 0) {
     deactivatePopups();
@@ -766,7 +773,6 @@ void Gui::processMouseEvent(Window& win)
   }
 
   // update focus
-  // FIXME: setFocus() could trigger an event that is overridden below
   if (lpressEvent) {
     setFocus(win, (type == GUI_ENTRY) ? ePtr : nullptr);
   } else if (lbuttonDown && anyGuiButtonEvent) {
@@ -811,7 +817,7 @@ void Gui::processMouseEvent(Window& win)
     }
   } else if (type == GUI_MENU_ITEM) {
     if (lbuttonEvent || rbuttonEvent) {
-      setEvent(*ePtr, win.lastPollTime());
+      addEvent(*ePtr, win.lastPollTime());
       deactivatePopups();
     } else if (_popupID != id) {
       // activate on menu item to close sub-menus if necessary
@@ -830,7 +836,7 @@ void Gui::processMouseEvent(Window& win)
         const float b = pPtr->theme->border;
         calcPos(*pPtr->theme, e0, ls._x + b, ls._y + b, ls._x + ls._w - b,
                 ls._y + ls._h - b);
-        setEvent(ls, win.lastPollTime());
+        addEvent(ls, win.lastPollTime());
         deactivatePopups();
       }
     }
@@ -844,7 +850,7 @@ void Gui::processMouseEvent(Window& win)
       _needRender = true;
       if (type == GUI_BUTTON_PRESS) {
         _repeatDelay = ePtr->button.repeatDelay;
-        setEvent(*ePtr, win.lastPollTime());
+        addEvent(*ePtr, win.lastPollTime());
       }
     } else if ((_heldType == GUI_BUTTON_PRESS) && (_heldID != id)) {
       // clear hold if cursor moves off BUTTON_PRESS
@@ -854,7 +860,7 @@ void Gui::processMouseEvent(Window& win)
       if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
           && lbuttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
-        setEvent(*ePtr, win.lastPollTime());
+        addEvent(*ePtr, win.lastPollTime());
         if (type == GUI_CHECKBOX) { ePtr->checkboxSet = !ePtr->checkboxSet; }
       }
 
@@ -1014,7 +1020,7 @@ void Gui::setFocus(Window& win, const GuiElem* ePtr)
           focusElem->text = "0";
         }
       }
-      setEvent(*focusElem, win.lastPollTime());
+      addEvent(*focusElem, win.lastPollTime());
     }
   }
 

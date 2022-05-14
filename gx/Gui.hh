@@ -120,6 +120,11 @@ class gx::Gui
   GuiElemType _eventType = GUI_NULL;
   int64_t _eventTime = 0;
 
+  // saved event to delay for next update
+  EventID _eventID2 = 0;
+  GuiElemType _eventType2 = GUI_NULL;
+  int64_t _eventTime2 = 0;
+
   ElemID _heldID = 0;
   GuiElemType _heldType = GUI_NULL;
   float _heldX = 0, _heldY = 0;
@@ -163,10 +168,17 @@ class gx::Gui
     _repeatDelay = -1;
   }
 
-  void setEvent(const GuiElem& e, int64_t t) {
-    _eventID = e.eid;
-    _eventType = e.type;
-    _eventTime = t;
+  void addEvent(const GuiElem& e, int64_t t) {
+    if (_eventID != 0) {
+      // save event for next update
+      _eventID2 = e.eid;
+      _eventType2 = e.type;
+      _eventTime2 = t;
+    } else {
+      _eventID = e.eid;
+      _eventType = e.type;
+      _eventTime = t;
+    }
   }
 
   PanelPtr removePanel(PanelID id) {
