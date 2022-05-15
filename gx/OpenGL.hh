@@ -64,9 +64,6 @@ int GLCheckErrors(std::string_view msg, const char* file = __FILE__,
 [[nodiscard]] std::string GLErrorStr(GLenum error);
   // returns error string (return value of glGetError)
 
-[[nodiscard]] constexpr GLboolean GLBool(bool val) {
-  return val ? GL_TRUE : GL_FALSE; }
-
 [[nodiscard]] constexpr int GLTypeSize(GLenum type)
 {
   switch (type) {

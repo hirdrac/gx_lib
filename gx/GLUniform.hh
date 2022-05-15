@@ -220,7 +220,7 @@ class GLUniformMat4f
 
   template<class T>
   void set(const T& m, bool transpose = false) {
-    GX_GLCALL(glUniformMatrix4fv, _loc, 1, GLBool(transpose), std::data(m)); }
+    GX_GLCALL(glUniformMatrix4fv, _loc, 1, GLboolean(transpose), std::data(m)); }
 
  private:
   GLint _loc = -1;
