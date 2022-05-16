@@ -722,14 +722,12 @@ void Gui::deactivatePopups()
   _needRender = true;
 }
 
-void Gui::activatePopup(const GuiElem& def)
+void Gui::activatePopup(Panel& p, const GuiElem& def)
 {
   if (_popupID != 0) { deactivatePopups(); }
-  const ElemID id = def._id;
-  for (auto& pPtr : _panels) { if (activate(pPtr->root, id)) break; }
-  _popupID = id;
+  _needRender |= activate(p.root, def._id);
+  _popupID = def._id;
   _popupType = getPopupType(def.type);
-  _needRender = true;
 }
 
 void Gui::processMouseEvent(Window& win)
@@ -813,7 +811,7 @@ void Gui::processMouseEvent(Window& win)
       deactivatePopups();
     } else if (pressEvent || (isMenu(type) && _popupType == GUI_MENU)) {
       // open menu/listselect with click OR open menu/sub-menu with mouse-over
-      if (_popupID != id) { activatePopup(*ePtr); }
+      if (_popupID != id) { activatePopup(*pPtr, *ePtr); }
     }
   } else if (type == GUI_MENU_ITEM) {
     if (lbuttonEvent || rbuttonEvent) {
@@ -821,7 +819,7 @@ void Gui::processMouseEvent(Window& win)
       deactivatePopups();
     } else if (_popupID != id) {
       // activate on menu item to close sub-menus if necessary
-      activatePopup(*ePtr);
+      activatePopup(*pPtr, *ePtr);
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
     if (lbuttonEvent) {
