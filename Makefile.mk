@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 43 (2022/5/9)
+# Makefile.mk - revision 43 (2022/5/18)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -1009,13 +1009,16 @@ endef
 # make path of input file - <1:file w/ path>
 override _make_path = $(if $(strip $(filter-out ./,$(dir $1))),@mkdir -p "$(dir $1)")
 
+# fix path to other objects when inside build dir
+override _fix_path = $(foreach x,$1,$(if $(filter /% ~%,$x),,../../)$x)
+
 # link binary/test/shared lib - <1:label>
 override _do_link = $(if $(filter cxx,$(_$1_lang)),$(CXX) $(_cxxflags_$(_$1_build)),$(CC) $(_cflags_$(_$1_build))) $(_$1_ldflags)
 
 # static library build
 override define _make_static_lib  # <1:label>
 override _$1_all_objs := $$(addprefix $$(BUILD_DIR)/$$(_$1_build)/,$$(_$1_src_objs))
-override _$1_link_cmd := cd '$$(BUILD_DIR)/$$(_$1_build)'; $$(AR) rcs '../../$$(_$1_name)' $$(strip $$(_$1_src_objs) $$(addprefix ../../,$$(_$1_other_objs)))
+override _$1_link_cmd := cd '$$(BUILD_DIR)/$$(_$1_build)'; $$(AR) rcs '../../$$(_$1_name)' $$(strip $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs)))
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1-static
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
