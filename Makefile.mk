@@ -261,7 +261,7 @@ override _gcc_cc := gcc
 override _gcc_as := gcc -x assembler-with-cpp
 override _gcc_ar := gcc-ar
 override _gcc_warn := shadow=local
-override _gcc_modern := -Wzero-as-null-pointer-constant -Wregister -Wsuggest-override -Wsuggest-final-methods -Wsuggest-final-types
+override _gcc_modern := -Wzero-as-null-pointer-constant -Wregister -Wsuggest-override
 
 override _clang_cxx := clang++
 override _clang_cc := clang
