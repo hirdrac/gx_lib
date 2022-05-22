@@ -1,5 +1,5 @@
 # gx_lib project makefile
-# Copyright (C) 2021 Richard Bradley
+# Copyright (C) 2022 Richard Bradley
 
 include gx/LIB_gx.mk
 LIB_gx.SOURCE_DIR = gx
