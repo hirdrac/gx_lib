@@ -6,15 +6,15 @@
 #include "Image.hh"
 #include "Glyph.hh"
 #include "Logger.hh"
+#include "Assert.hh"
 #include "3rd/stb_image.h"
 #include <limits>
 #include <cstring>
-#include <cassert>
 
 
 bool gx::Image::init(int width, int height, int channels)
 {
-  assert(width > 0 && height > 0 && channels > 0);
+  GX_ASSERT(width > 0 && height > 0 && channels > 0);
 
   _width = width;
   _height = height;
@@ -27,8 +27,8 @@ bool gx::Image::init(int width, int height, int channels)
 bool gx::Image::init(int width, int height, int channels,
 		     const uint8_t* src_data, bool copy)
 {
-  assert(width > 0 && height > 0 && channels > 0);
-  assert(src_data != nullptr);
+  GX_ASSERT(width > 0 && height > 0 && channels > 0);
+  GX_ASSERT(src_data != nullptr);
 
   _width = width;
   _height = height;
@@ -60,8 +60,8 @@ bool gx::Image::load(const char* filename)
 
 bool gx::Image::loadFromMemory(const void* mem, std::size_t memSize)
 {
-  assert(mem != nullptr);
-  assert(memSize <= std::numeric_limits<int>::max());
+  GX_ASSERT(mem != nullptr);
+  GX_ASSERT(memSize <= std::numeric_limits<int>::max());
 
   int w = 0, h = 0, c = 0;
   uint8_t* data = stbi_load_from_memory(
@@ -78,16 +78,16 @@ bool gx::Image::loadFromMemory(const void* mem, std::size_t memSize)
 
 bool gx::Image::clear()
 {
-  assert(canEdit());
+  GX_ASSERT(canEdit());
   std::memset(_storage.get(), 0, size());
   return true;
 }
 
 bool gx::Image::setPixel(int x, int y, const uint8_t* channel_vals)
 {
-  assert(canEdit());
+  GX_ASSERT(canEdit());
   const int offset = ((y * _width) + x) * _channels;
-  assert((offset >= 0) && (offset + _channels) <= int(size()));
+  GX_ASSERT((offset >= 0) && (offset + _channels) <= int(size()));
 
   std::memcpy(_storage.get() + offset, channel_vals, std::size_t(_channels));
   return true;
@@ -95,11 +95,11 @@ bool gx::Image::setPixel(int x, int y, const uint8_t* channel_vals)
 
 bool gx::Image::stamp(int x, int y, const Image& sub_image)
 {
-  assert(canEdit());
-  assert(_channels == sub_image.channels());
+  GX_ASSERT(canEdit());
+  GX_ASSERT(_channels == sub_image.channels());
 
-  assert(x >= 0 && sub_image.width() <= (_width - x));
-  assert(y >= 0 && sub_image.height() <= (_height - y));
+  GX_ASSERT(x >= 0 && sub_image.width() <= (_width - x));
+  GX_ASSERT(y >= 0 && sub_image.height() <= (_height - y));
   // TODO: clip source image against destination image
 
   uint8_t* dst = &_storage[std::size_t(((y * _width) + x) * _channels)];
@@ -116,11 +116,11 @@ bool gx::Image::stamp(int x, int y, const Image& sub_image)
 
 bool gx::Image::stamp(int x, int y, const Glyph& g)
 {
-  assert(canEdit());
-  assert(_channels == 1);
+  GX_ASSERT(canEdit());
+  GX_ASSERT(_channels == 1);
 
-  assert(x >= 0 && g.width <= (_width - x));
-  assert(y >= 0 && g.height <= (_height - y));
+  GX_ASSERT(x >= 0 && g.width <= (_width - x));
+  GX_ASSERT(y >= 0 && g.height <= (_height - y));
   // TODO: clip source image against destination image
 
   uint8_t* dst = &_storage[std::size_t((y * _width) + x)];

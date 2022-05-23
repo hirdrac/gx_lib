@@ -16,9 +16,8 @@
 #include "Projection.hh"
 #include "Logger.hh"
 #include "OpenGL.hh"
-//#include "Print.hh"
+#include "Assert.hh"
 #include <GLFW/glfw3.h>
-#include <cassert>
 #include <cstring>
 using namespace gx;
 
@@ -370,7 +369,7 @@ void OpenGLRenderer::draw(
       }
     }
 
-    assert(d == data_end);
+    GX_ASSERT(d == data_end);
   }
 
   std::lock_guard lg{_glMutex};
@@ -401,7 +400,7 @@ void OpenGLRenderer::draw(
   if (_vbo) {
     _vbo.setData(GLsizei(vsize * sizeof(Vertex3NTC)), nullptr, GL_STREAM_DRAW);
     ptr = static_cast<Vertex3NTC*>(_vbo.map(GL_WRITE_ONLY));
-    assert(ptr != nullptr);
+    GX_ASSERT(ptr != nullptr);
   }
 
   // general triangle layout
@@ -880,7 +879,7 @@ void OpenGLRenderer::renderFrame()
         break;
       }
       default:
-        assert(op == OP_null);
+        GX_ASSERT(op == OP_null);
         break;
     }
   }
@@ -894,7 +893,7 @@ void OpenGLRenderer::renderFrame()
 void OpenGLRenderer::setGLCapabilities(int cap)
 {
   constexpr int CULL = CULL_CW | CULL_CCW;
-  assert(cap >= 0);
+  GX_ASSERT(cap >= 0);
 
   if (_currentGLCap < 0)
   {

@@ -7,12 +7,11 @@
 #include "OpenGLRenderer.hh"
 #include "Logger.hh"
 #include "System.hh"
-//#include "Print.hh"
+#include "Assert.hh"
 #include <algorithm>
 #include <chrono>
 #include <mutex>
 #include <set>
-#include <cassert>
 #include <GLFW/glfw3.h>
 using namespace gx;
 
@@ -113,7 +112,7 @@ Window::~Window()
   }
 
   if (_renderer && glfwInitStatus()) {
-    assert(isMainThread());
+    GX_ASSERT(isMainThread());
     glfwHideWindow(_renderer->window());
     // window destroyed in Renderer destructor
   }
@@ -123,15 +122,15 @@ void Window::setTitle(std::string_view title)
 {
   _title = title;
   if (_renderer) {
-    assert(isMainThread());
+    GX_ASSERT(isMainThread());
     glfwSetWindowTitle(_renderer->window(), _title.c_str());
   }
 }
 
 void Window::setSize(int width, int height, bool fullScreen)
 {
-  assert(width > 0 || fullScreen);
-  assert(height > 0 || fullScreen);
+  GX_ASSERT(width > 0 || fullScreen);
+  GX_ASSERT(height > 0 || fullScreen);
 
   if (!fullScreen) {
     // update size limits if needed
@@ -148,7 +147,7 @@ void Window::setSize(int width, int height, bool fullScreen)
   }
 
   if (_renderer) {
-    assert(isMainThread());
+    GX_ASSERT(isMainThread());
     GLFWwindow* win = _renderer->window();
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -198,7 +197,7 @@ void Window::setSizeLimits(
   _maxWidth = (maxWidth < 0) ? -1 : maxWidth;
   _maxHeight = (maxHeight < 0) ? -1 : maxHeight;
   if (_renderer) {
-    assert(isMainThread());
+    GX_ASSERT(isMainThread());
     glfwSetWindowSizeLimits(_renderer->window(), _minWidth, _minHeight,
                             _maxWidth, _maxHeight);
   }
@@ -214,7 +213,7 @@ void Window::setMouseMode(MouseModeEnum mode)
 
   _mouseMode = mode;
   if (_renderer) {
-    assert(isMainThread());
+    GX_ASSERT(isMainThread());
     glfwSetInputMode(_renderer->window(), GLFW_CURSOR, val);
   }
 }
@@ -223,7 +222,7 @@ void Window::setMouseShape(MouseShapeEnum shape)
 {
   _mouseShape = shape;
   if (_renderer) {
-    assert(isMainThread());
+    GX_ASSERT(isMainThread());
     glfwSetCursor(_renderer->window(), getCursorInstance(shape));
   }
 }
@@ -232,7 +231,7 @@ void Window::setMousePos(float x, float y)
 {
   _mousePt.set(x, y);
   if (_renderer) {
-    assert(isMainThread());
+    GX_ASSERT(isMainThread());
     glfwSetCursorPos(_renderer->window(), double(x), double(y));
   }
 }
@@ -245,7 +244,7 @@ void Window::setSamples(int samples)
 
 bool Window::open(int flags)
 {
-  assert(isMainThread());
+  GX_ASSERT(isMainThread());
   if (!initGLFW()) {
     return false;
   }
@@ -416,7 +415,7 @@ void Window::finalizeEventState()
 
 int Window::pollEvents()
 {
-  assert(isMainThread());
+  GX_ASSERT(isMainThread());
   int e = 0;
 
   {

@@ -13,10 +13,10 @@
 #include "Renderer.hh"
 #include "Unicode.hh"
 #include "Logger.hh"
+#include "Assert.hh"
 #include <limits>
 #include <cstdlib>
 #include <cstring>
-#include <cassert>
 #include <ft2build.h>
 #include <freetype/freetype.h>
 using namespace gx;
@@ -83,7 +83,7 @@ static bool genGlyphs(Font& font, FT_Face face,
 // **** Font class ****
 bool Font::load(const char* fileName)
 {
-  assert(_size != 0);
+  GX_ASSERT(_size != 0);
   if (!initFreeType()) { return false; }
 
   FT_Face face;
@@ -107,7 +107,7 @@ bool Font::load(const char* fileName)
 
 bool Font::loadFromMemory(const void* mem, std::size_t memSize)
 {
-  assert(_size != 0);
+  GX_ASSERT(_size != 0);
   if (!initFreeType()) { return false; }
 
   FT_Face face;
@@ -229,8 +229,8 @@ Glyph& Font::newGlyph(
   using width_t = decltype(Glyph::width);
   using height_t = decltype(Glyph::height);
 
-  assert(width >= 0 && width < std::numeric_limits<width_t>::max());
-  assert(height >= 0 && height < std::numeric_limits<height_t>::max());
+  GX_ASSERT(width >= 0 && width < std::numeric_limits<width_t>::max());
+  GX_ASSERT(height >= 0 && height < std::numeric_limits<height_t>::max());
 
   Glyph& g = _glyphs[code];
   g.width = static_cast<width_t>(width);

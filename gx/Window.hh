@@ -7,11 +7,11 @@
 
 #pragma once
 #include "Types.hh"
+#include "Assert.hh"
 #include <string_view>
 #include <string>
 #include <vector>
 #include <memory>
-#include <cassert>
 
 
 struct GLFWwindow;
@@ -223,7 +223,7 @@ class gx::Window
 
   // renderer access methods
   [[nodiscard]] Renderer& renderer() {
-    assert(_renderer != nullptr); return *_renderer; }
+    GX_ASSERT(_renderer != nullptr); return *_renderer; }
     // NOTE: Renderer is available once open() is called and will be available
     //   until the Window is destroyed.
 

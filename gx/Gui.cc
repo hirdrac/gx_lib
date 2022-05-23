@@ -10,8 +10,8 @@
 #include "Unicode.hh"
 #include "System.hh"
 #include "Logger.hh"
+#include "Assert.hh"
 #include <algorithm>
-#include <cassert>
 using namespace gx;
 
 
@@ -136,7 +136,7 @@ template<class T>
 template<class T>
 [[nodiscard]] static inline T* findElemByEventIDT(T& def, EventID eid)
 {
-  assert(eid != 0);
+  GX_ASSERT(eid != 0);
   std::vector<T*> stack;
   T* e = &def;
   while (e->eid != eid) {
@@ -418,7 +418,7 @@ static void calcSize(const GuiTheme& thm, GuiElem& def)
       // base size on 1st list item (all items should be same size)
       GuiElem& e1 = def.elems[1]; // GUI_POPUP
       const GuiElem* item = findItem(e1.elems[0], 0);
-      assert(item != nullptr);
+      GX_ASSERT(item != nullptr);
       def._w = item->_w;
       def._h = item->_h;
       break;
@@ -551,7 +551,7 @@ static void calcPos(const GuiTheme& thm, GuiElem& def,
     default:
       if (!def.elems.empty()) {
         // align single child element
-        assert(def.elems.size() == 1);
+        GX_ASSERT(def.elems.size() == 1);
         const float b = borderVal(thm, def.type);
         calcPos(thm, def.elems[0], left + b, top + b, right - b, bottom - b);
       }
@@ -794,7 +794,7 @@ void Gui::processMouseEvent(Window& win)
       for (auto& ptr : _panels) {
         if (findElemByIDT(ptr->root, _heldID)) { pPtr = ptr.get(); break; }
       }
-      assert(pPtr != nullptr);
+      GX_ASSERT(pPtr != nullptr);
       raisePanel(pPtr->id);
       const float mx = std::clamp(win.mouseX(), 0.0f, float(win.width()));
       const float my = std::clamp(win.mouseY(), 0.0f, float(win.height()));
@@ -876,7 +876,7 @@ void Gui::processCharEvent(Window& win)
 {
   GuiElem* e = findElemByID(_focusID);
   if (!e) { return; }
-  assert(e->type == GUI_ENTRY);
+  GX_ASSERT(e->type == GUI_ENTRY);
 
   bool usedEvent = false;
   for (const CharInfo& c : win.charData()) {
@@ -889,7 +889,7 @@ void Gui::processCharEvent(Window& win)
     } else if (c.key == KEY_BACKSPACE) {
       usedEvent = true;
       if (_cursorPos > 0) {
-        assert(!e->text.empty());
+        GX_ASSERT(!e->text.empty());
         if (c.mods == MOD_CONTROL) {
           e->text.erase(0, indexUTF8(e->text, _cursorPos));
           _cursorPos = 0;
@@ -951,7 +951,7 @@ void Gui::processCharEvent(Window& win)
 
 bool Gui::addEntryChar(GuiElem& e, int32_t code)
 {
-  assert(e.type == GUI_ENTRY);
+  GX_ASSERT(e.type == GUI_ENTRY);
   if (e.entry.maxLength != 0 && lengthUTF8(e.text) >= e.entry.maxLength) {
     return false; // no space for character
   }
@@ -1113,7 +1113,7 @@ PanelID Gui::addPanel(PanelPtr ptr, float x, float y, AlignEnum align)
 void Gui::layout(Panel& p, float x, float y, AlignEnum align)
 {
   const GuiTheme& thm = *p.theme;
-  assert(thm.font != nullptr);
+  GX_ASSERT(thm.font != nullptr);
   p.layout = {x,y,0,0};
   if (HAlign(align) == ALIGN_RIGHT) { std::swap(p.layout.x, p.layout.w); }
   if (VAlign(align) == ALIGN_BOTTOM) { std::swap(p.layout.y, p.layout.h); }
@@ -1208,7 +1208,7 @@ bool Gui::drawElem(
       }
       break;
     default:
-      assert(style != nullptr);
+      GX_ASSERT(style != nullptr);
       break;
   }
 

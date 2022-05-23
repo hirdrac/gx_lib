@@ -7,7 +7,7 @@
 #include "Font.hh"
 #include "Unicode.hh"
 #include "MathUtil.hh"
-#include <cassert>
+#include "Assert.hh"
 using namespace gx;
 
 
@@ -256,12 +256,12 @@ void DrawContext::glyph(
 {
   if (!checkColor()) { return; }
 
-  assert(tf.font != nullptr);
+  GX_ASSERT(tf.font != nullptr);
   const Font& f = *tf.font;
   const Glyph* g = f.findGlyph(code);
   if (!g) {
     g = f.findGlyph(tf.unknownCode);
-    assert(g != nullptr);
+    GX_ASSERT(g != nullptr);
   }
 
   if (!g->bitmap) { return; }
@@ -295,7 +295,7 @@ void DrawContext::_text(
 {
   if (text.empty() || !checkColor()) { return; }
 
-  assert(tf.font != nullptr);
+  GX_ASSERT(tf.font != nullptr);
   const Font& f = *tf.font;
   const float fs = float(f.size()) + tf.lineSpacing;
   const AlignEnum h_align = HAlign(align);
@@ -335,7 +335,7 @@ void DrawContext::_text(
         const Glyph* g = f.findGlyph(ch);
         if (!g) {
           g = f.findGlyph(tf.unknownCode);
-          assert(g != nullptr);
+          GX_ASSERT(g != nullptr);
         }
 
         if (g->bitmap) { _glyph(*g, tf, cursor, clipPtr); }

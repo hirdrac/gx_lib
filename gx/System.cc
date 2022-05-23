@@ -5,11 +5,11 @@
 
 #include "System.hh"
 #include "Logger.hh"
+#include "Assert.hh"
 #include <GLFW/glfw3.h>
 #include <thread>
 #include <string_view>
 #include <cstdlib>
-#include <cassert>
 
 namespace {
   const std::thread::id mainThreadID = std::this_thread::get_id();
@@ -57,7 +57,7 @@ bool gx::glfwInitStatus()
 
 std::string gx::getClipboardFull()
 {
-  assert(isMainThread());
+  GX_ASSERT(isMainThread());
 
   initGLFW();
   const char* txt = glfwGetClipboardString(nullptr);
@@ -66,7 +66,7 @@ std::string gx::getClipboardFull()
 
 std::string gx::getClipboardFirstLine()
 {
-  assert(isMainThread());
+  GX_ASSERT(isMainThread());
 
   initGLFW();
   const char* txt = glfwGetClipboardString(nullptr);
@@ -78,7 +78,7 @@ std::string gx::getClipboardFirstLine()
 
 void gx::setClipboard(const char* s)
 {
-  assert(isMainThread());
+  GX_ASSERT(isMainThread());
 
   initGLFW();
   glfwSetClipboardString(nullptr, s);
