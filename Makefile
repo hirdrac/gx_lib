@@ -54,8 +54,8 @@ DEFINE = GX_DEBUG_GL
 #DEFINE += GX_GL33
 # uncomment this line if OpenGL4.5 isn't available
 
-WARN_EXTRA = fatal-errors cast-qual cast-align
-WARN_CXX_EXTRA = extra-semi conversion
+WARN_EXTRA = fatal-errors cast-qual
+WARN_CXX_EXTRA = extra-semi conversion cast-align
 #FLAGS_RELEASE = -DNDEBUG
 
 include Makefile.mk
