@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 43 (2022/5/19)
+# Makefile.mk - revision 44 (2022/5/25)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -986,22 +986,22 @@ endif
 
 #### Build Macros ####
 override define _rebuild_check  # <1:trigger file> <2:trigger text>
+$1: | $$(dir $1) ; @echo "$$(strip $2)" >$1
 ifneq ($$(strip $$(file <$1)),$$(strip $2))
   ifneq ($$(file <$1),)
     $$(info $$(_msgWarn)$1 changed$$(_end))
+    $$(shell $$(RM) "$1")
   endif
-  $$(if $$(strip $$(filter-out ./,$$(dir $1))),$$(shell mkdir -p "$$(dir $1)"))
-  $$(file >$1,$2)
 endif
 endef
 
 override define _rebuild_check_var # <1:trigger file> <2:trigger text var>
+$1: | $$(dir $1) ; @echo "$$(strip $$($2))" >$1
 ifneq ($$(strip $$(file <$1)),$$(strip $$($2)))
   ifneq ($$(file <$1),)
     $$(info $$(_msgWarn)$1 changed$$(_end))
+    $$(shell $$(RM) "$1")
   endif
-  $$(if $$(strip $$(filter-out ./,$$(dir $1))),$$(shell mkdir -p "$$(dir $1)"))
-  $$(file >$1,$$(value $2))
 endif
 endef
 
@@ -1126,12 +1126,12 @@ endef
 
 
 override define _make_obj  # <1:path> <2:build> <3:flags> <4:src list>
-ifneq ($4,)
+$1 $1/: ; @mkdir -p "$$@"
 $1/%.mk: ; @$$(RM) "$$(@:.mk=.o)"
 
 ifneq ($$(filter $$(_c_ptrn),$4),)
 $$(eval $$(call _rebuild_check,$1/.compile_cmd_c,$$(CC) $$(_cflags_$2) $3))
-$(addprefix $1/,$(addsuffix .o,$(call _src_bname,$(filter $(_c_ptrn),$4)))):
+$(addprefix $1/,$(addsuffix .o,$(call _src_bname,$(filter $(_c_ptrn),$4)))): | $1
 	$$(strip $$(CC) $$(_cflags_$2) $3) -MMD -MP -MT '$$@' -MF '$$(@:.o=.mk)' -c -o '$$@' $$<
 $(foreach x,$(filter $(_c_ptrn),$4),\
   $$(eval $$(call _make_dep,$1,$2,$x,.compile_cmd_c)))
@@ -1139,7 +1139,7 @@ endif
 
 ifneq ($$(filter $$(_asm_ptrn),$4),)
 $$(eval $$(call _rebuild_check,$1/.compile_cmd_s,$$(AS) $$(_asflags_$2) $3))
-$(addprefix $1/,$(addsuffix .o,$(call _src_bname,$(filter $(_asm_ptrn),$4)))):
+$(addprefix $1/,$(addsuffix .o,$(call _src_bname,$(filter $(_asm_ptrn),$4)))): | $1
 	$$(strip $$(AS) $$(_asflags_$2) $3) -MMD -MP -MT '$$@' -MF '$$(@:.o=.mk)' -c -o '$$@' $$<
 $(foreach x,$(filter $(_asm_ptrn),$4),\
   $$(eval $$(call _make_dep,$1,$2,$x,.compile_cmd_s)))
@@ -1147,11 +1147,10 @@ endif
 
 ifneq ($$(filter $$(_cxx_ptrn),$4),)
 $$(eval $$(call _rebuild_check,$1/.compile_cmd,$$(CXX) $$(_cxxflags_$2) $3))
-$(addprefix $1/,$(addsuffix .o,$(call _src_bname,$(filter $(_cxx_ptrn),$4)))):
+$(addprefix $1/,$(addsuffix .o,$(call _src_bname,$(filter $(_cxx_ptrn),$4)))): | $1
 	$$(strip $$(CXX) $$(_cxxflags_$2) $3) -MMD -MP -MT '$$@' -MF '$$(@:.o=.mk)' -c -o '$$@' $$<
 $(foreach x,$(filter $(_cxx_ptrn),$4),\
   $$(eval $$(call _make_dep,$1,$2,$x,.compile_cmd)))
-endif
 endif
 endef
 
@@ -1159,6 +1158,8 @@ endef
 #### Create Build Targets ####
 .DELETE_ON_ERROR:
 ifneq ($(_build_env),)
+  $(BUILD_DIR) $(BUILD_DIR)/: ; @mkdir -p "$@"
+
   # symlink creation rule
   $(foreach x,$(_symlinks),$(eval $x: ; @ln -s . "$x"))
 
