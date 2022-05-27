@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 44 (2022/5/25)
+# Makefile.mk - revision 44 (2022/5/27)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -121,6 +121,7 @@
 #  SUBDIRS         sub-directories to also make with base targets
 #  SYMLINKS        symlinks to the current dir to create for building
 #  SOURCE_DIR      source files base directory
+#  EXCLUDE_TARGETS targets to not build by default
 #
 #  Settings STANDARD/OPT_LEVEL/OPT_LEVEL_DEBUG/SUBSYSTEM/PACKAGES/INCLUDE/LIBS/
 #    DEFINE/OPTIONS/FLAGS/LINK_FLAGS/SOURCE_DIR can be set for specific targets
@@ -208,6 +209,7 @@ CLOBBER_EXTRA ?=
 SUBDIRS ?=
 SYMLINKS ?=
 SOURCE_DIR ?=
+EXCLUDE_TARGETS ?=
 
 # default values to be more obvious if used/handled improperly
 override ENV := ENV
@@ -216,7 +218,7 @@ override BUILD_TMP := BUILD_TMP
 override LIBPREFIX := lib
 
 # apply *_EXTRA setting values (WARN_EXTRA handled above)
-$(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE LIBS LIBS_TEST DEFINE OPTIONS FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE,\
+$(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE LIBS LIBS_TEST DEFINE OPTIONS FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE EXCLUDE_TARGETS,\
   $(if $($x_EXTRA),$(eval override $x += $($x_EXTRA))))
 
 
@@ -609,14 +611,23 @@ override _$1_libbin_targets :=\
 override _$1_file_targets := $$(foreach x,$$(_file_labels),$$($$x))
 override _$1_test_targets := $$(foreach x,$$(_test_labels),$$x$$(_$1_sfx))
 override _$1_build_targets := $$(_$1_file_targets) $$(_$1_libbin_targets) $$(_$1_test_targets)
+
+override _$1_filter_targets :=\
+$$(sort $$(foreach x,$$(EXCLUDE_TARGETS),\
+  $$(if $$(filter $$x,$$(_lib_labels)),\
+    $$(call _gen_static_lib_name,$1,$$x) $$(call _gen_shared_lib_name,$1,$$x),\
+    $$x $$($$x) $$(if $$(_$1_sfx),$$($$x)$$(_$1_sfx)))))
+override _$1_build2_targets := $$(filter-out $$(_$1_filter_targets),$$(_$1_build_targets))
+override _$1_test2_targets := $$(filter-out $$(_$1_filter_targets),$$(_$1_test_targets))
+
 override _$1_aliases :=\
   $$(foreach x,$$(_all_labels),$$x$$(_$1_sfx))\
   $$(foreach x,$$(_bin_labels),$$(call _gen_bin_aliases,$1,$$x))\
   $$(foreach x,$$(_static_lib_labels),$$(call _gen_static_lib_aliases,$1,$$x))\
   $$(_$1_shared_aliases)
 override _$1_goals := $$(sort\
-  $$(if $$(filter $$(if $$(filter $1,$$(DEFAULT_ENV)),all) $1,$$(MAKECMDGOALS)),$$(_$1_build_targets))\
-  $$(if $$(filter $$(if $$(filter $1,$$(DEFAULT_ENV)),tests) tests_$1,$$(MAKECMDGOALS)),$$(_$1_test_targets))\
+  $$(if $$(filter $$(if $$(filter $1,$$(DEFAULT_ENV)),all) $1,$$(MAKECMDGOALS)),$$(_$1_build2_targets))\
+  $$(if $$(filter $$(if $$(filter $1,$$(DEFAULT_ENV)),tests) tests_$1,$$(MAKECMDGOALS)),$$(_$1_test2_targets))\
   $$(filter $$(_$1_build_targets) $$(sort $$(_$1_aliases)),$$(MAKECMDGOALS)))
 endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env1,$e)))
@@ -939,8 +950,8 @@ help:
 	  echo "$$X"; done
 
 override define _setup_env_targets  # <1:build env>
-$1: $$(_$1_build_targets)
-tests_$1: $$(_$1_test_targets)
+$1: $$(_$1_build2_targets)
+tests_$1: $$(_$1_test2_targets)
 
 clean_$1:
 	@([ -d "$$(BUILD_DIR)/$1_tmp" ] && $$(RM) "$$(BUILD_DIR)/$1_tmp/"* && rmdir -- "$$(BUILD_DIR)/$1_tmp") || true
