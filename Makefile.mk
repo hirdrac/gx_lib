@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 44 (2022/5/27)
+# Makefile.mk - revision 44 (2022/5/28)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -974,9 +974,6 @@ clobber: clean
 	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
 	@for X in $(foreach y,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_libbin_targets) $(_$e_file_targets),$(dir $x))))),"$y"); do\
 	  ([ -d "$$X" ] && rmdir -p --ignore-fail-on-non-empty -- "$$X") || true; done
-
-install: ; $(error $(_msgErr)Target 'install' not implemented$(_end))
-install-strip: ; $(error $(_msgErr)Target 'install-strip' not implemented$(_end))
 
 override define _make_subdir_target  # <1:target>
 $1: _subdir_$1
