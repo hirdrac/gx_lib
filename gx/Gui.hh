@@ -129,9 +129,9 @@ class gx::Gui
   GuiElemType _heldType = GUI_NULL;
   float _heldX = 0, _heldY = 0;
   int64_t _heldTime = 0;
-  int64_t _repeatDelay = -1;  // negative value disables repeat
-  std::size_t _cursorPos = 0; // character pos of cursor
-  float _entryOffset = 0;     // text render offset because of cursor
+  int64_t _repeatDelay = -1;       // negative value disables repeat
+  std::size_t _focusCursorPos = 0; // character pos of cursor
+  float _focusEntryOffset = 0;     // text render offset because of cursor
 
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0; // cached theme value

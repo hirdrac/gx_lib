@@ -888,23 +888,23 @@ void Gui::processCharEvent(Window& win)
       // TODO: flash 'error' color if char isn't added
     } else if (c.key == KEY_BACKSPACE) {
       usedEvent = true;
-      if (_cursorPos > 0) {
+      if (_focusCursorPos > 0) {
         GX_ASSERT(!e->text.empty());
         if (c.mods == MOD_CONTROL) {
-          e->text.erase(0, indexUTF8(e->text, _cursorPos));
-          _cursorPos = 0;
+          e->text.erase(0, indexUTF8(e->text, _focusCursorPos));
+          _focusCursorPos = 0;
         } else {
-          eraseUTF8(e->text, --_cursorPos);
+          eraseUTF8(e->text, --_focusCursorPos);
         }
         _needRender = _textChanged = true;
       }
     } else if (c.key == KEY_DELETE) {
       usedEvent = true;
-      if (_cursorPos < e->text.size()) {
+      if (_focusCursorPos < lengthUTF8(e->text)) {
         if (c.mods == MOD_CONTROL) {
-          e->text.erase(indexUTF8(e->text, _cursorPos), std::string::npos);
+          e->text.erase(indexUTF8(e->text, _focusCursorPos), std::string::npos);
         } else {
-          eraseUTF8(e->text, _cursorPos);
+          eraseUTF8(e->text, _focusCursorPos);
         }
         _needRender = _textChanged = true;
       }
@@ -926,17 +926,18 @@ void Gui::processCharEvent(Window& win)
       setFocus(win, findPrevElem(_focusID, GUI_ENTRY));
     } else if (c.key == KEY_LEFT && c.mods == 0) {
       usedEvent = true;
-      if (_cursorPos > 0) { --_cursorPos; _needRender = true; }
+      if (_focusCursorPos > 0) { --_focusCursorPos; _needRender = true; }
     } else if (c.key == KEY_RIGHT && c.mods == 0) {
       usedEvent = true;
-      if (_cursorPos < e->text.size()) { ++_cursorPos; _needRender = true; }
+      if (_focusCursorPos < lengthUTF8(e->text)) {
+        ++_focusCursorPos; _needRender = true; }
     } else if (c.key == KEY_HOME && c.mods == 0) {
       usedEvent = true;
-      if (_cursorPos > 0) { _cursorPos = 0; _needRender = true; }
+      if (_focusCursorPos > 0) { _focusCursorPos = 0; _needRender = true; }
     } else if (c.key == KEY_END && c.mods == 0) {
       usedEvent = true;
-      const std::size_t ts = e->text.size();
-      if (_cursorPos < ts) { _cursorPos = ts; _needRender = true; }
+      const std::size_t ts = lengthUTF8(e->text);
+      if (_focusCursorPos < ts) { _focusCursorPos = ts; _needRender = true; }
     }
   }
 
@@ -966,10 +967,11 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
       if (!std::isdigit(code)) { return false; }
       // allowed sequence check
       if (code == '0'
-          && (e.text == "0" || (_cursorPos == 0 && !e.text.empty()))) {
+          && (e.text == "0" || (_focusCursorPos == 0 && !e.text.empty()))) {
         return false; }
       // special case to reset entry
-      if (e.text == "0" && _cursorPos == 1) { e.text.clear(); _cursorPos = 0; }
+      if (e.text == "0" && _focusCursorPos == 1) {
+        e.text.clear(); _focusCursorPos = 0; }
       break;
     case ENTRY_INTEGER:
       // valid character check
@@ -978,7 +980,8 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
       if ((code == '-' && !e.text.empty() && e.text != "0")
           || (code == '0' && (e.text == "0" || e.text == "-"))) { return false; }
       // special case to reset entry
-      if (e.text == "0" && _cursorPos == 1) { e.text.clear(); _cursorPos = 0; }
+      if (e.text == "0" && _focusCursorPos == 1) {
+        e.text.clear(); _focusCursorPos = 0; }
       break;
     case ENTRY_FLOAT:
       // valid character check
@@ -992,14 +995,14 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
         int count = 0;
         for (int ch : e.text) { count += (ch == '.'); }
         if (count > 0) { return false; }
-      } else if (e.text == "0"  && _cursorPos == 1) {
-        e.text.clear(); _cursorPos = 0;
+      } else if (e.text == "0"  && _focusCursorPos == 1) {
+        e.text.clear(); _focusCursorPos = 0;
       }
       break;
   }
 
-  insertUTF8(e.text, _cursorPos, code);
-  ++_cursorPos;
+  insertUTF8(e.text, _focusCursorPos, code);
+  ++_focusCursorPos;
   return true;
 }
 
@@ -1034,8 +1037,8 @@ void Gui::setFocus(Window& win, const GuiElem* ePtr)
     _cursorState = true;
   }
 
-  _cursorPos = ePtr ? ePtr->text.size() : 0;
-  _entryOffset = 0;
+  _focusCursorPos = ePtr ? lengthUTF8(ePtr->text) : 0;
+  _focusEntryOffset = 0;
   _needRender = true;
 }
 
@@ -1065,8 +1068,10 @@ bool Gui::setText(EventID eid, std::string_view text)
     if (!e) { continue; }
 
     if (e->type == GUI_ENTRY) {
-      _cursorPos = e->text.size();
-      _entryOffset = 0;
+      if (_focusID == e->_id) {
+        _focusCursorPos = lengthUTF8(e->text);
+        _focusEntryOffset = 0;
+      }
     } else if (e->type == GUI_LABEL || e->type == GUI_VLABEL) {
       pPtr->needLayout = true;
     } else {
@@ -1286,7 +1291,7 @@ bool Gui::drawElem(
     case GUI_ENTRY: {
       drawRec(dc, ex, ey, ew, eh, thm, style);
       const std::string txt = (def.entry.type == ENTRY_PASSWORD)
-        ? passwordStr(thm.passwordCode, def.text.size()) : def.text;
+        ? passwordStr(thm.passwordCode, lengthUTF8(def.text)) : def.text;
       const float cw = thm.cursorWidth;
       const float tw = thm.font->calcLength(txt, 0);
       const float maxWidth = ew - thm.entryLeftMargin
@@ -1303,22 +1308,22 @@ bool Gui::drawElem(
       }
       float cx = 0;
       if (def._id == _focusID) {
-        if (tw <= maxWidth) { _entryOffset = 0; }
-        cx = tx + _entryOffset
-          + thm.font->calcLength({txt.c_str(), _cursorPos}, 0);
+        if (tw <= maxWidth) { _focusEntryOffset = 0; }
+        cx = tx + _focusEntryOffset
+          + thm.font->calcLength({txt.c_str(), _focusCursorPos}, 0);
         if (cx < leftEdge) {
-          _entryOffset += leftEdge - cx; cx = leftEdge;
+          _focusEntryOffset += leftEdge - cx; cx = leftEdge;
         } else if (cx > rightEdge) {
-          _entryOffset -= cx - rightEdge; cx = rightEdge;
+          _focusEntryOffset -= cx - rightEdge; cx = rightEdge;
         } else if (tw > maxWidth) {
           // special case to keep max amount of entry text visible
-          const float tEnd = tx + _entryOffset + tw;
+          const float tEnd = tx + _focusEntryOffset + tw;
           if (tEnd < rightEdge) {
-            _entryOffset += rightEdge - tEnd;
+            _focusEntryOffset += rightEdge - tEnd;
             cx += rightEdge - tEnd;
           }
         }
-        tx += _entryOffset;
+        tx += _focusEntryOffset;
       }
       dc2.color(style->textColor);
       // TODO: add gradient color if text is off left/right edges
