@@ -772,10 +772,10 @@ void Gui::processMouseEvent(Window& win)
 
   // update focus
   if (lpressEvent) {
-    setFocus(win, (type == GUI_ENTRY) ? ePtr : nullptr);
+    setFocus(win, pPtr, (type == GUI_ENTRY) ? ePtr : nullptr);
   } else if (lbuttonDown && anyGuiButtonEvent) {
     // click in other Gui instance clears our focus
-    setFocus(win, nullptr);
+    setFocus(win, nullptr, nullptr);
   }
 
   // update hoverID
@@ -920,10 +920,10 @@ void Gui::processCharEvent(Window& win)
       _textChanged |= added;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       usedEvent = true;
-      setFocus(win, findNextElem(_focusID, GUI_ENTRY));
+      setFocus(win, nullptr, findNextElem(_focusID, GUI_ENTRY));
     } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
       usedEvent = true;
-      setFocus(win, findPrevElem(_focusID, GUI_ENTRY));
+      setFocus(win, nullptr, findPrevElem(_focusID, GUI_ENTRY));
     } else if (c.key == KEY_LEFT && c.mods == 0) {
       usedEvent = true;
       if (_focusCursorPos > 0) { --_focusCursorPos; _needRender = true; }
@@ -1006,9 +1006,9 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
   return true;
 }
 
-void Gui::setFocus(Window& win, const GuiElem* ePtr)
+void Gui::setFocus(Window& win, const Panel* p, const GuiElem* e)
 {
-  const ElemID id = ePtr ? ePtr->_id : 0;
+  const ElemID id = e ? e->_id : 0;
   if (_focusID == id) { return; }
 
   if (_textChanged) {
@@ -1028,16 +1028,12 @@ void Gui::setFocus(Window& win, const GuiElem* ePtr)
   _focusID = id;
   if (id != 0) {
     _lastCursorUpdate = win.lastPollTime();
-    const Panel* p = nullptr;
-    for (auto& pPtr : _panels) {
-      if (findElemByIDT(pPtr->root, _focusID)) { p = pPtr.get(); break; }
-    }
-
     _cursorBlinkTime = p ? p->theme->cursorBlinkTime : 400000;
     _cursorState = true;
   }
 
-  _focusCursorPos = ePtr ? lengthUTF8(ePtr->text) : 0;
+  // TODO: set cursorPos based on mouseX/mouseY
+  _focusCursorPos = e ? lengthUTF8(e->text) : 0;
   _focusEntryOffset = 0;
   _needRender = true;
 }

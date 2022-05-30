@@ -145,7 +145,7 @@ class gx::Gui
   void processMouseEvent(Window& win);
   void processCharEvent(Window& win);
   bool addEntryChar(GuiElem& e, int32_t code);
-  void setFocus(Window& win, const GuiElem* e);
+  void setFocus(Window& win, const Panel* p, const GuiElem* e);
   void initElem(GuiElem& def);
   void deactivatePopups();
   void activatePopup(Panel& p, const GuiElem& def);
