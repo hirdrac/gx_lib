@@ -1305,8 +1305,8 @@ bool Gui::drawElem(
       float cx = 0;
       if (def._id == _focusID) {
         if (tw <= maxWidth) { _focusEntryOffset = 0; }
-        cx = tx + _focusEntryOffset
-          + thm.font->calcLength({txt.c_str(), _focusCursorPos}, 0);
+        cx = tx + _focusEntryOffset + thm.font->calcLength(
+          {txt.c_str(), indexUTF8(txt,_focusCursorPos)}, 0);
         if (cx < leftEdge) {
           _focusEntryOffset += leftEdge - cx; cx = leftEdge;
         } else if (cx > rightEdge) {

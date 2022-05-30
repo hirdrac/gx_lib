@@ -59,9 +59,11 @@ std::size_t gx::lengthUTF8(std::string_view sv)
 
 std::size_t gx::indexUTF8(std::string_view sv, std::size_t pos)
 {
+  if (pos == std::string::npos) { return std::string::npos; }
+
   UTF8Iterator itr{sv};
-  while (!itr.done() && itr.pos() < pos) { itr.next(); }
-  return (itr.pos() < pos) ? std::string::npos : itr.pos();
+  while (!itr.done() && pos > 0) { --pos; itr.next(); }
+  return (pos != 0) ? std::string::npos : itr.pos();
 }
 
 void gx::popbackUTF8(std::string& str)
@@ -77,20 +79,15 @@ void gx::popbackUTF8(std::string& str)
 
 bool gx::eraseUTF8(std::string& str, std::size_t pos)
 {
-  if (pos == std::string::npos) {
-    if (str.empty()) { return false; }
-    popbackUTF8(str);
-    return true;
-  }
+  if (pos == std::string::npos) { return false; }
 
-  const std::size_t i = indexUTF8(str, pos);
-  if (i == std::string::npos) { return false; }
+  UTF8Iterator itr{str};
+  while (pos > 0 && itr.next()) { --pos; }
+  if (itr.done()) { return false; }
 
-  std::size_t count = 0;
-  for (;;) {
-    if ((i + count) >= str.size()) { count = std::string::npos; break; }
-    else if (!isMultiChar(str[i+count++])) { break; }
-  }
+  const std::size_t i = itr.pos();
+  itr.next();
+  const std::size_t count = itr.done() ? std::string::npos : (itr.pos() - i);
 
   str.erase(i, count);
   return true;
