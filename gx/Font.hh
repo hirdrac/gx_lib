@@ -91,12 +91,17 @@ class gx::Font
   void addGlyph(int code, int width, int height, float left, float top,
 		float advX, float advY, const uint8_t* bitmap, bool copy);
 
+  [[nodiscard]] int32_t unknownCode() const { return _unknownCode; }
+  void setUnknownCode(int32_t uc) { _unknownCode = uc; }
+    // read/set alternate glyph code to use for unknown code values
+
  private:
   std::map<int,Glyph> _glyphs;
   Texture _tex;
   int _size = 0;
   float _ymin = 0, _ymax = 0;
   float _digitWidth = 0;
+  int32_t _unknownCode = '*';
   bool _changed = false; // change since last atlas creation
 
   Glyph& newGlyph(int code, int width, int height, float left, float top,

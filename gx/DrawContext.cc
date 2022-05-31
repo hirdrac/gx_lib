@@ -260,7 +260,7 @@ void DrawContext::glyph(
   const Font& f = *tf.font;
   const Glyph* g = f.findGlyph(code);
   if (!g) {
-    g = f.findGlyph(tf.unknownCode);
+    g = f.findGlyph(f.unknownCode());
     GX_ASSERT(g != nullptr);
   }
 
@@ -334,7 +334,7 @@ void DrawContext::_text(
         if (ch == '\t') { ch = ' '; }
         const Glyph* g = f.findGlyph(ch);
         if (!g) {
-          g = f.findGlyph(tf.unknownCode);
+          g = f.findGlyph(f.unknownCode());
           GX_ASSERT(g != nullptr);
         }
 

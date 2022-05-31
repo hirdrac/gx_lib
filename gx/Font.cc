@@ -273,8 +273,14 @@ float Font::calcLength(std::string_view line, float glyphSpacing) const
     } else if (ch == '\n') {
       break;
     }
+
     g = findGlyph(ch);
-    if (g) { width += g->advX + glyphSpacing; }
+    if (!g) {
+      g = findGlyph(_unknownCode);
+      GX_ASSERT(g != nullptr);
+    }
+
+    width += g->advX + glyphSpacing;
   }
 
   return std::max(width, 0.0f);
@@ -292,8 +298,14 @@ float Font::calcMaxLength(std::string_view text, float glyphSpacing) const
       max_width = std::max(max_width, width);
       width = -glyphSpacing;
     }
+
     g = findGlyph(ch);
-    if (g) { width += g->advX + glyphSpacing; }
+    if (!g) {
+      g = findGlyph(_unknownCode);
+      GX_ASSERT(g != nullptr);
+    }
+
+    width += g->advX + glyphSpacing;
   }
 
   return std::max(max_width, width);
@@ -306,7 +318,10 @@ std::size_t Font::fitChars(std::string_view text, float maxWidth) const
     int32_t ch = itr.get();
     if (ch == '\t') { ch = ' '; }
     const Glyph* g = findGlyph(ch);
-    if (!g) { continue; }
+    if (!g) {
+      g = findGlyph(_unknownCode);
+      GX_ASSERT(g != nullptr);
+    }
 
     if ((w + g->advX) > maxWidth) { return itr.pos(); }
     w += g->advX;
