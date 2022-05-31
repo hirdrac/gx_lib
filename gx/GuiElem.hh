@@ -98,6 +98,7 @@ struct gx::GuiElem
   // elem type specific properties
   struct LabelProps {
     float minLength;
+    int32_t minLines;
   };
 
   struct SpacerProps {
