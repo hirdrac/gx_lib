@@ -124,10 +124,10 @@ struct gx::GuiTheme
   Style entryDisable = {
     packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.15f,.15f,.2f,1.0f)};
 
-  uint16_t entryLeftMargin = 6;
-  uint16_t entryRightMargin = 6;
+  uint16_t entryLeftMargin = 8;
+  uint16_t entryRightMargin = 8;
   uint16_t entryTopMargin = 4;
-  uint16_t entryBottomMargin = 2;
+  uint16_t entryBottomMargin = 3;
 
   int32_t checkCode = 'X';
   int16_t checkXOffset = 0;
