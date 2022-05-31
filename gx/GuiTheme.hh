@@ -126,7 +126,7 @@ struct gx::GuiTheme
 
   uint16_t entryLeftMargin = 6;
   uint16_t entryRightMargin = 6;
-  uint16_t entryTopMargin = 2;
+  uint16_t entryTopMargin = 4;
   uint16_t entryBottomMargin = 2;
 
   int32_t checkCode = 'X';
