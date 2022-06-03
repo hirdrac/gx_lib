@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 44 (2022/5/28)
+# Makefile.mk - revision 44 (2022/6/3)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -278,26 +278,28 @@ override _clang_modern := -Wzero-as-null-pointer-constant -Wregister -Winconsist
 # _fg2 - warning or removal notice
 # _fg3 - test passed
 # _fg4 - test failed or fatal error
-ifneq ($(shell which setterm 2>/dev/null),)
-  override _bold := $(shell setterm --bold on)
-  override _fg0 := $(shell setterm --foreground default)
-  override _fg1 := $(shell setterm --foreground cyan)
-  override _fg2 := $(shell setterm --foreground magenta)
-  override _fg3 := $(shell setterm --foreground green)
-  override _fg4 := $(shell setterm --foreground red)
-  override _end := $(shell setterm --default)
-else
-  override _bold := $(shell echo -e '\e[1m')
-  override _fg0 := $(shell echo -e '\e[39m')
-  override _fg1 := $(shell echo -e '\e[36m')
-  override _fg2 := $(shell echo -e '\e[35m')
-  override _fg3 := $(shell echo -e '\e[32m')
-  override _fg4 := $(shell echo -e '\e[31m')
-  override _end := $(shell echo -e '\e[m')
+ifneq ($(and $(MAKE_TERMOUT),$(MAKE_TERMERR)),)
+  ifneq ($(shell which setterm 2>/dev/null),)
+    override _bold := $(shell setterm --bold on)
+    override _fg0 := $(shell setterm --foreground default)
+    override _fg1 := $(shell setterm --foreground cyan)
+    override _fg2 := $(shell setterm --foreground magenta)
+    override _fg3 := $(shell setterm --foreground green)
+    override _fg4 := $(shell setterm --foreground red)
+    override _end := $(shell setterm --default)
+  else
+    override _bold := $(shell echo -e '\e[1m')
+    override _fg0 := $(shell echo -e '\e[39m')
+    override _fg1 := $(shell echo -e '\e[36m')
+    override _fg2 := $(shell echo -e '\e[35m')
+    override _fg3 := $(shell echo -e '\e[32m')
+    override _fg4 := $(shell echo -e '\e[31m')
+    override _end := $(shell echo -e '\e[m')
+  endif
+  override _msgInfo := $(_bold)$(_fg1)
+  override _msgWarn := $(_bold)$(_fg2)
+  override _msgErr := $(_bold)$(_fg4)
 endif
-override _msgInfo := $(_bold)$(_fg1)
-override _msgWarn := $(_bold)$(_fg2)
-override _msgErr := $(_bold)$(_fg4)
 
 
 #### Compiler/Standard Specific Setup ####
