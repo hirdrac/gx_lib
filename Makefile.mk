@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 44 (2022/6/3)
+# Makefile.mk - revision 44 (2022/6/4)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -218,7 +218,7 @@ override BUILD_TMP := BUILD_TMP
 override LIBPREFIX := lib
 
 # apply *_EXTRA setting values (WARN_EXTRA handled above)
-$(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE LIBS LIBS_TEST DEFINE OPTIONS FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE EXCLUDE_TARGETS,\
+$(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE LIBS LIBS_TEST DEFINE OPTIONS FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE LINK_FLAGS EXCLUDE_TARGETS,\
   $(if $($x_EXTRA),$(eval override $x += $($x_EXTRA))))
 
 
