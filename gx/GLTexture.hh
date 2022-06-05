@@ -254,10 +254,10 @@ GLuint GLTextureT<TARGET>::init(
   //glTexStorage2D(TARGET, levels, internalformat, width, height); //GL4.2
   if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
     for (int i = 0; i < levels; ++i) {
-      for (int f = 0; f < 6; ++f) {
-        GX_GLCALL(glTexImage2D,
-                  GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i, internalformat,
-                  width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      for (unsigned int f = 0; f < 6; ++f) {
+        GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i,
+                  GLint(internalformat), width, height, 0, GL_RED,
+                  GL_UNSIGNED_BYTE, nullptr);
       }
       width = std::max(1, (width / 2));
       height = std::max(1, (height / 2));
@@ -271,8 +271,8 @@ GLuint GLTextureT<TARGET>::init(
     }
   } else {
     for (int i = 0; i < levels; ++i) {
-      GX_GLCALL(glTexImage2D, TARGET, i, internalformat, width, height, 0,
-                GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      GX_GLCALL(glTexImage2D, TARGET, i, GLint(internalformat),
+                width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
       width = std::max(1, (width / 2));
       height = std::max(1, (height / 2));
     }
@@ -411,8 +411,8 @@ void GLTextureT<TARGET>::setSubImage3D(
 #ifdef GX_GL33
   bindCheck();
   if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
-    GX_GLCALL(glTexSubImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + zoffset, level,
-              xoffset, yoffset, width, height, format, type, pixels);
+    GX_GLCALL(glTexSubImage2D, GLenum(GL_TEXTURE_CUBE_MAP_POSITIVE_X + zoffset),
+              level, xoffset, yoffset, width, height, format, type, pixels);
   } else {
     GX_GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
               width, height, depth, format, type, pixels);
