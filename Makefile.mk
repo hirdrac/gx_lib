@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 44 (2022/6/4)
+# Makefile.mk - revision 45 (2022/6/6)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -703,21 +703,25 @@ else ifneq ($(_build_env),)
   override _libs := $(call _format_global_libs,$(LIBS))
   override _libs_test := $(call _format_global_libs,$(LIBS_TEST))
 
-  ## entry binary name & alias target assignment
+  ## entry name & alias target assignment
+  $(foreach x,$(_file_labels),\
+    $(eval override _$x_name := $($x))\
+    $(eval override _$x_aliases := $x$(SFX) $(if $(SFX),$x)))
+
   $(foreach x,$(_bin_labels),\
     $(eval override _$x_name := $(call _gen_bin_name,$(ENV),$x))\
-    $(eval override _$x_aliases := $x$(SFX) $(call _gen_bin_aliases,$(ENV),$x) $(if $(SFX),$x $($x))))
+    $(eval override _$x_aliases := $x$(SFX) $(if $(SFX),$x $($x)) $(call _gen_bin_aliases,$(ENV),$x)))
 
   $(foreach x,$(_static_lib_labels),\
     $(eval override _$x_name := $(call _gen_static_lib_name,$(ENV),$x))\
-    $(eval override _$x_aliases := $x$(SFX) $(call _gen_static_lib_aliases,$(ENV),$x) $(if $(SFX),$x $($x) $($x).a)))
+    $(eval override _$x_aliases := $x$(SFX) $(if $(SFX),$x $($x) $($x).a) $(call _gen_static_lib_aliases,$(ENV),$x)))
 
   ifneq ($$(_libprefix),lib)
     override LIBPREFIX := $(_libprefix)
   endif
   $(foreach x,$(_shared_lib_labels),\
     $(eval override _$x_shared_name := $(call _gen_shared_lib_name,$(ENV),$x))\
-    $(eval override _$x_shared_aliases := $x$(SFX) $(call _gen_shared_lib_aliases,$(ENV),$x) $(if $(SFX),$x $($x) $($x)$(_libext)))\
+    $(eval override _$x_shared_aliases := $x$(SFX) $(if $(SFX),$x $($x) $($x)$(_libext)) $(call _gen_shared_lib_aliases,$(ENV),$x))\
     $(if $(_windows),,\
       $(eval override _$x_soname := $(if $(_$x_major_ver),$(notdir $($x)).so.$(_$x_major_ver)))\
       $(eval override _$x_shared_links := $(call _gen_shared_lib_links,$(ENV),$x))))
@@ -728,9 +732,9 @@ else ifneq ($(_build_env),)
   $(if $(_windows),$(foreach x,$(_shared_lib_labels),\
     $(eval override _$x_implib := $(call _gen_implib_name,$(ENV),$x))))
 
-  # .DEPS wildcard & BIN label translation
+  # .DEPS wildcard & BIN/FILE label translation
   $(foreach x,$(_all_labels),$(eval override _$x_deps := $(foreach d,$($x.DEPS),\
-    $(if $(filter $d,$(_bin_labels)),$(call _gen_bin_name,$(ENV),$d),$(call _do_wildcard,$d,)))))
+    $(if $(filter $d,$(_bin_labels) $(_file_labels)),$(_$d_name),$(call _do_wildcard,$d,)))))
 
   ## general entry setting parsing (pre)
   override define _build_entry1  # <1:label>
@@ -1089,9 +1093,9 @@ override define _make_file  # <1:label>
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_command))
 
-.PHONY: $1$$(SFX)
-$1$$(SFX): $$($1)
-$$($1): $$(_$1_trigger) $$(_$1_deps)
+.PHONY: $$(_$1_aliases)
+$$(_$1_aliases): $$(_$1_name)
+$$(_$1_name): $$(_$1_trigger) $$(_$1_deps)
 	$$(call _make_path,$$@)
 	$$(value _$1_command)
 	@echo "$$(_msgInfo)File '$$@' created$$(_end)"
