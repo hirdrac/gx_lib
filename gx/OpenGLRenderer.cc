@@ -417,7 +417,7 @@ void OpenGLRenderer::draw(
       addOp(OP_projT, lPtr->proj);
     } else if (firstLayer) {
       // default 2D projection
-      addOp(OP_viewT, Mat4Identity);
+      addOp(OP_viewT, Mat4{INIT_IDENTITY});
       addOp(OP_projT, orthoProjection(float(_width), float(_height)));
     }
 

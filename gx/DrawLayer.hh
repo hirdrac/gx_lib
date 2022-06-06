@@ -25,7 +25,7 @@ struct gx::DrawLayer
   DrawList entries;
 
   // layer specific attributes/flags
-  Mat4 view = Mat4Identity, proj = Mat4Identity;
+  Mat4 view{INIT_IDENTITY}, proj{INIT_IDENTITY};
   Vec3 lightPos{0,0,0};
   RGBA8 lightA = 0;  // ambient
   RGBA8 lightD = 0;  // diffuse

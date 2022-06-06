@@ -18,11 +18,6 @@ namespace gx {
   using TextureID = uint32_t;
 
 
-  // constants
-  constexpr Mat4 Mat4Zero     = Matrix4x4Zero<float,ROW_MAJOR>;
-  constexpr Mat4 Mat4Identity = Matrix4x4Identity<float,ROW_MAJOR>;
-
-
   // enumerations
   enum FilterType {
     FILTER_UNSPECIFIED = 0,

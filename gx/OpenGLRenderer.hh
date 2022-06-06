@@ -42,8 +42,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   GLBuffer _uniformBuf;
   struct UniformData {
-    Mat4 viewT;
-    Mat4 projT;
+    Mat4 viewT{INIT_ZERO};
+    Mat4 projT{INIT_ZERO};
     Vec3 lightPos;
     uint32_t lightA;
     uint32_t lightD;
