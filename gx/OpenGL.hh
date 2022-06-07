@@ -10,9 +10,10 @@
 #include <string>
 #include <string_view>
 
-
 #ifdef GX_GL33
 #define GX_GLNAMESPACE gx_gl33
+#elif defined(GX_GL42)
+#define GX_GLNAMESPACE gx_gl42
 #else
 #define GX_GLNAMESPACE gx_gl45
 #endif
@@ -26,6 +27,11 @@ constexpr int GL_VERSION_MINOR = 3;
 constexpr const char* GLSL_SOURCE_HEADER =
   "#version 330 core\n"
   "#extension GL_ARB_shading_language_packing : enable\n";
+#elif defined(GX_GL42)
+constexpr int GL_VERSION_MAJOR = 4;
+constexpr int GL_VERSION_MINOR = 2;
+constexpr const char* GLSL_SOURCE_HEADER =
+  "#version 420 core\n";
 #else
 constexpr int GL_VERSION_MAJOR = 4;
 constexpr int GL_VERSION_MINOR = 5;
@@ -38,7 +44,7 @@ constexpr const char* GLSL_SOURCE_HEADER =
 extern bool GLInitialized;
   // check if GL calls are safe (mainly for destructors)
 
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
 extern GLuint GLLastBufferBind;
 extern GLuint GLLastArrayBufferBind;
 extern GLuint GLLastVertexArrayBind;

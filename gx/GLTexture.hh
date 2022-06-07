@@ -9,7 +9,7 @@
 #pragma once
 #include "OpenGL.hh"
 #include <utility>
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
 #include <memory>
 #endif
 
@@ -152,7 +152,7 @@ class GLTextureT
   GLsizei _height = 0;
   GLsizei _depth = 0;
 
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   void bindCheck() {
     if (GLLastTextureBind != _tex) {
       // don't care which unit is active
@@ -225,12 +225,15 @@ GLuint GLTextureT<TARGET>::init(
 #ifdef GX_GL33
   GX_GLCALL(glGenTextures, 1, &_tex);
   bindCheck();
-  //glTexStorage1D(TARGET, levels, internalformat, width); //GL4.2
   for (int i = 0; i < levels; ++i) {
     GX_GLCALL(glTexImage1D, TARGET, i, internalformat, width, 0,
               GL_RED, GL_UNSIGNED_BYTE, nullptr);
     width = std::max(1, (width / 2));
   }
+#elif defined(GX_GL42)
+  GX_GLCALL(glGenTextures, 1, &_tex);
+  bindCheck();
+  GX_GLCALL(glTexStorage1D, TARGET, levels, internalformat, width);
 #else
   GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
   GX_GLCALL(glTextureStorage1D, _tex, levels, internalformat, width);
@@ -251,7 +254,6 @@ GLuint GLTextureT<TARGET>::init(
 #ifdef GX_GL33
   GX_GLCALL(glGenTextures, 1, &_tex);
   bindCheck();
-  //glTexStorage2D(TARGET, levels, internalformat, width, height); //GL4.2
   if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
     for (int i = 0; i < levels; ++i) {
       for (unsigned int f = 0; f < 6; ++f) {
@@ -277,6 +279,10 @@ GLuint GLTextureT<TARGET>::init(
       height = std::max(1, (height / 2));
     }
   }
+#elif defined(GX_GL42)
+  GX_GLCALL(glGenTextures, 1, &_tex);
+  bindCheck();
+  GX_GLCALL(glTexStorage2D, TARGET, levels, internalformat, width, height);
 #else
   GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
   GX_GLCALL(glTextureStorage2D, _tex, levels, internalformat, width, height);
@@ -298,7 +304,6 @@ GLuint GLTextureT<TARGET>::init(
 #ifdef GX_GL33
   GX_GLCALL(glGenTextures, 1, &_tex);
   bindCheck();
-  //glTexStorage3D(TARGET, levels, internalformat, width, height, depth); //GL4.2
   if constexpr (TARGET == GL_TEXTURE_3D || TARGET == GL_PROXY_TEXTURE_3D) {
     for (int i = 0; i < levels; ++i) {
       GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
@@ -315,6 +320,10 @@ GLuint GLTextureT<TARGET>::init(
       height = std::max(1, (height / 2));
     }
   }
+#elif defined(GX_GL42)
+  GX_GLCALL(glGenTextures, 1, &_tex);
+  bindCheck();
+  GX_GLCALL(glTexStorage3D, TARGET, levels, internalformat, width, height, depth);
 #else
   GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
   GX_GLCALL(glTextureStorage3D, _tex, levels, internalformat, width, height, depth);
@@ -338,7 +347,7 @@ GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
   _width = 0;
   _height = 0;
   _depth = 0;
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   if (!_tex) { GX_GLCALL(glGenTextures, 1, &_tex); }
   bindCheck();
   GX_GLCALL(glTexBuffer, TARGET, internalformat, buffer);
@@ -352,7 +361,7 @@ GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
 template<GLenum TARGET>
 void GLTextureT<TARGET>::detachBuffer()
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glTexBuffer, TARGET, _internalformat, 0);
 #else
@@ -363,7 +372,7 @@ void GLTextureT<TARGET>::detachBuffer()
 template<GLenum TARGET>
 void GLTextureT<TARGET>::bindUnit(GLuint unit, GLuint tex)
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   GX_GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
   GX_GLCALL(glBindTexture, TARGET, tex);
   GLLastTextureBind = tex;
@@ -377,7 +386,7 @@ void GLTextureT<TARGET>::setSubImage1D(
   GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void* pixels)
 {
   setUnpackAlignment(width, format, type);
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glTexSubImage1D, TARGET, level, xoffset, width, format, type, pixels);
 #else
@@ -391,7 +400,7 @@ void GLTextureT<TARGET>::setSubImage2D(
   GLenum format, GLenum type, const void* pixels)
 {
   setUnpackAlignment(width, format, type);
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
             width, height, format, type, pixels);
@@ -408,7 +417,7 @@ void GLTextureT<TARGET>::setSubImage3D(
   GLenum format, GLenum type, const void* pixels)
 {
   setUnpackAlignment(width, format, type);
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
     GX_GLCALL(glTexSubImage2D, GLenum(GL_TEXTURE_CUBE_MAP_POSITIVE_X + zoffset),
@@ -427,7 +436,7 @@ template<GLenum TARGET>
 void GLTextureT<TARGET>::getImage(
   GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels)
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glGetTexImage, TARGET, level, format, type, pixels);
 #else
@@ -438,7 +447,7 @@ void GLTextureT<TARGET>::getImage(
 template<GLenum TARGET>
 void GLTextureT<TARGET>::generateMipmap()
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glGenerateMipmap, TARGET);
 #else
@@ -453,7 +462,7 @@ void GLTextureT<TARGET>::clear(GLint level)
   const GLenum type = (format == GL_DEPTH_STENCIL)
     ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
 
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   const int pixel_size = GLPixelSize(format, type);
   const auto empty = std::make_unique<GLubyte[]>(
     _width * std::max(_height,1) * std::max(_depth,1) * pixel_size);
@@ -465,7 +474,7 @@ void GLTextureT<TARGET>::clear(GLint level)
     setSubImage1D(level, 0, _width, format, empty.get());
   }
 #else
-  GX_GLCALL(glClearTexImage, _tex, level, format, type, nullptr);
+  GX_GLCALL(glClearTexImage, _tex, level, format, type, nullptr); // GL4.4
 #endif
 }
 
@@ -506,7 +515,7 @@ template<GLenum TARGET>
 void GLTextureT<TARGET>::cleanup() noexcept
 {
   if (_tex) {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
     if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
 #endif
     GX_GLCALL(glDeleteTextures, 1, &_tex);
@@ -516,7 +525,7 @@ void GLTextureT<TARGET>::cleanup() noexcept
 template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameter(GLenum pname, GLfloat param)
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glTexParameterf, TARGET, pname, param);
 #else
@@ -527,7 +536,7 @@ void GLTextureT<TARGET>::setParameter(GLenum pname, GLfloat param)
 template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameter(GLenum pname, GLint param)
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glTexParameteri, TARGET, pname, param);
 #else
@@ -538,7 +547,7 @@ void GLTextureT<TARGET>::setParameter(GLenum pname, GLint param)
 template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLfloat* params)
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glTexParameterfv, TARGET, pname, params);
 #else
@@ -549,7 +558,7 @@ void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLfloat* params)
 template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLint* params)
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glTexParameteriv, TARGET, pname, params);
 #else
@@ -560,7 +569,7 @@ void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLint* params)
 template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLint* params)
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glTexParameterIiv, TARGET, pname, params);
 #else
@@ -571,7 +580,7 @@ void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLint* params)
 template<GLenum TARGET>
 void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLuint* params)
 {
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   GX_GLCALL(glTexParameterIuiv, TARGET, pname, params);
 #else

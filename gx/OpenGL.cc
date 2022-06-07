@@ -13,7 +13,7 @@ inline namespace GX_GLNAMESPACE {
 
 // **** Globals ****
 bool GLInitialized = false;
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
 GLuint GLLastBufferBind = 0;
 GLuint GLLastArrayBufferBind = 0;
 GLuint GLLastVertexArrayBind = 0;
@@ -29,7 +29,7 @@ static void GLCleanUp()
   GLInitialized = false;
 }
 
-#ifndef GX_GL33
+#if !defined(GX_GL33) && !defined(GX_GL42)
 static constexpr const char* GLSourceStr(GLenum source)
 {
   const char* sourceStr = "unknown";
@@ -107,7 +107,8 @@ bool GLSetupContext(GLADloadproc loadProc)
     GLInitialized = true;
   }
 
-#ifndef GX_GL33
+#if !defined(GX_GL33) && !defined(GX_GL42)
+  // debug output available with GL4.3 or later
   GLint flags = 0;
   glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
   if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
@@ -130,7 +131,7 @@ void GLClearState()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
 
-#ifdef GX_GL33
+#if defined(GX_GL33) || defined(GX_GL42)
   GLLastBufferBind = 0;
   GLLastArrayBufferBind = 0;
   GLLastVertexArrayBind = 0;
