@@ -13,7 +13,7 @@ inline namespace GX_GLNAMESPACE {
 
 // **** Globals ****
 bool GLInitialized = false;
-#if defined(GX_GL33) || defined(GX_GL42)
+#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
 GLuint GLLastBufferBind = 0;
 GLuint GLLastArrayBufferBind = 0;
 GLuint GLLastVertexArrayBind = 0;
@@ -131,7 +131,7 @@ void GLClearState()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
 
-#if defined(GX_GL33) || defined(GX_GL42)
+#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
   GLLastBufferBind = 0;
   GLLastArrayBufferBind = 0;
   GLLastVertexArrayBind = 0;
