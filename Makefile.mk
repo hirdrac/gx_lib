@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 45 (2022/6/6)
+# Makefile.mk - revision 45 (2022/6/13)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -129,7 +129,7 @@
 #    A value of '-' can be used to clear the setting for the target
 #
 #  Filename wildcards '*' or '**'(directory hierarchy search) supported
-#    for .SRC,.DEPS,.OBJS settings
+#    for .SRC,.DEPS,.OBJS,CLEAN_EXTRA,CLOBBER_EXTRA settings
 #
 #  <X>.LIBS/<X>.OBJS can accept LIB labels of library targets. Library
 #    LIBS/PACKAGES/binary will automatically be used in target building.
@@ -655,9 +655,10 @@ $(if $(filter $x,$(_lib_labels)),$(or $(call _format_lib_name,$(_$x_shared_name)
 $(call _format_lib_arg,$x)))
 
 # _do_wildcard: <1:file> <2:basedir>
-override _do_wildcard = $(if $(findstring **,$(notdir $1)),\
-$(patsubst $(or $2,./)%,%,$(shell find $2$(filter-out ./,$(dir $1)) -name '$(notdir $1)')),\
-$(if $(findstring *,$1),$(patsubst $2%,%,$(wildcard $2$1)),$1))
+override _do_wildcard =\
+$(if $(filter %/**/ **/,$(dir $1)),$(patsubst $(or $2,./)%,%,$(shell find $2$(patsubst %**/,%,$(dir $1)) -name '$(notdir $1)')),\
+$(if $(findstring **,$(notdir $1)),$(patsubst $(or $2,./)%,%,$(shell find $2$(filter-out ./,$(dir $1)) -name '$(notdir $1)')),\
+$(if $(findstring *,$1),$(patsubst $2%,%,$(wildcard $2$1)),$1)))
 
 # build environment detection
 override _build_env := $(strip $(foreach e,$(_env_names),$(if $(_$e_goals),$e)))
@@ -969,14 +970,23 @@ clean: clean_$1
 endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env_targets,$e)))
 
+
+ifneq ($(filter clean $(foreach e,$(_env_names),clean_$e),$(MAKECMDGOALS)),)
+  override _clean_extra := $(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f))
+endif
+
 clean:
 	@$(RM) "$(BUILD_DIR)/.compiler_ver" "$(BUILD_DIR)/.packages_ver"* $(foreach x,$(_symlinks),"$x")
 	@([ -d "$(BUILD_DIR)" ] && rmdir -p -- "$(BUILD_DIR)") || true
-	@for X in $(CLEAN_EXTRA); do\
+	@for X in $(_clean_extra); do\
 	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
 
+ifneq ($(filter clobber,$(MAKECMDGOALS)),)
+  override _clobber_extra := $(foreach f,$(CLOBBER_EXTRA),$(call _do_wildcard,$f))
+endif
+
 clobber: clean
-	@for X in $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_file_targets) $(_$e_links)) core gmon.out $(CLOBBER_EXTRA); do\
+	@for X in $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_file_targets) $(_$e_links)) core gmon.out $(_clobber_extra); do\
 	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
 	@for X in $(foreach y,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_libbin_targets) $(_$e_file_targets),$(dir $x))))),"$y"); do\
 	  ([ -d "$$X" ] && rmdir -p --ignore-fail-on-non-empty -- "$$X") || true; done
