@@ -1,6 +1,6 @@
 //
 // gx/Matrix3D.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // 4x4 matrix template type/functions for 3D calculations
 //
