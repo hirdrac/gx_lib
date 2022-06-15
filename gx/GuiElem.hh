@@ -18,7 +18,7 @@ namespace gx {
   using EventID = int32_t;  // user specified event value
 
   class GuiTexture;
-  struct GuiElem;
+  class GuiElem;
 
   enum GuiElemType {
     GUI_NULL = 0,
@@ -85,8 +85,9 @@ class gx::GuiTexture
 };
 
 
-struct gx::GuiElem
+class gx::GuiElem
 {
+ public:
   // shared properties
   std::vector<GuiElem> elems;  // child elements
   std::string text;  // label/entry text
