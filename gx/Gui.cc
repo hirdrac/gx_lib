@@ -78,12 +78,6 @@ static int allElemState(GuiElem& def, bool enable)
   return count;
 }
 
-[[nodiscard]] static bool contains(const GuiElem& e, float x, float y)
-{
-  return (x >= e._x) && (x < (e._x + e._w))
-    && (y >= e._y) && (y < (e._y + e._h));
-}
-
 [[nodiscard]] static GuiElem* findElemByXY(
   GuiElem& def, float x, float y, GuiElemType popupType)
 {
@@ -93,7 +87,7 @@ static int allElemState(GuiElem& def, bool enable)
       if (popupType == GUI_LISTSELECT && def.type == GUI_LISTSELECT
           && !def._active) { return nullptr; }
 
-      if (contains(def, x, y)) { return &def; }
+      if (def.contains(x, y)) { return &def; }
       else if (def._active) {
         GuiElem* e = findElemByXY(def.elems[1], x, y, GUI_NULL);
         if (e) { return e; }
@@ -101,7 +95,7 @@ static int allElemState(GuiElem& def, bool enable)
     }
   } else if ((def.eid != 0 || def.type == GUI_LISTSELECT_ITEM
               || def.type == GUI_TITLEBAR) && popupType == GUI_NULL
-             && contains(def, x, y)) {
+             && def.contains(x, y)) {
     return &def;
   } else {
     for (GuiElem& c : def.elems) {
@@ -110,7 +104,7 @@ static int allElemState(GuiElem& def, bool enable)
     }
 
     if (def.type == GUI_PANEL && popupType == GUI_NULL
-        && contains(def, x, y)) { return &def; }
+        && def.contains(x, y)) { return &def; }
   }
   return nullptr;
 }

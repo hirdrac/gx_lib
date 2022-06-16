@@ -151,4 +151,8 @@ class gx::GuiElem
   GuiElem(GuiElemType t, AlignEnum a, EventID i,
           std::initializer_list<GuiElem> x)
     : elems{x}, type{t}, align{a}, eid{i} { }
+
+  [[nodiscard]] bool contains(float x, float y) const {
+    return (x >= _x) && (x < (_x + _w)) && (y >= _y) && (y < (_y + _h));
+  }
 };
