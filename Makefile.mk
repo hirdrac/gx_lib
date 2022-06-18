@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 45 (2022/6/13)
+# Makefile.mk - revision 45 (2022/6/19)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -867,6 +867,8 @@ else ifneq ($(_build_env),)
       endif
     endif
   endif
+  override _$1_build_dir := $$(BUILD_DIR)/$$(_$1_build)
+  override _$1_all_objs := $$(addprefix $$(_$1_build_dir)/,$$(_$1_src_objs))
   endef
   $(foreach x,$(_lib_labels) $(_bin_labels),$(eval $(call _build_entry2,$x,)))
   $(foreach x,$(_test_labels),$(eval $(call _build_entry2,$x,test)))
@@ -877,8 +879,9 @@ else ifneq ($(_build_env),)
   #   without isolation)
 
   $(foreach x,$(_test_labels),\
+    $(eval override _$x_name := __$x)\
     $(eval override _$x_aliases := $x$(SFX))\
-    $(eval override _$x_run := $(BUILD_DIR)/$(_$x_build)/__$x))
+    $(eval override _$x_run := $(BUILD_DIR)/$(_$x_build)/$(_$x_name)))
 
   # check for source conflicts like src/file.cc & src/file.cpp
   override _all_source := $(sort $(foreach x,$(_src_labels),$(_$x_src)))
@@ -1009,8 +1012,11 @@ endif
 
 
 #### Build Macros ####
+override _escape_echo = $(subst ",\",$(subst $,\$,$1))
+# "
+
 override define _rebuild_check  # <1:trigger file> <2:trigger text>
-$1: | $$(dir $1) ; @echo "$$(strip $2)" >$1
+$1: | $$(dir $1) ; @echo "$$(call _escape_echo,$$(strip $2))" >$1
 ifneq ($$(strip $$(file <$1)),$$(strip $2))
   ifneq ($$(file <$1),)
     $$(info $$(_msgWarn)$1 changed$$(_end))
@@ -1020,7 +1026,7 @@ endif
 endef
 
 override define _rebuild_check_var # <1:trigger file> <2:trigger text var>
-$1: | $$(dir $1) ; @echo "$$(strip $$($2))" >$1
+$1: | $$(dir $1) ; @echo "$$(call _escape_echo,$$(strip $$($2)))" >$1
 ifneq ($$(strip $$(file <$1)),$$(strip $$($2)))
   ifneq ($$(file <$1),)
     $$(info $$(_msgWarn)$1 changed$$(_end))
@@ -1033,15 +1039,16 @@ endef
 override _make_path = $(if $(strip $(filter-out ./,$(dir $1))),@mkdir -p "$(dir $1)")
 
 # fix path to other objects when inside build dir
-override _fix_path = $(foreach x,$1,$(if $(filter /% ~%,$x),,../../)$x)
+override _fix_path = $(foreach x,$1,\
+$(if $(filter -L%,$(filter-out -L/% -L~%,$x)),-L../../$(patsubst -L%,%,$x),\
+$(if $(filter-out /% ~% -%,$x),../../$x,$x)))
 
 # link binary/test/shared lib - <1:label>
 override _do_link = $(if $(filter cxx,$(_$1_lang)),$(CXX) $(_cxxflags_$(_$1_build)),$(CC) $(_cflags_$(_$1_build))) $(_$1_ldflags)
 
 # static library build
 override define _make_static_lib  # <1:label>
-override _$1_all_objs := $$(addprefix $$(BUILD_DIR)/$$(_$1_build)/,$$(_$1_src_objs))
-override _$1_link_cmd := cd '$$(BUILD_DIR)/$$(_$1_build)'; $$(AR) rcs '../../$$(_$1_name)' $$(strip $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs)))
+override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(AR) rcs '../../$$(_$1_name)' $$(strip $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs)))
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1-static
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
@@ -1060,8 +1067,9 @@ endef
 
 # shared library build
 override define _make_shared_lib  # <1:label>
-override _$1_shared_objs := $$(addprefix $$(BUILD_DIR)/$$(_$1_build)$$(if $$(_pic_flag),-pic)/,$$(_$1_src_objs))
-override _$1_shared_link_cmd := $$(strip $$(call _do_link,$1) $$(_pic_flag) -shared $$(_$1_shared_objs) $$(_$1_other_objs) $$(_$1_xlibs)) -o '$$(_$1_shared_name)'
+override _$1_shared_build_dir := $$(BUILD_DIR)/$$(_$1_build)$$(if $$(_pic_flag),-pic)
+override _$1_shared_objs := $$(addprefix $$(_$1_shared_build_dir)/,$$(_$1_src_objs))
+override _$1_shared_link_cmd := cd '$$(_$1_shared_build_dir)'; $$(strip $$(call _do_link,$1) $$(_pic_flag) -shared $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs))) -o '../../$$(_$1_shared_name)'
 override _$1_shared_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1-shared
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_shared_trigger),_$1_shared_link_cmd))
 
@@ -1081,8 +1089,7 @@ endef
 
 # binary build
 override define _make_bin  # <1:label>
-override _$1_all_objs := $$(addprefix $$(BUILD_DIR)/$$(_$1_build)/,$$(_$1_src_objs))
-override _$1_link_cmd := $$(strip $$(call _do_link,$1) $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_xlibs)) -o '$$(_$1_name)'
+override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs))) -o '../../$$(_$1_name)'
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
@@ -1117,8 +1124,7 @@ endef
 # - always execute test binary if a test target was specified otherwise only
 #     run test if rebuilt
 override define _make_test  # <1:label>
-override _$1_all_objs := $$(addprefix $$(BUILD_DIR)/$$(_$1_build)/,$$(_$1_src_objs))
-override _$1_link_cmd := $$(strip $$(call _do_link,$1) $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_xlibs)) -o '$$(_$1_run)'
+override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs))) -o '$$(_$1_name)'
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
