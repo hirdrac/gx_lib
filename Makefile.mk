@@ -897,7 +897,7 @@ else ifneq ($(_build_env),)
   # determine LDFLAGS value for each entry
   $(foreach x,$(_shared_lib_labels) $(_bin_labels) $(_test_labels),\
     $(eval override _$x_ldflags :=\
-      -Wl$(_comma)--as-needed$(_comma)--gc-sections -L$(or $(_$(ENV)_ldir),.)\
+      -Wl$(_comma)--as-needed$(_comma)--gc-sections -L../..$(if $(_$(ENV)_ldir),/$(_$(ENV)_ldir))\
       $(if $(_$x_soname),-Wl$(_comma)-h$(_comma)'$(_$x_soname)')\
       $(if $(_$x_implib),-Wl$(_comma)--out-implib$(_comma)'$(_$x_implib)')\
       $(if $(_$x_subsystem),-Wl$(_comma)$--subsystem$(_comma)$(_$x_subsystem))\
