@@ -5991,8 +5991,9 @@ static void *stbi__tga_load(stbi__context *s, int *x, int *y, int *comp, int req
 }
 #endif
 
-// *************************************************************************************************
-// Photoshop PSD loader -- PD by Thatcher Ulrich, integration by Nicolas Schulz, tweaked by STB
+// *****************************************************************************
+// Photoshop PSD loader -- PD by Thatcher Ulrich, integration by Nicolas Schulz,
+// tweaked by STB
 
 #ifndef STBI_NO_PSD
 static int stbi__psd_test(stbi__context *s)
@@ -6242,7 +6243,7 @@ static void *stbi__psd_load(stbi__context *s, int *x, int *y, int *comp, int req
 }
 #endif
 
-// *************************************************************************************************
+// *****************************************************************************
 // Softimage PIC loader
 // by Tom Seddon
 //
@@ -6463,7 +6464,7 @@ static int stbi__pic_test(stbi__context *s)
 }
 #endif
 
-// *************************************************************************************************
+// *****************************************************************************
 // GIF loader -- public domain by Jean-Marc Lienher -- simplified/shrunk by stb
 
 #ifndef STBI_NO_GIF
@@ -6997,9 +6998,10 @@ static int stbi__gif_info(stbi__context *s, int *x, int *y, int *comp)
 }
 #endif
 
-// *************************************************************************************************
+// *****************************************************************************
 // Radiance RGBE HDR loader
 // originally by Nicolas Schulz
+
 #ifndef STBI_NO_HDR
 static int stbi__hdr_test_core(stbi__context *s, const char *signature)
 {
@@ -7395,7 +7397,7 @@ static int stbi__pic_info(stbi__context *s, int *x, int *y, int *comp)
 }
 #endif
 
-// *************************************************************************************************
+// *****************************************************************************
 // Portable Gray Map and Portable Pixel Map loader
 // by Ken Miller
 //
@@ -7407,7 +7409,6 @@ static int stbi__pic_info(stbi__context *s, int *x, int *y, int *comp)
 //    Does not support ASCII image data (formats P2 and P3)
 
 #ifndef STBI_NO_PNM
-
 static int      stbi__pnm_test(stbi__context *s)
 {
    char p, t;
