@@ -150,7 +150,7 @@ template<class T>
 {
   // NOTE: skips root in search
   for (GuiElem& e : root.elems) {
-    if (e.type == GUI_LISTSELECT_ITEM && (no == 0 || e.itemNo == no)) {
+    if (e.type == GUI_LISTSELECT_ITEM && (no == 0 || e.item.no == no)) {
       return &e;
     } else if (!e.elems.empty()) {
       GuiElem* e2 = findItem(e, no);
@@ -820,7 +820,7 @@ void Gui::processMouseEvent(Window& win)
       GuiElem* parent = findParentListSelect(pPtr->root, id);
       if (parent) {
         GuiElem& ls = *parent;
-        ls.itemNo = ePtr->itemNo;
+        ls.item.no = ePtr->item.no;
         GuiElem& e0 = ls.elems[0];
         const GuiElem& src = ePtr->elems[0];
         e0.text = src.text;
@@ -853,7 +853,7 @@ void Gui::processMouseEvent(Window& win)
           && lbuttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
         addEvent(*ePtr, win.lastPollTime());
-        if (type == GUI_CHECKBOX) { ePtr->checkboxSet = !ePtr->checkboxSet; }
+        if (type == GUI_CHECKBOX) { ePtr->checkbox.set = !ePtr->checkbox.set; }
       }
 
       clearHeld();
@@ -1080,7 +1080,7 @@ bool Gui::setBool(EventID eid, bool val)
   GuiElem* e = findElemByEventID(eid);
   if (!e || e->type != GUI_CHECKBOX) { return false; }
 
-  e->checkboxSet = val;
+  e->checkbox.set = val;
   _needRender = true;
   return true;
 }
@@ -1090,7 +1090,7 @@ bool Gui::setItemNo(EventID eid, int no)
   GuiElem* e = findElemByEventID(eid);
   if (!e || e->type != GUI_LISTSELECT) { return false; }
 
-  e->itemNo = no;
+  e->item.no = no;
   _needRender = true;
   return true;
 }
@@ -1123,8 +1123,8 @@ void Gui::initElem(GuiElem& def)
 {
   def._id = ++_lastElemID;
   if (def.type == GUI_LISTSELECT) {
-    const GuiElem* e = findItem(def, def.itemNo);
-    if (!e && def.itemNo != 0) { e = findItem(def, 0); }
+    const GuiElem* e = findItem(def, def.item.no);
+    if (!e && def.item.no != 0) { e = findItem(def, 0); }
     if (e) {
       GuiElem& e0 = def.elems[0];
       const GuiElem& src = e->elems[0];
@@ -1132,7 +1132,7 @@ void Gui::initElem(GuiElem& def)
       e0.type  = src.type;
       e0.align = ALIGN_CENTER_LEFT;
       e0.eid   = src.eid;
-      def.itemNo = e->itemNo;
+      def.item.no = e->item.no;
     }
   }
   for (GuiElem& e : def.elems) { initElem(e); }
@@ -1242,7 +1242,7 @@ bool Gui::drawElem(
       const float cw = thm.font->glyphWidth(thm.checkCode) + (b*2);
       const float ch = float(thm.font->size() - 1) + (b*2);
       drawRec(dc, ex, ey, cw, ch, thm, style);
-      if (def.checkboxSet) {
+      if (def.checkbox.set) {
         dc2.color(style->textColor);
         dc2.glyph({thm.font, float(thm.textSpacing)},
                   ex + b + thm.checkXOffset, ey + b + thm.checkYOffset,
@@ -1270,7 +1270,7 @@ bool Gui::drawElem(
       drawRec(dc, ex, ey, ew, eh, thm, style);
       if (thm.listSelectItemCode != 0) {
         const GuiElem* parent = findParentListSelect(p.root, def._id);
-        if (parent && parent->itemNo == def.itemNo) {
+        if (parent && parent->item.no == def.item.no) {
           const float b = thm.border;
           dc2.color(style->textColor);
           dc2.glyph({thm.font, float(thm.textSpacing)}, ex + ew - b, ey + b,

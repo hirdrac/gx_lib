@@ -77,12 +77,12 @@ class gx::Gui
 
   [[nodiscard]] bool getBool(EventID eid) const {
     const GuiElem* e = findElemByEventID(eid);
-    return (e == nullptr || e->type != GUI_CHECKBOX) ? false : e->checkboxSet;
+    return (e == nullptr || e->type != GUI_CHECKBOX) ? false : e->checkbox.set;
   }
 
   [[nodiscard]] int getItemNo(EventID eid) const {
     const GuiElem* e = findElemByEventID(eid);
-    return (e == nullptr || e->type != GUI_LISTSELECT) ? 0 : e->itemNo;
+    return (e == nullptr || e->type != GUI_LISTSELECT) ? 0 : e->item.no;
   }
 
   [[nodiscard]] std::string eventText() const { return getText(_eventID); }

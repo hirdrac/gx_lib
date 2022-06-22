@@ -112,6 +112,14 @@ class gx::GuiElem
     EventID targetID;
   };
 
+  struct CheckboxProps {
+    bool set;
+  };
+
+  struct ItemProps {
+    int no;
+  };
+
   struct EntryProps {
     float size; // width in characters
     uint32_t maxLength;
@@ -126,13 +134,13 @@ class gx::GuiElem
   };
 
   union {
-    bool checkboxSet;    // CHECKBOX
-    int itemNo;          // LISTSELECT, LISTSELECT_ITEM
-    LabelProps label;    // LABEL,VLABEL
-    SpacerProps spacer;  // SPACER
-    ButtonProps button;  // BUTTON,BUTTON_PRESS
-    EntryProps entry;    // ENTRY
-    ImageProps image;    // IMAGE
+    LabelProps label;       // LABEL,VLABEL
+    SpacerProps spacer;     // SPACER
+    ButtonProps button;     // BUTTON,BUTTON_PRESS
+    CheckboxProps checkbox; // CHECKBOX
+    ItemProps item;         // LISTSELECT,LISTSELECT_ITEM
+    EntryProps entry;       // ENTRY
+    ImageProps image;       // IMAGE
   };
 
   // layout state

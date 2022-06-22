@@ -301,7 +301,7 @@ namespace gx {
     EventID id, bool set, const GuiElem& label)
   {
     GuiElem e{GUI_CHECKBOX, ALIGN_LEFT, id, {label}};
-    e.checkboxSet = set;
+    e.checkbox.set = set;
     return e;
   }
 
@@ -309,7 +309,7 @@ namespace gx {
     EventID id, AlignEnum align, bool set, const GuiElem& label)
   {
     GuiElem e{GUI_CHECKBOX, align, id, {label}};
-    e.checkboxSet = set;
+    e.checkbox.set = set;
     return e;
   }
 
@@ -317,7 +317,7 @@ namespace gx {
     EventID id, bool set, std::string_view label)
   {
     GuiElem e{GUI_CHECKBOX, ALIGN_TOP_LEFT, id, {guiLabel(ALIGN_LEFT, label)}};
-    e.checkboxSet = set;
+    e.checkbox.set = set;
     return e;
   }
 
@@ -325,7 +325,7 @@ namespace gx {
     EventID id, AlignEnum align, bool set, std::string_view label)
   {
     GuiElem e{GUI_CHECKBOX, align, id, {guiLabel(ALIGN_LEFT, label)}};
-    e.checkboxSet = set;
+    e.checkbox.set = set;
     return e;
   }
 
@@ -361,7 +361,7 @@ namespace gx {
     GuiElem e{GUI_LISTSELECT, ALIGN_TOP_LEFT, id,
               {GuiElem{},
                GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
-    e.itemNo = 0; // unset (default to first item)
+    e.item.no = 0; // unset (default to first item)
     return e;
   }
 
@@ -372,7 +372,7 @@ namespace gx {
     GuiElem e{GUI_LISTSELECT, align, id,
               {GuiElem{},
                GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
-    e.itemNo = 0; // unset (default to first item)
+    e.item.no = 0; // unset (default to first item)
     return e;
   }
 
@@ -380,7 +380,7 @@ namespace gx {
   {
     GuiElem e{GUI_LISTSELECT_ITEM, ALIGN_JUSTIFY, 0,
               {guiLabel(ALIGN_CENTER_LEFT, text)}};
-    e.itemNo = no; // should be non-zero
+    e.item.no = no; // should be non-zero
     return e;
   }
 
