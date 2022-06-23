@@ -150,7 +150,7 @@ template<class T>
 {
   // NOTE: skips root in search
   for (GuiElem& e : root.elems) {
-    if (e.type == GUI_LISTSELECT_ITEM && (no == 0 || e.item.no == no)) {
+    if (e.type == GUI_LISTSELECT_ITEM && (no == 0 || e.item().no == no)) {
       return &e;
     } else if (!e.elems.empty()) {
       GuiElem* e2 = findItem(e, no);
@@ -286,11 +286,12 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
       if (!def.elems.empty()) {
         GuiElem& e = def.elems[0];
         if (e.align & ALIGN_JUSTIFY) {
+          const auto& spacer = def.spacer();
           if (e.align & ALIGN_HJUSTIFY) {
-            e._w = def._w - (def.spacer.left + def.spacer.right);
+            e._w = def._w - (spacer.left + spacer.right);
           }
           if (e.align & ALIGN_VJUSTIFY) {
-            e._h = def._h - (def.spacer.top + def.spacer.bottom);
+            e._h = def._h - (spacer.top + spacer.bottom);
           }
           resizedElem(thm, e);
         }
@@ -361,29 +362,33 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
       def._h = total_h;
       break;
     }
-    case GUI_SPACER:
-      def._w = def.spacer.left + def.spacer.right;
-      def._h = def.spacer.top + def.spacer.bottom;
+    case GUI_SPACER: {
+      const auto& spacer = def.spacer();
+      def._w = spacer.left + spacer.right;
+      def._h = spacer.top + spacer.bottom;
       if (!def.elems.empty()) {
         const GuiElem& e = def.elems[0];
         def._w += e._w;
         def._h += e._h;
       }
       break;
+    }
     case GUI_LABEL: {
       const Font& fnt = *thm.font;
-      const int lines = std::max(calcLines(def.text), def.label.minLines);
-      def._w = std::max(fnt.calcMaxLength(def.text, 0), def.label.minLength);
+      const auto& label = def.label();
+      const int lines = std::max(calcLines(label.text), label.minLines);
+      def._w = std::max(fnt.calcMaxLength(label.text, 0), label.minLength);
       def._h = float((fnt.size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
       break;
     }
     case GUI_VLABEL: {
       const Font& fnt = *thm.font;
-      const int lines = std::max(calcLines(def.text), def.label.minLines);
+      const auto& label = def.label();
+      const int lines = std::max(calcLines(label.text), label.minLines);
       def._w = float((fnt.size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
-      def._h = std::max(fnt.calcMaxLength(def.text, 0), def.label.minLength);
+      def._h = std::max(fnt.calcMaxLength(label.text, 0), label.minLength);
       break;
     }
     case GUI_HLINE:
@@ -427,7 +432,7 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
     }
     case GUI_ENTRY: {
       const Font& fnt = *thm.font;
-      const auto& ep = def.entry;
+      const auto& ep = def.entry();
       if (ep.type == ENTRY_CARDINAL || ep.type == ENTRY_INTEGER
           || ep.type == ENTRY_FLOAT) {
         def._w = ep.size * fnt.digitWidth();
@@ -443,8 +448,9 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
     }
     case GUI_IMAGE: {
       const float b2 = thm.border * 2;
-      def._w = def.image.width + b2;
-      def._h = def.image.height + b2;
+      const auto& image = def.image();
+      def._w = image.width + b2;
+      def._h = image.height + b2;
       break;
     }
     default:
@@ -508,9 +514,10 @@ static void calcPos(GuiElem& def, const GuiTheme& thm,
     }
     case GUI_SPACER:
       if (!def.elems.empty()) {
+        const auto& spacer = def.spacer();
         calcPos(def.elems[0], thm,
-                left + def.spacer.left, top + def.spacer.top,
-                right - def.spacer.right, bottom - def.spacer.bottom);
+                left + spacer.left, top + spacer.top,
+                right - spacer.right, bottom - spacer.bottom);
       }
       break;
     case GUI_CHECKBOX:
@@ -820,10 +827,10 @@ void Gui::processMouseEvent(Window& win)
       GuiElem* parent = findParentListSelect(pPtr->root, id);
       if (parent) {
         GuiElem& ls = *parent;
-        ls.item.no = ePtr->item.no;
+        ls.item().no = ePtr->item().no;
         GuiElem& e0 = ls.elems[0];
         const GuiElem& src = ePtr->elems[0];
-        e0.text = src.text;
+        e0.label().text = src.label().text;
         e0.eid  = src.eid;
         const float b = pPtr->theme->border;
         calcPos(e0, *pPtr->theme, ls._x + b, ls._y + b, ls._x + ls._w - b,
@@ -841,7 +848,7 @@ void Gui::processMouseEvent(Window& win)
       _heldY = win.mouseY();
       _needRender = true;
       if (type == GUI_BUTTON_PRESS) {
-        _repeatDelay = ePtr->button.repeatDelay;
+        _repeatDelay = ePtr->button().repeatDelay;
         addEvent(*ePtr, win.lastPollTime());
       }
     } else if ((_heldType == GUI_BUTTON_PRESS) && (_heldID != id)) {
@@ -853,7 +860,7 @@ void Gui::processMouseEvent(Window& win)
           && lbuttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
         addEvent(*ePtr, win.lastPollTime());
-        if (type == GUI_CHECKBOX) { ePtr->checkbox.set = !ePtr->checkbox.set; }
+        if (type == GUI_CHECKBOX) { ePtr->checkbox().set = !ePtr->checkbox().set; }
       }
 
       clearHeld();
@@ -871,6 +878,7 @@ void Gui::processCharEvent(Window& win)
   GuiElem* e = findElemByID(_focusID);
   if (!e) { return; }
   GX_ASSERT(e->type == GUI_ENTRY);
+  auto& entry = e->entry();
 
   bool usedEvent = false;
   for (const CharInfo& c : win.charData()) {
@@ -883,22 +891,22 @@ void Gui::processCharEvent(Window& win)
     } else if (c.key == KEY_BACKSPACE) {
       usedEvent = true;
       if (_focusCursorPos > 0) {
-        GX_ASSERT(!e->text.empty());
+        GX_ASSERT(!entry.text.empty());
         if (c.mods == MOD_CONTROL) {
-          e->text.erase(0, indexUTF8(e->text, _focusCursorPos));
+          entry.text.erase(0, indexUTF8(entry.text, _focusCursorPos));
           _focusCursorPos = 0;
         } else {
-          eraseUTF8(e->text, --_focusCursorPos);
+          eraseUTF8(entry.text, --_focusCursorPos);
         }
         _needRender = _textChanged = true;
       }
     } else if (c.key == KEY_DELETE) {
       usedEvent = true;
-      if (_focusCursorPos < lengthUTF8(e->text)) {
+      if (_focusCursorPos < lengthUTF8(entry.text)) {
         if (c.mods == MOD_CONTROL) {
-          e->text.erase(indexUTF8(e->text, _focusCursorPos), std::string::npos);
+          entry.text.erase(indexUTF8(entry.text, _focusCursorPos), std::string::npos);
         } else {
-          eraseUTF8(e->text, _focusCursorPos);
+          eraseUTF8(entry.text, _focusCursorPos);
         }
         _needRender = _textChanged = true;
       }
@@ -923,14 +931,14 @@ void Gui::processCharEvent(Window& win)
       if (_focusCursorPos > 0) { --_focusCursorPos; _needRender = true; }
     } else if (c.key == KEY_RIGHT && c.mods == 0) {
       usedEvent = true;
-      if (_focusCursorPos < lengthUTF8(e->text)) {
+      if (_focusCursorPos < lengthUTF8(entry.text)) {
         ++_focusCursorPos; _needRender = true; }
     } else if (c.key == KEY_HOME && c.mods == 0) {
       usedEvent = true;
       if (_focusCursorPos > 0) { _focusCursorPos = 0; _needRender = true; }
     } else if (c.key == KEY_END && c.mods == 0) {
       usedEvent = true;
-      const std::size_t ts = lengthUTF8(e->text);
+      const std::size_t ts = lengthUTF8(entry.text);
       if (_focusCursorPos < ts) { _focusCursorPos = ts; _needRender = true; }
     }
   }
@@ -947,11 +955,12 @@ void Gui::processCharEvent(Window& win)
 bool Gui::addEntryChar(GuiElem& e, int32_t code)
 {
   GX_ASSERT(e.type == GUI_ENTRY);
-  if (e.entry.maxLength != 0 && lengthUTF8(e.text) >= e.entry.maxLength) {
+  auto& entry = e.entry();
+  if (entry.maxLength != 0 && lengthUTF8(entry.text) >= entry.maxLength) {
     return false; // no space for character
   }
 
-  switch (e.entry.type) {
+  switch (entry.type) {
     default: // ENTRY_TEXT, ENTRY_PASSWORD
       // valid character check
       if (code <= 31) { return false; }
@@ -961,41 +970,41 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
       if (!std::isdigit(code)) { return false; }
       // allowed sequence check
       if (code == '0'
-          && (e.text == "0" || (_focusCursorPos == 0 && !e.text.empty()))) {
+          && (entry.text == "0" || (_focusCursorPos == 0 && !entry.text.empty()))) {
         return false; }
       // special case to reset entry
-      if (e.text == "0" && _focusCursorPos == 1) {
-        e.text.clear(); _focusCursorPos = 0; }
+      if (entry.text == "0" && _focusCursorPos == 1) {
+        entry.text.clear(); _focusCursorPos = 0; }
       break;
     case ENTRY_INTEGER:
       // valid character check
       if (!std::isdigit(code) && code != '-') { return false; }
       // allowed sequence check
-      if ((code == '-' && !e.text.empty() && e.text != "0")
-          || (code == '0' && (e.text == "0" || e.text == "-"))) { return false; }
+      if ((code == '-' && !entry.text.empty() && entry.text != "0")
+          || (code == '0' && (entry.text == "0" || entry.text == "-"))) { return false; }
       // special case to reset entry
-      if (e.text == "0" && _focusCursorPos == 1) {
-        e.text.clear(); _focusCursorPos = 0; }
+      if (entry.text == "0" && _focusCursorPos == 1) {
+        entry.text.clear(); _focusCursorPos = 0; }
       break;
     case ENTRY_FLOAT:
       // valid character check
       if (!std::isdigit(code) && code != '-' && code != '.') { return false; }
       // allowed sequence check
-      if ((code == '-' && !e.text.empty() && e.text != "0")
-          || (code == '0' && (e.text == "0" || e.text == "-0"))) {
+      if ((code == '-' && !entry.text.empty() && entry.text != "0")
+          || (code == '0' && (entry.text == "0" || entry.text == "-0"))) {
         return false; }
       // decimal handling and special case to reset entry
       if (code == '.') {
         int count = 0;
-        for (int ch : e.text) { count += (ch == '.'); }
+        for (int ch : entry.text) { count += (ch == '.'); }
         if (count > 0) { return false; }
-      } else if (e.text == "0"  && _focusCursorPos == 1) {
-        e.text.clear(); _focusCursorPos = 0;
+      } else if (entry.text == "0"  && _focusCursorPos == 1) {
+        entry.text.clear(); _focusCursorPos = 0;
       }
       break;
   }
 
-  insertUTF8(e.text, _focusCursorPos, code);
+  insertUTF8(entry.text, _focusCursorPos, code);
   ++_focusCursorPos;
   return true;
 }
@@ -1009,10 +1018,11 @@ void Gui::setFocus(Window& win, const Panel* p, const GuiElem* e)
     _textChanged = false;
     GuiElem* focusElem = findElemByID(_focusID);
     if (focusElem) {
-      if (focusElem->text.empty()) {
-        EntryType t = focusElem->entry.type;
+      auto& entry = focusElem->entry();
+      if (entry.text.empty()) {
+        const EntryType t = entry.type;
         if (t == ENTRY_CARDINAL || t == ENTRY_INTEGER || t == ENTRY_FLOAT) {
-          focusElem->text = "0";
+          entry.text = "0";
         }
       }
       addEvent(*focusElem, win.lastPollTime());
@@ -1027,7 +1037,7 @@ void Gui::setFocus(Window& win, const Panel* p, const GuiElem* e)
   }
 
   // TODO: set cursorPos based on mouseX/mouseY
-  _focusCursorPos = e ? lengthUTF8(e->text) : 0;
+  _focusCursorPos = e ? lengthUTF8(e->entry().text) : 0;
   _focusEntryOffset = 0;
   _needRender = true;
 }
@@ -1058,17 +1068,18 @@ bool Gui::setText(EventID eid, std::string_view text)
     if (!e) { continue; }
 
     if (e->type == GUI_ENTRY) {
+      e->entry().text = text;
       if (_focusID == e->_id) {
-        _focusCursorPos = lengthUTF8(e->text);
+        _focusCursorPos = lengthUTF8(text);
         _focusEntryOffset = 0;
       }
     } else if (e->type == GUI_LABEL || e->type == GUI_VLABEL) {
+      e->label().text = text;
       pPtr->needLayout = true;
     } else {
       break;
     }
 
-    e->text = text;
     _needRender = true;
     return true;
   }
@@ -1080,7 +1091,7 @@ bool Gui::setBool(EventID eid, bool val)
   GuiElem* e = findElemByEventID(eid);
   if (!e || e->type != GUI_CHECKBOX) { return false; }
 
-  e->checkbox.set = val;
+  e->checkbox().set = val;
   _needRender = true;
   return true;
 }
@@ -1090,7 +1101,7 @@ bool Gui::setItemNo(EventID eid, int no)
   GuiElem* e = findElemByEventID(eid);
   if (!e || e->type != GUI_LISTSELECT) { return false; }
 
-  e->item.no = no;
+  e->item().no = no;
   _needRender = true;
   return true;
 }
@@ -1123,16 +1134,15 @@ void Gui::initElem(GuiElem& def)
 {
   def._id = ++_lastElemID;
   if (def.type == GUI_LISTSELECT) {
-    const GuiElem* e = findItem(def, def.item.no);
-    if (!e && def.item.no != 0) { e = findItem(def, 0); }
+    const GuiElem* e = findItem(def, def.item().no);
+    if (!e && def.item().no != 0) { e = findItem(def, 0); }
     if (e) {
       GuiElem& e0 = def.elems[0];
       const GuiElem& src = e->elems[0];
-      e0.text  = src.text;
-      e0.type  = src.type;
+      e0.label().text = src.label().text;
       e0.align = ALIGN_CENTER_LEFT;
       e0.eid   = src.eid;
-      def.item.no = e->item.no;
+      def.item().no = e->item().no;
     }
   }
   for (GuiElem& e : def.elems) { initElem(e); }
@@ -1217,13 +1227,13 @@ bool Gui::drawElem(
     case GUI_LABEL:
       dc2.color(style->textColor);
       dc2.text({thm.font, float(thm.textSpacing)},
-               ex, ey, ALIGN_TOP_LEFT, def.text);
+               ex, ey, ALIGN_TOP_LEFT, def.label().text);
       break;
     case GUI_VLABEL:
       dc2.color(style->textColor);
       dc2.text({thm.font, float(thm.textSpacing), 0,
                 {0,-1}, {1,0}, {0,-1}, {1,0}},
-               ex, ey+eh, ALIGN_TOP_LEFT, def.text);
+               ex, ey+eh, ALIGN_TOP_LEFT, def.label().text);
       break;
     case GUI_HLINE: {
       const float b = thm.lineBorder;
@@ -1242,7 +1252,7 @@ bool Gui::drawElem(
       const float cw = thm.font->glyphWidth(thm.checkCode) + (b*2);
       const float ch = float(thm.font->size() - 1) + (b*2);
       drawRec(dc, ex, ey, cw, ch, thm, style);
-      if (def.checkbox.set) {
+      if (def.checkbox().set) {
         dc2.color(style->textColor);
         dc2.glyph({thm.font, float(thm.textSpacing)},
                   ex + b + thm.checkXOffset, ey + b + thm.checkYOffset,
@@ -1270,7 +1280,7 @@ bool Gui::drawElem(
       drawRec(dc, ex, ey, ew, eh, thm, style);
       if (thm.listSelectItemCode != 0) {
         const GuiElem* parent = findParentListSelect(p.root, def._id);
-        if (parent && parent->item.no == def.item.no) {
+        if (parent && parent->item().no == def.item().no) {
           const float b = thm.border;
           dc2.color(style->textColor);
           dc2.glyph({thm.font, float(thm.textSpacing)}, ex + ew - b, ey + b,
@@ -1280,8 +1290,9 @@ bool Gui::drawElem(
       break;
     case GUI_ENTRY: {
       drawRec(dc, ex, ey, ew, eh, thm, style);
-      const std::string txt = (def.entry.type == ENTRY_PASSWORD)
-        ? passwordStr(thm.passwordCode, lengthUTF8(def.text)) : def.text;
+      const auto& entry = def.entry();
+      const std::string txt = (entry.type == ENTRY_PASSWORD)
+        ? passwordStr(thm.passwordCode, lengthUTF8(entry.text)) : entry.text;
       const float cw = thm.cursorWidth;
       const float tw = thm.font->calcLength(txt, 0);
       const float maxWidth = ew - thm.entryLeftMargin
@@ -1290,9 +1301,9 @@ bool Gui::drawElem(
       const float rightEdge = leftEdge + maxWidth;
       float tx = leftEdge;
       if (tw <= maxWidth) {
-        if (HAlign(def.entry.align) == ALIGN_RIGHT) {
+        if (HAlign(entry.align) == ALIGN_RIGHT) {
           tx = ex + ew - (tw + cw + thm.entryRightMargin);
-        } else if (HAlign(def.entry.align) != ALIGN_LEFT) { // HCENTER
+        } else if (HAlign(entry.align) != ALIGN_LEFT) { // HCENTER
           tx = ex + ((ew - tw) * .5f);
         }
       }
@@ -1327,12 +1338,14 @@ bool Gui::drawElem(
       }
       break;
     }
-    case GUI_IMAGE:
-      dc.texture(def.image.texId);
+    case GUI_IMAGE: {
+      const auto& image = def.image();
+      dc.texture(image.texId);
       dc.rectangle(ex + thm.border, ey + thm.border,
-                   def.image.width, def.image.height,
-                   def.image.texCoord0, def.image.texCoord1);
+                   image.width, image.height,
+                   image.texCoord0, image.texCoord1);
       break;
+    }
     case GUI_HFRAME:
     case GUI_VFRAME:
     case GUI_SPACER:

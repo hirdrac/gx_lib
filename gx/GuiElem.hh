@@ -8,9 +8,9 @@
 #include "Types.hh"
 #include <vector>
 #include <string>
-#include <string_view>
 #include <initializer_list>
 #include <utility>
+#include <variant>
 
 
 namespace gx {
@@ -90,37 +90,40 @@ class gx::GuiElem
  public:
   // shared properties
   std::vector<GuiElem> elems;  // child elements
-  std::string text;  // label/entry text
   GuiElemType type;
   AlignEnum align;
   EventID eid;
-  GuiTexture tex;    // texture cache for rendering
 
   // elem type specific properties
   struct LabelProps {
+    std::string text;
     float minLength;
     int32_t minLines;
   };
 
   struct SpacerProps {
-    int16_t left, top, right, bottom;
+    int16_t left = 0;
+    int16_t top = 0;
+    int16_t right = 0;
+    int16_t bottom = 0;
   };
 
   struct ButtonProps {
-    int64_t repeatDelay; // BUTTON_PRESS only
-    GuiAction action;
-    EventID targetID;
+    int64_t repeatDelay = -1; // BUTTON_PRESS only (-1 disables)
+    GuiAction action = ACTION_NONE;
+    EventID targetID = 0;
   };
 
   struct CheckboxProps {
-    bool set;
+    bool set = false;
   };
 
   struct ItemProps {
-    int no;
+    int no = 0;
   };
 
   struct EntryProps {
+    std::string text;
     float size; // width in characters
     uint32_t maxLength;
     EntryType type;
@@ -133,15 +136,28 @@ class gx::GuiElem
     Vec2 texCoord0, texCoord1;
   };
 
-  union {
-    LabelProps label;       // LABEL,VLABEL
-    SpacerProps spacer;     // SPACER
-    ButtonProps button;     // BUTTON,BUTTON_PRESS
-    CheckboxProps checkbox; // CHECKBOX
-    ItemProps item;         // LISTSELECT,LISTSELECT_ITEM
-    EntryProps entry;       // ENTRY
-    ImageProps image;       // IMAGE
-  };
+  std::variant<
+    LabelProps,    // LABEL,VLABEL
+    SpacerProps,   // SPACER
+    ButtonProps,   // BUTTON,BUTTON_PRESS
+    CheckboxProps, // CHECKBOX
+    ItemProps,     // LISTSELECT,LISTSELECT_ITEM
+    EntryProps,    // ENTRY
+    ImageProps     // IMAGE
+    > props;
+
+#define GETTER(name,type)\
+  type& name() { return std::get<type>(props); }\
+  const type& name() const { return std::get<type>(props); }
+
+  GETTER(label,LabelProps)
+  GETTER(spacer,SpacerProps)
+  GETTER(button,ButtonProps)
+  GETTER(checkbox,CheckboxProps)
+  GETTER(item,ItemProps)
+  GETTER(entry,EntryProps)
+  GETTER(image,ImageProps)
+#undef GETTER
 
   // layout state
   ElemID _id = 0;
@@ -150,12 +166,8 @@ class gx::GuiElem
   bool _active = false;  // popup/menu activated
   bool _enabled = true;
 
-  GuiElem()
-    : type{GUI_NULL}, align{ALIGN_UNSPECIFIED}, eid{0} { }
   GuiElem(GuiElemType t, AlignEnum a, EventID i)
     : type{t}, align{a}, eid{i} { }
-  GuiElem(GuiElemType t, AlignEnum a, EventID i, std::string_view txt)
-    : text{txt}, type{t}, align{a}, eid{i} { }
   GuiElem(GuiElemType t, AlignEnum a, EventID i,
           std::initializer_list<GuiElem> x)
     : elems{x}, type{t}, align{a}, eid{i} { }

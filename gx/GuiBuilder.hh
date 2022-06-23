@@ -43,10 +43,7 @@ namespace gx {
   [[nodiscard]] inline GuiElem guiSpacer(int16_t width, int16_t height)
   {
     GuiElem e{GUI_SPACER, ALIGN_CENTER, 0};
-    e.spacer.left = width;
-    e.spacer.top = height;
-    e.spacer.right = 0;
-    e.spacer.bottom = 0;
+    e.props = GuiElem::SpacerProps{.left = width, .top = height};
     return e;
   }
 
@@ -54,10 +51,7 @@ namespace gx {
     AlignEnum align, int16_t width, int16_t height)
   {
     GuiElem e{GUI_SPACER, align, 0};
-    e.spacer.left = width;
-    e.spacer.top = height;
-    e.spacer.right = 0;
-    e.spacer.bottom = 0;
+    e.props = GuiElem::SpacerProps{.left = width, .top = height};
     return e;
   }
 
@@ -66,10 +60,8 @@ namespace gx {
     const GuiElem& elem)
   {
     GuiElem e{GUI_SPACER, ALIGN_CENTER, 0, {elem}};
-    e.spacer.left = left;
-    e.spacer.top = top;
-    e.spacer.right = right;
-    e.spacer.bottom = bottom;
+    e.props = GuiElem::SpacerProps{
+      .left = left, .top = top, .right = right, .bottom = bottom};
     return e;
   }
 
@@ -78,10 +70,8 @@ namespace gx {
     const GuiElem& elem)
   {
     GuiElem e{GUI_SPACER, align, 0, {elem}};
-    e.spacer.left = left;
-    e.spacer.top = top;
-    e.spacer.right = right;
-    e.spacer.bottom = bottom;
+    e.props = GuiElem::SpacerProps{
+      .left = left, .top = top, .right = right, .bottom = bottom};
     return e;
   }
 
@@ -89,9 +79,12 @@ namespace gx {
   [[nodiscard]] inline GuiElem guiLabel(
     std::string_view text, float minLength = 0, int minLines = 0)
   {
-    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, 0, text};
-    e.label.minLength = minLength;
-    e.label.minLines = minLines;
+    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, 0};
+    GuiElem::LabelProps label;
+    label.text = text;
+    label.minLength = minLength;
+    label.minLines = minLines;
+    e.props = label;
     return e;
   }
 
@@ -99,18 +92,24 @@ namespace gx {
     AlignEnum align, std::string_view text,
     float minLength = 0, int minLines = 0)
   {
-    GuiElem e{GUI_LABEL, align, 0, text};
-    e.label.minLength = minLength;
-    e.label.minLines = minLines;
+    GuiElem e{GUI_LABEL, align, 0};
+    GuiElem::LabelProps label;
+    label.text = text;
+    label.minLength = minLength;
+    label.minLines = minLines;
+    e.props = label;
     return e;
   }
 
   [[nodiscard]] inline GuiElem guiLabel(
     EventID id, std::string_view text, float minLength = 0, int minLines = 0)
   {
-    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, id, text};
-    e.label.minLength = minLength;
-    e.label.minLines = minLines;
+    GuiElem e{GUI_LABEL, ALIGN_TOP_LEFT, id};
+    GuiElem::LabelProps label;
+    label.text = text;
+    label.minLength = minLength;
+    label.minLines = minLines;
+    e.props = label;
     return e;
   }
 
@@ -118,9 +117,12 @@ namespace gx {
     EventID id, AlignEnum align, std::string_view text,
     float minLength = 0, int minLines = 0)
   {
-    GuiElem e{GUI_LABEL, align, id, text};
-    e.label.minLength = minLength;
-    e.label.minLines = minLines;
+    GuiElem e{GUI_LABEL, align, id};
+    GuiElem::LabelProps label;
+    label.text = text;
+    label.minLength = minLength;
+    label.minLines = minLines;
+    e.props = label;
     return e;
   }
 
@@ -128,9 +130,12 @@ namespace gx {
   [[nodiscard]] inline GuiElem guiVLabel(
     std::string_view text, float minLength = 0, int minLines = 0)
   {
-    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, 0, text};
-    e.label.minLength = minLength;
-    e.label.minLines = minLines;
+    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, 0};
+    GuiElem::LabelProps label;
+    label.text = text;
+    label.minLength = minLength;
+    label.minLines = minLines;
+    e.props = label;
     return e;
   }
 
@@ -138,18 +143,24 @@ namespace gx {
     AlignEnum align, std::string_view text,
     float minLength = 0, int minLines = 0)
   {
-    GuiElem e{GUI_VLABEL, align, 0, text};
-    e.label.minLength = minLength;
-    e.label.minLines = minLines;
+    GuiElem e{GUI_VLABEL, align, 0};
+    GuiElem::LabelProps label;
+    label.text = text;
+    label.minLength = minLength;
+    label.minLines = minLines;
+    e.props = label;
     return e;
   }
 
   [[nodiscard]] inline GuiElem guiVLabel(
     EventID id, std::string_view text, float minLength = 0, int minLines = 0)
   {
-    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, id, text};
-    e.label.minLength = minLength;
-    e.label.minLines = minLines;
+    GuiElem e{GUI_VLABEL, ALIGN_BOTTOM_LEFT, id};
+    GuiElem::LabelProps label;
+    label.text = text;
+    label.minLength = minLength;
+    label.minLines = minLines;
+    e.props = label;
     return e;
   }
 
@@ -157,9 +168,12 @@ namespace gx {
     EventID id, AlignEnum align, std::string_view text,
     float minLength = 0, int minLines = 0)
   {
-    GuiElem e{GUI_VLABEL, align, id, text};
-    e.label.minLength = minLength;
-    e.label.minLines = minLines;
+    GuiElem e{GUI_VLABEL, align, id};
+    GuiElem::LabelProps label;
+    label.text = text;
+    label.minLength = minLength;
+    label.minLines = minLines;
+    e.props = label;
     return e;
   }
 
@@ -178,9 +192,7 @@ namespace gx {
   [[nodiscard]] inline GuiElem guiButton(EventID id, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON, ALIGN_TOP_LEFT, id, {elem}};
-    e.button.repeatDelay = -1; // disabled
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{};
     return e;
   }
 
@@ -188,18 +200,14 @@ namespace gx {
     EventID id, AlignEnum align, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON, align, id, {elem}};
-    e.button.repeatDelay = -1; // disabled
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{};
     return e;
   }
 
   [[nodiscard]] inline GuiElem guiButton(EventID id, std::string_view text)
   {
     GuiElem e{GUI_BUTTON, ALIGN_TOP_LEFT, id, {guiLabel(ALIGN_CENTER, text)}};
-    e.button.repeatDelay = -1; // disabled
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{};
     return e;
   }
 
@@ -207,9 +215,7 @@ namespace gx {
     EventID id, AlignEnum align, std::string_view text)
   {
     GuiElem e{GUI_BUTTON, align, id, {guiLabel(ALIGN_CENTER, text)}};
-    e.button.repeatDelay = -1; // disabled
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{};
     return e;
   }
 
@@ -218,9 +224,7 @@ namespace gx {
   [[nodiscard]] inline GuiElem guiButtonPress(EventID id, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
-    e.button.repeatDelay = -1; // disabled
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{};
     return e;
   }
 
@@ -228,9 +232,7 @@ namespace gx {
     EventID id, AlignEnum align, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
-    e.button.repeatDelay = -1; // disabled
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{};
     return e;
   }
 
@@ -238,9 +240,7 @@ namespace gx {
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
               {guiLabel(ALIGN_CENTER, text)}};
-    e.button.repeatDelay = -1; // disabled
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{};
     return e;
   }
 
@@ -248,9 +248,7 @@ namespace gx {
     EventID id, AlignEnum align, std::string_view text)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
-    e.button.repeatDelay = -1; // disabled
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{};
     return e;
   }
 
@@ -259,9 +257,7 @@ namespace gx {
     EventID id, int64_t repeat_delay, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
-    e.button.repeatDelay = repeat_delay;
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{.repeatDelay = repeat_delay};
     return e;
   }
 
@@ -269,9 +265,7 @@ namespace gx {
     EventID id, AlignEnum align, int64_t repeat_delay, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
-    e.button.repeatDelay = repeat_delay;
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{.repeatDelay = repeat_delay};
     return e;
   }
 
@@ -280,9 +274,7 @@ namespace gx {
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
               {guiLabel(ALIGN_CENTER, text)}};
-    e.button.repeatDelay = repeat_delay;
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{.repeatDelay = repeat_delay};
     return e;
   }
 
@@ -290,9 +282,7 @@ namespace gx {
     EventID id, AlignEnum align, int64_t repeat_delay, std::string_view text)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
-    e.button.repeatDelay = repeat_delay;
-    e.button.action = ACTION_NONE;
-    e.button.targetID = 0;
+    e.props = GuiElem::ButtonProps{.repeatDelay = repeat_delay};
     return e;
   }
 
@@ -301,7 +291,7 @@ namespace gx {
     EventID id, bool set, const GuiElem& label)
   {
     GuiElem e{GUI_CHECKBOX, ALIGN_LEFT, id, {label}};
-    e.checkbox.set = set;
+    e.props = GuiElem::CheckboxProps{.set = set};
     return e;
   }
 
@@ -309,7 +299,7 @@ namespace gx {
     EventID id, AlignEnum align, bool set, const GuiElem& label)
   {
     GuiElem e{GUI_CHECKBOX, align, id, {label}};
-    e.checkbox.set = set;
+    e.props = GuiElem::CheckboxProps{.set = set};
     return e;
   }
 
@@ -317,7 +307,7 @@ namespace gx {
     EventID id, bool set, std::string_view label)
   {
     GuiElem e{GUI_CHECKBOX, ALIGN_TOP_LEFT, id, {guiLabel(ALIGN_LEFT, label)}};
-    e.checkbox.set = set;
+    e.props = GuiElem::CheckboxProps{.set = set};
     return e;
   }
 
@@ -325,7 +315,7 @@ namespace gx {
     EventID id, AlignEnum align, bool set, std::string_view label)
   {
     GuiElem e{GUI_CHECKBOX, align, id, {guiLabel(ALIGN_LEFT, label)}};
-    e.checkbox.set = set;
+    e.props = GuiElem::CheckboxProps{.set = set};
     return e;
   }
 
@@ -359,9 +349,9 @@ namespace gx {
   [[nodiscard]] inline GuiElem guiListSelect(EventID id, const Elems&... items)
   {
     GuiElem e{GUI_LISTSELECT, ALIGN_TOP_LEFT, id,
-              {GuiElem{},
+              {guiLabel(""), // copy of label from selected item
                GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
-    e.item.no = 0; // unset (default to first item)
+    e.props = GuiElem::ItemProps{};
     return e;
   }
 
@@ -370,9 +360,9 @@ namespace gx {
     EventID id, AlignEnum align, const Elems&... items)
   {
     GuiElem e{GUI_LISTSELECT, align, id,
-              {GuiElem{},
+              {guiLabel(""), // copy of label from selected item
                GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
-    e.item.no = 0; // unset (default to first item)
+    e.props = GuiElem::ItemProps{};
     return e;
   }
 
@@ -380,7 +370,7 @@ namespace gx {
   {
     GuiElem e{GUI_LISTSELECT_ITEM, ALIGN_JUSTIFY, 0,
               {guiLabel(ALIGN_CENTER_LEFT, text)}};
-    e.item.no = no; // should be non-zero
+    e.props = GuiElem::ItemProps{.no = no};
     return e;
   }
 
@@ -390,12 +380,14 @@ namespace gx {
     uint32_t maxLen, AlignEnum textAlign)
   {
     GuiElem e{GUI_ENTRY, align, id};
+    GuiElem::EntryProps entry;
     if (type == ENTRY_CARDINAL || type == ENTRY_INTEGER
-        || type == ENTRY_FLOAT) { e.text = "0"; }
-    e.entry.size = size;
-    e.entry.maxLength = maxLen;
-    e.entry.type = type;
-    e.entry.align = textAlign;
+        || type == ENTRY_FLOAT) { entry.text = "0"; }
+    entry.size = size;
+    entry.maxLength = maxLen;
+    entry.type = type;
+    entry.align = textAlign;
+    e.props = entry;
     return e;
   }
 
@@ -459,11 +451,13 @@ namespace gx {
     float w, float h, TextureID tid, Vec2 t0, Vec2 t1)
   {
     GuiElem e{GUI_IMAGE, ALIGN_TOP_LEFT, 0};
-    e.image.width = w;
-    e.image.height = h;
-    e.image.texId = tid;
-    e.image.texCoord0 = t0;
-    e.image.texCoord1 = t1;
+    GuiElem::ImageProps image;
+    image.width = w;
+    image.height = h;
+    image.texId = tid;
+    image.texCoord0 = t0;
+    image.texCoord1 = t1;
+    e.props = image;
     return e;
   }
 
