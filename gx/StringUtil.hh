@@ -1,6 +1,6 @@
 //
 // gx/StringUtil.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #pragma once
@@ -50,5 +50,13 @@ namespace gx
 
     if (n < 0) { *(--ptr) = '-'; }
     return ptr;
+  }
+
+  [[nodiscard]] inline std::string_view trimSpaces(std::string_view str)
+  {
+    std::size_t n = 0, len = str.length();
+    while (len > 0 && str[n] == ' ') { ++n; --len; }
+    while (len > 0 && str[len-1] == ' ') { --len; }
+    return str.substr(n, len);
   }
 }
