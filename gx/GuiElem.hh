@@ -54,6 +54,8 @@ namespace gx {
 
   enum GuiAction {
     ACTION_NONE = 0,
+    ACTION_ADD = 1,    // add value to target
+    ACTION_SET = 2     // set target to value
   };
 }
 
@@ -112,6 +114,7 @@ class gx::GuiElem
     int64_t repeatDelay = -1; // BUTTON_PRESS only (-1 disables)
     GuiAction action = ACTION_NONE;
     EventID targetID = 0;
+    double value = 0;
   };
 
   struct CheckboxProps {
