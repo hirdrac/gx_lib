@@ -175,29 +175,8 @@ class gx::Gui
     _repeatDelay = -1;
   }
 
-  void addEvent(const GuiElem& e, int64_t t) {
-    if (_eventID != 0) {
-      // save event for next update
-      _eventID2 = e.eid;
-      _eventType2 = e.type;
-      _eventTime2 = t;
-    } else {
-      _eventID = e.eid;
-      _eventType = e.type;
-      _eventTime = t;
-    }
-  }
-
-  PanelPtr removePanel(PanelID id) {
-    for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
-      if ((*i)->id == id) {
-        auto ptr = std::move(*i);
-        _panels.erase(i);
-        return ptr;
-      }
-    }
-    return {};
-  }
+  void addEvent(const GuiElem& e, int64_t t);
+  PanelPtr removePanel(PanelID id);
 };
 
 // **** Inline Implementations ****
