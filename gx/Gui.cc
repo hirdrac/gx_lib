@@ -1477,20 +1477,96 @@ GuiElem* Gui::findPrevElem(ElemID id, GuiElemType type)
   }
 }
 
-void gx::Gui::addEvent(const GuiElem& e, int64_t t)
+static bool buttonActionAdd(GuiElem& target, double value)
 {
-  if (_eventID != 0) {
-    // save event for next update
-    _eventID2 = e.eid;
-    _eventType2 = e.type;
-    _eventTime2 = t;
-  } else {
-    _eventID = e.eid;
-    _eventType = e.type;
-    _eventTime = t;
+  if (target.type != GUI_ENTRY) return false;
+
+  auto& entry = target.entry();
+  switch (entry.type) {
+    case ENTRY_INTEGER: {
+      const int64_t eval = std::stoll(entry.text) + int64_t(value);
+      entry.text = std::to_string(eval);
+      break;
+    }
+
+    case ENTRY_CARDINAL: {
+      const int64_t eval =
+        std::max(0ll, std::stoll(entry.text) + int64_t(value));
+      entry.text = std::to_string(eval);
+      break;
+    }
+
+    case ENTRY_FLOAT: {
+      const double eval = std::stof(entry.text) + value;
+      entry.text = std::to_string(eval);
+      break;
+    }
+
+    default:
+      return false;
   }
 
-  // TODO: handle button action here
+  return true;
+}
+
+static bool buttonActionSet(GuiElem& target, double value)
+{
+  if (target.type != GUI_ENTRY) return false;
+
+  auto& entry = target.entry();
+  switch (entry.type) {
+    case ENTRY_INTEGER:
+      entry.text = std::to_string(int64_t(value));
+      break;
+
+    case ENTRY_CARDINAL:
+      entry.text = std::to_string(std::max(int64_t{0}, int64_t(value)));
+      break;
+
+    case ENTRY_FLOAT:
+      entry.text = std::to_string(value);
+      break;
+
+    default:
+      return false;
+  }
+
+  return true;
+}
+
+void gx::Gui::addEvent(const GuiElem& e, int64_t t)
+{
+  GuiElem* target = nullptr;
+  if (e.type == GUI_BUTTON || e.type == GUI_BUTTON_PRESS) {
+    const auto& button = e.button();
+    if (button.action != ACTION_NONE) {
+      target = findElemByEventID(button.targetID);
+      if (!target) {
+        GX_LOG_ERROR("Unknown targetID ",button.targetID," for GuiAction");
+        return;
+      }
+
+      switch (button.action) {
+        case ACTION_ADD:
+          _needRender |= buttonActionAdd(*target, button.value); break;
+        case ACTION_SET:
+          _needRender |= buttonActionSet(*target, button.value); break;
+        default: break;
+      }
+    }
+  }
+
+  const GuiElem& eventElem = target ? *target : e;
+  if (_eventID != 0) {
+    // save event for next update
+    _eventID2 = eventElem.eid;
+    _eventType2 = eventElem.type;
+    _eventTime2 = t;
+  } else {
+    _eventID = eventElem.eid;
+    _eventType = eventElem.type;
+    _eventTime = t;
+  }
 }
 
 gx::Gui::PanelPtr gx::Gui::removePanel(PanelID id)
