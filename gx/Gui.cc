@@ -1546,12 +1546,21 @@ void gx::Gui::addEvent(const GuiElem& e, int64_t t)
         return;
       }
 
+      bool update = false;
       switch (button.action) {
         case ACTION_ADD:
-          _needRender |= buttonActionAdd(*target, button.value); break;
+          update |= buttonActionAdd(*target, button.value); break;
         case ACTION_SET:
-          _needRender |= buttonActionSet(*target, button.value); break;
+          update |= buttonActionSet(*target, button.value); break;
         default: break;
+      }
+
+      if (update) {
+        _needRender = true;
+        if (_focusID == target->_id) {
+          _focusCursorPos = lengthUTF8(target->entry().text);
+          _focusEntryOffset = 0;
+        }
       }
     }
   }
