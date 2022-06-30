@@ -52,10 +52,14 @@ namespace gx {
     ENTRY_PASSWORD  // all characters valid w/ output hidden
   };
 
-  enum GuiAction {
-    ACTION_NONE = 0,
-    ACTION_ADD = 1,    // add value to target
-    ACTION_SET = 2     // set target to value
+  struct GuiAction {
+    enum {
+      NONE = 0,
+      ADD = 1,    // add value to target
+      SET = 2     // set target to value
+    } type = NONE;
+    EventID targetID = 0;
+    double value = 0;
   };
 }
 
@@ -112,9 +116,7 @@ class gx::GuiElem
 
   struct ButtonProps {
     int64_t repeatDelay = -1; // BUTTON_PRESS only (-1 disables)
-    GuiAction action = ACTION_NONE;
-    EventID targetID = 0;
-    double value = 0;
+    GuiAction action{};
   };
 
   struct CheckboxProps {

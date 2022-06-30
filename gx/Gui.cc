@@ -1538,20 +1538,20 @@ void gx::Gui::addEvent(const GuiElem& e, int64_t t)
 {
   GuiElem* target = nullptr;
   if (e.type == GUI_BUTTON || e.type == GUI_BUTTON_PRESS) {
-    const auto& button = e.button();
-    if (button.action != ACTION_NONE) {
-      target = findElemByEventID(button.targetID);
+    const GuiAction& action = e.button().action;
+    if (action.type != GuiAction::NONE) {
+      target = findElemByEventID(action.targetID);
       if (!target) {
-        GX_LOG_ERROR("Unknown targetID ",button.targetID," for GuiAction");
+        GX_LOG_ERROR("Unknown targetID ",action.targetID," for GuiAction");
         return;
       }
 
       bool update = false;
-      switch (button.action) {
-        case ACTION_ADD:
-          update |= buttonActionAdd(*target, button.value); break;
-        case ACTION_SET:
-          update |= buttonActionSet(*target, button.value); break;
+      switch (action.type) {
+        case GuiAction::ADD:
+          update |= buttonActionAdd(*target, action.value); break;
+        case GuiAction::SET:
+          update |= buttonActionSet(*target, action.value); break;
         default: break;
       }
 
