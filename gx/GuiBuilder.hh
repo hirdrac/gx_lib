@@ -220,7 +220,7 @@ namespace gx {
   }
 
   // ButtonPress
-  // (triggered on initial button press, holding repeats if repeat_delay > 0)
+  // (triggered on initial button press, holding repeats if repeat_delay >= 0)
   [[nodiscard]] inline GuiElem guiButtonPress(
     EventID id, int64_t repeat_delay, const GuiElem& elem)
   {
