@@ -47,9 +47,9 @@ int main(int argc, char* argv[])
       gx::guiLabel(gx::ALIGN_CENTER, "\nRepeating Buttons"),
       gx::guiHFrame(
         gx::ALIGN_CENTER,
-        gx::guiButtonPress(77, "ONCE"),
-        gx::guiButtonHold(78, 400000, "SLOW"),
-        gx::guiButtonHold(79, 1, "FAST")),
+        gx::guiButtonPress(77, 0, "ONCE"),
+        gx::guiButtonPress(78, 400000, "SLOW"),
+        gx::guiButtonPress(79, 1, "FAST")),
       gx::guiHLine(),
       gx::guiButton(99, gx::ALIGN_RIGHT, " QUIT ")));
 

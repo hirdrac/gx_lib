@@ -220,40 +220,8 @@ namespace gx {
   }
 
   // ButtonPress
-  // (triggered on initial button press)
-  [[nodiscard]] inline GuiElem guiButtonPress(EventID id, const GuiElem& elem)
-  {
-    GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
-    e.props = GuiElem::ButtonProps{};
-    return e;
-  }
-
+  // (triggered on initial button press, holding repeats if repeat_delay > 0)
   [[nodiscard]] inline GuiElem guiButtonPress(
-    EventID id, AlignEnum align, const GuiElem& elem)
-  {
-    GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
-    e.props = GuiElem::ButtonProps{};
-    return e;
-  }
-
-  [[nodiscard]] inline GuiElem guiButtonPress(EventID id, std::string_view text)
-  {
-    GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
-              {guiLabel(ALIGN_CENTER, text)}};
-    e.props = GuiElem::ButtonProps{};
-    return e;
-  }
-
-  [[nodiscard]] inline GuiElem guiButtonPress(
-    EventID id, AlignEnum align, std::string_view text)
-  {
-    GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
-    e.props = GuiElem::ButtonProps{};
-    return e;
-  }
-
-  // ButtonPress with repeat if held
-  [[nodiscard]] inline GuiElem guiButtonHold(
     EventID id, int64_t repeat_delay, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id, {elem}};
@@ -261,7 +229,7 @@ namespace gx {
     return e;
   }
 
-  [[nodiscard]] inline GuiElem guiButtonHold(
+  [[nodiscard]] inline GuiElem guiButtonPress(
     EventID id, AlignEnum align, int64_t repeat_delay, const GuiElem& elem)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {elem}};
@@ -269,7 +237,7 @@ namespace gx {
     return e;
   }
 
-  [[nodiscard]] inline GuiElem guiButtonHold(
+  [[nodiscard]] inline GuiElem guiButtonPress(
     EventID id, int64_t repeat_delay, std::string_view text)
   {
     GuiElem e{GUI_BUTTON_PRESS, ALIGN_TOP_LEFT, id,
@@ -278,7 +246,7 @@ namespace gx {
     return e;
   }
 
-  [[nodiscard]] inline GuiElem guiButtonHold(
+  [[nodiscard]] inline GuiElem guiButtonPress(
     EventID id, AlignEnum align, int64_t repeat_delay, std::string_view text)
   {
     GuiElem e{GUI_BUTTON_PRESS, align, id, {guiLabel(ALIGN_CENTER, text)}};
