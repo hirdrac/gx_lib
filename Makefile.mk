@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 45 (2022/6/20)
+# Makefile.mk - revision 46 (2022/7/2)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -121,7 +121,7 @@
 #  SUBDIRS         sub-directories to also make with base targets
 #  SYMLINKS        symlinks to the current dir to create for building
 #  SOURCE_DIR      source files base directory
-#  EXCLUDE_TARGETS targets to not build by default
+#  EXCLUDE_TARGETS labels/files not built by default (wildcard '*' allowed)
 #
 #  Settings STANDARD/OPT_LEVEL/OPT_LEVEL_DEBUG/SUBSYSTEM/PACKAGES/INCLUDE/LIBS/
 #    DEFINE/OPTIONS/FLAGS/LINK_FLAGS/SOURCE_DIR can be set for specific targets
@@ -585,6 +585,15 @@ override _$1_bdir := $$(if $$(OUTPUT_BIN_DIR),$$(OUTPUT_BIN_DIR:%/=%)/)
 endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env0,$e)))
 
+
+# <1:build env> <2:label/file pattern>
+override _gen_filter_targets =\
+$(foreach x,$(filter $2,$(_bin_labels)),$(call _gen_bin_name,$1,$x) $(call _gen_bin_aliases,$1,$x))\
+$(foreach x,$(filter $2,$(_static_lib_labels)),$(call _gen_static_lib_name,$1,$x) $(call _gen_static_lib_aliases,$1,$x))\
+$(foreach x,$(filter $2,$(_shared_lib_labels)),$(call _gen_shared_lib_name,$1,$x) $(call _gen_shared_lib_aliases,$1,$x))\
+$(foreach x,$(filter $2,$(_file_labels)),$($x))\
+$(foreach x,$(filter $2,$(_test_labels)),$x$(_$1_sfx)) $2
+
 override define _setup_env1  # <1:build env>
 override ENV := $1
 override SFX := $$(_$1_sfx)
@@ -615,24 +624,29 @@ override _$1_test_targets := $$(foreach x,$$(_test_labels),$$x$$(_$1_sfx))
 override _$1_build_targets := $$(_$1_file_targets) $$(_$1_libbin_targets) $$(_$1_test_targets)
 
 override _$1_filter_targets :=\
-$$(sort $$(foreach x,$$(EXCLUDE_TARGETS),\
-  $$(if $$(filter $$x,$$(_lib_labels)),\
-    $$(call _gen_static_lib_name,$1,$$x) $$(call _gen_shared_lib_name,$1,$$x),\
-    $$x $$($$x) $$(if $$(_$1_sfx),$$($$x)$$(_$1_sfx)))))
-override _$1_build2_targets := $$(filter-out $$(_$1_filter_targets),$$(_$1_build_targets))
-override _$1_test2_targets := $$(filter-out $$(_$1_filter_targets),$$(_$1_test_targets))
+  $$(foreach x,$$(EXCLUDE_TARGETS),$$(call _gen_filter_targets,$1,$$(subst *,%,$$x)))
 
 override _$1_aliases :=\
   $$(foreach x,$$(_all_labels),$$x$$(_$1_sfx))\
   $$(foreach x,$$(_bin_labels),$$(call _gen_bin_aliases,$1,$$x))\
   $$(foreach x,$$(_static_lib_labels),$$(call _gen_static_lib_aliases,$1,$$x))\
   $$(_$1_shared_aliases)
+endef
+$(foreach e,$(_env_names),$(eval $(call _setup_env1,$e)))
+
+
+override _filter_targets := $(sort $(foreach e,$(_env_names),$(_$e_filter_targets)))
+
+override define _setup_env2 # <1:build env>
+override _$1_build2_targets := $$(filter-out $$(_filter_targets),$$(_$1_build_targets))
+override _$1_test2_targets := $$(filter-out $$(_filter_targets),$$(_$1_test_targets))
 override _$1_goals := $$(sort\
   $$(if $$(filter $$(if $$(filter $1,$$(DEFAULT_ENV)),all) $1,$$(MAKECMDGOALS)),$$(_$1_build2_targets))\
   $$(if $$(filter $$(if $$(filter $1,$$(DEFAULT_ENV)),tests) tests_$1,$$(MAKECMDGOALS)),$$(_$1_test2_targets))\
   $$(filter $$(_$1_build_targets) $$(sort $$(_$1_aliases)),$$(MAKECMDGOALS)))
 endef
-$(foreach e,$(_env_names),$(eval $(call _setup_env1,$e)))
+$(foreach e,$(_env_names),$(eval $(call _setup_env2,$e)))
+
 
 # setting value processing functions
 override _format_warn = $(foreach x,$1,$(if $(filter -%,$x),$x,-W$x))
