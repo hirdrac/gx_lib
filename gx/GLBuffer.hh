@@ -7,7 +7,7 @@
 
 #pragma once
 #include "OpenGL.hh"
-#include <utility>
+#include "Utility.hh"
 
 
 inline namespace GX_GLNAMESPACE {
@@ -43,7 +43,7 @@ class GLBuffer
     // allow data changes (only contents, not size) with setSubData()
     //   if data is null
 
-  GLuint release() noexcept { return std::exchange(_buffer, 0); }
+  GLuint release() noexcept { return gx::exchange(_buffer, 0); }
     // releases ownership of managed buffer object, returns object id
 
   inline void bind(GLenum target);

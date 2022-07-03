@@ -5,7 +5,7 @@
 
 #pragma once
 #include "Types.hh"
-#include <utility>  // for std::exchange()
+#include "Utility.hh"
 
 namespace gx {
   class Texture;
@@ -56,7 +56,7 @@ class gx::Texture
 
 // **** Inline Implementations ****
 gx::Texture::Texture(Texture&& t) noexcept
-  : _texID{std::exchange(t._texID,0)},
+  : _texID{exchange(t._texID,0)},
     _width{t._width}, _height{t._height}, _levels{t._levels},
     _minFilter{t._minFilter}, _magFilter{t._magFilter}
 { }
@@ -64,7 +64,7 @@ gx::Texture::Texture(Texture&& t) noexcept
 gx::Texture& gx::Texture::operator=(Texture&& t) noexcept
 {
   cleanup();
-  _texID = std::exchange(t._texID,0);
+  _texID = exchange(t._texID,0);
   _width = t._width;
   _height = t._height;
   _levels = t._levels;

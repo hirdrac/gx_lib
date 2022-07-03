@@ -6,10 +6,10 @@
 #pragma once
 #include "Align.hh"
 #include "Types.hh"
+#include "Utility.hh"
 #include <vector>
 #include <string>
 #include <initializer_list>
-#include <utility>
 #include <variant>
 
 
@@ -77,9 +77,10 @@ class gx::GuiTexture
     cleanup(); _tid = 0; return *this; }
 
   // move/move-assign (transfer texture ownership)
-  GuiTexture(GuiTexture&& t) : _tid{std::exchange(t._tid, 0)} { }
-  GuiTexture& operator=(GuiTexture&& t) {
-    cleanup(); _tid = std::exchange(t._tid, 0); return *this; }
+  GuiTexture(GuiTexture&& t) noexcept
+    : _tid{exchange(t._tid, 0)} { }
+  GuiTexture& operator=(GuiTexture&& t) noexcept {
+    cleanup(); _tid = exchange(t._tid, 0); return *this; }
 
   // other methods
   [[nodiscard]] explicit operator bool() const { return _tid != 0; }

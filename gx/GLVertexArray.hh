@@ -8,7 +8,7 @@
 #pragma once
 #include "GLBuffer.hh"
 #include "OpenGL.hh"
-#include <utility>
+#include "Utility.hh"
 
 
 inline namespace GX_GLNAMESPACE {
@@ -35,7 +35,7 @@ class GLVertexArray
 
   // methods
   inline GLuint init();
-  GLuint release() noexcept { return std::exchange(_vao, 0); }
+  GLuint release() noexcept { return gx::exchange(_vao, 0); }
 
   inline void bind();
   inline static void unbind();
