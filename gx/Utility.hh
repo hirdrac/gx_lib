@@ -8,9 +8,8 @@
 
 
 namespace gx {
-  // equivalent to C++23 std::exchange
-  // (replace with that version when available)
-  //
+  // C++23 equivalent functions
+
   template<class T, class U = T>
   constexpr T exchange(T& obj, U&& new_value)
     noexcept(std::is_nothrow_move_constructible<T>::value
@@ -19,5 +18,14 @@ namespace gx {
     const T old_value = std::move(obj);
     obj = std::forward<U>(new_value);
     return old_value;
+  }
+
+  [[noreturn]] inline void unreachable()
+  {
+#ifdef __GNUC__ // GCC, Clang, ICC
+    __builtin_unreachable();
+#elif defined(_MSC_VER) // MSVC
+    __assume(false);
+#endif
   }
 }
