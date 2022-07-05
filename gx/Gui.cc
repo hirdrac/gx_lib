@@ -574,6 +574,7 @@ static std::string passwordStr(int32_t code, std::size_t len)
 void Gui::clear()
 {
   _panels.clear();
+  _lastElemID = 0;
   clearHeld();
   _hoverID = 0;
   _focusID = 0;
@@ -1108,12 +1109,19 @@ bool Gui::setItemNo(EventID eid, int no)
 
 PanelID Gui::addPanel(PanelPtr ptr, float x, float y, AlignEnum align)
 {
-  const PanelID id = ++_lastPanelID;
-  ptr->id = id;
   initElem(ptr->root);
   layout(*ptr, x, y, align);
-  _panels.insert(_panels.begin(), std::move(ptr));
-  return id;
+
+  if (ptr->id <= 0) {
+    PanelID id = 0;
+    for (auto& pPtr : _panels) { id = std::max(id, pPtr->id); }
+    ptr->id = id + 1;
+  } else {
+    removePanel(ptr->id);
+  }
+
+  const auto itr = _panels.insert(_panels.begin(), std::move(ptr));
+  return (*itr)->id;
 }
 
 void Gui::layout(Panel& p, float x, float y, AlignEnum align)

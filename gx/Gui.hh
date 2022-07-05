@@ -112,7 +112,6 @@ class gx::Gui
   // element definition
   using PanelPtr = std::unique_ptr<Panel>;
   std::vector<PanelPtr> _panels;
-  PanelID _lastPanelID = 0;
   ElemID _lastElemID = 0;
 
   // current state
