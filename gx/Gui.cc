@@ -1195,12 +1195,20 @@ bool Gui::drawElem(
       style = def._active ? &thm.menuButtonOpen
         : ((def._id == _hoverID) ? &thm.menuButtonHover : &thm.menuButton);
       break;
-    case GUI_MENU_ITEM:
     case GUI_SUBMENU:
       if (!def._enabled) {
         style = &thm.menuItemDisable;
       } else {
         style = def._active ? &thm.menuItemSelect : &thm.menuItem;
+      }
+      break;
+    case GUI_MENU_ITEM:
+      if (!def._enabled) {
+        style = &thm.menuItemDisable;
+      } else if (def._active && (def._id == _hoverID)) {
+        style = &thm.menuItemSelect;
+      } else {
+        style = &thm.menuItem;
       }
       break;
     case GUI_LISTSELECT:
