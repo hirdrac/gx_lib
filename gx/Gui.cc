@@ -748,12 +748,13 @@ void Gui::processMouseEvent(Window& win)
   GuiElem* ePtr = nullptr;
   ElemID id = 0;
   GuiElemType type = GUI_NULL;
+  float px = 0, py = 0;
   if (win.mouseIn()) {
     for (auto& ptr : _panels) {
       Panel& p = *ptr;
-      const float mx = win.mouseX() - p.layout.x;
-      const float my = win.mouseY() - p.layout.y;
-      ePtr = findElemByXY(p.root, mx, my, _popupType);
+      px = win.mouseX() - p.layout.x;
+      py = win.mouseY() - p.layout.y;
+      ePtr = findElemByXY(p.root, px, py, _popupType);
       if (ePtr) {
         if (ePtr->_enabled) {
           id = ePtr->_id;
@@ -774,10 +775,16 @@ void Gui::processMouseEvent(Window& win)
 
   // update focus
   if (lpressEvent) {
-    setFocus(win, pPtr, (type == GUI_ENTRY) ? ePtr : nullptr);
+    if (type == GUI_ENTRY) {
+      setFocus(win, ePtr);
+      _cursorBlinkTime = pPtr->theme->cursorBlinkTime;
+      // TODO: set _focusCursorPos based on px
+    } else {
+      setFocus(win, nullptr);
+    }
   } else if (lbuttonDown && anyGuiButtonEvent) {
     // click in other Gui instance clears our focus
-    setFocus(win, nullptr, nullptr);
+    setFocus(win, nullptr);
   }
 
   // update hoverID
@@ -923,10 +930,10 @@ void Gui::processCharEvent(Window& win)
       _textChanged |= added;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       usedEvent = true;
-      setFocus(win, nullptr, findNextElem(_focusID, GUI_ENTRY));
+      setFocus(win, findNextElem(_focusID, GUI_ENTRY));
     } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
       usedEvent = true;
-      setFocus(win, nullptr, findPrevElem(_focusID, GUI_ENTRY));
+      setFocus(win, findPrevElem(_focusID, GUI_ENTRY));
     } else if (c.key == KEY_LEFT && c.mods == 0) {
       usedEvent = true;
       if (_focusCursorPos > 0) { --_focusCursorPos; _needRender = true; }
@@ -1010,7 +1017,7 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
   return true;
 }
 
-void Gui::setFocus(Window& win, const Panel* p, const GuiElem* e)
+void Gui::setFocus(Window& win, const GuiElem* e)
 {
   const ElemID id = e ? e->_id : 0;
   if (_focusID == id) { return; }
@@ -1031,13 +1038,8 @@ void Gui::setFocus(Window& win, const Panel* p, const GuiElem* e)
   }
 
   _focusID = id;
-  if (id != 0) {
-    _lastCursorUpdate = win.lastPollTime();
-    _cursorBlinkTime = p ? p->theme->cursorBlinkTime : 400000;
-    _cursorState = true;
-  }
-
-  // TODO: set cursorPos based on mouseX/mouseY
+  _lastCursorUpdate = win.lastPollTime();
+  _cursorState = true;
   _focusCursorPos = e ? lengthUTF8(e->entry().text) : 0;
   _focusEntryOffset = 0;
   _needRender = true;
