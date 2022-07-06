@@ -748,12 +748,11 @@ void Gui::processMouseEvent(Window& win)
   GuiElem* ePtr = nullptr;
   ElemID id = 0;
   GuiElemType type = GUI_NULL;
-  float px = 0, py = 0;
   if (win.mouseIn()) {
     for (auto& ptr : _panels) {
       Panel& p = *ptr;
-      px = win.mouseX() - p.layout.x;
-      py = win.mouseY() - p.layout.y;
+      const float px = win.mouseX() - p.layout.x;
+      const float py = win.mouseY() - p.layout.y;
       ePtr = findElemByXY(p.root, px, py, _popupType);
       if (ePtr) {
         if (ePtr->_enabled) {
@@ -777,8 +776,11 @@ void Gui::processMouseEvent(Window& win)
   if (lpressEvent) {
     if (type == GUI_ENTRY) {
       setFocus(win, ePtr);
-      _cursorBlinkTime = pPtr->theme->cursorBlinkTime;
-      // TODO: set _focusCursorPos based on px
+      const GuiTheme& thm = *(pPtr->theme);
+      const auto& entry = ePtr->entry();
+      _cursorBlinkTime = thm.cursorBlinkTime;
+      _focusCursorPos = lengthUTF8(
+        thm.font->fitText(entry.text, win.mouseX() - entry.tx + 1));
     } else {
       setFocus(win, nullptr);
     }
@@ -1019,6 +1021,10 @@ bool Gui::addEntryChar(GuiElem& e, int32_t code)
 
 void Gui::setFocus(Window& win, const GuiElem* e)
 {
+  // reset cursor blink
+  _lastCursorUpdate = win.lastPollTime();
+  _cursorState = true;
+
   const ElemID id = e ? e->_id : 0;
   if (_focusID == id) { return; }
 
@@ -1038,8 +1044,6 @@ void Gui::setFocus(Window& win, const GuiElem* e)
   }
 
   _focusID = id;
-  _lastCursorUpdate = win.lastPollTime();
-  _cursorState = true;
   _focusCursorPos = e ? lengthUTF8(e->entry().text) : 0;
   _focusEntryOffset = 0;
   _needRender = true;
@@ -1300,7 +1304,7 @@ bool Gui::drawElem(
       break;
     case GUI_ENTRY: {
       drawRec(dc, ex, ey, ew, eh, thm, style);
-      const auto& entry = def.entry();
+      auto& entry = def.entry();
       const std::string txt = (entry.type == ENTRY_PASSWORD)
         ? passwordStr(thm.passwordCode, lengthUTF8(entry.text)) : entry.text;
       const float cw = thm.cursorWidth;
@@ -1336,6 +1340,7 @@ bool Gui::drawElem(
         }
         tx += _focusEntryOffset;
       }
+      entry.tx = tx;
       dc2.color(style->textColor);
       // TODO: add gradient color if text is off left/right edges
       dc2.text({thm.font, float(thm.textSpacing)}, tx,
@@ -1343,7 +1348,7 @@ bool Gui::drawElem(
       if (def._id == _focusID && _cursorState) {
         // draw cursor
         dc.color(thm.cursorColor);
-        dc.rectangle(cx, ey + thm.entryTopMargin,
+        dc.rectangle(cx - 1, ey + thm.entryTopMargin,
                      cw, float(thm.font->size() - 1));
       }
       break;

@@ -134,6 +134,7 @@ class gx::GuiElem
     uint32_t maxLength;
     EntryType type;
     AlignEnum align; // alignment of entry text
+    float tx = 0; // cache last text x pos for mouse click cursor pos calc
   };
 
   struct ImageProps {

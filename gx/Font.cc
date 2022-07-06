@@ -311,7 +311,7 @@ float Font::calcMaxLength(std::string_view text, float glyphSpacing) const
   return std::max(max_width, width);
 }
 
-std::size_t Font::fitChars(std::string_view text, float maxWidth) const
+std::string_view Font::fitText(std::string_view text, float maxWidth) const
 {
   float w = 0;
   for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
@@ -323,9 +323,9 @@ std::size_t Font::fitChars(std::string_view text, float maxWidth) const
       GX_ASSERT(g != nullptr);
     }
 
-    if ((w + g->advX) > maxWidth) { return itr.pos(); }
+    if ((w + g->advX) > maxWidth) { return text.substr(0, itr.pos()); }
     w += g->advX;
   }
 
-  return text.size();
+  return text;
 }
