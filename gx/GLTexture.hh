@@ -8,7 +8,7 @@
 
 #pragma once
 #include "OpenGL.hh"
-#include "Utility.hh"
+#include <utility>
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
 #include <memory>
 #endif
@@ -79,7 +79,7 @@ class GLTextureT
   inline void detachBuffer();
     // for GL_TEXTURE_BUFFER
 
-  GLuint release() noexcept { return gx::exchange(_tex, 0); }
+  GLuint release() noexcept { return std::exchange(_tex, 0); }
     // releases ownership of managed texture object, returns object id
 
   inline static void bindUnit(GLuint unit, GLuint tex);

@@ -7,7 +7,7 @@
 
 #pragma once
 #include "OpenGL.hh"
-#include "Utility.hh"
+#include <utility>
 #include <string>
 //#include <memory>
 
@@ -37,7 +37,7 @@ class GLShader
   // methods
   inline GLuint init(
     GLenum type, const char* src, const char* header = nullptr);
-  GLuint release() noexcept { return gx::exchange(_shader, 0); }
+  GLuint release() noexcept { return std::exchange(_shader, 0); }
   [[nodiscard]] inline std::string infoLog();
 
  private:

@@ -8,7 +8,7 @@
 #pragma once
 #include "GLShader.hh"
 #include "OpenGL.hh"
-#include "Utility.hh"
+#include <utility>
 #include <string>
 //#include <memory>
 
@@ -39,7 +39,7 @@ class GLProgram
   inline GLuint init();
     // creates program object - only call after GL context creation
 
-  GLuint release() noexcept { return gx::exchange(_prog, 0); }
+  GLuint release() noexcept { return std::exchange(_prog, 0); }
     // releases ownership of managed program object, returns object id
 
   void attach(GLuint shader) { GX_GLCALL(glAttachShader, _prog, shader); }
