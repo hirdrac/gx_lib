@@ -71,7 +71,7 @@ class gx::Gui
     // (optionally just for a specific panel if id is non-zero)
 
   [[nodiscard]] std::string getText(EventID eid) const {
-    const GuiElem* e = findElemByEventID(eid);
+    const GuiElem* e = findEventElem(eid);
     switch (e->type) {
       case GUI_LABEL: case GUI_VLABEL:
         return e->label().text;
@@ -83,12 +83,12 @@ class gx::Gui
   }
 
   [[nodiscard]] bool getBool(EventID eid) const {
-    const GuiElem* e = findElemByEventID(eid);
+    const GuiElem* e = findEventElem(eid);
     return (e == nullptr || e->type != GUI_CHECKBOX) ? false : e->checkbox().set;
   }
 
   [[nodiscard]] int getItemNo(EventID eid) const {
-    const GuiElem* e = findElemByEventID(eid);
+    const GuiElem* e = findEventElem(eid);
     return (e == nullptr || e->type != GUI_LISTSELECT) ? 0 : e->item().no;
   }
 
@@ -161,9 +161,9 @@ class gx::Gui
   bool drawPopup(Window& win, Panel& p, GuiElem& def,
                  DrawContext& dc, DrawContext& dc2);
 
-  [[nodiscard]] GuiElem* findElemByID(ElemID id);
-  [[nodiscard]] GuiElem* findElemByEventID(EventID eid);
-  [[nodiscard]] const GuiElem* findElemByEventID(EventID eid) const;
+  [[nodiscard]] GuiElem* findElem(ElemID id);
+  [[nodiscard]] GuiElem* findEventElem(EventID eid);
+  [[nodiscard]] const GuiElem* findEventElem(EventID eid) const;
   [[nodiscard]] GuiElem* findNextElem(ElemID id, GuiElemType type = GUI_NULL);
   [[nodiscard]] GuiElem* findPrevElem(ElemID id, GuiElemType type = GUI_NULL);
 

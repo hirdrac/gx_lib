@@ -110,10 +110,10 @@ static int allElemState(GuiElem& def, bool enable)
 }
 
 template<class T>
-[[nodiscard]] static inline T* findElemByIDT(T& def, ElemID id)
+[[nodiscard]] static inline T* findByElemID(T& root, ElemID id)
 {
   std::vector<T*> stack;
-  T* e = &def;
+  T* e = &root;
   while (e->_id != id) {
     if (!e->elems.empty()) {
       stack.reserve(stack.size() + e->elems.size());
@@ -128,11 +128,11 @@ template<class T>
 }
 
 template<class T>
-[[nodiscard]] static inline T* findElemByEventIDT(T& def, EventID eid)
+[[nodiscard]] static inline T* findByEventID(T& root, EventID eid)
 {
   GX_ASSERT(eid != 0);
   std::vector<T*> stack;
-  T* e = &def;
+  T* e = &root;
   while (e->eid != eid) {
     if (!e->elems.empty()) {
       stack.reserve(stack.size() + e->elems.size());
@@ -164,7 +164,7 @@ template<class T>
 {
   // NOTE: skips root in search
   for (GuiElem& e : root.elems) {
-    if (e.type == GUI_LISTSELECT && findElemByIDT(e.elems[1], id)) {
+    if (e.type == GUI_LISTSELECT && findByElemID(e.elems[1], id)) {
       return &e;
     } else if (!isMenu(e.type) && !e.elems.empty()) {
       GuiElem* e2 = findParentListSelect(e, id);
@@ -658,7 +658,7 @@ bool Gui::update(Window& win)
         _heldTime += _repeatDelay * ((now - _heldTime) / _repeatDelay);
       }
 
-      const GuiElem* heldElem = findElemByID(_heldID);
+      const GuiElem* heldElem = findElem(_heldID);
       if (heldElem) { addEvent(*heldElem, now); }
     }
   } else if (_popupID != 0) {
@@ -803,7 +803,7 @@ void Gui::processMouseEvent(Window& win)
     if (win.events() & EVENT_MOUSE_MOVE) {
       pPtr = nullptr;
       for (auto& ptr : _panels) {
-        if (findElemByIDT(ptr->root, _heldID)) { pPtr = ptr.get(); break; }
+        if (findByElemID(ptr->root, _heldID)) { pPtr = ptr.get(); break; }
       }
       GX_ASSERT(pPtr != nullptr);
       raisePanel(pPtr->id);
@@ -885,7 +885,7 @@ void Gui::processMouseEvent(Window& win)
 
 void Gui::processCharEvent(Window& win)
 {
-  GuiElem* e = findElemByID(_focusID);
+  GuiElem* e = findElem(_focusID);
   if (!e) { return; }
   GX_ASSERT(e->type == GUI_ENTRY);
   auto& entry = e->entry();
@@ -1030,7 +1030,7 @@ void Gui::setFocus(Window& win, const GuiElem* e)
 
   if (_textChanged) {
     _textChanged = false;
-    GuiElem* focusElem = findElemByID(_focusID);
+    GuiElem* focusElem = findElem(_focusID);
     if (focusElem) {
       auto& entry = focusElem->entry();
       if (entry.text.empty()) {
@@ -1051,7 +1051,7 @@ void Gui::setFocus(Window& win, const GuiElem* e)
 
 void Gui::setElemState(EventID eid, bool enable)
 {
-  GuiElem* e = findElemByEventID(eid);
+  GuiElem* e = findEventElem(eid);
   if (e && e->_enabled != enable) {
     e->_enabled = enable;
     _needRender = true;
@@ -1071,20 +1071,25 @@ void Gui::setAllElemState(PanelID id, bool enable)
 bool Gui::setText(EventID eid, std::string_view text)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
+    GuiElem* e = findByEventID(pPtr->root, eid);
     if (!e) { continue; }
 
-    if (e->type == GUI_ENTRY) {
-      e->entry().text = text;
-      if (_focusID == e->_id) {
-        _focusCursorPos = lengthUTF8(text);
-        _focusEntryOffset = 0;
-      }
-    } else if (e->type == GUI_LABEL || e->type == GUI_VLABEL) {
-      e->label().text = text;
-      pPtr->needLayout = true;
-    } else {
-      break;
+    switch (e->type) {
+      case GUI_ENTRY:
+        e->entry().text = text;
+        if (_focusID == e->_id) {
+          _focusCursorPos = lengthUTF8(text);
+          _focusEntryOffset = 0;
+        }
+        break;
+      case GUI_LABEL:
+      case GUI_VLABEL:
+        e->label().text = text;
+        pPtr->needLayout = true;
+        break;
+
+      default:
+        return false;
     }
 
     _needRender = true;
@@ -1095,7 +1100,7 @@ bool Gui::setText(EventID eid, std::string_view text)
 
 bool Gui::setBool(EventID eid, bool val)
 {
-  GuiElem* e = findElemByEventID(eid);
+  GuiElem* e = findEventElem(eid);
   if (!e || e->type != GUI_CHECKBOX) { return false; }
 
   e->checkbox().set = val;
@@ -1105,7 +1110,7 @@ bool Gui::setBool(EventID eid, bool val)
 
 bool Gui::setItemNo(EventID eid, int no)
 {
-  GuiElem* e = findElemByEventID(eid);
+  GuiElem* e = findEventElem(eid);
   if (!e || e->type != GUI_LISTSELECT) { return false; }
 
   e->item().no = no;
@@ -1403,28 +1408,28 @@ bool Gui::drawPopup(Window& win, Panel& p, GuiElem& def,
   return needRedraw;
 }
 
-GuiElem* Gui::findElemByID(ElemID id)
+GuiElem* Gui::findElem(ElemID id)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByIDT(pPtr->root, id);
+    GuiElem* e = findByElemID(pPtr->root, id);
     if (e) { return e; }
   }
   return nullptr;
 }
 
-GuiElem* Gui::findElemByEventID(EventID eid)
+GuiElem* Gui::findEventElem(EventID eid)
 {
   for (auto& pPtr : _panels) {
-    GuiElem* e = findElemByEventIDT(pPtr->root, eid);
+    GuiElem* e = findByEventID(pPtr->root, eid);
     if (e) { return e; }
   }
   return nullptr;
 }
 
-const GuiElem* Gui::findElemByEventID(EventID eid) const
+const GuiElem* Gui::findEventElem(EventID eid) const
 {
   for (auto& pPtr : _panels) {
-    const GuiElem* e = findElemByEventIDT(pPtr->root, eid);
+    const GuiElem* e = findByEventID(pPtr->root, eid);
     if (e) { return e; }
   }
   return nullptr;
@@ -1436,7 +1441,7 @@ GuiElem* Gui::findNextElem(ElemID id, GuiElemType type)
   const GuiElem* focusElem = nullptr;
   for (auto& pPtr : _panels) {
     p = pPtr.get();
-    focusElem = findElemByIDT(pPtr->root, id);
+    focusElem = findByElemID(pPtr->root, id);
     if (focusElem) { break; }
   }
 
@@ -1471,7 +1476,7 @@ GuiElem* Gui::findPrevElem(ElemID id, GuiElemType type)
   const GuiElem* focusElem = nullptr;
   for (auto& pPtr : _panels) {
     p = pPtr.get();
-    focusElem = findElemByIDT(pPtr->root, id);
+    focusElem = findByElemID(pPtr->root, id);
     if (focusElem) { break; }
   }
 
@@ -1563,7 +1568,7 @@ void gx::Gui::addEvent(const GuiElem& e, int64_t t)
   if (e.type == GUI_BUTTON || e.type == GUI_BUTTON_PRESS) {
     const GuiAction& action = e.button().action;
     if (action.type != GuiAction::NONE) {
-      target = findElemByEventID(action.targetID);
+      target = findEventElem(action.targetID);
       if (!target) {
         GX_LOG_ERROR("Unknown targetID ",action.targetID," for GuiAction");
         return;
