@@ -1552,7 +1552,7 @@ static bool buttonActionSet(GuiElem& target, double value)
   return true;
 }
 
-void gx::Gui::addEvent(const GuiElem& e, int64_t t)
+void Gui::addEvent(const GuiElem& e, int64_t t)
 {
   GuiElem* target = nullptr;
   if (e.type == GUI_BUTTON || e.type == GUI_BUTTON_PRESS) {
@@ -1596,7 +1596,7 @@ void gx::Gui::addEvent(const GuiElem& e, int64_t t)
   }
 }
 
-gx::Gui::PanelPtr gx::Gui::removePanel(PanelID id)
+Gui::PanelPtr Gui::removePanel(PanelID id)
 {
   for (auto i = _panels.begin(), end = _panels.end(); i != end; ++i) {
     if ((*i)->id == id) {

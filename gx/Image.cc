@@ -10,9 +10,10 @@
 #include "3rd/stb_image.h"
 #include <limits>
 #include <cstring>
+using namespace gx;
 
 
-bool gx::Image::init(int width, int height, int channels)
+bool Image::init(int width, int height, int channels)
 {
   GX_ASSERT(width > 0 && height > 0 && channels > 0);
 
@@ -24,8 +25,8 @@ bool gx::Image::init(int width, int height, int channels)
   return true;
 }
 
-bool gx::Image::init(int width, int height, int channels,
-		     const uint8_t* src_data, bool copy)
+bool Image::init(int width, int height, int channels,
+                 const uint8_t* src_data, bool copy)
 {
   GX_ASSERT(width > 0 && height > 0 && channels > 0);
   GX_ASSERT(src_data != nullptr);
@@ -44,7 +45,7 @@ bool gx::Image::init(int width, int height, int channels,
   return true;
 }
 
-bool gx::Image::load(const char* filename)
+bool Image::load(const char* filename)
 {
   int w = 0, h = 0, c = 0;
   uint8_t* data = stbi_load(filename, &w, &h, &c, 0);
@@ -58,7 +59,7 @@ bool gx::Image::load(const char* filename)
   return true;
 }
 
-bool gx::Image::loadFromMemory(const void* mem, std::size_t memSize)
+bool Image::loadFromMemory(const void* mem, std::size_t memSize)
 {
   GX_ASSERT(mem != nullptr);
   GX_ASSERT(memSize <= std::numeric_limits<int>::max());
@@ -76,14 +77,14 @@ bool gx::Image::loadFromMemory(const void* mem, std::size_t memSize)
   return true;
 }
 
-bool gx::Image::clear()
+bool Image::clear()
 {
   GX_ASSERT(canEdit());
   std::memset(_storage.get(), 0, size());
   return true;
 }
 
-bool gx::Image::setPixel(int x, int y, const uint8_t* channel_vals)
+bool Image::setPixel(int x, int y, const uint8_t* channel_vals)
 {
   GX_ASSERT(canEdit());
   const int offset = ((y * _width) + x) * _channels;
@@ -93,7 +94,7 @@ bool gx::Image::setPixel(int x, int y, const uint8_t* channel_vals)
   return true;
 }
 
-bool gx::Image::stamp(int x, int y, const Image& sub_image)
+bool Image::stamp(int x, int y, const Image& sub_image)
 {
   GX_ASSERT(canEdit());
   GX_ASSERT(_channels == sub_image.channels());
@@ -114,7 +115,7 @@ bool gx::Image::stamp(int x, int y, const Image& sub_image)
   return true;
 }
 
-bool gx::Image::stamp(int x, int y, const Glyph& g)
+bool Image::stamp(int x, int y, const Glyph& g)
 {
   GX_ASSERT(canEdit());
   GX_ASSERT(_channels == 1);

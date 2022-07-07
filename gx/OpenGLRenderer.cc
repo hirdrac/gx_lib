@@ -227,13 +227,13 @@ bool OpenGLRenderer::init(GLFWwindow* win)
   // debug output
   float val[2] = {};
   glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, val);
-  gx::println("GL_ALIASED_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
+  println("GL_ALIASED_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
 
   glGetFloatv(GL_SMOOTH_LINE_WIDTH_RANGE, val);
-  gx::println("GL_SMOOTH_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
+  println("GL_SMOOTH_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
 
   glGetFloatv(GL_SMOOTH_LINE_WIDTH_GRANULARITY, val);
-  gx::println("GL_SMOOTH_LINE_WIDTH_GRANULARITY: ", val[0]);
+  println("GL_SMOOTH_LINE_WIDTH_GRANULARITY: ", val[0]);
 #endif
 
   return status;
@@ -742,8 +742,8 @@ void OpenGLRenderer::draw(
 #if 0
   std::size_t dsize = 0;
   for (const DrawLayer* lPtr : dl) { dsize += lPtr->entries.size(); }
-  gx::println_err("entries:", dsize, "  vertices:", vsize,
-                  "  opData:", _opData.size());
+  println_err("entries:", dsize, "  vertices:", vsize,
+              "  opData:", _opData.size());
 #endif
 }
 
