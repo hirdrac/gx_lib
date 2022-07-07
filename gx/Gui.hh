@@ -162,10 +162,11 @@ class gx::Gui
                  DrawContext& dc, DrawContext& dc2);
 
   [[nodiscard]] GuiElem* findElem(ElemID id);
+  [[nodiscard]] std::pair<Panel*,GuiElem*> findPanelElem(ElemID id);
   [[nodiscard]] GuiElem* findEventElem(EventID eid);
   [[nodiscard]] const GuiElem* findEventElem(EventID eid) const;
-  [[nodiscard]] GuiElem* findNextElem(ElemID id, GuiElemType type = GUI_NULL);
-  [[nodiscard]] GuiElem* findPrevElem(ElemID id, GuiElemType type = GUI_NULL);
+  [[nodiscard]] GuiElem* findNextElem(ElemID id, GuiElemType type);
+  [[nodiscard]] GuiElem* findPrevElem(ElemID id, GuiElemType type);
 
   void clearHeld() {
     _heldID = 0;

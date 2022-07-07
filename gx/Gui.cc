@@ -801,16 +801,13 @@ void Gui::processMouseEvent(Window& win)
 
   if (lbuttonDown && _heldType == GUI_TITLEBAR) {
     if (win.events() & EVENT_MOUSE_MOVE) {
-      pPtr = nullptr;
-      for (auto& ptr : _panels) {
-        if (findByElemID(ptr->root, _heldID)) { pPtr = ptr.get(); break; }
-      }
-      GX_ASSERT(pPtr != nullptr);
-      raisePanel(pPtr->id);
+      const auto [p,e] = findPanelElem(_heldID);
+      GX_ASSERT(p != nullptr);
+      raisePanel(p->id);
       const float mx = std::clamp(win.mouseX(), 0.0f, float(win.width()));
       const float my = std::clamp(win.mouseY(), 0.0f, float(win.height()));
-      pPtr->layout.x += mx - _heldX;
-      pPtr->layout.y += my - _heldY;
+      p->layout.x += mx - _heldX;
+      p->layout.y += my - _heldY;
       _heldX = mx;
       _heldY = my;
       _needRender = true;
@@ -1415,6 +1412,15 @@ GuiElem* Gui::findElem(ElemID id)
   return nullptr;
 }
 
+std::pair<Gui::Panel*,GuiElem*> Gui::findPanelElem(ElemID id)
+{
+  for (auto& pPtr : _panels) {
+    GuiElem* e = findByElemID(pPtr->root, id);
+    if (e) { return {pPtr.get(),e}; }
+  }
+  return {nullptr,nullptr};
+}
+
 GuiElem* Gui::findEventElem(EventID eid)
 {
   for (auto& pPtr : _panels) {
@@ -1435,14 +1441,7 @@ const GuiElem* Gui::findEventElem(EventID eid) const
 
 GuiElem* Gui::findNextElem(ElemID id, GuiElemType type)
 {
-  Panel* p = nullptr;
-  const GuiElem* focusElem = nullptr;
-  for (auto& pPtr : _panels) {
-    p = pPtr.get();
-    focusElem = findByElemID(pPtr->root, id);
-    if (focusElem) { break; }
-  }
-
+  const auto [p,focusElem] = findPanelElem(id);
   if (!focusElem) { return nullptr; }
   const EventID eid = focusElem->eid;
 
@@ -1470,14 +1469,7 @@ GuiElem* Gui::findNextElem(ElemID id, GuiElemType type)
 
 GuiElem* Gui::findPrevElem(ElemID id, GuiElemType type)
 {
-  Panel* p = nullptr;
-  const GuiElem* focusElem = nullptr;
-  for (auto& pPtr : _panels) {
-    p = pPtr.get();
-    focusElem = findByElemID(pPtr->root, id);
-    if (focusElem) { break; }
-  }
-
+  const auto [p,focusElem] = findPanelElem(id);
   if (!focusElem) { return nullptr; }
   const EventID eid = focusElem->eid;
 
