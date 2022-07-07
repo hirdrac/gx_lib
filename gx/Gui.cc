@@ -1210,10 +1210,8 @@ bool Gui::drawElem(
     case GUI_MENU_ITEM:
       if (!def._enabled) {
         style = &thm.menuItemDisable;
-      } else if (def._active && (def._id == _hoverID)) {
-        style = &thm.menuItemSelect;
       } else {
-        style = &thm.menuItem;
+        style = (def._id == _hoverID) ? &thm.menuItemSelect : &thm.menuItem;
       }
       break;
     case GUI_LISTSELECT:
