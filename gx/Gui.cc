@@ -28,7 +28,7 @@ using namespace gx;
   return (type == GUI_MENU) || (type == GUI_SUBMENU);
 }
 
-[[nodiscard]] static constexpr bool isPopup(GuiElemType type)
+[[nodiscard]] static constexpr bool hasPopup(GuiElemType type)
 {
   return isMenu(type) || (type == GUI_LISTSELECT);
 }
@@ -78,10 +78,16 @@ static int allElemState(GuiElem& def, bool enable)
   return count;
 }
 
+[[nodiscard]] static inline bool canSelect(const GuiElem& e)
+{
+  return (e.eid != 0) || (e.type == GUI_LISTSELECT_ITEM)
+    || (e.type == GUI_TITLEBAR);
+}
+
 [[nodiscard]] static GuiElem* findElemByXY(
   GuiElem& def, float x, float y, GuiElemType popupType)
 {
-  if (isPopup(def.type)) {
+  if (hasPopup(def.type)) {
     if (popupType == GUI_NULL || (getPopupType(def.type) == popupType)) {
       // special case for listselect to prevent other listselect activation
       if (popupType == GUI_LISTSELECT && def.type == GUI_LISTSELECT
@@ -93,9 +99,7 @@ static int allElemState(GuiElem& def, bool enable)
         if (e) { return e; }
       }
     }
-  } else if ((def.eid != 0 || def.type == GUI_LISTSELECT_ITEM
-              || def.type == GUI_TITLEBAR) && popupType == GUI_NULL
-             && def.contains(x, y)) {
+  } else if (popupType == GUI_NULL && canSelect(def) && def.contains(x, y)) {
     return &def;
   } else {
     for (GuiElem& c : def.elems) {
@@ -863,7 +867,7 @@ void Gui::processMouseEvent(Window& win)
       _heldY = my;
       _needRender = true;
     }
-  } else if (isPopup(type)) {
+  } else if (hasPopup(type)) {
     const bool pressEvent = lpressEvent || (type == GUI_MENU && rpressEvent);
     if (pressEvent && ePtr->_active) {
       // click on open menu/listselect button closes popup
