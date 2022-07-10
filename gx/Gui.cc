@@ -634,9 +634,11 @@ void Gui::clear()
   _focusID = 0;
   _popupID = 0;
   _popupType = GUI_NULL;
+  _eventPanelID = 0;
   _eventID = 0;
   _eventType = GUI_NULL;
   _eventTime = 0;
+  _eventPanelID2 = 0;
   _eventID2 = 0;
   _eventType2 = GUI_NULL;
   _eventTime2 = 0;
@@ -682,9 +684,11 @@ bool Gui::update(Window& win)
   const int64_t now = win.lastPollTime();
 
   // make saved event active
+  _eventPanelID = _eventPanelID2;
   _eventID = _eventID2;
   _eventType = _eventType2;
   _eventTime = _eventTime2;
+  _eventPanelID2 = 0;
   _eventID2 = 0;
   _eventType2 = GUI_NULL;
   _eventTime2 = 0;
@@ -713,7 +717,7 @@ bool Gui::update(Window& win)
       }
 
       const auto [panelP,elemP] = findPanelElem(_heldID);
-      if (elemP) { addEvent(*elemP, now); }
+      if (elemP) { addEvent(*panelP, *elemP, now); }
     }
   } else if (_popupID != 0) {
     deactivatePopups();
@@ -878,7 +882,7 @@ void Gui::processMouseEvent(Window& win)
     }
   } else if (type == GUI_MENU_ITEM) {
     if (lbuttonEvent || rbuttonEvent) {
-      addEvent(*ePtr, win.lastPollTime());
+      addEvent(*pPtr, *ePtr, win.lastPollTime());
       deactivatePopups();
     } else if (_popupID != id) {
       // activate on menu item to close sub-menus if necessary
@@ -886,7 +890,8 @@ void Gui::processMouseEvent(Window& win)
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
     if (lbuttonEvent) {
-      GuiElem* parent = findParentListSelect(pPtr->root, id);
+      Panel& p = *pPtr;
+      GuiElem* parent = findParentListSelect(p.root, id);
       if (parent) {
         GuiElem& ls = *parent;
         ls.item().no = ePtr->item().no;
@@ -894,10 +899,11 @@ void Gui::processMouseEvent(Window& win)
         const GuiElem& src = ePtr->elems[0];
         e0.label().text = src.label().text;
         e0.eid  = src.eid;
-        const float b = pPtr->theme->border;
-        calcPos(e0, *pPtr->theme, ls._x + b, ls._y + b, ls._x + ls._w - b,
+        const GuiTheme& thm = *p.theme;
+        const float b = thm.border;
+        calcPos(e0, thm, ls._x + b, ls._y + b, ls._x + ls._w - b,
                 ls._y + ls._h - b);
-        addEvent(ls, win.lastPollTime());
+        addEvent(p, ls, win.lastPollTime());
         deactivatePopups();
       }
     }
@@ -911,7 +917,7 @@ void Gui::processMouseEvent(Window& win)
       _needRender = true;
       if (type == GUI_BUTTON_PRESS) {
         _repeatDelay = ePtr->button().repeatDelay;
-        addEvent(*ePtr, win.lastPollTime());
+        addEvent(*pPtr, *ePtr, win.lastPollTime());
       }
     } else if ((_heldType == GUI_BUTTON_PRESS) && (_heldID != id)) {
       // clear hold if cursor moves off BUTTON_PRESS
@@ -921,7 +927,7 @@ void Gui::processMouseEvent(Window& win)
       if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
           && lbuttonEvent && (_heldID == id)) {
         // activate if cursor is over element & button is released
-        addEvent(*ePtr, win.lastPollTime());
+        addEvent(*pPtr, *ePtr, win.lastPollTime());
         if (type == GUI_CHECKBOX) { ePtr->checkbox().set = !ePtr->checkbox().set; }
       }
 
@@ -1093,7 +1099,7 @@ void Gui::setFocus(Window& win, const GuiElem* e)
           entry.text = "0";
         }
       }
-      addEvent(*elemP, win.lastPollTime());
+      addEvent(*panelP, *elemP, win.lastPollTime());
     }
   }
 
@@ -1544,7 +1550,7 @@ static bool buttonActionSet(GuiElem& target, double value)
   return true;
 }
 
-void Gui::addEvent(const GuiElem& e, int64_t t)
+void Gui::addEvent(const Panel& p, const GuiElem& e, int64_t t)
 {
   GuiElem* target = nullptr;
   if (e.type == GUI_BUTTON || e.type == GUI_BUTTON_PRESS) {
@@ -1578,10 +1584,12 @@ void Gui::addEvent(const GuiElem& e, int64_t t)
   const GuiElem& eventElem = target ? *target : e;
   if (_eventID != 0) {
     // save event for next update
+    _eventPanelID2 = p.id;
     _eventID2 = eventElem.eid;
     _eventType2 = eventElem.type;
     _eventTime2 = t;
   } else {
+    _eventPanelID = p.id;
     _eventID = eventElem.eid;
     _eventType = eventElem.type;
     _eventTime = t;

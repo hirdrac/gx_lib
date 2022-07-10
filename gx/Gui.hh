@@ -51,6 +51,7 @@ class gx::Gui
 
   [[nodiscard]] const DrawList& drawList() const { return _dl; }
 
+  [[nodiscard]] PanelID eventPanelID() const { return _eventPanelID; }
   [[nodiscard]] EventID eventID() const { return _eventID; }
   [[nodiscard]] GuiElemType eventType() const { return _eventType; }
   [[nodiscard]] int64_t eventTime() const { return _eventTime; }
@@ -122,11 +123,13 @@ class gx::Gui
   ElemID _popupID = 0;
   GuiElemType _popupType = GUI_NULL;
 
+  PanelID _eventPanelID = 0;
   EventID _eventID = 0;
   GuiElemType _eventType = GUI_NULL;
   int64_t _eventTime = 0;
 
   // saved event to delay for next update
+  PanelID _eventPanelID2 = 0;
   EventID _eventID2 = 0;
   GuiElemType _eventType2 = GUI_NULL;
   int64_t _eventTime2 = 0;
@@ -172,7 +175,7 @@ class gx::Gui
     _repeatDelay = -1;
   }
 
-  void addEvent(const GuiElem& e, int64_t t);
+  void addEvent(const Panel& p, const GuiElem& e, int64_t t);
   PanelPtr removePanel(PanelID id);
 };
 
