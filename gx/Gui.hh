@@ -24,7 +24,19 @@ namespace gx {
   class DrawContext;
   class Font;
   class Gui;
+  struct GuiEvent;
 }
+
+
+struct gx::GuiEvent
+{
+  PanelID pid;
+  EventID eid;
+  GuiElemType type;
+  int64_t time;
+
+  [[nodiscard]] explicit operator bool() const { return eid != 0; }
+};
 
 
 class gx::Gui
@@ -49,16 +61,12 @@ class gx::Gui
     // process events & update drawLists
     // returns true if redraw is required (same as needRedraw())
 
+  [[nodiscard]] const GuiEvent& event() const { return _event; }
+    // event details from last update
+
   [[nodiscard]] const DrawList& drawList() const { return _dl; }
-
-  [[nodiscard]] PanelID eventPanelID() const { return _eventPanelID; }
-  [[nodiscard]] EventID eventID() const { return _eventID; }
-  [[nodiscard]] GuiElemType eventType() const { return _eventType; }
-  [[nodiscard]] int64_t eventTime() const { return _eventTime; }
-    // id/type of element triggering an event
-
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
-    // true if GUI needs to be redrawn
+    // render data & flag if data was changed last update
 
   void setElemState(EventID eid, bool enable);
   void enableElem(EventID eid) { setElemState(eid, true); }
@@ -93,9 +101,9 @@ class gx::Gui
     return (e == nullptr || e->type != GUI_LISTSELECT) ? 0 : e->item().no;
   }
 
-  [[nodiscard]] std::string eventText() const { return getText(_eventID); }
-  [[nodiscard]] bool eventBool() const { return getBool(_eventID); }
-  [[nodiscard]] int eventItemNo() const { return getItemNo(_eventID); }
+  [[nodiscard]] std::string eventText() const { return getText(_event.eid); }
+  [[nodiscard]] bool eventBool() const { return getBool(_event.eid); }
+  [[nodiscard]] int eventItemNo() const { return getItemNo(_event.eid); }
 
   bool setText(EventID eid, std::string_view text);
   bool setBool(EventID eid, bool val);
@@ -123,16 +131,7 @@ class gx::Gui
   ElemID _popupID = 0;
   GuiElemType _popupType = GUI_NULL;
 
-  PanelID _eventPanelID = 0;
-  EventID _eventID = 0;
-  GuiElemType _eventType = GUI_NULL;
-  int64_t _eventTime = 0;
-
-  // saved event to delay for next update
-  PanelID _eventPanelID2 = 0;
-  EventID _eventID2 = 0;
-  GuiElemType _eventType2 = GUI_NULL;
-  int64_t _eventTime2 = 0;
+  GuiEvent _event{}, _event2{};
 
   ElemID _heldID = 0;
   GuiElemType _heldType = GUI_NULL;

@@ -634,14 +634,8 @@ void Gui::clear()
   _focusID = 0;
   _popupID = 0;
   _popupType = GUI_NULL;
-  _eventPanelID = 0;
-  _eventID = 0;
-  _eventType = GUI_NULL;
-  _eventTime = 0;
-  _eventPanelID2 = 0;
-  _eventID2 = 0;
-  _eventType2 = GUI_NULL;
-  _eventTime2 = 0;
+  _event = {};
+  _event2 = {};
   _needRender = true;
   _textChanged = false;
 }
@@ -684,14 +678,8 @@ bool Gui::update(Window& win)
   const int64_t now = win.lastPollTime();
 
   // make saved event active
-  _eventPanelID = _eventPanelID2;
-  _eventID = _eventID2;
-  _eventType = _eventType2;
-  _eventTime = _eventTime2;
-  _eventPanelID2 = 0;
-  _eventID2 = 0;
-  _eventType2 = GUI_NULL;
-  _eventTime2 = 0;
+  _event = _event2;
+  _event2 = {};
   _needRedraw = false;
 
   for (auto& pPtr : _panels) {
@@ -710,7 +698,7 @@ bool Gui::update(Window& win)
       processMouseEvent(win);
     }
 
-    if (_eventID == 0 && _heldID != 0 && _repeatDelay >= 0
+    if (_event && _heldID != 0 && _repeatDelay >= 0
         && (now - _heldTime) > _repeatDelay) {
       if (_repeatDelay > 0) {
         _heldTime += _repeatDelay * ((now - _heldTime) / _repeatDelay);
@@ -1582,17 +1570,11 @@ void Gui::addEvent(const Panel& p, const GuiElem& e, int64_t t)
   }
 
   const GuiElem& eventElem = target ? *target : e;
-  if (_eventID != 0) {
+  if (_event) {
     // save event for next update
-    _eventPanelID2 = p.id;
-    _eventID2 = eventElem.eid;
-    _eventType2 = eventElem.type;
-    _eventTime2 = t;
+    _event2 = {p.id, eventElem.eid, eventElem.type, t};
   } else {
-    _eventPanelID = p.id;
-    _eventID = eventElem.eid;
-    _eventType = eventElem.type;
-    _eventTime = t;
+    _event = {p.id, eventElem.eid, eventElem.type, t};
   }
 }
 

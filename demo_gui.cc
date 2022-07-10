@@ -167,9 +167,9 @@ int main(int argc, char* argv[])
 
     // update gui
     needRedraw |= gui.update(win);
-    if (gui.eventID() > 0) {
-      gx::print_err("GUI event:", gui.eventID());
-      switch (gui.eventType()) {
+    if (gui.event()) {
+      gx::print_err("GUI event:", gui.event().eid);
+      switch (gui.event().type) {
         case gx::GUI_ENTRY:
           gx::println_err("\ttext:\"", gui.eventText(), "\"");
           break;
@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
           gx::println_err();
           break;
       }
-      if (gui.eventID() == 99) { running = false; }
+      if (gui.event().eid == 99) { running = false; }
     }
 
     //gx::println_err("time ", gx::Window::lastPollTime());
