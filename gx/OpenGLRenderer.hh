@@ -30,7 +30,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
                        FilterType minFilter, FilterType magFilter) override;
   void freeTexture(TextureID id) override;
   void draw(int width, int height,
-            std::initializer_list<DrawLayer*> dl) override;
+            std::initializer_list<const DrawLayer*> dl) override;
   void renderFrame() override;
 
  private:

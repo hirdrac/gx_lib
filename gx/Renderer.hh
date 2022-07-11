@@ -40,7 +40,7 @@ class gx::Renderer
 
   // draw methods
   virtual void draw(
-    int width, int height, std::initializer_list<DrawLayer*> dl) = 0;
+    int width, int height, std::initializer_list<const DrawLayer*> dl) = 0;
   virtual void renderFrame() = 0;
 
   // general accessors

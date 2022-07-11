@@ -322,7 +322,7 @@ void OpenGLRenderer::freeTexture(TextureID id)
 }
 
 void OpenGLRenderer::draw(
-  int width, int height, std::initializer_list<DrawLayer*> dl)
+  int width, int height, std::initializer_list<const DrawLayer*> dl)
 {
   unsigned int vsize = 0; // vertices needed
   for (const DrawLayer* lPtr : dl) {
