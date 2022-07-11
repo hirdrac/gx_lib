@@ -698,13 +698,13 @@ bool Gui::update(Window& win)
       processMouseEvent(win);
     }
 
-    if (_event && _heldID != 0 && _repeatDelay >= 0
+    if (!_event && _heldID != 0 && _repeatDelay >= 0
         && (now - _heldTime) > _repeatDelay) {
       if (_repeatDelay > 0) {
         _heldTime += _repeatDelay * ((now - _heldTime) / _repeatDelay);
       }
 
-      const auto [panelP,elemP] = findPanelElem(_heldID);
+      const auto [panelP,elemP] = findElem(_heldID);
       if (elemP) { addEvent(*panelP, *elemP, now); }
     }
   } else if (_popupID != 0) {
@@ -847,7 +847,7 @@ void Gui::processMouseEvent(Window& win)
 
   if (lbuttonDown && _heldType == GUI_TITLEBAR) {
     if (win.events() & EVENT_MOUSE_MOVE) {
-      const auto [panelP,elemP] = findPanelElem(_heldID);
+      const auto [panelP,elemP] = findElem(_heldID);
       GX_ASSERT(panelP != nullptr);
       Panel& p = *panelP;
       raisePanel(p.id);
@@ -931,7 +931,7 @@ void Gui::processMouseEvent(Window& win)
 
 void Gui::processCharEvent(Window& win)
 {
-  const auto [panelP,elemP] = findPanelElem(_focusID);
+  const auto [panelP,elemP] = findElem(_focusID);
   if (!elemP) { return; }
 
   GuiElem& e = *elemP;
@@ -1078,7 +1078,7 @@ void Gui::setFocus(Window& win, const GuiElem* e)
 
   if (_textChanged) {
     _textChanged = false;
-    const auto [panelP,elemP] = findPanelElem(_focusID);
+    const auto [panelP,elemP] = findElem(_focusID);
     if (elemP) {
       auto& entry = elemP->entry();
       if (entry.text.empty()) {
@@ -1097,9 +1097,9 @@ void Gui::setFocus(Window& win, const GuiElem* e)
   _needRender = true;
 }
 
-void Gui::setElemState(EventID eid, bool enable)
+void Gui::setElemState(PanelID pid, EventID eid, bool enable)
 {
-  GuiElem* e = findEventElem(eid);
+  GuiElem* e = findEventElem(pid, eid);
   if (e && e->_enabled != enable) {
     e->_enabled = enable;
     _needRender = true;
@@ -1116,9 +1116,10 @@ void Gui::setAllElemState(PanelID id, bool enable)
   _needRender |= (count > 0);
 }
 
-bool Gui::setText(EventID eid, std::string_view text)
+bool Gui::setText(PanelID pid, EventID eid, std::string_view text)
 {
   for (auto& pPtr : _panels) {
+    if (pid != 0 && pid != pPtr->id) { continue; }
     GuiElem* e = findByEventID(pPtr->root, eid);
     if (!e) { continue; }
 
@@ -1146,9 +1147,9 @@ bool Gui::setText(EventID eid, std::string_view text)
   return false;
 }
 
-bool Gui::setBool(EventID eid, bool val)
+bool Gui::setBool(PanelID pid, EventID eid, bool val)
 {
-  GuiElem* e = findEventElem(eid);
+  GuiElem* e = findEventElem(pid, eid);
   if (!e || e->type != GUI_CHECKBOX) { return false; }
 
   e->checkbox().set = val;
@@ -1156,9 +1157,9 @@ bool Gui::setBool(EventID eid, bool val)
   return true;
 }
 
-bool Gui::setItemNo(EventID eid, int no)
+bool Gui::setItemNo(PanelID pid, EventID eid, int no)
 {
-  GuiElem* e = findEventElem(eid);
+  GuiElem* e = findEventElem(pid, eid);
   if (!e || e->type != GUI_LISTSELECT) { return false; }
 
   e->item().no = no;
@@ -1454,7 +1455,7 @@ bool Gui::drawPopup(Window& win, Panel& p, GuiElem& def,
   return needRedraw;
 }
 
-std::pair<Gui::Panel*,GuiElem*> Gui::findPanelElem(ElemID id)
+std::pair<Gui::Panel*,GuiElem*> Gui::findElem(ElemID id)
 {
   for (auto& pPtr : _panels) {
     GuiElem* e = findByElemID(pPtr->root, id);
@@ -1463,18 +1464,20 @@ std::pair<Gui::Panel*,GuiElem*> Gui::findPanelElem(ElemID id)
   return {nullptr,nullptr};
 }
 
-GuiElem* Gui::findEventElem(EventID eid)
+GuiElem* Gui::findEventElem(PanelID pid, EventID eid)
 {
   for (auto& pPtr : _panels) {
+    if (pid != 0 && pid != pPtr->id) { continue; }
     GuiElem* e = findByEventID(pPtr->root, eid);
     if (e) { return e; }
   }
   return nullptr;
 }
 
-const GuiElem* Gui::findEventElem(EventID eid) const
+const GuiElem* Gui::findEventElem(PanelID pid, EventID eid) const
 {
   for (auto& pPtr : _panels) {
+    if (pid != 0 && pid != pPtr->id) { continue; }
     const GuiElem* e = findByEventID(pPtr->root, eid);
     if (e) { return e; }
   }
@@ -1544,7 +1547,7 @@ void Gui::addEvent(const Panel& p, const GuiElem& e, int64_t t)
   if (e.type == GUI_BUTTON || e.type == GUI_BUTTON_PRESS) {
     const GuiAction& action = e.button().action;
     if (action.type != GuiAction::NONE) {
-      target = findEventElem(action.targetID);
+      target = findEventElem(p.id, action.targetID);
       if (!target) {
         GX_LOG_ERROR("Unknown targetID ",action.targetID," for GuiAction");
         return;

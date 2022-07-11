@@ -71,19 +71,19 @@ class gx::Gui
   template<typename... Args>
   void setBGColor(const Args&... args) { _layer.setBGColor(args...); }
 
-  void setElemState(EventID eid, bool enable);
-  void enableElem(EventID eid) { setElemState(eid, true); }
-  void disableElem(EventID eid) { setElemState(eid, false); }
+  void setElemState(PanelID pid, EventID eid, bool enable);
+  void enableElem(PanelID pid, EventID eid) { setElemState(pid, eid, true); }
+  void disableElem(PanelID pid, EventID eid) { setElemState(pid, eid, false); }
     // enable/disable event generating elements
 
-  void setAllElemState(PanelID id, bool enable);
-  void enableAllElem(PanelID id = 0) { setAllElemState(id, true); }
-  void disableAllElem(PanelID id = 0) { setAllElemState(id, false); }
+  void setAllElemState(PanelID pid, bool enable);
+  void enableAllElem(PanelID pid = 0) { setAllElemState(pid, true); }
+  void disableAllElem(PanelID pid = 0) { setAllElemState(pid, false); }
     // enable/disable all event generating elements
     // (optionally just for a specific panel if id is non-zero)
 
-  [[nodiscard]] std::string getText(EventID eid) const {
-    const GuiElem* e = findEventElem(eid);
+  [[nodiscard]] std::string getText(PanelID pid, EventID eid) const {
+    const GuiElem* e = findEventElem(pid, eid);
     switch (e->type) {
       case GUI_LABEL: case GUI_VLABEL:
         return e->label().text;
@@ -94,23 +94,26 @@ class gx::Gui
     }
   }
 
-  [[nodiscard]] bool getBool(EventID eid) const {
-    const GuiElem* e = findEventElem(eid);
+  [[nodiscard]] bool getBool(PanelID pid, EventID eid) const {
+    const GuiElem* e = findEventElem(pid, eid);
     return (e == nullptr || e->type != GUI_CHECKBOX) ? false : e->checkbox().set;
   }
 
-  [[nodiscard]] int getItemNo(EventID eid) const {
-    const GuiElem* e = findEventElem(eid);
+  [[nodiscard]] int getItemNo(PanelID pid, EventID eid) const {
+    const GuiElem* e = findEventElem(pid, eid);
     return (e == nullptr || e->type != GUI_LISTSELECT) ? 0 : e->item().no;
   }
 
-  [[nodiscard]] std::string eventText() const { return getText(_event.eid); }
-  [[nodiscard]] bool eventBool() const { return getBool(_event.eid); }
-  [[nodiscard]] int eventItemNo() const { return getItemNo(_event.eid); }
+  [[nodiscard]] std::string eventText() const {
+    return getText(_event.pid, _event.eid); }
+  [[nodiscard]] bool eventBool() const {
+    return getBool(_event.pid, _event.eid); }
+  [[nodiscard]] int eventItemNo() const {
+    return getItemNo(_event.pid, _event.eid); }
 
-  bool setText(EventID eid, std::string_view text);
-  bool setBool(EventID eid, bool val);
-  bool setItemNo(EventID eid, int itemNo);
+  bool setText(PanelID pid, EventID eid, std::string_view text);
+  bool setBool(PanelID pid, EventID eid, bool val);
+  bool setItemNo(PanelID pid, EventID eid, int itemNo);
 
  private:
   struct Panel {
@@ -166,9 +169,9 @@ class gx::Gui
   bool drawPopup(Window& win, Panel& p, GuiElem& def,
                  DrawContext& dc, DrawContext& dc2);
 
-  [[nodiscard]] std::pair<Panel*,GuiElem*> findPanelElem(ElemID id);
-  [[nodiscard]] GuiElem* findEventElem(EventID eid);
-  [[nodiscard]] const GuiElem* findEventElem(EventID eid) const;
+  [[nodiscard]] std::pair<Panel*,GuiElem*> findElem(ElemID id);
+  [[nodiscard]] GuiElem* findEventElem(PanelID pid, EventID eid);
+  [[nodiscard]] const GuiElem* findEventElem(PanelID pid, EventID eid) const;
 
   void clearHeld() {
     _heldID = 0;
