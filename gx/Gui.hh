@@ -8,7 +8,7 @@
 #pragma once
 #include "GuiElem.hh"
 #include "GuiTheme.hh"
-#include "DrawList.hh"
+#include "DrawLayer.hh"
 #include "Align.hh"
 #include "Types.hh"
 #include <string>
@@ -64,9 +64,12 @@ class gx::Gui
   [[nodiscard]] const GuiEvent& event() const { return _event; }
     // event details from last update
 
-  [[nodiscard]] const DrawList& drawList() const { return _dl; }
+  [[nodiscard]] const DrawLayer& drawLayer() const { return _layer; }
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // render data & flag if data was changed last update
+
+  template<typename... Args>
+  void setBGColor(const Args&... args) { _layer.setBGColor(args...); }
 
   void setElemState(EventID eid, bool enable);
   void enableElem(EventID eid) { setElemState(eid, true); }
@@ -124,7 +127,7 @@ class gx::Gui
   ElemID _lastElemID = 0;
 
   // current state
-  DrawList _dl, _dl2;
+  DrawLayer _layer;
   ElemID _hoverID = 0;
   ElemID _focusID = 0;
 

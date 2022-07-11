@@ -730,9 +730,9 @@ bool Gui::update(Window& win)
 
   // redraw GUI if needed
   if (_needRender) {
-    DrawContext dc{_dl}, dc2{_dl2};
-    dc.clear();
-    dc2.clear();
+    _layer.clear();
+    DrawList tmp;
+    DrawContext dc{_layer}, dc2{tmp};
     _needRender = false;
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {

@@ -140,16 +140,14 @@ int main(int argc, char* argv[])
   bool running = true;
   bool needRedraw = true;
 
-  gx::DrawLayer dl;
-  dl.setBGColor(.1f,.3f,.1f);
+  gui.setBGColor(.1f,.3f,.1f);
 
   // **** MAIN LOOP ****
   while (running) {
     // draw frame
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
-      dl.entries = gui.drawList();
-      ren.draw(win.width(), win.height(), {&dl});
+      ren.draw(win.width(), win.height(), {&gui.drawLayer()});
       needRedraw = false;
     }
     ren.renderFrame();
