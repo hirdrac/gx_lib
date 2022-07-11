@@ -43,4 +43,6 @@ struct gx::DrawLayer
     setBGColor(packRGBA8(r,g,b,1.0f)); }
   void setBGColor(const Color& c) {
     setBGColor(packRGBA8(c)); }
+
+  void clear() { entries.clear(); }
 };
