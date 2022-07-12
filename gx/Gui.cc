@@ -80,8 +80,8 @@ static int allElemState(GuiElem& def, bool enable)
 
 [[nodiscard]] static inline bool canSelect(const GuiElem& e)
 {
-  return (e.eid != 0) || (e.type == GUI_LISTSELECT_ITEM)
-    || (e.type == GUI_TITLEBAR);
+  return (e.type == GUI_LISTSELECT_ITEM) || (e.type == GUI_TITLEBAR)
+    || ((e.eid != 0) && (e.type != GUI_LABEL) && (e.type != GUI_VLABEL));
 }
 
 [[nodiscard]] static GuiElem* findElemByXY(
