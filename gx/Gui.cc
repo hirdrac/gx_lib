@@ -823,8 +823,8 @@ void Gui::processMouseEvent(Window& win)
     if (type == GUI_ENTRY) {
       setFocus(win, ePtr);
       const GuiTheme& thm = *(pPtr->theme);
-      const auto& entry = ePtr->entry();
       _cursorBlinkTime = thm.cursorBlinkTime;
+      const auto& entry = ePtr->entry();
       _focusCursorPos = lengthUTF8(
         thm.font->fitText(entry.text, win.mouseX() - entry.tx + 1));
     } else {
@@ -951,10 +951,10 @@ void Gui::processCharEvent(Window& win)
       if (_focusCursorPos > 0) {
         GX_ASSERT(!entry.text.empty());
         if (c.mods == MOD_CONTROL) {
-          entry.text.erase(0, indexUTF8(entry.text, _focusCursorPos));
+          eraseUTF8(entry.text, 0, _focusCursorPos);
           _focusCursorPos = 0;
         } else {
-          eraseUTF8(entry.text, --_focusCursorPos);
+          eraseUTF8(entry.text, --_focusCursorPos, 1);
         }
         _needRender = _textChanged = true;
       }
@@ -962,9 +962,9 @@ void Gui::processCharEvent(Window& win)
       usedEvent = true;
       if (_focusCursorPos < lengthUTF8(entry.text)) {
         if (c.mods == MOD_CONTROL) {
-          entry.text.erase(indexUTF8(entry.text, _focusCursorPos), std::string::npos);
+          eraseUTF8(entry.text, _focusCursorPos, std::string::npos);
         } else {
-          eraseUTF8(entry.text, _focusCursorPos);
+          eraseUTF8(entry.text, _focusCursorPos, 1);
         }
         _needRender = _textChanged = true;
       }

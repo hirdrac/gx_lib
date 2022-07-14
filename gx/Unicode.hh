@@ -29,9 +29,9 @@ namespace gx
   void popbackUTF8(std::string& str);
     // removes last trailing UTF-8 character
 
-  bool eraseUTF8(std::string& str, std::size_t pos);
-    // remove character at pos
-    // (pos == string::npos will delete the last character)
+  bool eraseUTF8(std::string& str, std::size_t pos, std::size_t len);
+    // remove len character(s) starting at pos
+    // (len == string::npos will delete all characters from pos to end)
 
   bool insertUTF8(std::string& str, std::size_t pos, int32_t code);
     // add UTF8 character to UTF8 string at specified character position

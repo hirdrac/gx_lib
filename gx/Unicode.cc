@@ -77,7 +77,7 @@ void gx::popbackUTF8(std::string& str)
   }
 }
 
-bool gx::eraseUTF8(std::string& str, std::size_t pos)
+bool gx::eraseUTF8(std::string& str, std::size_t pos, std::size_t len)
 {
   if (pos == std::string::npos) { return false; }
 
@@ -85,11 +85,10 @@ bool gx::eraseUTF8(std::string& str, std::size_t pos)
   while (pos > 0 && itr.next()) { --pos; }
   if (itr.done()) { return false; }
 
+  if (len == std::string::npos) { len = str.size(); }
   const std::size_t i = itr.pos();
-  itr.next();
-  const std::size_t count = itr.done() ? std::string::npos : (itr.pos() - i);
-
-  str.erase(i, count);
+  while (!itr.done() && len > 0) { itr.next(); --len; }
+  str.erase(i, itr.done() ? std::string::npos : (itr.pos() - i));
   return true;
 }
 
