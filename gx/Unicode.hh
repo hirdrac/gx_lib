@@ -36,6 +36,11 @@ namespace gx
   bool insertUTF8(std::string& str, std::size_t pos, int32_t code);
     // add UTF8 character to UTF8 string at specified character position
 
+  [[nodiscard]] std::string_view substrUTF8(
+    std::string_view sv, std::size_t pos, std::size_t len);
+    // return sub-view of UTF-8 encoded string
+    // (returns empty string_view if pos > utf8length)
+
   class UTF8Iterator;
 }
 

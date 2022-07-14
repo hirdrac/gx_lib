@@ -100,6 +100,20 @@ bool gx::insertUTF8(std::string& str, std::size_t pos, int32_t code)
   return true;
 }
 
+std::string_view gx::substrUTF8(
+  std::string_view sv, std::size_t pos, std::size_t len)
+{
+  UTF8Iterator itr{sv};
+  while (!itr.done() && pos > 0) { --pos; itr.next(); }
+  if (pos != 0) { return {}; }
+
+  const char* s = &sv[itr.pos()];
+  while (!itr.done() && len > 0) { --len; itr.next(); }
+
+  const char* e = &sv[itr.pos()];
+  return {s, std::size_t(e-s)};
+}
+
 
 // UTF8Iterator implementation
 bool gx::UTF8Iterator::next()
