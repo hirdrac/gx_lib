@@ -8,7 +8,6 @@
 #include "gx/Font.hh"
 #include "gx/GuiBuilder.hh"
 #include "gx/Gui.hh"
-#include "gx/DrawLayer.hh"
 #include "gx/Print.hh"
 
 
@@ -92,9 +91,11 @@ int main(int argc, char* argv[])
           gx::guiCardinalEntry(32, 3.0f,3),
           gx::guiLabel(gx::ALIGN_CENTER_LEFT, " B"),
           gx::guiCardinalEntry(33, 3.0f,3)),
-        gx::guiTextEntry(34, 16.0f,100),
-        gx::guiTextEntry(35, 16.0f,100,gx::ALIGN_CENTER),
-        gx::guiTextEntry(36, 16.0f,100,gx::ALIGN_RIGHT))));
+        gx::guiTextEntry(34, 18.0f,100),
+        gx::guiTextEntry(35, 18.0f,100,gx::ALIGN_CENTER),
+        gx::guiTextEntry(36, 18.0f,100,gx::ALIGN_RIGHT),
+        gx::guiIntegerEntry(37, 10.0f, 20),
+        gx::guiFloatEntry(38, 10.0f, 20) )));
 
   // checkbox demo
   gui.newPanel(

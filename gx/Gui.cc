@@ -786,7 +786,7 @@ void Gui::processMouseEvent(Window& win)
   const bool rbuttonEvent = win.events() & EVENT_MOUSE_BUTTON2;
   const bool lpressEvent = lbuttonDown & lbuttonEvent;
   const bool rpressEvent = rbuttonDown & rbuttonEvent;
-  const bool anyGuiButtonEvent = win.allEvents() & EVENT_MOUSE_ANY_BUTTON;
+  const bool anyButtonEvent = win.allEvents() & EVENT_MOUSE_ANY_BUTTON;
 
   // get elem at mouse pointer
   MouseShapeEnum shape = MOUSESHAPE_ARROW;
@@ -830,7 +830,7 @@ void Gui::processMouseEvent(Window& win)
     } else {
       setFocus(win, nullptr);
     }
-  } else if (lbuttonDown && anyGuiButtonEvent) {
+  } else if (lbuttonDown && anyButtonEvent) {
     // click in other Gui instance clears our focus
     setFocus(win, nullptr);
   }
@@ -923,7 +923,7 @@ void Gui::processMouseEvent(Window& win)
       _needRender = true;
     }
 
-    if (_popupID != 0 && anyGuiButtonEvent) {
+    if (_popupID != 0 && anyButtonEvent) {
       deactivatePopups();
     }
   }
@@ -942,9 +942,7 @@ void Gui::processCharEvent(Window& win)
   for (const CharInfo& c : win.charData()) {
     if (c.codepoint) {
       usedEvent = true;
-      if (addEntryChar(e, int32_t(c.codepoint))) {
-        _needRender = _textChanged = true;
-      }
+      addEntryChar(e, int32_t(c.codepoint));
       // TODO: flash 'error' color if char isn't added
     } else if (c.key == KEY_BACKSPACE) {
       usedEvent = true;
@@ -972,12 +970,9 @@ void Gui::processCharEvent(Window& win)
       // (CTRL-V) paste first line of clipboard
       usedEvent = true;
       const std::string cb = getClipboardFirstLine();
-      bool added = false;
       for (UTF8Iterator itr{cb}; !itr.done(); itr.next()) {
-        added |= addEntryChar(e, itr.get());
+        addEntryChar(e, itr.get());
       }
-      _needRender |= added;
-      _textChanged |= added;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       usedEvent = true;
       setFocus(win, findNextElem(panelP->root, e.eid, GUI_ENTRY));
@@ -1010,61 +1005,91 @@ void Gui::processCharEvent(Window& win)
   }
 }
 
-bool Gui::addEntryChar(GuiElem& e, int32_t code)
+void Gui::addEntryChar(GuiElem& e, int32_t code)
 {
   GX_ASSERT(e.type == GUI_ENTRY);
   auto& entry = e.entry();
-  if (entry.maxLength != 0 && lengthUTF8(entry.text) >= entry.maxLength) {
-    return false; // no space for character
-  }
 
+  // valid character check
   switch (entry.type) {
     default: // ENTRY_TEXT, ENTRY_PASSWORD
-      // valid character check
-      if (code <= 31) { return false; }
+      if (code <= 31) { return; }
       break;
     case ENTRY_CARDINAL:
-      // valid character check
-      if (!std::isdigit(code)) { return false; }
-      // allowed sequence check
-      if (code == '0'
-          && (entry.text == "0" || (_focusCursorPos == 0 && !entry.text.empty()))) {
-        return false; }
-      // special case to reset entry
-      if (entry.text == "0" && _focusCursorPos == 1) {
-        entry.text.clear(); _focusCursorPos = 0; }
+      if (!std::isdigit(code)) { return; }
       break;
     case ENTRY_INTEGER:
-      // valid character check
-      if (!std::isdigit(code) && code != '-') { return false; }
-      // allowed sequence check
-      if ((code == '-' && !entry.text.empty() && entry.text != "0")
-          || (code == '0' && (entry.text == "0" || entry.text == "-"))) { return false; }
-      // special case to reset entry
-      if (entry.text == "0" && _focusCursorPos == 1) {
-        entry.text.clear(); _focusCursorPos = 0; }
+      if (!std::isdigit(code) && code != '-') { return; }
       break;
     case ENTRY_FLOAT:
-      // valid character check
-      if (!std::isdigit(code) && code != '-' && code != '.') { return false; }
-      // allowed sequence check
-      if ((code == '-' && !entry.text.empty() && entry.text != "0")
-          || (code == '0' && (entry.text == "0" || entry.text == "-0"))) {
-        return false; }
-      // decimal handling and special case to reset entry
-      if (code == '.') {
-        int count = 0;
-        for (int ch : entry.text) { count += (ch == '.'); }
-        if (count > 0) { return false; }
-      } else if (entry.text == "0"  && _focusCursorPos == 1) {
-        entry.text.clear(); _focusCursorPos = 0;
-      }
+      if (!std::isdigit(code) && code != '-' && code != '.') { return; }
       break;
   }
 
-  insertUTF8(entry.text, _focusCursorPos, code);
+  std::string& txt = entry.text;
+  if (entry.maxLength != 0 && lengthUTF8(txt) >= entry.maxLength) {
+    return; // no space for character
+  }
+
+  if (!txt.empty()) {
+    // allowed sequence check
+    switch (entry.type) {
+      case ENTRY_CARDINAL:
+        if (code == '0' && _focusCursorPos == 0) { return; }
+        break;
+      case ENTRY_INTEGER:
+        if (code == '0') {
+          if (_focusCursorPos == 0
+              || (_focusCursorPos == 1 && txt[0] == '-')) { return; }
+        } else if (code == '-') {
+          if (_focusCursorPos == 0) {
+            if (txt[0] == '-' || txt[0] == '0') { return; }
+          } else if (_focusCursorPos == 1) {
+            if (txt != "0") { return; }
+          } else {
+            return;
+          }
+        }
+        break;
+      case ENTRY_FLOAT:
+        if (code == '0') {
+          if (_focusCursorPos == 0
+              || (_focusCursorPos == 1 && txt[0] == '-')) { return; }
+        } else if (code == '-') {
+          if (_focusCursorPos == 0) {
+            if (txt[0] == '-') { return; }
+          } else if (_focusCursorPos == 1) {
+            if (txt != "0") { return; }
+          } else {
+            return;
+          }
+        } else if (code == '.') {
+          if (_focusCursorPos == 0 && txt[0] == '-') { return; }
+          int count = 0;
+          for (int ch : txt) { count += (ch == '.'); }
+          if (count > 0) { return; }
+        }
+        break;
+      default:
+        break;
+    }
+
+    if (entry.type == ENTRY_CARDINAL || entry.type == ENTRY_INTEGER
+        || entry.type == ENTRY_FLOAT) {
+      // special case to reset entry
+      if (txt == "0" && _focusCursorPos == 1) {
+        txt.clear(); _focusCursorPos = 0;
+      }
+    }
+  }
+
+  // FIXME: an invalid sequence can be produced by deleting characters from
+  //   currently valid entry text
+  // (possible solution would be to format entry text after focus change)
+
+  insertUTF8(txt, _focusCursorPos, code);
   ++_focusCursorPos;
-  return true;
+  _needRender = _textChanged = true;
 }
 
 void Gui::setFocus(Window& win, const GuiElem* e)
@@ -1385,7 +1410,7 @@ bool Gui::drawElem(
       if (def._id == _focusID) {
         if (tw <= maxWidth) { _focusEntryOffset = 0; }
         cx = tx + _focusEntryOffset + thm.font->calcLength(
-          {txt.c_str(), indexUTF8(txt,_focusCursorPos)}, 0);
+          substrUTF8(txt, 0, _focusCursorPos), 0);
         if (cx < leftEdge) {
           _focusEntryOffset += leftEdge - cx; cx = leftEdge;
         } else if (cx > rightEdge) {
