@@ -1002,11 +1002,22 @@ void Gui::processCharEvent(Window& win)
         addEntryChar(e, itr.get());
       }
     } else if (c.key == KEY_C && c.mods == MOD_CONTROL) {
-      // TODO: copy selected text
+      // (CTRL-C) copy selected text
       usedEvent = true;
+      if (rangeLen > 0) {
+        const std::string cp{substrUTF8(entry.text, rangeStart, rangeLen)};
+        setClipboard(cp.c_str());
+      }
     } else if (c.key == KEY_X && c.mods == MOD_CONTROL) {
-      // TODO: copy & delete selected test
+      // (CTRL-X) cut selected text
       usedEvent = true;
+      if (rangeLen > 0) {
+        const std::string cp{substrUTF8(entry.text, rangeStart, rangeLen)};
+        setClipboard(cp.c_str());
+        eraseUTF8(entry.text, rangeStart, rangeLen);
+        _focusCursorPos = _focusRangeStart = rangeStart;
+        _needRender = _textChanged = true;
+      }
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       usedEvent = true;
       setFocus(win, findNextElem(panelP->root, e.eid, GUI_ENTRY));
