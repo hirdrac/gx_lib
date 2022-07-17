@@ -124,8 +124,8 @@ struct gx::GuiTheme
   Style entryDisable = {
     packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.15f,.15f,.2f,1.0f)};
 
-  uint16_t entryLeftMargin = 8;
-  uint16_t entryRightMargin = 8;
+  uint16_t entryLeftMargin = 10;
+  uint16_t entryRightMargin = 10;
   uint16_t entryTopMargin = 4;
   uint16_t entryBottomMargin = 3;
 
@@ -142,6 +142,7 @@ struct gx::GuiTheme
   int32_t listSelectItemCode = 0; // disabled by default
 
   RGBA8 cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
+  RGBA8 textSelectColor = packRGBA8(.5f,.5f,.5f,1.0f);
   uint32_t cursorBlinkTime = 400000; // 1 sec
   uint16_t cursorWidth = 3;
 

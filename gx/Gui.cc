@@ -715,7 +715,7 @@ bool Gui::update(Window& win)
   if (_focusID != 0) {
     if (win.events() & EVENT_CHAR) { processCharEvent(win); }
 
-    if (_cursorBlinkTime > 0) {
+    if (_focusCursorPos == _focusRangeStart && _cursorBlinkTime > 0) {
       // check for cursor blink
       const int64_t blinks = (now - _lastCursorUpdate) / _cursorBlinkTime;
       if (blinks > 0) {
@@ -787,6 +787,7 @@ void Gui::processMouseEvent(Window& win)
   const bool lpressEvent = lbuttonDown & lbuttonEvent;
   const bool rpressEvent = rbuttonDown & rbuttonEvent;
   const bool anyButtonEvent = win.allEvents() & EVENT_MOUSE_ANY_BUTTON;
+  const bool moveEvent = win.allEvents() & EVENT_MOUSE_MOVE;
 
   // get elem at mouse pointer
   MouseShapeEnum shape = MOUSESHAPE_ARROW;
@@ -825,7 +826,7 @@ void Gui::processMouseEvent(Window& win)
       const GuiTheme& thm = *(pPtr->theme);
       _cursorBlinkTime = thm.cursorBlinkTime;
       const auto& entry = ePtr->entry();
-      _focusCursorPos = lengthUTF8(
+      _focusCursorPos = _focusRangeStart = lengthUTF8(
         thm.font->fitText(entry.text, win.mouseX() - entry.tx + 1));
     } else {
       setFocus(win, nullptr);
@@ -833,6 +834,18 @@ void Gui::processMouseEvent(Window& win)
   } else if (lbuttonDown && anyButtonEvent) {
     // click in other Gui instance clears our focus
     setFocus(win, nullptr);
+  }
+
+  // select text in entry w/ mouse
+  if (lbuttonDown && moveEvent && type == GUI_ENTRY) {
+    const GuiTheme& thm = *(pPtr->theme);
+    const auto& entry = ePtr->entry();
+    const std::size_t newPos = lengthUTF8(
+      thm.font->fitText(entry.text, win.mouseX() - entry.tx + 1));
+    if (newPos != _focusCursorPos) {
+      _focusCursorPos = newPos;
+      _needRender = true;
+    }
   }
 
   // update hoverID
@@ -944,9 +957,19 @@ void Gui::processCharEvent(Window& win)
       usedEvent = true;
       addEntryChar(e, int32_t(c.codepoint));
       // TODO: flash 'error' color if char isn't added
-    } else if (c.key == KEY_BACKSPACE) {
+      continue;
+    }
+
+    const std::size_t rangeStart = std::min(_focusCursorPos, _focusRangeStart);
+    const std::size_t rangeEnd = std::max(_focusCursorPos, _focusRangeStart);
+    const std::size_t rangeLen = rangeEnd - rangeStart;
+    if (c.key == KEY_BACKSPACE) {
       usedEvent = true;
-      if (_focusCursorPos > 0) {
+      if (rangeLen > 0) {
+        eraseUTF8(entry.text, rangeStart, rangeLen);
+        _focusCursorPos = _focusRangeStart = rangeStart;
+        _needRender = _textChanged = true;
+      } else if (_focusCursorPos > 0) {
         GX_ASSERT(!entry.text.empty());
         if (c.mods == MOD_CONTROL) {
           eraseUTF8(entry.text, 0, _focusCursorPos);
@@ -954,11 +977,16 @@ void Gui::processCharEvent(Window& win)
         } else {
           eraseUTF8(entry.text, --_focusCursorPos, 1);
         }
+        _focusRangeStart = _focusCursorPos;
         _needRender = _textChanged = true;
       }
     } else if (c.key == KEY_DELETE) {
       usedEvent = true;
-      if (_focusCursorPos < lengthUTF8(entry.text)) {
+      if (rangeLen > 0) {
+        eraseUTF8(entry.text, rangeStart, rangeLen);
+        _focusCursorPos = _focusRangeStart = rangeStart;
+        _needRender = _textChanged = true;
+      } else if (_focusCursorPos < lengthUTF8(entry.text)) {
         if (c.mods == MOD_CONTROL) {
           eraseUTF8(entry.text, _focusCursorPos, std::string::npos);
         } else {
@@ -973,35 +1001,84 @@ void Gui::processCharEvent(Window& win)
       for (UTF8Iterator itr{cb}; !itr.done(); itr.next()) {
         addEntryChar(e, itr.get());
       }
+    } else if (c.key == KEY_C && c.mods == MOD_CONTROL) {
+      // TODO: copy selected text
+      usedEvent = true;
+    } else if (c.key == KEY_X && c.mods == MOD_CONTROL) {
+      // TODO: copy & delete selected test
+      usedEvent = true;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       usedEvent = true;
       setFocus(win, findNextElem(panelP->root, e.eid, GUI_ENTRY));
+      // TODO: select all text on focus change
     } else if (c.key == KEY_TAB && c.mods == MOD_SHIFT) {
       usedEvent = true;
       setFocus(win, findPrevElem(panelP->root, e.eid, GUI_ENTRY));
-    } else if (c.key == KEY_LEFT && c.mods == 0) {
+      // TODO: select all text on focus change
+    } else if (c.key == KEY_LEFT) {
       usedEvent = true;
-      if (_focusCursorPos > 0) { --_focusCursorPos; _needRender = true; }
-    } else if (c.key == KEY_RIGHT && c.mods == 0) {
+      if (c.mods == 0) {
+        if (rangeLen > 0) {
+          _focusCursorPos = _focusRangeStart = rangeStart;
+          _needRender = true;
+        } else if (_focusCursorPos > 0) {
+          _focusRangeStart = --_focusCursorPos;
+          _needRender = true;
+        }
+      } else if (c.mods == MOD_SHIFT) {
+        if (_focusCursorPos > 0) {
+          --_focusCursorPos; _needRender = true;
+        }
+      }
+    } else if (c.key == KEY_RIGHT) {
       usedEvent = true;
-      if (_focusCursorPos < lengthUTF8(entry.text)) {
-        ++_focusCursorPos; _needRender = true; }
-    } else if (c.key == KEY_HOME && c.mods == 0) {
+      if (c.mods == 0) {
+        if (rangeLen > 0) {
+          _focusCursorPos = _focusRangeStart = rangeEnd;
+          _needRender = true;
+        } else if (_focusCursorPos < lengthUTF8(entry.text)) {
+          _focusRangeStart = ++_focusCursorPos;
+          _needRender = true;
+        }
+      } else if (c.mods == MOD_SHIFT) {
+        if (_focusCursorPos < lengthUTF8(entry.text)) {
+          ++_focusCursorPos; _needRender = true;
+        }
+      }
+    } else if (c.key == KEY_HOME) {
       usedEvent = true;
-      if (_focusCursorPos > 0) { _focusCursorPos = 0; _needRender = true; }
-    } else if (c.key == KEY_END && c.mods == 0) {
+      if (c.mods == 0) {
+        if (_focusCursorPos > 0 || rangeLen > 0) {
+          _focusCursorPos = _focusRangeStart = 0; _needRender = true;
+        }
+      } else if (c.mods == MOD_SHIFT) {
+        if (_focusCursorPos > 0) {
+          _focusCursorPos = 0; _needRender = true;
+        }
+      }
+    } else if (c.key == KEY_END) {
       usedEvent = true;
       const std::size_t ts = lengthUTF8(entry.text);
-      if (_focusCursorPos < ts) { _focusCursorPos = ts; _needRender = true; }
+      if (c.mods == 0) {
+        if (_focusCursorPos < ts || rangeLen > 0) {
+          _focusCursorPos = _focusRangeStart = ts; _needRender = true;
+        }
+      } else if (c.mods == MOD_SHIFT) {
+        if (_focusCursorPos < ts) {
+          _focusCursorPos = ts; _needRender = true;
+        }
+      }
     }
   }
 
   if (usedEvent) {
     win.removeEvent(EVENT_CHAR);
-    // reset cursor blink state
-    _needRender |= !_cursorState;
-    _lastCursorUpdate = win.lastPollTime();
-    _cursorState = true;
+    if (_focusCursorPos == _focusRangeStart) {
+      // reset cursor blink state
+      _needRender |= !_cursorState;
+      _lastCursorUpdate = win.lastPollTime();
+      _cursorState = true;
+    }
   }
 }
 
@@ -1027,6 +1104,18 @@ void Gui::addEntryChar(GuiElem& e, int32_t code)
   }
 
   std::string& txt = entry.text;
+
+  // selected range replacement check
+  if (_focusCursorPos != _focusRangeStart) {
+    const std::size_t rangeStart = std::min(_focusCursorPos, _focusRangeStart);
+    const std::size_t rangeEnd = std::max(_focusCursorPos, _focusRangeStart);
+    const std::size_t rangeLen = rangeEnd - rangeStart;
+
+    eraseUTF8(txt, rangeStart, rangeLen);
+    _focusCursorPos = _focusRangeStart = rangeStart;
+    _needRender = _textChanged = true;
+  }
+
   if (entry.maxLength != 0 && lengthUTF8(txt) >= entry.maxLength) {
     return; // no space for character
   }
@@ -1078,7 +1167,7 @@ void Gui::addEntryChar(GuiElem& e, int32_t code)
         || entry.type == ENTRY_FLOAT) {
       // special case to reset entry
       if (txt == "0" && _focusCursorPos == 1) {
-        txt.clear(); _focusCursorPos = 0;
+        txt.clear(); _focusCursorPos = _focusRangeStart = 0;
       }
     }
   }
@@ -1088,7 +1177,7 @@ void Gui::addEntryChar(GuiElem& e, int32_t code)
   // (possible solution would be to format entry text after focus change)
 
   insertUTF8(txt, _focusCursorPos, code);
-  ++_focusCursorPos;
+  _focusRangeStart = ++_focusCursorPos;
   _needRender = _textChanged = true;
 }
 
@@ -1117,7 +1206,7 @@ void Gui::setFocus(Window& win, const GuiElem* e)
   }
 
   _focusID = id;
-  _focusCursorPos = e ? lengthUTF8(e->entry().text) : 0;
+  _focusCursorPos = _focusRangeStart = e ? lengthUTF8(e->entry().text) : 0;
   _focusEntryOffset = 0;
   _needRender = true;
 }
@@ -1152,7 +1241,7 @@ bool Gui::setText(PanelID pid, EventID eid, std::string_view text)
       case GUI_ENTRY:
         e->entry().text = text;
         if (_focusID == e->_id) {
-          _focusCursorPos = lengthUTF8(text);
+          _focusCursorPos = _focusRangeStart = lengthUTF8(text);
           _focusEntryOffset = 0;
         }
         break;
@@ -1430,11 +1519,22 @@ bool Gui::drawElem(
       // TODO: add gradient color if text is off left/right edges
       dc2.text({thm.font, float(thm.textSpacing)}, tx,
                ey + thm.entryTopMargin, ALIGN_TOP_LEFT, txt, {ex, ey, ew, eh});
-      if (def._id == _focusID && _cursorState) {
-        // draw cursor
-        dc.color(thm.cursorColor);
-        dc.rectangle(cx - 1, ey + thm.entryTopMargin,
-                     cw, float(thm.font->size() - 1));
+      if (def._id == _focusID) {
+        const float cy = ey + float(std::max(int(thm.entryTopMargin), 1) - 1);
+        const float ch = float(thm.font->size());
+        if (_focusCursorPos != _focusRangeStart) {
+          // draw selected text background
+          const float cx2 = tx + thm.font->calcLength(
+            substrUTF8(txt, 0, _focusRangeStart), 0);
+          const float x0 = std::max(std::min(cx,cx2)-1, ex);
+          const float x1 = std::min(std::max(cx,cx2)+1, ex+ew);
+          dc.color(thm.textSelectColor);
+          dc.rectangle(x0, cy, x1 - x0, ch);
+        } else if (_cursorState) {
+          // draw cursor
+          dc.color(thm.cursorColor);
+          dc.rectangle(cx - 1, cy, cw, ch);
+        }
       }
       break;
     }
@@ -1590,7 +1690,7 @@ void Gui::addEvent(const Panel& p, const GuiElem& e, int64_t t)
       if (update) {
         _needRender = true;
         if (_focusID == target->_id) {
-          _focusCursorPos = lengthUTF8(target->entry().text);
+          _focusCursorPos = _focusRangeStart = lengthUTF8(target->entry().text);
           _focusEntryOffset = 0;
         }
       }

@@ -143,9 +143,12 @@ class gx::Gui
   GuiElemType _heldType = GUI_NULL;
   float _heldX = 0, _heldY = 0;
   int64_t _heldTime = 0;
-  int64_t _repeatDelay = -1;       // negative value disables repeat
-  std::size_t _focusCursorPos = 0; // character pos of cursor
-  float _focusEntryOffset = 0;     // text render offset because of cursor
+  int64_t _repeatDelay = -1;        // negative value disables repeat
+  std::size_t _focusCursorPos = 0;  // character pos of cursor
+  std::size_t _focusRangeStart = 0; // start selected range from cursorPos
+    // if cursorPos != rangeStart, there is a selected range from
+    //   min(pos,rs) to max(pos,rs)
+  float _focusEntryOffset = 0;      // text render offset because of cursor
 
   int64_t _lastCursorUpdate = 0;
   uint32_t _cursorBlinkTime = 0; // cached theme value
