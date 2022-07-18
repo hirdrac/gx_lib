@@ -1018,6 +1018,11 @@ void Gui::processCharEvent(Window& win)
         _focusCursorPos = _focusRangeStart = rangeStart;
         _needRender = _textChanged = true;
       }
+    } else if (c.key == KEY_A && c.mods == MOD_CONTROL) {
+      // (CTRL-A) select all text
+      _focusRangeStart = 0;
+      _focusCursorPos = lengthUTF8(entry.text);
+      _needRender = true;
     } else if ((c.key == KEY_TAB && c.mods == 0) || c.key == KEY_ENTER) {
       usedEvent = true;
       setFocus(win, findNextElem(panelP->root, e.eid, GUI_ENTRY));
