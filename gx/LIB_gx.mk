@@ -8,5 +8,6 @@ LIB_gx.SRC =\
   OpenGL.cc OpenGLRenderer.cc Renderer.cc System.cc Texture.cc Unicode.cc\
   Window.cc 3rd/glad.c 3rd/stb_image.c
 
+LIB_gx.LIBS = -
 LIB_gx.PACKAGES = glfw3:3.2 freetype2
   # freetype2:24 for SDF support
