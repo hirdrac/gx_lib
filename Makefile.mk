@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 46 (2022/7/2)
+# Makefile.mk - revision 46 (2022/7/19)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -660,11 +660,7 @@ $(if $(filter ./,$(dir $1)),,-L$(dir $1)) -l$(if $(filter %.a %.so %.dll,$1),:)$
 override _format_lib_name =\
 $(if $1,$(if $(filter ./,$(dir $1)),,-L$(dir $1)) -l:$(notdir $1))
 
-override _format_global_libs = $(foreach x,$1,\
-$(if $(filter $x,$(_lib_labels)),$(error $(_msgErr)LIB label '$x' not allowed in global LIBS setting$(_end)),\
-$(call _format_lib_arg,$x)))
-
-override _format_target_libs = $(foreach x,$1,\
+override _format_libs = $(foreach x,$1,\
 $(if $(filter $x,$(_lib_labels)),$(or $(call _format_lib_name,$(_$x_shared_name)),$(_$x_name)),\
 $(call _format_lib_arg,$x)))
 
@@ -715,9 +711,6 @@ else ifneq ($(_build_env),)
     override _src_path_$(ENV)-tests := $(_src_path)
   endif
 
-  override _libs := $(call _format_global_libs,$(LIBS))
-  override _libs_test := $(call _format_global_libs,$(LIBS_TEST))
-
   ## entry name & alias target assignment
   $(foreach x,$(_file_labels),\
     $(eval override _$x_name := $($x))\
@@ -752,7 +745,7 @@ else ifneq ($(_build_env),)
     $(if $(filter $d,$(_bin_labels) $(_file_labels)),$(_$d_name),$(call _do_wildcard,$d,)))))
 
   ## general entry setting parsing (pre)
-  override define _build_entry1  # <1:label>
+  override define _build_entry1  # <1:label> <2:test flag>
   ifneq ($$(strip $$($1.SOURCE_DIR)),-)
     $$(eval $$(call _check_dir,$1.SOURCE_DIR))
     override _$1_source_dir := $$(if $$($1.SOURCE_DIR),$$(filter-out ./,$$($1.SOURCE_DIR:%/=%)/))
@@ -809,7 +802,7 @@ else ifneq ($(_build_env),)
   endif
 
   ifneq ($$(strip $$($1.LIBS)),-)
-    override _$1_libs := $$(or $$(call _format_target_libs,$$($1.LIBS)),$$(_libs))
+    override _$1_libs := $$(filter-out $1,$$(or $$($1.LIBS),$$(LIBS) $$(if $2,$$(LIBS_TEST))))
   endif
 
   ifneq ($$(strip $$($1.DEFINE)),-)
@@ -824,19 +817,18 @@ else ifneq ($(_build_env),)
     override _$1_flags := $$(or $$($1.FLAGS),$$(FLAGS))
   endif
   endef
-  $(foreach x,$(_src_labels),$(eval $(call _build_entry1,$x)))
+  $(foreach x,$(_lib_labels) $(_bin_labels),$(eval $(call _build_entry1,$x,)))
+  $(foreach x,$(_test_labels),$(eval $(call _build_entry1,$x,test)))
 
   ## general entry setting parsing (post)
   override define _build_entry2  # <1:label> <2:test flag>
-  ifneq ($$(strip $$($1.LIBS)),-)
-    override _$1_req_pkgs1 := $$(foreach x,$$($1.LIBS),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_pkgs)))
-    override _$1_req_libs1 := $$(foreach x,$$($1.LIBS),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs)))
-    override _$1_link_deps := $$(foreach x,$$($1.LIBS),$$(if $$(filter $$x,$$(_lib_labels)),$$(or $$(_$$x_shared_name),$$(_$$x_name))))
-  endif
+  override _$1_req_pkgs1 := $$(foreach x,$$(_$1_libs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_pkgs)))
+  override _$1_req_libs1 := $$(filter-out $1,$$(foreach x,$$(_$1_libs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs))))
+  override _$1_link_deps := $$(foreach x,$$(_$1_libs),$$(if $$(filter $$x,$$(_lib_labels)),$$(or $$(_$$x_shared_name),$$(_$$x_name))))
 
   ifneq ($$(strip $$($1.OBJS)),-)
     override _$1_req_pkgs2 := $$(foreach x,$$($1.OBJS),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_pkgs)))
-    override _$1_req_libs2 := $$(foreach x,$$($1.OBJS),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs)))
+    override _$1_req_libs2 := $$(filter-out $1,$$(foreach x,$$($1.OBJS),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs))))
   endif
 
   override _$1_xpkgs := $$(sort $$(_$1_pkgs) $$(if $2,$$(_pkgs_test)) $$(_$1_req_pkgs1) $$(_$1_req_pkgs2))
@@ -853,7 +845,7 @@ else ifneq ($(_build_env),)
     endif
   endif
 
-  override _$1_xlibs := $$(_$1_libs) $$(if $2,$$(_libs_test)) $$(_$1_req_libs1) $$(_$1_req_libs2) $$(_$1_pkg_libs)
+  override _$1_xlibs := $$(call _format_libs,$$(_$1_libs) $$(_$1_req_libs1) $$(_$1_req_libs2)) $$(_$1_pkg_libs)
 
   # NOTE: LIBS before PACKAGES libs in case included static lib requires package
   override _$1_xflags := $$(_$1_pkg_flags) $$(_$1_flags) $$(FLAGS_$$(_$$(ENV)_uc)) $$(if $2,$$(FLAGS_TEST))
