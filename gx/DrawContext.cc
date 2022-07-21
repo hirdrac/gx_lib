@@ -470,16 +470,14 @@ void DrawContext::circleSector(
   if (!checkColor()) { return; }
 
   fixAngles(startAngle, endAngle);
-  _circleSector(center, radius, startAngle, endAngle, segments);
+  _circleSector(
+    center, radius, degToRad(startAngle), degToRad(endAngle), segments);
 }
 
 void DrawContext::_circleSector(
-  Vec2 center, float radius, float startAngle, float endAngle, int segments)
+  Vec2 center, float radius, float angle0, float angle1, int segments)
 {
-  const float angle0 = degToRad(startAngle);
-  const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
-
   const Vec2 v0{center.x, center.y};
 
   Vec2 v1{
@@ -551,15 +549,14 @@ void DrawContext::arc(
   if (!checkColor()) { return; }
 
   fixAngles(startAngle, endAngle);
-  _arc(center, radius, startAngle, endAngle, segments, arcWidth);
+  _arc(center, radius, degToRad(startAngle), degToRad(endAngle),
+       segments, arcWidth);
 }
 
 void DrawContext::_arc(
-  Vec2 center, float radius, float startAngle, float endAngle,
+  Vec2 center, float radius, float angle0, float angle1,
   int segments, float arcWidth)
 {
-  const float angle0 = degToRad(startAngle);
-  const float angle1 = degToRad(endAngle);
   const float segmentAngle = (angle1 - angle0) / float(segments);
   const float innerR = radius - arcWidth;
 
@@ -644,10 +641,14 @@ void DrawContext::roundedRectangle(
   const float r = std::min(curveRadius, std::min(half_w, half_h));
 
   // corners
-  _circleSector({x+r,y+r}, r, 270, 360, curveSegments);    // top/left
-  _circleSector({x+w-r,y+r}, r, 0, 90, curveSegments);     // top/right
-  _circleSector({x+w-r,y+h-r}, r, 90, 180, curveSegments); // bottom/right
-  _circleSector({x+r,y+h-r}, r, 180, 270, curveSegments);  // bottom/left
+  constexpr float a90  = degToRad(90.0f);
+  constexpr float a180 = degToRad(180.0f);
+  constexpr float a270 = degToRad(270.0f);
+  constexpr float a360 = degToRad(360.0f);
+  _circleSector({x+r,y+r}, r, a270, a360, curveSegments);    // top/left
+  _circleSector({x+w-r,y+r}, r, 0, a90, curveSegments);      // top/right
+  _circleSector({x+w-r,y+h-r}, r, a90, a180, curveSegments); // bottom/right
+  _circleSector({x+r,y+h-r}, r, a180, a270, curveSegments);  // bottom/left
 
   // borders/center
   if (r == curveRadius) {
@@ -737,10 +738,14 @@ void DrawContext::roundedBorder(
   const float r = std::min(curveRadius, std::min(half_w, half_h));
 
   // corners
-  _arc({x+r,y+r}, r, 270, 360, curveSegments, borderWidth);    // top/left
-  _arc({x+w-r,y+r}, r, 0, 90, curveSegments, borderWidth);     // top/right
-  _arc({x+w-r,y+h-r}, r, 90, 180, curveSegments, borderWidth); // bottom/right
-  _arc({x+r,y+h-r}, r, 180, 270, curveSegments, borderWidth);  // bottom/left
+  constexpr float a90  = degToRad(90.0f);
+  constexpr float a180 = degToRad(180.0f);
+  constexpr float a270 = degToRad(270.0f);
+  constexpr float a360 = degToRad(360.0f);
+  _arc({x+r,y+r}, r, a270, a360, curveSegments, borderWidth);    // top/left
+  _arc({x+w-r,y+r}, r, 0, a90, curveSegments, borderWidth);      // top/right
+  _arc({x+w-r,y+h-r}, r, a90, a180, curveSegments, borderWidth); // bottom/right
+  _arc({x+r,y+h-r}, r, a180, a270, curveSegments, borderWidth);  // bottom/left
 
   // borders/center
   if (curveRadius < half_w) {

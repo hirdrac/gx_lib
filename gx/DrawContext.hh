@@ -214,8 +214,8 @@ class gx::DrawContext
   void _glyph(const Glyph& g, const TextFormatting& tf, Vec2 cursor,
               const Rect* clipPtr);
   void _circleSector(
-    Vec2 center, float radius, float startAngle, float endAngle, int segments);
-  void _arc(Vec2 center, float radius, float startAngle, float endAngle,
+    Vec2 center, float radius, float angle0, float angle1, int segments);
+  void _arc(Vec2 center, float radius, float angle0, float angle1,
             int segments, float arcWidth);
 
   void _quad(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
