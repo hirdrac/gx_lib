@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 46 (2022/7/19)
+# Makefile.mk - revision 46 (2022/7/23)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -845,7 +845,7 @@ else ifneq ($(_build_env),)
     endif
   endif
 
-  override _$1_xlibs := $$(call _format_libs,$$(_$1_libs) $$(_$1_req_libs1) $$(_$1_req_libs2)) $$(_$1_pkg_libs)
+  override _$1_xlibs := $$(call _format_libs,$$(_$1_libs) $$(_$1_req_libs1) $$(_$1_req_libs2))
 
   # NOTE: LIBS before PACKAGES libs in case included static lib requires package
   override _$1_xflags := $$(_$1_pkg_flags) $$(_$1_flags) $$(FLAGS_$$(_$$(ENV)_uc)) $$(if $2,$$(FLAGS_TEST))
@@ -1078,7 +1078,7 @@ endef
 override define _make_shared_lib  # <1:label>
 override _$1_shared_build_dir := $$(BUILD_DIR)/$$(_$1_build)$$(if $$(_pic_flag),-pic)
 override _$1_shared_objs := $$(addprefix $$(_$1_shared_build_dir)/,$$(_$1_src_objs))
-override _$1_shared_link_cmd := cd '$$(_$1_shared_build_dir)'; $$(strip $$(call _do_link,$1) $$(_pic_flag) -shared $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs))) -o '../../$$(_$1_shared_name)'
+override _$1_shared_link_cmd := cd '$$(_$1_shared_build_dir)'; $$(strip $$(call _do_link,$1) $$(_pic_flag) -shared $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '../../$$(_$1_shared_name)'
 override _$1_shared_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1-shared
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_shared_trigger),_$1_shared_link_cmd))
 
@@ -1098,7 +1098,7 @@ endef
 
 # binary build
 override define _make_bin  # <1:label>
-override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs))) -o '../../$$(_$1_name)'
+override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '../../$$(_$1_name)'
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
@@ -1133,7 +1133,7 @@ endef
 # - always execute test binary if a test target was specified otherwise only
 #     run test if rebuilt
 override define _make_test  # <1:label>
-override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs))) -o '$$(_$1_name)'
+override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '$$(_$1_name)'
 override _$1_trigger := $$(BUILD_DIR)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
