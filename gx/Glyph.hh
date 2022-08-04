@@ -22,5 +22,5 @@ struct gx::Glyph
   std::unique_ptr<uint8_t[]> bitmap_copy;
 
   // texture atlas coords
-  Vec2 t0, t1;
+  Vec2 t0{INIT_NONE}, t1{INIT_NONE};
 };

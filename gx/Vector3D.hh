@@ -33,7 +33,6 @@ class gx::Vector2
   using size_type = unsigned int;
 
 
-  Vector2() { }
   Vector2(NoInit_t) { }
   constexpr Vector2(ZeroInit_t) : Vector2{0,0} { }
   constexpr Vector2(T vx, T vy) : x{vx}, y{vy} { }
@@ -103,7 +102,6 @@ class gx::Vector3
   using size_type = unsigned int;
 
 
-  Vector3() { }
   Vector3(NoInit_t) { }
   constexpr Vector3(ZeroInit_t) : Vector3{0,0,0} { }
   constexpr Vector3(T vx, T vy, T vz) : x{vx}, y{vy}, z{vz} { }
@@ -184,7 +182,6 @@ class gx::Vector4
   using size_type = unsigned int;
 
 
-  Vector4() { }
   Vector4(NoInit_t) { }
   constexpr Vector4(ZeroInit_t) : Vector4{0,0,0,0} { }
   constexpr Vector4(T vx, T vy, T vz, T vw) : x{vx}, y{vy}, z{vz}, w{vw} { }

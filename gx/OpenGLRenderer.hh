@@ -44,7 +44,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   struct UniformData {
     Mat4 viewT{INIT_ZERO};
     Mat4 projT{INIT_ZERO};
-    Vec3 lightPos;
+    Vec3 lightPos{INIT_ZERO};
     uint32_t lightA;
     uint32_t lightD;
     uint32_t modColor;

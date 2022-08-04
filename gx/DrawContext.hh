@@ -188,7 +188,8 @@ class gx::DrawContext
 
   // color/gradient properties
   float _g0, _g1;                 // x or y gradient coords
-  Color _fullcolor0, _fullcolor1; // full float colors for gradient calc
+  Color _fullcolor0{INIT_NONE};   // full float colors for gradient calc
+  Color _fullcolor1{INIT_NONE};
   RGBA8 _color0, _color1;         // current colors
   RGBA8 _dataColor = 0;           // last color set in data
   enum ColorMode { CM_SOLID, CM_HGRADIENT, CM_VGRADIENT };

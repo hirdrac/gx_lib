@@ -140,7 +140,7 @@ class gx::GuiElem
   struct ImageProps {
     float width, height;
     TextureID texId;
-    Vec2 texCoord0, texCoord1;
+    Vec2 texCoord0{INIT_NONE}, texCoord1{INIT_NONE};
   };
 
   std::variant<
