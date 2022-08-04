@@ -178,8 +178,8 @@ bool Font::makeAtlas(Renderer& ren)
   for (auto& itr : _glyphs) {
     Glyph& g = itr.second;
     if (g.width == 0 || g.height == 0) {
-      g.t0 = {};
-      g.t1 = {};
+      g.t0 = INIT_ZERO;
+      g.t1 = INIT_ZERO;
       continue;
     }
 

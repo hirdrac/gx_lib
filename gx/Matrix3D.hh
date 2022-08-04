@@ -29,11 +29,12 @@ template<typename T, gx::MatrixOrderType MOT>
 class gx::Matrix4x4
 {
  public:
-  using self_type = Matrix4x4<T,MOT>;
+  using type = Matrix4x4<T,MOT>;
   using value_type = T;
   using size_type = unsigned int;
 
-  Matrix4x4(Uninitialized_t) { }
+
+  Matrix4x4(NoInit_t) { }
 
   constexpr Matrix4x4(ZeroInit_t)
     : Matrix4x4{0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0} { }
@@ -44,13 +45,14 @@ class gx::Matrix4x4
 		      T i, T j, T k, T l, T m, T n, T o, T p)
     : _val{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p} { }
 
+  type& operator=(NoInit_t) = delete;
+
 
   // Operators
   [[nodiscard]] constexpr T& operator[](size_type i) { return _val[i]; }
   [[nodiscard]] constexpr T  operator[](size_type i) const { return _val[i]; }
 
-  constexpr self_type& operator*=(const self_type& m) {
-    return *this = (*this * m); }
+  constexpr type& operator*=(const type& m) { return *this = (*this * m); }
 
 
   // Iterators
@@ -124,7 +126,7 @@ namespace gx {
   [[nodiscard]] constexpr Matrix4x4<T,ROW_MAJOR> operator*(
     const Matrix4x4<T,ROW_MAJOR>& a, const Matrix4x4<T,ROW_MAJOR>& b)
   {
-    Matrix4x4<T,ROW_MAJOR> m{UNINITIALIZED};
+    Matrix4x4<T,ROW_MAJOR> m{INIT_NONE};
     //for (unsigned int i = 0; i != 16; i += 4) {
     //  m[i]   = (a[i]*b[0]) + (a[i+1]*b[4]) + (a[i+2]*b[8])  + (a[i+3]*b[12]);
     //  m[i+1] = (a[i]*b[1]) + (a[i+1]*b[5]) + (a[i+2]*b[9])  + (a[i+3]*b[13]);
@@ -145,7 +147,7 @@ namespace gx {
   [[nodiscard]] constexpr Matrix4x4<T,COLUMN_MAJOR> operator*(
     const Matrix4x4<T,COLUMN_MAJOR>& a, const Matrix4x4<T,COLUMN_MAJOR>& b)
   {
-    Matrix4x4<T,COLUMN_MAJOR> m{UNINITIALIZED};
+    Matrix4x4<T,COLUMN_MAJOR> m{INIT_NONE};
     //for (unsigned int i = 0; i != 16; i += 4) {
     //  m[i]   = (a[0]*b[i]) + (a[4]*b[i+1]) + (a[8]*b[i+2])  + (a[12]*b[i+3]);
     //  m[i+1] = (a[1]*b[i]) + (a[5]*b[i+1]) + (a[9]*b[i+2])  + (a[13]*b[i+3]);
