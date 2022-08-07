@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 46 (2022/7/23)
+# Makefile.mk - revision 47 (2022/8/7)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -407,8 +407,10 @@ override _10-99 := $(foreach x,$(_1-9),$(addprefix $x,0 $(_1-9)))
 override _1-99 := $(_1-9) $(_10-99)
 override _1-999 := $(_1-99) $(foreach x,$(_1-9),$(addprefix $x,$(addprefix 0,0 $(_1-9)) $(_10-99)))
 
-# TEMPLATE<1-99> labels
-override _template_labels := $(filter $(sort $(foreach x,$(filter TEMPLATE%,$(.VARIABLES)),$(word 1,$(subst ., ,$x)))),$(addprefix TEMPLATE,$(_1-99)))
+# TEMPLATE<1-99>, TEMPLATE_<id> labels
+override _template_labels1 := $(filter $(sort $(foreach x,$(filter TEMPLATE%,$(.VARIABLES)),$(word 1,$(subst ., ,$x)))),$(addprefix TEMPLATE,$(_1-99)))
+override _template_labels2 := $(sort $(foreach x,$(filter TEMPLATE_%,$(.VARIABLES)),$(if $(findstring .,$x),$(word 1,$(subst ., ,$x)))))
+override _template_labels := $(strip $(_template_labels1) $(_template_labels2))
 
 # verify template configs
 override define _check_template_entry  # <1:label>
@@ -416,7 +418,7 @@ override _$1_labels := $$(subst $1.,,$$(filter $1.FILE%,$$(.VARIABLES)))
 ifeq ($$(_$1_labels),)
   $$(error $$(_msgErr)$1: no FILE entries$$(_end))
 else ifeq ($$(strip $$($1)),)
-  $$(error $$(_msgErr)$1 required)
+  $$(error $$(_msgErr)$1 required$$(_end))
 else ifeq ($$(strip $$($1.CMD)),)
   $$(error $$(_msgErr)$1.CMD required$$(_end))
 endif
@@ -445,7 +447,7 @@ override _lib_labels := $(strip $(_lib_labels1) $(_lib_labels2))
 override _static_lib_labels := $(strip $(foreach x,$(_lib_labels),$(if $($x.TYPE),$(if $(filter static,$($x.TYPE)),$x),$x)))
 override _shared_lib_labels := $(strip $(foreach x,$(_lib_labels),$(if $(filter shared,$($x.TYPE)),$x)))
 
-# BIN<1-99>, BIN_<id> labels (<id> is the default target>
+# BIN<1-99>, BIN_<id> labels (<id> is the default target>)
 override _bin_labels1 := $(filter $(sort $(foreach x,$(filter BIN%,$(.VARIABLES)),$(word 1,$(subst ., ,$x)))),$(addprefix BIN,$(_1-99)))
 override _bin_labels2 := $(sort $(foreach x,$(filter BIN_%,$(.VARIABLES)),$(if $(findstring .,$x),$(word 1,$(subst ., ,$x)))))
 $(foreach x,$(_bin_labels2),$(eval $x ?= $(subst BIN_,,$x)))
@@ -456,7 +458,7 @@ override _file_labels1 := $(filter $(sort $(foreach x,$(filter FILE%,$(.VARIABLE
 override _file_labels2 := $(sort $(foreach x,$(filter FILE_%,$(.VARIABLES)),$(if $(findstring .,$x),$(word 1,$(subst ., ,$x)))))
 override _file_labels := $(strip $(_file_labels1) $(_file_labels2))
 
-# TEST<1-999> TEST_<id> labels
+# TEST<1-999>, TEST_<id> labels
 override _test_labels1 := $(filter $(sort $(foreach x,$(filter TEST%,$(.VARIABLES)),$(word 1,$(subst ., ,$x)))),$(addprefix TEST,$(_1-999)))
 override _test_labels2 := $(sort $(foreach x,$(filter TEST_%,$(.VARIABLES)),$(if $(findstring .,$x),$(word 1,$(subst ., ,$x)))))
 override _test_labels := $(strip $(_test_labels1) $(_test_labels2))
