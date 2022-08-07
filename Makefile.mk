@@ -447,7 +447,7 @@ override _lib_labels := $(strip $(_lib_labels1) $(_lib_labels2))
 override _static_lib_labels := $(strip $(foreach x,$(_lib_labels),$(if $($x.TYPE),$(if $(filter static,$($x.TYPE)),$x),$x)))
 override _shared_lib_labels := $(strip $(foreach x,$(_lib_labels),$(if $(filter shared,$($x.TYPE)),$x)))
 
-# BIN<1-99>, BIN_<id> labels (<id> is the default target>)
+# BIN<1-99>, BIN_<id> labels (<id> is the default target)
 override _bin_labels1 := $(filter $(sort $(foreach x,$(filter BIN%,$(.VARIABLES)),$(word 1,$(subst ., ,$x)))),$(addprefix BIN,$(_1-99)))
 override _bin_labels2 := $(sort $(foreach x,$(filter BIN_%,$(.VARIABLES)),$(if $(findstring .,$x),$(word 1,$(subst ., ,$x)))))
 $(foreach x,$(_bin_labels2),$(eval $x ?= $(subst BIN_,,$x)))
