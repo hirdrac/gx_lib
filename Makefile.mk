@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 47 (2022/8/7)
+# Makefile.mk - revision 47 (2022/8/8)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -1052,7 +1052,7 @@ $(if $(filter -L%,$(filter-out -L/% -L~%,$x)),-L../../$(patsubst -L%,%,$x),\
 $(if $(filter-out /% ~% -%,$x),../../$x,$x)))
 
 # link binary/test/shared lib - <1:label>
-override _do_link = $(filter-out -D% -U% -include% -imacros% -I%,\
+override _do_link = $(filter-out -D% -U% -I%,\
 $(if $(filter cxx,$(_$1_lang)),\
 $(CXX) $(_$1_cxx_std) $(call _$(ENV)_opt,$1) $(_$1_op_cxx_flags),\
 $(CC) $(_$1_c_std) $(call _$(ENV)_opt,$1) $(_$1_op_flags)) $(_$1_xflags)) $(_$1_ldflags)
