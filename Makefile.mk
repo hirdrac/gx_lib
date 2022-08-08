@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 47 (2022/8/8)
+# Makefile.mk - revision 47 (2022/8/9)
 # Copyright (C) 2022 Richard Bradley
 #
 # Additional contributions from:
@@ -351,7 +351,7 @@ override define _verify_pkgs  # <1:config pkgs var> <2:valid pkgs>
 ifeq ($$($1),)
 else ifeq ($$($1),-)
 else ifneq ($$(words $$($1)),$$(words $$($2)))
-  $$(error $$(_msgErr)Cannot build because of package error(s)$$(_end))
+  $$(error $$(_msgErr)Cannot build because of package error$$(_end))
 endif
 endef
 
@@ -693,13 +693,13 @@ else ifneq ($(_build_env),)
 
   override _define := $(call _format_define,$(DEFINE))
   override _include := $(call _format_include,$(INCLUDE))
-  override _warn := $(call _format_warn,$(WARN_CXX))
+  override _warn_cxx := $(call _format_warn,$(WARN_CXX))
   override _warn_c := $(call _format_warn,$(WARN_C))
 
   # setup compile flags for each build path
   override _pkg_flags := $(call _get_pkg_flags,$(_pkgs))
   override _xflags :=  $(_pkg_flags) $(FLAGS) $(FLAGS_$(_$(ENV)_uc))
-  override _cxxflags_$(ENV) := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn) $(_op_cxx_warn) $(_define) $(_include) $(_op_cxx_flags) $(_xflags))
+  override _cxxflags_$(ENV) := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_define) $(_include) $(_op_cxx_flags) $(_xflags))
   override _cflags_$(ENV) := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_xflags))
   override _asflags_$(ENV) := $(strip $(_$(ENV)_opt) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_xflags))
   override _src_path_$(ENV) := $(_src_path)
@@ -707,7 +707,7 @@ else ifneq ($(_build_env),)
   ifneq ($(_test_labels),)
     override _test_pkg_flags := $(if $(_pkgs_test),$(call _get_pkg_flags,$(_pkgs) $(_pkgs_test)),$(_pkg_flags))
     override _test_xflags :=  $(_test_pkg_flags) $(FLAGS) $(FLAGS_$(_$(ENV)_uc)) $(FLAGS_TEST)
-    override _cxxflags_$(ENV)-tests := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn) $(_op_cxx_warn) $(_define) $(_include) $(_op_cxx_flags) $(_test_xflags))
+    override _cxxflags_$(ENV)-tests := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_define) $(_include) $(_op_cxx_flags) $(_test_xflags))
     override _cflags_$(ENV)-tests := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_test_xflags))
     override _asflags_$(ENV)-tests := $(strip $(_$(ENV)_opt) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_test_xflags))
     override _src_path_$(ENV)-tests := $(_src_path)
@@ -851,7 +851,7 @@ else ifneq ($(_build_env),)
 
   # NOTE: LIBS before PACKAGES libs in case included static lib requires package
   override _$1_xflags := $$(_$1_pkg_flags) $$(_$1_flags) $$(FLAGS_$$(_$$(ENV)_uc)) $$(if $2,$$(FLAGS_TEST))
-  override _cxxflags_$$(ENV)-$1 := $$(strip $$(_$1_cxx_std) $$(call _$$(ENV)_opt,$1) $$(_warn) $$(_$1_op_cxx_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_cxx_flags) $$(_$1_xflags))
+  override _cxxflags_$$(ENV)-$1 := $$(strip $$(_$1_cxx_std) $$(call _$$(ENV)_opt,$1) $$(_warn_cxx) $$(_$1_op_cxx_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_cxx_flags) $$(_$1_xflags))
   override _cflags_$$(ENV)-$1 := $$(strip $$(_$1_c_std) $$(call _$$(ENV)_opt,$1) $$(_warn_c) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
   override _asflags_$$(ENV)-$1 := $$(strip $$(call _$$(ENV)_opt,$1) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
 
