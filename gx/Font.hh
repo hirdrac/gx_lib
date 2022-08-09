@@ -9,7 +9,6 @@
 #include "Glyph.hh"
 #include "Texture.hh"
 #include "Types.hh"
-#include <string>
 #include <string_view>
 #include <map>
 
@@ -44,7 +43,10 @@ class gx::Font
     // font pixel size
 
   bool load(const char* fileName);
-  bool load(const std::string& fn) { return load(fn.c_str()); }
+
+  template<class T>
+  bool load(const T& fn) { return load(fn.c_str()); }
+
   bool loadFromMemory(const void* mem, std::size_t memSize);
     // load TTF file & render glyphs for current size
 

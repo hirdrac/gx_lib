@@ -1,6 +1,6 @@
 //
 // gx/System.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 // GLFW init & other misc GLFW/OS function wrappers
 //
@@ -22,5 +22,7 @@ namespace gx {
   std::string getClipboardFirstLine();
 
   void setClipboard(const char* s);
-  inline void setClipboard(const std::string& s) { setClipboard(s.c_str()); }
+
+  template<class T>
+  void setClipboard(const T& s) { setClipboard(s.c_str()); }
 }

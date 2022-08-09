@@ -6,7 +6,6 @@
 //
 
 #pragma once
-#include <string>
 #include <memory>
 #include <cstdint>
 
@@ -33,7 +32,10 @@ class gx::Image
 	    const uint8_t* data, bool copy);
 
   bool load(const char* fileName);
-  bool load(const std::string& fileName) { return load(fileName.c_str()); }
+
+  template<class T>
+  bool load(const T& fileName) { return load(fileName.c_str()); }
+
   bool loadFromMemory(const void* mem, std::size_t memSize);
 
   [[nodiscard]] int width() const { return _width; }

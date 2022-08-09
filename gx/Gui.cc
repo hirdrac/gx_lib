@@ -1006,14 +1006,14 @@ void Gui::processCharEvent(Window& win)
       usedEvent = true;
       if (rangeLen > 0) {
         const std::string cp{substrUTF8(entry.text, rangeStart, rangeLen)};
-        setClipboard(cp.c_str());
+        setClipboard(cp);
       }
     } else if (c.key == KEY_X && c.mods == MOD_CONTROL) {
       // (CTRL-X) cut selected text
       usedEvent = true;
       if (rangeLen > 0) {
         const std::string cp{substrUTF8(entry.text, rangeStart, rangeLen)};
-        setClipboard(cp.c_str());
+        setClipboard(cp);
         eraseUTF8(entry.text, rangeStart, rangeLen);
         _focusCursorPos = _focusRangeStart = rangeStart;
         _needRender = _textChanged = true;
