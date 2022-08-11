@@ -30,6 +30,7 @@
 #include <string_view>
 #include <vector>
 #include <algorithm>
+#include <memory_resource>
 
 
 constexpr int DEFAULT_WIDTH = 1280;
@@ -44,6 +45,43 @@ constexpr int SCROLL_STEP = 3;
 extern char FixedWidthFontDataName[];
 extern unsigned char FixedWidthFontData[];
 extern unsigned long FixedWidthFontDataSize;
+
+
+class TextBuffer
+{
+ public:
+  using size_type = std::size_t;
+  using string_type = std::pmr::string;
+  using char_type = string_type::value_type;
+  using view_type = std::basic_string_view<char_type>;
+
+  TextBuffer() { }
+  TextBuffer(std::istream& in) { load(in); }
+
+  [[nodiscard]] bool empty() const { return _text.empty(); }
+  [[nodiscard]] size_type lines() const { return _text.size(); }
+  [[nodiscard]] view_type operator[](size_type lineNo) const {
+    if (lineNo > _text.size()) { return {}; }
+    return _text[lineNo];
+  }
+
+  void clear() { _text.clear(); }
+
+  void load(std::istream& in) {
+    if (in.eof()) { return; }
+    for (;;) {
+      string_type line;
+      std::getline(in, line);
+      if (in.eof()) { break; }
+      _text.push_back(line);
+    }
+  }
+
+  void addLine(view_type line) { _text.emplace_back(line); }
+
+ private:
+  std::vector<string_type> _text;
+};
 
 
 int showUsage(char** argv)
@@ -119,15 +157,9 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  std::vector<std::string> text;
-  for (;;) {
-    std::string line;
-    std::getline(fs, line);
-    if (fs.eof()) { break; }
-    text.push_back(line);
-  }
+  TextBuffer buffer{fs};
   fs.close();
-  if (text.empty()) { text.push_back("* FILE EMPTY *"); }
+  if (buffer.empty()) { buffer.addLine("* FILE EMPTY *"); }
 
   gx::Font fnt{fontSize};
   if (fontName.empty()) {
@@ -165,7 +197,7 @@ int main(int argc, char** argv)
   bool redraw = true;
   for (;;) {
     const int maxLines = win.height() / lineHeight;
-    const int endLine = std::max(int(text.size()) - maxLines, 0);
+    const int endLine = std::max(int(buffer.lines()) - maxLines, 0);
 
     // draw frame
     if (win.resized() || redraw) {
@@ -174,9 +206,9 @@ int main(int argc, char** argv)
 
       float ty = 0;
       int lineNo = topLine;
-      while (lineNo < int(text.size()) && ty < float(win.height())) {
+      while (lineNo < int(buffer.lines()) && ty < float(win.height())) {
         if (lineNo >= 0) {
-          const std::string_view line = text[std::size_t(lineNo)];
+          const std::string_view line = buffer[std::size_t(lineNo)];
           float tx = 0;
           std::size_t i = 0;
           while (i < line.size()) {
