@@ -76,7 +76,7 @@ namespace gx {
 
 // **** Macros ****
 #define GX_LOGGER_LOG_FL(logger,lvl,file,line,...) \
-  do { gx::Logger& lg(logger); if ((lvl)>=lg.level()) { lg.log((lvl),(file),(line),__VA_ARGS__); } } while(0)
+  do { if ((lvl)>=(logger).level()) { (logger).log((lvl),(file),(line),__VA_ARGS__); } } while(0)
 
 #define GX_LOGGER_LOG(logger,lvl,...)\
   GX_LOGGER_LOG_FL((logger),(lvl),__FILE__,__LINE__,__VA_ARGS__)
