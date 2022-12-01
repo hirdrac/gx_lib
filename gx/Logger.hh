@@ -1,6 +1,6 @@
 //
 // gx/Logger.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2022 Richard Bradley
 //
 
 #pragma once
