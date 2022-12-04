@@ -137,11 +137,17 @@ void GLVertexArray::setAttrib(
   GLuint index, GLBuffer& buffer, GLintptr offset, GLsizei stride,
   GLint size, GLenum type, GLboolean normalized)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   bufferBindCheck(buffer);
   GX_GLCALL(glVertexAttribPointer, index, size, type, normalized, stride,
             reinterpret_cast<const void*>(offset));
+#elif defined(GX_GL43)
+  // attribindex & bindingindex set the same for simplicity
+  bindCheck();
+  GX_GLCALL(glBindVertexBuffer, index, buffer.id(), offset, stride);
+  GX_GLCALL(glVertexAttribBinding, index, index);
+  GX_GLCALL(glVertexAttribFormat, index, size, type, normalized, 0);
 #else
   // attribindex & bindingindex set the same for simplicity
   GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
@@ -154,11 +160,17 @@ void GLVertexArray::setAttribI(
   GLuint index, GLBuffer& buffer, GLintptr offset,
   GLsizei stride, GLint size, GLenum type)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   bufferBindCheck(buffer);
   GX_GLCALL(glVertexAttribIPointer, index, size, type, stride,
 	 reinterpret_cast<const void*>(offset));
+#elif defined(GX_GL43)
+  // attribindex & bindingindex set the same for simplicity
+  bindCheck();
+  GX_GLCALL(glBindVertexBuffer, index, buffer.id(), offset, stride);
+  GX_GLCALL(glVertexAttribBinding, index, index);
+  GX_GLCALL(glVertexAttribIFormat, index, size, type, 0);
 #else
   // attribindex & bindingindex set the same for simplicity
   GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
@@ -171,11 +183,17 @@ void GLVertexArray::setAttribL(
   GLuint index, GLBuffer& buffer, GLintptr offset,
   GLsizei stride, GLint size, GLenum type)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
+#if defined(GX_GL33) || defined(GX_GL42)
   bindCheck();
   bufferBindCheck(buffer);
   GX_GLCALL(glVertexAttribLPointer, index, size, type, stride,
             reinterpret_cast<const void*>(offset));
+#elif defined(GX_GL43)
+  // attribindex & bindingindex set the same for simplicity
+  bindCheck();
+  GX_GLCALL(glBindVertexBuffer, index, buffer.id(), offset, stride);
+  GX_GLCALL(glVertexAttribBinding, index, index);
+  GX_GLCALL(glVertexAttribLFormat, index, size, type, 0);
 #else
   // attribindex & bindingindex set the same for simplicity
   GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
