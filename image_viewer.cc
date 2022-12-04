@@ -9,6 +9,7 @@
 // TODO: multiple image display in fullscreen (horizontal/vertical)
 // TODO: smooth scrolling when moving to next image
 // TODO: don't scroll if all images can fit on screen?
+// TODO: option to enable full logging
 
 #include "gx/Image.hh"
 #include "gx/Logger.hh"

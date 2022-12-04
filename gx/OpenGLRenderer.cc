@@ -96,10 +96,13 @@ void OpenGLRenderer::setWindowHints(bool debug)
 {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
   //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+
+  // use to force specific GL version for context
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR);
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
+  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, debug ? GLFW_TRUE : GLFW_FALSE);
 }
 
@@ -109,6 +112,15 @@ bool OpenGLRenderer::init(GLFWwindow* win)
   _window = win;
   setCurrentContext(win);
   if (!GLSetupContext(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
+    return false;
+  }
+
+  GX_LOG_INFO("GLVersion: ", GLVersion.major, ".", GLVersion.minor);
+  if (GLVersion.major < GL_VERSION_MAJOR
+      || (GLVersion.major == GL_VERSION_MAJOR
+          && GLVersion.minor < GL_VERSION_MINOR)) {
+    GX_LOG_ERROR("OpenGL version ", GL_VERSION_MAJOR, ".", GL_VERSION_MINOR,
+                 " or higher required");
     return false;
   }
 
