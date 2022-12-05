@@ -168,7 +168,7 @@ void draw_lines1(gx::DrawContext& dc, float x, float y)
 void draw_lines2(gx::DrawContext& dc, float x, float y)
 {
   x += .5f; y += .5f;
-  const gx::Vertex2C origin{x+20,y+20,RED};
+  const gx::Vertex2C origin{x+20,y+30,RED};
 
   dc.line(origin, gx::Vertex2C{x+379,y+30,WHITE});
   dc.line(origin, gx::Vertex2C{x+379,y+180,WHITE});
