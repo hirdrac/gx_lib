@@ -11,15 +11,6 @@ using namespace gx;
 
 inline namespace GX_GLNAMESPACE {
 
-// **** Globals ****
-bool GLInitialized = false;
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-GLuint GLLastBufferBind = 0;
-GLuint GLLastArrayBufferBind = 0;
-GLuint GLLastVertexArrayBind = 0;
-GLuint GLLastTextureBind = 0;
-#endif
-
 
 // **** Callbacks ****
 static void GLCleanUp()
@@ -132,8 +123,8 @@ void GLClearState()
   glBindTexture(GL_TEXTURE_2D, 0);
 
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  GLLastBufferBind = 0;
   GLLastArrayBufferBind = 0;
+  GLLastCopyWriteBufferBind = 0;
   GLLastVertexArrayBind = 0;
   GLLastTextureBind = 0;
 #endif

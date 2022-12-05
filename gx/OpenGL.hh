@@ -48,14 +48,14 @@ constexpr const char* GLSL_SOURCE_HEADER =
 
 
 // **** Globals ****
-extern bool GLInitialized;
+inline bool GLInitialized = false;
   // check if GL calls are safe (mainly for destructors)
 
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-extern GLuint GLLastBufferBind;
-extern GLuint GLLastArrayBufferBind;
-extern GLuint GLLastVertexArrayBind;
-extern GLuint GLLastTextureBind;
+inline GLuint GLLastArrayBufferBind = 0;
+inline GLuint GLLastCopyWriteBufferBind = 0;
+inline GLuint GLLastVertexArrayBind = 0;
+inline GLuint GLLastTextureBind = 0;
   // cache bind values for auto-binding in OpenGL versions without
   // direct state access methods (GL < 4.5)
 #endif

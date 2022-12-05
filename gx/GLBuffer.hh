@@ -101,13 +101,17 @@ class GLBuffer
  private:
   GLuint _buffer = 0;
   GLsizei _size = 0;
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  GLenum _target = GL_NONE; // last bound target
 
-  void bindCheck() {
-    if (GLLastBufferBind != _buffer) {
-      bind((_target != GL_NONE) ? _target : GL_ARRAY_BUFFER);
-    }
+#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
+  void bindCheck(GLenum target) {
+    if ((target == GL_ARRAY_BUFFER && GLLastArrayBufferBind == _buffer)
+        || (target == GL_COPY_WRITE_BUFFER && GLLastCopyWriteBufferBind == _buffer)) { return; }
+    bind(target);
+  }
+
+  void clearBind() {
+    if (GLLastArrayBufferBind == _buffer) GLLastArrayBufferBind = 0;
+    if (GLLastCopyWriteBufferBind == _buffer) GLLastCopyWriteBufferBind = 0;
   }
 #endif
 
@@ -118,11 +122,7 @@ class GLBuffer
 // **** Inline Implementations ****
 GLBuffer::GLBuffer(GLBuffer&& b) noexcept
   : _buffer{b.release()}, _size{b._size}
-{
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  _target = b._target;
-#endif
-}
+{ }
 
 GLBuffer& GLBuffer::operator=(GLBuffer&& b) noexcept
 {
@@ -130,9 +130,6 @@ GLBuffer& GLBuffer::operator=(GLBuffer&& b) noexcept
     cleanup();
     _buffer = b.release();
     _size = b._size;
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-    _target = b._target;
-#endif
   }
   return *this;
 }
@@ -142,7 +139,6 @@ GLuint GLBuffer::init()
   cleanup();
   _size = 0;
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  _target = GL_NONE;
   GX_GLCALL(glGenBuffers, 1, &_buffer);
 #else
   GX_GLCALL(glCreateBuffers, 1, &_buffer);
@@ -153,7 +149,7 @@ GLuint GLBuffer::init()
 GLuint GLBuffer::init(GLsizei size, const GLvoid* data)
 {
   // for immutable data store:
-  //  glBufferStorage(_target, size, data, flags);      // OGL 4.4
+  //  glBufferStorage(target, size, data, flags);       // OGL 4.4
   //  glNamedBufferStorage(_buffer, size, data, flags); // OGL 4.5
   // -- flags --
   //  GL_DYNAMIC_STORAGE_BIT
@@ -167,10 +163,9 @@ GLuint GLBuffer::init(GLsizei size, const GLvoid* data)
   _size = size;
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
   // immutable buffer not available, just make normal buffer
-  _target = GL_ARRAY_BUFFER;
   GX_GLCALL(glGenBuffers, 1, &_buffer);
-  bindCheck();
-  GX_GLCALL(glBufferData, _target, size, data, data ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+  bindCheck(GL_COPY_WRITE_BUFFER);
+  GX_GLCALL(glBufferData, GL_COPY_WRITE_BUFFER, size, data, data ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 #else
   GX_GLCALL(glCreateBuffers, 1, &_buffer);
   GX_GLCALL(glNamedBufferStorage, _buffer, size, data, data ? 0 : GL_DYNAMIC_STORAGE_BIT);
@@ -189,31 +184,37 @@ void GLBuffer::bind(GLenum target)
 
   GX_GLCALL(glBindBuffer, target, _buffer);
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
+  clearBind();
   if (target == GL_ARRAY_BUFFER) {
     GLLastArrayBufferBind = _buffer;
-  } else if (_target == GL_ARRAY_BUFFER) {
-    GLLastArrayBufferBind = 0;
+  } else if (target == GL_COPY_WRITE_BUFFER) {
+    GLLastCopyWriteBufferBind = _buffer;
   }
-
-  _target = target;
-  GLLastBufferBind = _buffer;
 #endif
 }
 
 void GLBuffer::bindBase(GLenum target, GLuint index)
 {
+  // buffer target must be one of these:
+  //   GL_ATOMIC_COUNTER_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER,
+  //   GL_UNIFORM_BUFFER, GL_SHADER_STORAGE_BUFFER
+
   GX_GLCALL(glBindBufferBase, target, index, _buffer);
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  _target = target;
+  clearBind();
 #endif
 }
 
 void GLBuffer::bindRange(GLenum target, GLuint index,
 			 GLintptr offset, GLsizeiptr size)
 {
+  // buffer target must be one of these:
+  //   GL_ATOMIC_COUNTER_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER,
+  //   GL_UNIFORM_BUFFER, GL_SHADER_STORAGE_BUFFER
+
   GX_GLCALL(glBindBufferRange, target, index, _buffer, offset, size);
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  _target = target;
+  clearBind();
 #endif
 }
 
@@ -221,9 +222,10 @@ void GLBuffer::unbind(GLenum target)
 {
   GX_GLCALL(glBindBuffer, target, 0);
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  GLLastBufferBind = 0;
   if (target == GL_ARRAY_BUFFER) {
     GLLastArrayBufferBind = 0;
+  } else if (target == GL_COPY_WRITE_BUFFER) {
+    GLLastCopyWriteBufferBind = 0;
   }
 #endif
 }
@@ -232,8 +234,8 @@ void GLBuffer::setData(GLsizei size, const void* data, GLenum usage)
 {
   _size = size;
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glBufferData, _target, size, data, usage);
+  bindCheck(GL_COPY_WRITE_BUFFER);
+  GX_GLCALL(glBufferData, GL_COPY_WRITE_BUFFER, size, data, usage);
 #else
   GX_GLCALL(glNamedBufferData, _buffer, size, data, usage);
 #endif
@@ -242,8 +244,8 @@ void GLBuffer::setData(GLsizei size, const void* data, GLenum usage)
 void GLBuffer::setSubData(GLintptr offset, GLsizei size, const void* data)
 {
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glBufferSubData, _target, offset, size, data);
+  bindCheck(GL_COPY_WRITE_BUFFER);
+  GX_GLCALL(glBufferSubData, GL_COPY_WRITE_BUFFER, offset, size, data);
 #else
   GX_GLCALL(glNamedBufferSubData, _buffer, offset, size, data);
 #endif
@@ -252,8 +254,8 @@ void GLBuffer::setSubData(GLintptr offset, GLsizei size, const void* data)
 void* GLBuffer::map(GLenum access)
 {
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  void* result = glMapBuffer(_target, access);
+  bindCheck(GL_COPY_WRITE_BUFFER);
+  void* result = glMapBuffer(GL_COPY_WRITE_BUFFER, access);
   #ifdef GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapBuffer"); }
   #endif
@@ -269,8 +271,8 @@ void* GLBuffer::map(GLenum access)
 bool GLBuffer::unmap()
 {
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  bool result = glUnmapBuffer(_target);
+  bindCheck(GL_COPY_WRITE_BUFFER);
+  bool result = glUnmapBuffer(GL_COPY_WRITE_BUFFER);
   #ifdef GX_DEBUG_GL
   GLCheckErrors("glUnmapBuffer");
   #endif
@@ -286,8 +288,8 @@ bool GLBuffer::unmap()
 void* GLBuffer::mapRange(GLintptr offset, GLsizeiptr length, GLbitfield access)
 {
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  void* result = glMapBufferRange(_target, offset, length, access);
+  bindCheck(GL_COPY_WRITE_BUFFER);
+  void* result = glMapBufferRange(GL_COPY_WRITE_BUFFER, offset, length, access);
   #ifdef GX_DEBUG_GL
   if (!result) { GLCheckErrors("glMapBufferRange"); }
   #endif
@@ -303,8 +305,8 @@ void* GLBuffer::mapRange(GLintptr offset, GLsizeiptr length, GLbitfield access)
 void GLBuffer::flushMappedRange(GLintptr offset, GLsizeiptr length)
 {
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glFlushMappedBufferRange, _target, offset, length);
+  bindCheck(GL_COPY_WRITE_BUFFER);
+  GX_GLCALL(glFlushMappedBufferRange, GL_COPY_WRITE_BUFFER, offset, length);
 #else
   GX_GLCALL(glFlushMappedNamedBufferRange, _buffer, offset, length);
 #endif
@@ -314,8 +316,8 @@ GLint GLBuffer::getParameteri(GLenum pname)
 {
   GLint result;
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glGetBufferParameteriv, _target, pname, &result);
+  bindCheck(GL_COPY_WRITE_BUFFER);
+  GX_GLCALL(glGetBufferParameteriv, GL_COPY_WRITE_BUFFER, pname, &result);
 #else
   GX_GLCALL(glGetNamedBufferParameteriv, _buffer, pname, &result);
 #endif
@@ -326,8 +328,8 @@ GLint64 GLBuffer::getParameteri64(GLenum pname)
 {
   GLint64 result;
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glGetBufferParameteri64v, _target, pname, &result);
+  bindCheck(GL_COPY_WRITE_BUFFER);
+  GX_GLCALL(glGetBufferParameteri64v, GL_COPY_WRITE_BUFFER, pname, &result);
 #else
   GX_GLCALL(glGetNamedBufferParameteri64v, _buffer, pname, &result);
 #endif
@@ -338,8 +340,7 @@ void GLBuffer::cleanup() noexcept
 {
   if (_buffer) {
 #if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-    if (GLLastBufferBind == _buffer) { GLLastBufferBind = 0; }
-    if (GLLastArrayBufferBind == _buffer) { GLLastArrayBufferBind = 0; }
+    clearBind();
 #endif
     GX_GLCALL(glDeleteBuffers, 1, &_buffer);
   }
