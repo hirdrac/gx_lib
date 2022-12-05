@@ -9,9 +9,6 @@
 using namespace gx;
 
 
-inline namespace GX_GLNAMESPACE {
-
-
 // **** Callbacks ****
 static void GLCleanUp()
 {
@@ -20,7 +17,6 @@ static void GLCleanUp()
   GLInitialized = false;
 }
 
-#if !defined(GX_GL33) && !defined(GX_GL42)
 static constexpr const char* GLSourceStr(GLenum source)
 {
   const char* sourceStr = "unknown";
@@ -82,11 +78,10 @@ static void APIENTRY GLDebugCB(
     "GLDebug: source=", GLSourceStr(source), " type=", GLTypeStr(type),
     " id=", id, GLSeverityStr(severity), " message=[", message, ']');
 }
-#endif
 
 
 // **** Functions ****
-bool GLSetupContext(GLADloadproc loadProc)
+bool gx::GLSetupContext(GLADloadproc loadProc)
 {
   if (!GLInitialized) {
     if (gladLoadGLLoader(loadProc) == 0) {
@@ -98,11 +93,10 @@ bool GLSetupContext(GLADloadproc loadProc)
     GLInitialized = true;
   }
 
-#if !defined(GX_GL33) && !defined(GX_GL42)
-  // debug output available with GL4.3 or later
   GLint flags = 0;
   glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
   if (flags & GL_CONTEXT_FLAG_DEBUG_BIT) {
+    // debug output available with GL4.3 or later
     GX_LOG_INFO("OpenGL debug context enabled");
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -110,11 +104,11 @@ bool GLSetupContext(GLADloadproc loadProc)
     glDebugMessageControl(
       GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
   }
-#endif
+
   return true;
 }
 
-void GLClearState()
+void gx::GLClearState()
 {
   // clear GL state
   glUseProgram(0);
@@ -122,15 +116,13 @@ void GLClearState()
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
 
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
   GLLastArrayBufferBind = 0;
   GLLastCopyWriteBufferBind = 0;
   GLLastVertexArrayBind = 0;
   GLLastTextureBind = 0;
-#endif
 }
 
-std::string GLErrorStr(GLenum error)
+std::string gx::GLErrorStr(GLenum error)
 {
   switch (error) {
 #define ERROR_CASE(x) case GL_##x: return #x
@@ -147,7 +139,7 @@ std::string GLErrorStr(GLenum error)
   }
 }
 
-int GLCheckErrors(std::string_view msg, const char* file, int line)
+int gx::GLCheckErrors(std::string_view msg, const char* file, int line)
 {
   int count = 0;
   GLenum error;
@@ -159,5 +151,3 @@ int GLCheckErrors(std::string_view msg, const char* file, int line)
 
   return count;
 }
-
-} // end GX_GLNAMESPACE

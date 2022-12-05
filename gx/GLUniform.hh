@@ -6,10 +6,23 @@
 #pragma once
 #include "OpenGL.hh"
 
+namespace gx {
+  class GLUniform1f;
+  class GLUniform2f;
+  class GLUniform3f;
+  class GLUniform4f;
+  class GLUniform1i;
+  class GLUniform2i;
+  class GLUniform3i;
+  class GLUniform4i;
+  class GLUniform1ui;
+  class GLUniform2ui;
+  class GLUniform3ui;
+  class GLUniform4ui;
+  class GLUniformMat4f;
+}
 
-inline namespace GX_GLNAMESPACE {
-
-class GLUniform1f
+class gx::GLUniform1f
 {
  public:
   GLUniform1f() = default;
@@ -23,7 +36,7 @@ class GLUniform1f
   GLint _loc = -1;
 };
 
-class GLUniform2f
+class gx::GLUniform2f
 {
  public:
   GLUniform2f() = default;
@@ -40,7 +53,7 @@ class GLUniform2f
   GLint _loc = -1;
 };
 
-class GLUniform3f
+class gx::GLUniform3f
 {
  public:
   GLUniform3f() = default;
@@ -58,7 +71,7 @@ class GLUniform3f
   GLint _loc = -1;
 };
 
-class GLUniform4f
+class gx::GLUniform4f
 {
  public:
   GLUniform4f() = default;
@@ -76,7 +89,7 @@ class GLUniform4f
   GLint _loc = -1;
 };
 
-class GLUniform1i
+class gx::GLUniform1i
 {
  public:
   GLUniform1i() = default;
@@ -90,7 +103,7 @@ class GLUniform1i
   GLint _loc = -1;
 };
 
-class GLUniform2i
+class gx::GLUniform2i
 {
  public:
   GLUniform2i() = default;
@@ -107,7 +120,7 @@ class GLUniform2i
   GLint _loc = -1;
 };
 
-class GLUniform3i
+class gx::GLUniform3i
 {
  public:
   GLUniform3i() = default;
@@ -125,7 +138,7 @@ class GLUniform3i
   GLint _loc = -1;
 };
 
-class GLUniform4i
+class gx::GLUniform4i
 {
  public:
   GLUniform4i() = default;
@@ -143,7 +156,7 @@ class GLUniform4i
   GLint _loc = -1;
 };
 
-class GLUniform1ui
+class gx::GLUniform1ui
 {
  public:
   GLUniform1ui() = default;
@@ -157,7 +170,7 @@ class GLUniform1ui
   GLint _loc = -1;
 };
 
-class GLUniform2ui
+class gx::GLUniform2ui
 {
  public:
   GLUniform2ui() = default;
@@ -174,7 +187,7 @@ class GLUniform2ui
   GLint _loc = -1;
 };
 
-class GLUniform3ui
+class gx::GLUniform3ui
 {
  public:
   GLUniform3ui() = default;
@@ -192,7 +205,7 @@ class GLUniform3ui
   GLint _loc = -1;
 };
 
-class GLUniform4ui
+class gx::GLUniform4ui
 {
  public:
   GLUniform4ui() = default;
@@ -210,7 +223,7 @@ class GLUniform4ui
   GLint _loc = -1;
 };
 
-class GLUniformMat4f
+class gx::GLUniformMat4f
 {
  public:
   GLUniformMat4f() = default;
@@ -225,5 +238,3 @@ class GLUniformMat4f
  private:
   GLint _loc = -1;
 };
-
-} // end GX_GLNAMESPACE

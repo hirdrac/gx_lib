@@ -10,55 +10,18 @@
 #include <string>
 #include <string_view>
 
-#ifdef GX_GL33
-#define GX_GLNAMESPACE gx_gl33
-#elif defined(GX_GL42)
-#define GX_GLNAMESPACE gx_gl42
-#elif defined(GX_GL43)
-#define GX_GLNAMESPACE gx_gl43
-#else
-#define GX_GLNAMESPACE gx_gl45
-#endif
-
-inline namespace GX_GLNAMESPACE {
-
-// **** Constants ****
-#ifdef GX_GL33
-constexpr int GL_VERSION_MAJOR = 3;
-constexpr int GL_VERSION_MINOR = 3;
-constexpr const char* GLSL_SOURCE_HEADER =
-  "#version 330 core\n"
-  "#extension GL_ARB_shading_language_packing : enable\n";
-#elif defined(GX_GL42)
-constexpr int GL_VERSION_MAJOR = 4;
-constexpr int GL_VERSION_MINOR = 2;
-constexpr const char* GLSL_SOURCE_HEADER =
-  "#version 420 core\n";
-#elif defined(GX_GL43)
-constexpr int GL_VERSION_MAJOR = 4;
-constexpr int GL_VERSION_MINOR = 3;
-constexpr const char* GLSL_SOURCE_HEADER =
-  "#version 430 core\n";
-#else
-constexpr int GL_VERSION_MAJOR = 4;
-constexpr int GL_VERSION_MINOR = 5;
-constexpr const char* GLSL_SOURCE_HEADER =
-  "#version 450 core\n";
-#endif
-
+namespace gx {
 
 // **** Globals ****
 inline bool GLInitialized = false;
   // check if GL calls are safe (mainly for destructors)
 
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
 inline GLuint GLLastArrayBufferBind = 0;
 inline GLuint GLLastCopyWriteBufferBind = 0;
 inline GLuint GLLastVertexArrayBind = 0;
 inline GLuint GLLastTextureBind = 0;
   // cache bind values for auto-binding in OpenGL versions without
   // direct state access methods (GL < 4.5)
-#endif
 
 
 // **** Functions ****
@@ -261,14 +224,6 @@ int GLCheckErrors(std::string_view msg, const char* file = __FILE__,
 }
 
 
-// **** Macros ****
-#ifdef GX_DEBUG_GL
-#define GX_GLCALL(fn,...) do { (fn)(__VA_ARGS__); GLCheckErrors(#fn); } while(0)
-#else
-#define GX_GLCALL(fn,...) (fn)(__VA_ARGS__)
-#endif
-
-
 // **** Types ****
 template<class T> struct GLType { };
 
@@ -299,4 +254,12 @@ template<> struct GLType<GLuint> {
 template<class T>
 constexpr GLenum GLType_v = GLType<T>::value;
 
-} // end GX_GLNAMESPACE
+} // end gx namespace
+
+
+// **** Macros ****
+#ifdef GX_DEBUG_GL
+#define GX_GLCALL(fn,...) do { (fn)(__VA_ARGS__); gx::GLCheckErrors(#fn); } while(0)
+#else
+#define GX_GLCALL(fn,...) (fn)(__VA_ARGS__)
+#endif

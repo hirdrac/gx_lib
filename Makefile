@@ -50,11 +50,8 @@ STANDARD = c++17
 OPTIONS = lto modern_c++
 # NOTE: lto doesn't work for clang on MINGW64/MSys2
 
+# Add extra error checks for OpenGL calls
 DEFINE = GX_DEBUG_GL
-#DEFINE += GX_GL33
-#DEFINE += GX_GL42
-#DEFINE += GX_GL43
-# uncomment one of these lines if OpenGL 4.5 isn't available
 
 WARN_EXTRA = fatal-errors cast-qual
 WARN_CXX_EXTRA = extra-semi conversion cast-align

@@ -256,9 +256,6 @@ bool Window::open(int flags)
   const bool debug = flags & WINDOW_DEBUG;
 
   initStartTime();
-  auto ren = std::make_unique<OpenGLRenderer>();
-  // TODO: factory constructor for Renderer instance
-  //  (when multiple APIs are available, most likely vulkan next)
 
   glfwDefaultWindowHints();
   glfwWindowHint(GLFW_DECORATED, glfwBool(decorated));
@@ -268,7 +265,17 @@ bool Window::open(int flags)
   glfwWindowHint(GLFW_VISIBLE, glfwBool(false));
   //glfwWindowHint(GLFW_FOCUSED, glfwBool(false));
   //glfwWindowHint(GLFW_FOCUS_ON_SHOW, glfwBool(false));
-  ren->setWindowHints(debug);
+
+  // OpenGL specified window hints
+  glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+  //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, debug ? GLFW_TRUE : GLFW_FALSE);
+
+  // use to force specific GL version for context
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR);
+  //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
+  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 
   int width = _width;
   int height = _height;
@@ -300,13 +307,11 @@ bool Window::open(int flags)
 
   glfwGetFramebufferSize(win, &_width, &_height);
   //println("new window size: ", _width, " x ", _height);
-  bool status = ren->init(win);
-  if (!status) {
-    return false;
-  }
+
+  auto ren = makeOpenGLRenderer(win);
+  if (!ren || !ren->init(win)) { return false; }
 
   _renderer = std::move(ren);
-
   glfwSetWindowUserPointer(win, this);
   glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
   glfwSetCursor(win, getCursorInstance(_mouseShape));

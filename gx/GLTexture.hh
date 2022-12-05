@@ -9,50 +9,50 @@
 #pragma once
 #include "OpenGL.hh"
 #include <utility>
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
 #include <memory>
-#endif
 
+namespace gx {
+  template<int VER, GLenum TARGET> class GLTextureT;
 
-inline namespace GX_GLNAMESPACE {
+  // **** Texture constants based on target ****
+  template<GLenum TARGET> struct GLTextureVals {
+    static constexpr GLenum pnameMaxSize = GL_MAX_TEXTURE_SIZE;
+  };
 
-// **** Texture constants based on target ****
-template<GLenum TARGET> struct GLTextureVals {
-  static constexpr GLenum pnameMaxSize = GL_MAX_TEXTURE_SIZE;
-};
+  template<> struct GLTextureVals<GL_TEXTURE_3D> {
+    static constexpr GLenum pnameMaxSize = GL_MAX_3D_TEXTURE_SIZE;
+  };
 
-template<> struct GLTextureVals<GL_TEXTURE_3D> {
-  static constexpr GLenum pnameMaxSize = GL_MAX_3D_TEXTURE_SIZE;
-};
+  template<> struct GLTextureVals<GL_TEXTURE_RECTANGLE> {
+    static constexpr GLenum pnameMaxSize = GL_MAX_RECTANGLE_TEXTURE_SIZE;
+  };
 
-template<> struct GLTextureVals<GL_TEXTURE_RECTANGLE> {
-  static constexpr GLenum pnameMaxSize = GL_MAX_RECTANGLE_TEXTURE_SIZE;
-};
+  template<> struct GLTextureVals<GL_TEXTURE_CUBE_MAP> {
+    static constexpr GLenum pnameMaxSize = GL_MAX_CUBE_MAP_TEXTURE_SIZE;
+  };
 
-template<> struct GLTextureVals<GL_TEXTURE_CUBE_MAP> {
-  static constexpr GLenum pnameMaxSize = GL_MAX_CUBE_MAP_TEXTURE_SIZE;
-};
+  template<> struct GLTextureVals<GL_TEXTURE_CUBE_MAP_ARRAY> {
+    static constexpr GLenum pnameMaxSize = GL_MAX_CUBE_MAP_TEXTURE_SIZE;
+  };
 
-template<> struct GLTextureVals<GL_TEXTURE_CUBE_MAP_ARRAY> {
-  static constexpr GLenum pnameMaxSize = GL_MAX_CUBE_MAP_TEXTURE_SIZE;
-};
-
-template<> struct GLTextureVals<GL_TEXTURE_BUFFER> {
-  static constexpr GLenum pnameMaxSize = GL_MAX_TEXTURE_BUFFER_SIZE;
-};
-
+  template<> struct GLTextureVals<GL_TEXTURE_BUFFER> {
+    static constexpr GLenum pnameMaxSize = GL_MAX_TEXTURE_BUFFER_SIZE;
+  };
+}
 
 // **** Main texture template definition ****
-template<GLenum TARGET>
-class GLTextureT
+template<int VER, GLenum TARGET>
+class gx::GLTextureT
 {
  public:
+  using type = GLTextureT<VER,TARGET>;
+
   GLTextureT() = default;
-  inline GLTextureT(GLTextureT<TARGET>&& t) noexcept;
+  inline GLTextureT(type&& t) noexcept;
   ~GLTextureT() { if (GLInitialized) cleanup(); }
 
   // operators
-  inline GLTextureT<TARGET>& operator=(GLTextureT<TARGET>&& t) noexcept;
+  inline type& operator=(type&& t) noexcept;
   [[nodiscard]] explicit operator bool() const { return _tex; }
 
   // accessors
@@ -152,7 +152,6 @@ class GLTextureT
   GLsizei _height = 0;
   GLsizei _depth = 0;
 
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
   void bindCheck() {
     if (GLLastTextureBind != _tex) {
       // don't care which unit is active
@@ -160,33 +159,56 @@ class GLTextureT
       GLLastTextureBind = _tex;
     }
   }
-#endif
+
   static void setUnpackAlignment(GLsizei width, GLenum format, GLenum type);
   inline void cleanup() noexcept;
 
   // prevent copy/assignment
-  GLTextureT(const GLTextureT<TARGET>&) = delete;
-  GLTextureT<TARGET>& operator=(const GLTextureT<TARGET>&) = delete;
+  GLTextureT(const type&) = delete;
+  type& operator=(const type&) = delete;
 };
 
 
-// **** Helper Type Aliases ****
-using GLTexture1D = GLTextureT<GL_TEXTURE_1D>;
-using GLTexture2D = GLTextureT<GL_TEXTURE_2D>;
-using GLTexture3D = GLTextureT<GL_TEXTURE_3D>;
-using GLTexture1DArray = GLTextureT<GL_TEXTURE_1D_ARRAY>;
-using GLTexture2DArray = GLTextureT<GL_TEXTURE_2D_ARRAY>;
-using GLTextureRectangle = GLTextureT<GL_TEXTURE_RECTANGLE>;
-using GLTextureCubeMap = GLTextureT<GL_TEXTURE_CUBE_MAP>;
-using GLTextureCubeMapArray = GLTextureT<GL_TEXTURE_CUBE_MAP_ARRAY>;
-using GLTextureBuffer = GLTextureT<GL_TEXTURE_BUFFER>;
-using GLTexture2DMultisample = GLTextureT<GL_TEXTURE_2D_MULTISAMPLE>;
-using GLTexture2DMultisampleArray = GLTextureT<GL_TEXTURE_2D_MULTISAMPLE_ARRAY>;
+namespace gx {
+  // **** Helper Type Aliases ****
+  template<int VER>
+  using GLTexture1D = GLTextureT<VER,GL_TEXTURE_1D>;
+
+  template<int VER>
+  using GLTexture2D = GLTextureT<VER,GL_TEXTURE_2D>;
+
+  template<int VER>
+  using GLTexture3D = GLTextureT<VER,GL_TEXTURE_3D>;
+
+  template<int VER>
+  using GLTexture1DArray = GLTextureT<VER,GL_TEXTURE_1D_ARRAY>;
+
+  template<int VER>
+  using GLTexture2DArray = GLTextureT<VER,GL_TEXTURE_2D_ARRAY>;
+
+  template<int VER>
+  using GLTextureRectangle = GLTextureT<VER,GL_TEXTURE_RECTANGLE>;
+
+  template<int VER>
+  using GLTextureCubeMap = GLTextureT<VER,GL_TEXTURE_CUBE_MAP>;
+
+  template<int VER>
+  using GLTextureCubeMapArray = GLTextureT<VER,GL_TEXTURE_CUBE_MAP_ARRAY>;
+
+  template<int VER>
+  using GLTextureBuffer = GLTextureT<VER,GL_TEXTURE_BUFFER>;
+
+  template<int VER>
+  using GLTexture2DMultisample = GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE>;
+
+  template<int VER>
+  using GLTexture2DMultisampleArray = GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE_ARRAY>;
+}
 
 
 // **** Inline Implementations ****
-template<GLenum TARGET>
-GLTextureT<TARGET>::GLTextureT(GLTextureT<TARGET>&& t) noexcept
+template<int VER, GLenum TARGET>
+gx::GLTextureT<VER,TARGET>::GLTextureT(GLTextureT<VER,TARGET>&& t) noexcept
   : _tex(t.release())
 {
   _internalformat = t._internalformat;
@@ -196,9 +218,9 @@ GLTextureT<TARGET>::GLTextureT(GLTextureT<TARGET>&& t) noexcept
   _depth = t._depth;
 }
 
-template<GLenum TARGET>
-GLTextureT<TARGET>&
-GLTextureT<TARGET>::operator=(GLTextureT<TARGET>&& t) noexcept
+template<int VER, GLenum TARGET>
+gx::GLTextureT<VER,TARGET>&
+gx::GLTextureT<VER,TARGET>::operator=(GLTextureT<VER,TARGET>&& t) noexcept
 {
   if (this != &t) {
     cleanup();
@@ -212,8 +234,8 @@ GLTextureT<TARGET>::operator=(GLTextureT<TARGET>&& t) noexcept
   return *this;
 }
 
-template<GLenum TARGET>
-GLuint GLTextureT<TARGET>::init(
+template<int VER, GLenum TARGET>
+GLuint gx::GLTextureT<VER,TARGET>::init(
   GLsizei levels, GLenum internalformat, GLsizei width)
 {
   cleanup();
@@ -222,27 +244,27 @@ GLuint GLTextureT<TARGET>::init(
   _width = width;
   _height = 0;
   _depth = 0;
-#ifdef GX_GL33
-  GX_GLCALL(glGenTextures, 1, &_tex);
-  bindCheck();
-  for (int i = 0; i < levels; ++i) {
-    GX_GLCALL(glTexImage1D, TARGET, i, internalformat, width, 0,
-              GL_RED, GL_UNSIGNED_BYTE, nullptr);
-    width = std::max(1, (width / 2));
+  if constexpr (VER < 42) {
+    GX_GLCALL(glGenTextures, 1, &_tex);
+    bindCheck();
+    for (int i = 0; i < levels; ++i) {
+      GX_GLCALL(glTexImage1D, TARGET, i, internalformat, width, 0,
+                GL_RED, GL_UNSIGNED_BYTE, nullptr);
+      width = std::max(1, (width / 2));
+    }
+  } else if constexpr (VER < 45) {
+    GX_GLCALL(glGenTextures, 1, &_tex);
+    bindCheck();
+    GX_GLCALL(glTexStorage1D, TARGET, levels, internalformat, width);
+  } else {
+    GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
+    GX_GLCALL(glTextureStorage1D, _tex, levels, internalformat, width);
   }
-#elif defined(GX_GL42) || defined(GX_GL43)
-  GX_GLCALL(glGenTextures, 1, &_tex);
-  bindCheck();
-  GX_GLCALL(glTexStorage1D, TARGET, levels, internalformat, width);
-#else
-  GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
-  GX_GLCALL(glTextureStorage1D, _tex, levels, internalformat, width);
-#endif
   return _tex;
 }
 
-template<GLenum TARGET>
-GLuint GLTextureT<TARGET>::init(
+template<int VER, GLenum TARGET>
+GLuint gx::GLTextureT<VER,TARGET>::init(
   GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
 {
   cleanup();
@@ -251,47 +273,47 @@ GLuint GLTextureT<TARGET>::init(
   _width = width;
   _height = height;
   _depth = 0;
-#ifdef GX_GL33
-  GX_GLCALL(glGenTextures, 1, &_tex);
-  bindCheck();
-  if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
-    for (int i = 0; i < levels; ++i) {
-      for (unsigned int f = 0; f < 6; ++f) {
-        GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i,
-                  GLint(internalformat), width, height, 0, GL_RED,
-                  GL_UNSIGNED_BYTE, nullptr);
+  if constexpr (VER < 42) {
+    GX_GLCALL(glGenTextures, 1, &_tex);
+    bindCheck();
+    if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
+      for (int i = 0; i < levels; ++i) {
+        for (unsigned int f = 0; f < 6; ++f) {
+          GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i,
+                    GLint(internalformat), width, height, 0, GL_RED,
+                    GL_UNSIGNED_BYTE, nullptr);
+        }
+        width = std::max(1, (width / 2));
+        height = std::max(1, (height / 2));
       }
-      width = std::max(1, (width / 2));
-      height = std::max(1, (height / 2));
+    } else if constexpr (TARGET == GL_TEXTURE_1D_ARRAY
+                         || TARGET == GL_PROXY_TEXTURE_1D_ARRAY) {
+      for (int i = 0; i < levels; ++i) {
+        GX_GLCALL(glTexImage2D, TARGET, i, internalformat, width, height, 0,
+                  GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        width = std::max(1, (width / 2));
+      }
+    } else {
+      for (int i = 0; i < levels; ++i) {
+        GX_GLCALL(glTexImage2D, TARGET, i, GLint(internalformat),
+                  width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        width = std::max(1, (width / 2));
+        height = std::max(1, (height / 2));
+      }
     }
-  } else if constexpr (TARGET == GL_TEXTURE_1D_ARRAY
-                       || TARGET == GL_PROXY_TEXTURE_1D_ARRAY) {
-    for (int i = 0; i < levels; ++i) {
-      GX_GLCALL(glTexImage2D, TARGET, i, internalformat, width, height, 0,
-                GL_RED, GL_UNSIGNED_BYTE, nullptr);
-      width = std::max(1, (width / 2));
-    }
+  } else if constexpr (VER < 45) {
+    GX_GLCALL(glGenTextures, 1, &_tex);
+    bindCheck();
+    GX_GLCALL(glTexStorage2D, TARGET, levels, internalformat, width, height);
   } else {
-    for (int i = 0; i < levels; ++i) {
-      GX_GLCALL(glTexImage2D, TARGET, i, GLint(internalformat),
-                width, height, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
-      width = std::max(1, (width / 2));
-      height = std::max(1, (height / 2));
-    }
+    GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
+    GX_GLCALL(glTextureStorage2D, _tex, levels, internalformat, width, height);
   }
-#elif defined(GX_GL42) || defined(GX_GL43)
-  GX_GLCALL(glGenTextures, 1, &_tex);
-  bindCheck();
-  GX_GLCALL(glTexStorage2D, TARGET, levels, internalformat, width, height);
-#else
-  GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
-  GX_GLCALL(glTextureStorage2D, _tex, levels, internalformat, width, height);
-#endif
   return _tex;
 }
 
-template<GLenum TARGET>
-GLuint GLTextureT<TARGET>::init(
+template<int VER, GLenum TARGET>
+GLuint gx::GLTextureT<VER,TARGET>::init(
   GLsizei levels, GLenum internalformat,
   GLsizei width, GLsizei height, GLsizei depth)
 {
@@ -301,33 +323,33 @@ GLuint GLTextureT<TARGET>::init(
   _width = width;
   _height = height;
   _depth = depth;
-#ifdef GX_GL33
-  GX_GLCALL(glGenTextures, 1, &_tex);
-  bindCheck();
-  if constexpr (TARGET == GL_TEXTURE_3D || TARGET == GL_PROXY_TEXTURE_3D) {
-    for (int i = 0; i < levels; ++i) {
-      GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
-                GL_RED, GL_UNSIGNED_BYTE, nullptr);
-      width = std::max(1, (width / 2));
-      height = std::max(1, (height / 2));
-      depth = std::max(1, (depth / 2));
+  if constexpr (VER < 42) {
+    GX_GLCALL(glGenTextures, 1, &_tex);
+    bindCheck();
+    if constexpr (TARGET == GL_TEXTURE_3D || TARGET == GL_PROXY_TEXTURE_3D) {
+      for (int i = 0; i < levels; ++i) {
+        GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
+                  GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        width = std::max(1, (width / 2));
+        height = std::max(1, (height / 2));
+        depth = std::max(1, (depth / 2));
+      }
+    } else {
+      for (int i = 0; i < levels; ++i) {
+        GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
+                  GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        width = std::max(1, (width / 2));
+        height = std::max(1, (height / 2));
+      }
     }
+  } else if constexpr (VER < 45) {
+    GX_GLCALL(glGenTextures, 1, &_tex);
+    bindCheck();
+    GX_GLCALL(glTexStorage3D, TARGET, levels, internalformat, width, height, depth);
   } else {
-    for (int i = 0; i < levels; ++i) {
-      GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
-                GL_RED, GL_UNSIGNED_BYTE, nullptr);
-      width = std::max(1, (width / 2));
-      height = std::max(1, (height / 2));
-    }
+    GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
+    GX_GLCALL(glTextureStorage3D, _tex, levels, internalformat, width, height, depth);
   }
-#elif defined(GX_GL42) || defined(GX_GL43)
-  GX_GLCALL(glGenTextures, 1, &_tex);
-  bindCheck();
-  GX_GLCALL(glTexStorage3D, TARGET, levels, internalformat, width, height, depth);
-#else
-  GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
-  GX_GLCALL(glTextureStorage3D, _tex, levels, internalformat, width, height, depth);
-#endif
   return _tex;
 }
 
@@ -339,147 +361,147 @@ GLuint GLTextureT<TARGET>::init(
 //   3.3 - glTexImage3DMultisample
 //   4.5 - glTextureStorage3DMultisample
 
-template<GLenum TARGET>
-GLuint GLTextureT<TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
+template<int VER, GLenum TARGET>
+GLuint gx::GLTextureT<VER,TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
 {
   _internalformat = internalformat;
   _levels = 0;
   _width = 0;
   _height = 0;
   _depth = 0;
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  if (!_tex) { GX_GLCALL(glGenTextures, 1, &_tex); }
-  bindCheck();
-  GX_GLCALL(glTexBuffer, TARGET, internalformat, buffer);
-#else
-  if (!_tex) { GX_GLCALL(glCreateTextures, TARGET, 1, &_tex); }
-  GX_GLCALL(glTextureBuffer, _tex, internalformat, buffer);
-#endif
+  if constexpr (VER < 45) {
+    if (!_tex) { GX_GLCALL(glGenTextures, 1, &_tex); }
+    bindCheck();
+    GX_GLCALL(glTexBuffer, TARGET, internalformat, buffer);
+  } else {
+    if (!_tex) { GX_GLCALL(glCreateTextures, TARGET, 1, &_tex); }
+    GX_GLCALL(glTextureBuffer, _tex, internalformat, buffer);
+  }
   return _tex;
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::detachBuffer()
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::detachBuffer()
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glTexBuffer, TARGET, _internalformat, 0);
-#else
-  GX_GLCALL(glTextureBuffer, _tex, _internalformat, 0);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexBuffer, TARGET, _internalformat, 0);
+  } else {
+    GX_GLCALL(glTextureBuffer, _tex, _internalformat, 0);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::bindUnit(GLuint unit, GLuint tex)
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::bindUnit(GLuint unit, GLuint tex)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  GX_GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
-  GX_GLCALL(glBindTexture, TARGET, tex);
-  GLLastTextureBind = tex;
-#else
-  GX_GLCALL(glBindTextureUnit, unit, tex);
-#endif
+  if constexpr (VER < 45) {
+    GX_GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
+    GX_GLCALL(glBindTexture, TARGET, tex);
+    GLLastTextureBind = tex;
+  } else {
+    GX_GLCALL(glBindTextureUnit, unit, tex);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setSubImage1D(
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setSubImage1D(
   GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void* pixels)
 {
   setUnpackAlignment(width, format, type);
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glTexSubImage1D, TARGET, level, xoffset, width, format, type, pixels);
-#else
-  GX_GLCALL(glTextureSubImage1D, _tex, level, xoffset, width, format, type, pixels);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexSubImage1D, TARGET, level, xoffset, width, format, type, pixels);
+  } else {
+    GX_GLCALL(glTextureSubImage1D, _tex, level, xoffset, width, format, type, pixels);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setSubImage2D(
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setSubImage2D(
   GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
   GLenum format, GLenum type, const void* pixels)
 {
   setUnpackAlignment(width, format, type);
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
-            width, height, format, type, pixels);
-#else
-  GX_GLCALL(glTextureSubImage2D, _tex, level, xoffset, yoffset,
-            width, height, format, type, pixels);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
+              width, height, format, type, pixels);
+  } else {
+    GX_GLCALL(glTextureSubImage2D, _tex, level, xoffset, yoffset,
+              width, height, format, type, pixels);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setSubImage3D(
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setSubImage3D(
   GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
   GLsizei width, GLsizei height, GLsizei depth,
   GLenum format, GLenum type, const void* pixels)
 {
   setUnpackAlignment(width, format, type);
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
-    GX_GLCALL(glTexSubImage2D, GLenum(GL_TEXTURE_CUBE_MAP_POSITIVE_X + zoffset),
-              level, xoffset, yoffset, width, height, format, type, pixels);
+  if constexpr (VER < 45) {
+    bindCheck();
+    if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
+      GX_GLCALL(glTexSubImage2D, GLenum(GL_TEXTURE_CUBE_MAP_POSITIVE_X + zoffset),
+                level, xoffset, yoffset, width, height, format, type, pixels);
+    } else {
+      GX_GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
+                width, height, depth, format, type, pixels);
+    }
   } else {
-    GX_GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
+    GX_GLCALL(glTextureSubImage3D, _tex, level, xoffset, yoffset, zoffset,
               width, height, depth, format, type, pixels);
   }
-#else
-  GX_GLCALL(glTextureSubImage3D, _tex, level, xoffset, yoffset, zoffset,
-            width, height, depth, format, type, pixels);
-#endif
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::getImage(
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::getImage(
   GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glGetTexImage, TARGET, level, format, type, pixels);
-#else
-  GX_GLCALL(glGetTextureImage, _tex, level, format, type, bufSize, pixels);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glGetTexImage, TARGET, level, format, type, pixels);
+  } else {
+    GX_GLCALL(glGetTextureImage, _tex, level, format, type, bufSize, pixels);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::generateMipmap()
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::generateMipmap()
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glGenerateMipmap, TARGET);
-#else
-  GX_GLCALL(glGenerateTextureMipmap, _tex);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glGenerateMipmap, TARGET);
+  } else {
+    GX_GLCALL(glGenerateTextureMipmap, _tex);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::clear(GLint level)
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::clear(GLint level)
 {
   const GLenum format = GLBaseFormat(_internalformat);
   const GLenum type = (format == GL_DEPTH_STENCIL)
     ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
 
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  const int pixel_size = GLPixelSize(format, type);
-  const auto empty = std::make_unique<GLubyte[]>(
-    _width * std::max(_height,1) * std::max(_depth,1) * pixel_size);
-  if (_depth > 0) {
-    setSubImage3D(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
-  } else if (_height > 0) {
-    setSubImage2D(level, 0, 0, _width, _height, format, empty.get());
+  if constexpr (VER < 44) {
+    const int pixel_size = GLPixelSize(format, type);
+    const auto empty = std::make_unique<GLubyte[]>(
+      _width * std::max(_height,1) * std::max(_depth,1) * pixel_size);
+    if (_depth > 0) {
+      setSubImage3D(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
+    } else if (_height > 0) {
+      setSubImage2D(level, 0, 0, _width, _height, format, empty.get());
+    } else {
+      setSubImage1D(level, 0, _width, format, empty.get());
+    }
   } else {
-    setSubImage1D(level, 0, _width, format, empty.get());
+    GX_GLCALL(glClearTexImage, _tex, level, format, type, nullptr);
   }
-#else
-  GX_GLCALL(glClearTexImage, _tex, level, format, type, nullptr); // GL4.4
-#endif
 }
 
-template<GLenum TARGET>
-float GLTextureT<TARGET>::coordX(float x) const
+template<int VER, GLenum TARGET>
+float gx::GLTextureT<VER,TARGET>::coordX(float x) const
 {
   if constexpr (TARGET == GL_TEXTURE_RECTANGLE) {
     return x;
@@ -488,8 +510,8 @@ float GLTextureT<TARGET>::coordX(float x) const
   }
 }
 
-template<GLenum TARGET>
-float GLTextureT<TARGET>::coordY(float y) const
+template<int VER, GLenum TARGET>
+float gx::GLTextureT<VER,TARGET>::coordY(float y) const
 {
   if constexpr (TARGET == GL_TEXTURE_RECTANGLE) {
     return y;
@@ -498,8 +520,8 @@ float GLTextureT<TARGET>::coordY(float y) const
   }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setUnpackAlignment(
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setUnpackAlignment(
   GLsizei width, GLenum format, GLenum type)
 {
   const int x = width * GLPixelSize(format, type);
@@ -511,81 +533,79 @@ void GLTextureT<TARGET>::setUnpackAlignment(
   GX_GLCALL(glPixelStorei, GL_UNPACK_ALIGNMENT, align);
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::cleanup() noexcept
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::cleanup() noexcept
 {
   if (_tex) {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-    if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
-#endif
+    if constexpr (VER < 45) {
+      if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
+    }
     GX_GLCALL(glDeleteTextures, 1, &_tex);
   }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setParameter(GLenum pname, GLfloat param)
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setParameter(GLenum pname, GLfloat param)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glTexParameterf, TARGET, pname, param);
-#else
-  GX_GLCALL(glTextureParameterf, _tex, pname, param);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameterf, TARGET, pname, param);
+  } else {
+    GX_GLCALL(glTextureParameterf, _tex, pname, param);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setParameter(GLenum pname, GLint param)
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setParameter(GLenum pname, GLint param)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glTexParameteri, TARGET, pname, param);
-#else
-  GX_GLCALL(glTextureParameteri, _tex, pname, param);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameteri, TARGET, pname, param);
+  } else {
+    GX_GLCALL(glTextureParameteri, _tex, pname, param);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLfloat* params)
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setParameterv(GLenum pname, const GLfloat* params)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glTexParameterfv, TARGET, pname, params);
-#else
-  GX_GLCALL(glTextureParameterfv, _tex, pname, params);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameterfv, TARGET, pname, params);
+  } else {
+    GX_GLCALL(glTextureParameterfv, _tex, pname, params);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setParameterv(GLenum pname, const GLint* params)
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setParameterv(GLenum pname, const GLint* params)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glTexParameteriv, TARGET, pname, params);
-#else
-  GX_GLCALL(glTextureParameteriv, _tex, pname, params);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameteriv, TARGET, pname, params);
+  } else {
+    GX_GLCALL(glTextureParameteriv, _tex, pname, params);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLint* params)
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setParameterIv(GLenum pname, const GLint* params)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glTexParameterIiv, TARGET, pname, params);
-#else
-  GX_GLCALL(glTextureParameterIiv, _tex, pname, params);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameterIiv, TARGET, pname, params);
+  } else {
+    GX_GLCALL(glTextureParameterIiv, _tex, pname, params);
+  }
 }
 
-template<GLenum TARGET>
-void GLTextureT<TARGET>::setParameterIv(GLenum pname, const GLuint* params)
+template<int VER, GLenum TARGET>
+void gx::GLTextureT<VER,TARGET>::setParameterIv(GLenum pname, const GLuint* params)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glTexParameterIuiv, TARGET, pname, params);
-#else
-  GX_GLCALL(glTextureParameterIuiv, _tex, pname, params);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameterIuiv, TARGET, pname, params);
+  } else {
+    GX_GLCALL(glTextureParameterIuiv, _tex, pname, params);
+  }
 }
-
-} // end GX_GLNAMESPACE

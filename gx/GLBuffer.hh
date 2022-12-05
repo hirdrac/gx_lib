@@ -9,22 +9,26 @@
 #include "OpenGL.hh"
 #include <utility>
 
+namespace gx {
+  template<int VER> class GLBuffer;
+}
 
-inline namespace GX_GLNAMESPACE {
-
-class GLBuffer
+template<int VER>
+class gx::GLBuffer
 {
  public:
+  using type = GLBuffer<VER>;
+
   GLBuffer() = default;
   ~GLBuffer() { if (GLInitialized) cleanup(); }
 
   // prevent copy/assignment
-  GLBuffer(const GLBuffer&) = delete;
-  GLBuffer& operator=(const GLBuffer&) = delete;
+  GLBuffer(const type&) = delete;
+  type& operator=(const type&) = delete;
 
   // enable move
-  inline GLBuffer(GLBuffer&& b) noexcept;
-  inline GLBuffer& operator=(GLBuffer&& b) noexcept;
+  inline GLBuffer(type&& b) noexcept;
+  inline type& operator=(type&& b) noexcept;
 
   // operators
   [[nodiscard]] explicit operator bool() const { return _buffer; }
@@ -102,7 +106,6 @@ class GLBuffer
   GLuint _buffer = 0;
   GLsizei _size = 0;
 
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
   void bindCheck(GLenum target) {
     if ((target == GL_ARRAY_BUFFER && GLLastArrayBufferBind == _buffer)
         || (target == GL_COPY_WRITE_BUFFER && GLLastCopyWriteBufferBind == _buffer)) { return; }
@@ -113,18 +116,19 @@ class GLBuffer
     if (GLLastArrayBufferBind == _buffer) GLLastArrayBufferBind = 0;
     if (GLLastCopyWriteBufferBind == _buffer) GLLastCopyWriteBufferBind = 0;
   }
-#endif
 
   inline void cleanup() noexcept;
 };
 
 
 // **** Inline Implementations ****
-GLBuffer::GLBuffer(GLBuffer&& b) noexcept
+template<int VER>
+gx::GLBuffer<VER>::GLBuffer(GLBuffer<VER>&& b) noexcept
   : _buffer{b.release()}, _size{b._size}
 { }
 
-GLBuffer& GLBuffer::operator=(GLBuffer&& b) noexcept
+template<int VER>
+gx::GLBuffer<VER>& gx::GLBuffer<VER>::operator=(GLBuffer<VER>&& b) noexcept
 {
   if (this != &b) {
     cleanup();
@@ -134,19 +138,21 @@ GLBuffer& GLBuffer::operator=(GLBuffer&& b) noexcept
   return *this;
 }
 
-GLuint GLBuffer::init()
+template<int VER>
+GLuint gx::GLBuffer<VER>::init()
 {
   cleanup();
   _size = 0;
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  GX_GLCALL(glGenBuffers, 1, &_buffer);
-#else
-  GX_GLCALL(glCreateBuffers, 1, &_buffer);
-#endif
+  if constexpr (VER < 45) {
+    GX_GLCALL(glGenBuffers, 1, &_buffer);
+  } else {
+    GX_GLCALL(glCreateBuffers, 1, &_buffer);
+  }
   return _buffer;
 }
 
-GLuint GLBuffer::init(GLsizei size, const GLvoid* data)
+template<int VER>
+GLuint gx::GLBuffer<VER>::init(GLsizei size, const GLvoid* data)
 {
   // for immutable data store:
   //  glBufferStorage(target, size, data, flags);       // OGL 4.4
@@ -161,19 +167,20 @@ GLuint GLBuffer::init(GLsizei size, const GLvoid* data)
 
   cleanup();
   _size = size;
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  // immutable buffer not available, just make normal buffer
-  GX_GLCALL(glGenBuffers, 1, &_buffer);
-  bindCheck(GL_COPY_WRITE_BUFFER);
-  GX_GLCALL(glBufferData, GL_COPY_WRITE_BUFFER, size, data, data ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
-#else
-  GX_GLCALL(glCreateBuffers, 1, &_buffer);
-  GX_GLCALL(glNamedBufferStorage, _buffer, size, data, data ? 0 : GL_DYNAMIC_STORAGE_BIT);
-#endif
+  if constexpr (VER < 45) {
+    // immutable buffer not available, just make normal buffer
+    GX_GLCALL(glGenBuffers, 1, &_buffer);
+    bindCheck(GL_COPY_WRITE_BUFFER);
+    GX_GLCALL(glBufferData, GL_COPY_WRITE_BUFFER, size, data, data ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+  } else {
+    GX_GLCALL(glCreateBuffers, 1, &_buffer);
+    GX_GLCALL(glNamedBufferStorage, _buffer, size, data, data ? 0 : GL_DYNAMIC_STORAGE_BIT);
+  }
   return _buffer;
 }
 
-void GLBuffer::bind(GLenum target)
+template<int VER>
+void gx::GLBuffer<VER>::bind(GLenum target)
 {
   // -- GL45 NOTES --
   // glBindBuffer() most likely only used for ELEMENT_ARRAY, DRAW_INDIRECT
@@ -183,167 +190,175 @@ void GLBuffer::bind(GLenum target)
   // use glTextureBuffer()/glBindTextureUnit() for TEXTURE_BUFFER
 
   GX_GLCALL(glBindBuffer, target, _buffer);
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  clearBind();
-  if (target == GL_ARRAY_BUFFER) {
-    GLLastArrayBufferBind = _buffer;
-  } else if (target == GL_COPY_WRITE_BUFFER) {
-    GLLastCopyWriteBufferBind = _buffer;
+  if constexpr (VER < 45) {
+    clearBind();
+    if (target == GL_ARRAY_BUFFER) {
+      GLLastArrayBufferBind = _buffer;
+    } else if (target == GL_COPY_WRITE_BUFFER) {
+      GLLastCopyWriteBufferBind = _buffer;
+    }
   }
-#endif
 }
 
-void GLBuffer::bindBase(GLenum target, GLuint index)
+template<int VER>
+void gx::GLBuffer<VER>::bindBase(GLenum target, GLuint index)
 {
   // buffer target must be one of these:
   //   GL_ATOMIC_COUNTER_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER,
   //   GL_UNIFORM_BUFFER, GL_SHADER_STORAGE_BUFFER
 
   GX_GLCALL(glBindBufferBase, target, index, _buffer);
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  clearBind();
-#endif
+  if constexpr (VER < 45) { clearBind(); }
 }
 
-void GLBuffer::bindRange(GLenum target, GLuint index,
-			 GLintptr offset, GLsizeiptr size)
+template<int VER>
+void gx::GLBuffer<VER>::bindRange(
+  GLenum target, GLuint index, GLintptr offset, GLsizeiptr size)
 {
   // buffer target must be one of these:
   //   GL_ATOMIC_COUNTER_BUFFER, GL_TRANSFORM_FEEDBACK_BUFFER,
   //   GL_UNIFORM_BUFFER, GL_SHADER_STORAGE_BUFFER
 
   GX_GLCALL(glBindBufferRange, target, index, _buffer, offset, size);
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  clearBind();
-#endif
+  if constexpr (VER < 45) { clearBind(); }
 }
 
-void GLBuffer::unbind(GLenum target)
+template<int VER>
+void gx::GLBuffer<VER>::unbind(GLenum target)
 {
   GX_GLCALL(glBindBuffer, target, 0);
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  if (target == GL_ARRAY_BUFFER) {
-    GLLastArrayBufferBind = 0;
-  } else if (target == GL_COPY_WRITE_BUFFER) {
-    GLLastCopyWriteBufferBind = 0;
+  if constexpr (VER < 45) {
+    if (target == GL_ARRAY_BUFFER) {
+      GLLastArrayBufferBind = 0;
+    } else if (target == GL_COPY_WRITE_BUFFER) {
+      GLLastCopyWriteBufferBind = 0;
+    }
   }
-#endif
 }
 
-void GLBuffer::setData(GLsizei size, const void* data, GLenum usage)
+template<int VER>
+void gx::GLBuffer<VER>::setData(GLsizei size, const void* data, GLenum usage)
 {
   _size = size;
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck(GL_COPY_WRITE_BUFFER);
-  GX_GLCALL(glBufferData, GL_COPY_WRITE_BUFFER, size, data, usage);
-#else
-  GX_GLCALL(glNamedBufferData, _buffer, size, data, usage);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck(GL_COPY_WRITE_BUFFER);
+    GX_GLCALL(glBufferData, GL_COPY_WRITE_BUFFER, size, data, usage);
+  } else {
+    GX_GLCALL(glNamedBufferData, _buffer, size, data, usage);
+  }
 }
 
-void GLBuffer::setSubData(GLintptr offset, GLsizei size, const void* data)
+template<int VER>
+void gx::GLBuffer<VER>::setSubData(GLintptr offset, GLsizei size, const void* data)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck(GL_COPY_WRITE_BUFFER);
-  GX_GLCALL(glBufferSubData, GL_COPY_WRITE_BUFFER, offset, size, data);
-#else
-  GX_GLCALL(glNamedBufferSubData, _buffer, offset, size, data);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck(GL_COPY_WRITE_BUFFER);
+    GX_GLCALL(glBufferSubData, GL_COPY_WRITE_BUFFER, offset, size, data);
+  } else {
+    GX_GLCALL(glNamedBufferSubData, _buffer, offset, size, data);
+  }
 }
 
-void* GLBuffer::map(GLenum access)
+template<int VER>
+void* gx::GLBuffer<VER>::map(GLenum access)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck(GL_COPY_WRITE_BUFFER);
-  void* result = glMapBuffer(GL_COPY_WRITE_BUFFER, access);
-  #ifdef GX_DEBUG_GL
-  if (!result) { GLCheckErrors("glMapBuffer"); }
-  #endif
-#else
-  void* result = glMapNamedBuffer(_buffer, access);
-  #ifdef GX_DEBUG_GL
-  if (!result) { GLCheckErrors("glMapNamedBuffer"); }
-  #endif
+  void* result;
+  if constexpr (VER < 45) {
+    bindCheck(GL_COPY_WRITE_BUFFER);
+    result = glMapBuffer(GL_COPY_WRITE_BUFFER, access);
+#ifdef GX_DEBUG_GL
+    if (!result) { GLCheckErrors("glMapBuffer"); }
 #endif
+  } else {
+    result = glMapNamedBuffer(_buffer, access);
+#ifdef GX_DEBUG_GL
+    if (!result) { GLCheckErrors("glMapNamedBuffer"); }
+#endif
+  }
   return result;
 }
 
-bool GLBuffer::unmap()
+template<int VER>
+bool gx::GLBuffer<VER>::unmap()
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck(GL_COPY_WRITE_BUFFER);
-  bool result = glUnmapBuffer(GL_COPY_WRITE_BUFFER);
-  #ifdef GX_DEBUG_GL
-  GLCheckErrors("glUnmapBuffer");
-  #endif
-#else
-  bool result = glUnmapNamedBuffer(_buffer);
-  #ifdef GX_DEBUG_GL
-  GLCheckErrors("glUnmapNamedBuffer");
-  #endif
+  bool result;
+  if constexpr (VER < 45) {
+    bindCheck(GL_COPY_WRITE_BUFFER);
+    result = glUnmapBuffer(GL_COPY_WRITE_BUFFER);
+#ifdef GX_DEBUG_GL
+    GLCheckErrors("glUnmapBuffer");
 #endif
+  } else {
+    result = glUnmapNamedBuffer(_buffer);
+#ifdef GX_DEBUG_GL
+    GLCheckErrors("glUnmapNamedBuffer");
+#endif
+  }
   return result;
 }
 
-void* GLBuffer::mapRange(GLintptr offset, GLsizeiptr length, GLbitfield access)
+template<int VER>
+void* gx::GLBuffer<VER>::mapRange(
+  GLintptr offset, GLsizeiptr length, GLbitfield access)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck(GL_COPY_WRITE_BUFFER);
-  void* result = glMapBufferRange(GL_COPY_WRITE_BUFFER, offset, length, access);
-  #ifdef GX_DEBUG_GL
-  if (!result) { GLCheckErrors("glMapBufferRange"); }
-  #endif
-#else
-  void* result = glMapNamedBufferRange(_buffer, offset, length, access);
-  #ifdef GX_DEBUG_GL
-  if (!result) { GLCheckErrors("glMapNamedBufferRange"); }
-  #endif
+  void* result;
+  if constexpr (VER < 45) {
+    bindCheck(GL_COPY_WRITE_BUFFER);
+    result = glMapBufferRange(GL_COPY_WRITE_BUFFER, offset, length, access);
+#ifdef GX_DEBUG_GL
+    if (!result) { GLCheckErrors("glMapBufferRange"); }
 #endif
+  } else {
+    result = glMapNamedBufferRange(_buffer, offset, length, access);
+#ifdef GX_DEBUG_GL
+    if (!result) { GLCheckErrors("glMapNamedBufferRange"); }
+#endif
+  }
   return result;
 }
 
-void GLBuffer::flushMappedRange(GLintptr offset, GLsizeiptr length)
+template<int VER>
+void gx::GLBuffer<VER>::flushMappedRange(GLintptr offset, GLsizeiptr length)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck(GL_COPY_WRITE_BUFFER);
-  GX_GLCALL(glFlushMappedBufferRange, GL_COPY_WRITE_BUFFER, offset, length);
-#else
-  GX_GLCALL(glFlushMappedNamedBufferRange, _buffer, offset, length);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck(GL_COPY_WRITE_BUFFER);
+    GX_GLCALL(glFlushMappedBufferRange, GL_COPY_WRITE_BUFFER, offset, length);
+  } else {
+    GX_GLCALL(glFlushMappedNamedBufferRange, _buffer, offset, length);
+  }
 }
 
-GLint GLBuffer::getParameteri(GLenum pname)
+template<int VER>
+GLint gx::GLBuffer<VER>::getParameteri(GLenum pname)
 {
   GLint result;
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck(GL_COPY_WRITE_BUFFER);
-  GX_GLCALL(glGetBufferParameteriv, GL_COPY_WRITE_BUFFER, pname, &result);
-#else
-  GX_GLCALL(glGetNamedBufferParameteriv, _buffer, pname, &result);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck(GL_COPY_WRITE_BUFFER);
+    GX_GLCALL(glGetBufferParameteriv, GL_COPY_WRITE_BUFFER, pname, &result);
+  } else {
+    GX_GLCALL(glGetNamedBufferParameteriv, _buffer, pname, &result);
+  }
   return result;
 }
 
-GLint64 GLBuffer::getParameteri64(GLenum pname)
+template<int VER>
+GLint64 gx::GLBuffer<VER>::getParameteri64(GLenum pname)
 {
   GLint64 result;
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck(GL_COPY_WRITE_BUFFER);
-  GX_GLCALL(glGetBufferParameteri64v, GL_COPY_WRITE_BUFFER, pname, &result);
-#else
-  GX_GLCALL(glGetNamedBufferParameteri64v, _buffer, pname, &result);
-#endif
+  if constexpr (VER < 45) {
+    bindCheck(GL_COPY_WRITE_BUFFER);
+    GX_GLCALL(glGetBufferParameteri64v, GL_COPY_WRITE_BUFFER, pname, &result);
+  } else {
+    GX_GLCALL(glGetNamedBufferParameteri64v, _buffer, pname, &result);
+  }
   return result;
 }
 
-void GLBuffer::cleanup() noexcept
+template<int VER>
+void gx::GLBuffer<VER>::cleanup() noexcept
 {
   if (_buffer) {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-    clearBind();
-#endif
+    if constexpr (VER < 45) { clearBind(); }
     GX_GLCALL(glDeleteBuffers, 1, &_buffer);
   }
 }
-
-} // end GX_GLNAMESPACE

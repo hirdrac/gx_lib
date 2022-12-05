@@ -9,12 +9,12 @@
 #include "OpenGL.hh"
 #include <utility>
 #include <string>
-//#include <memory>
 
+namespace gx {
+  class GLShader;
+}
 
-inline namespace GX_GLNAMESPACE {
-
-class GLShader
+class gx::GLShader
 {
  public:
   GLShader() = default;
@@ -48,10 +48,10 @@ class GLShader
 
 
 // **** Inline Implementations ****
-GLShader::GLShader(GLShader&& s) noexcept
+gx::GLShader::GLShader(GLShader&& s) noexcept
   : _shader{s.release()} { }
 
-GLShader& GLShader::operator=(GLShader&& s) noexcept
+gx::GLShader& gx::GLShader::operator=(GLShader&& s) noexcept
 {
   if (this != &s) {
     cleanup();
@@ -60,7 +60,7 @@ GLShader& GLShader::operator=(GLShader&& s) noexcept
   return *this;
 }
 
-GLuint GLShader::init(GLenum type, const char* src, const char* header)
+GLuint gx::GLShader::init(GLenum type, const char* src, const char* header)
 {
   cleanup();
   _shader = glCreateShader(type);
@@ -80,7 +80,7 @@ GLuint GLShader::init(GLenum type, const char* src, const char* header)
   return compile_ok ? _shader : 0;
 }
 
-std::string GLShader::infoLog()
+std::string gx::GLShader::infoLog()
 {
   GLint logLen = 0;
   GX_GLCALL(glGetShaderiv, _shader, GL_INFO_LOG_LENGTH, &logLen);
@@ -95,11 +95,9 @@ std::string GLShader::infoLog()
   return {tmp, std::size_t(len)};
 }
 
-void GLShader::cleanup() noexcept
+void gx::GLShader::cleanup() noexcept
 {
   if (_shader) {
     GX_GLCALL(glDeleteShader, _shader);
   }
 }
-
-} // end GX_GLNAMESPACE

@@ -10,22 +10,26 @@
 #include "OpenGL.hh"
 #include <utility>
 
+namespace gx {
+  template<int VER> class GLVertexArray;
+}
 
-inline namespace GX_GLNAMESPACE {
-
-class GLVertexArray
+template<int VER>
+class gx::GLVertexArray
 {
  public:
+  using type = GLVertexArray<VER>;
+
   GLVertexArray() = default;
   ~GLVertexArray() { if (GLInitialized) cleanup(); }
 
   // prevent copy/assignment
-  GLVertexArray(const GLVertexArray&) = delete;
-  GLVertexArray& operator=(const GLVertexArray&) = delete;
+  GLVertexArray(const type&) = delete;
+  type& operator=(const type&) = delete;
 
   // enable move
-  inline GLVertexArray(GLVertexArray&& v) noexcept;
-  inline GLVertexArray& operator=(GLVertexArray&& v) noexcept;
+  inline GLVertexArray(type&& v) noexcept;
+  inline type& operator=(type&& v) noexcept;
 
   // operators
   [[nodiscard]] explicit operator bool() const { return _vao; }
@@ -43,40 +47,40 @@ class GLVertexArray
   inline void enableAttrib(GLuint index);
   inline void disableAttrib(GLuint index);
   inline void setAttrib(
-    GLuint index, GLBuffer& buffer, GLintptr offset,
+    GLuint index, GLBuffer<VER>& buffer, GLintptr offset,
     GLsizei stride, GLint size, GLenum type, GLboolean normalized);
   inline void setAttribI(
-    GLuint index, GLBuffer& buffer, GLintptr offset,
+    GLuint index, GLBuffer<VER>& buffer, GLintptr offset,
     GLsizei stride, GLint size, GLenum type);
   inline void setAttribL(
-    GLuint index, GLBuffer& buffer, GLintptr offset,
+    GLuint index, GLBuffer<VER>& buffer, GLintptr offset,
     GLsizei stride, GLint size, GLenum type);
   inline void setAttribDivisor(GLuint index, GLuint divisor);
 
  private:
   GLuint _vao = 0;
 
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
   void bindCheck() {
     if (GLLastVertexArrayBind != _vao) { bind(); }
   }
 
-  void bufferBindCheck(GLBuffer& buffer) {
+  void bufferBindCheck(GLBuffer<VER>& buffer) {
     if (GLLastArrayBufferBind != buffer.id()) {
       buffer.bind(GL_ARRAY_BUFFER);
     }
   }
-#endif
 
   inline void cleanup() noexcept;
 };
 
 
 // **** Inline Implementation ****
-GLVertexArray::GLVertexArray(GLVertexArray&& v) noexcept
+template<int VER>
+gx::GLVertexArray<VER>::GLVertexArray(GLVertexArray&& v) noexcept
   : _vao{v.release()} { }
 
-GLVertexArray& GLVertexArray::operator=(GLVertexArray&& v) noexcept
+template<int VER>
+gx::GLVertexArray<VER>& gx::GLVertexArray<VER>::operator=(GLVertexArray&& v) noexcept
 {
   if (this != &v) {
     cleanup();
@@ -85,141 +89,145 @@ GLVertexArray& GLVertexArray::operator=(GLVertexArray&& v) noexcept
   return *this;
 }
 
-GLuint GLVertexArray::init()
+template<int VER>
+GLuint gx::GLVertexArray<VER>::init()
 {
   cleanup();
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  GX_GLCALL(glGenVertexArrays, 1, &_vao);
-  // VA created when bound for the first time
-#else
-  GX_GLCALL(glCreateVertexArrays, 1, &_vao);
-#endif
+  if constexpr (VER < 45) {
+    GX_GLCALL(glGenVertexArrays, 1, &_vao);
+    // VA created when bound for the first time
+  } else {
+    GX_GLCALL(glCreateVertexArrays, 1, &_vao);
+  }
   return _vao;
 }
 
-void GLVertexArray::bind()
+template<int VER>
+void gx::GLVertexArray<VER>::bind()
 {
   GX_GLCALL(glBindVertexArray, _vao);
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  GLLastVertexArrayBind = _vao;
-#endif
+  if constexpr (VER < 45) { GLLastVertexArrayBind = _vao; }
 }
 
-void GLVertexArray::unbind()
+template<int VER>
+void gx::GLVertexArray<VER>::unbind()
 {
   GX_GLCALL(glBindVertexArray, 0);
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  GLLastVertexArrayBind = 0;
-#endif
+  if constexpr (VER < 45) { GLLastVertexArrayBind = 0; }
 }
 
-void GLVertexArray::enableAttrib(GLuint index)
+template<int VER>
+void gx::GLVertexArray<VER>::enableAttrib(GLuint index)
 {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glEnableVertexAttribArray, index);
-#else
-  GX_GLCALL(glEnableVertexArrayAttrib, _vao, index);
-#endif
-}
-
-void GLVertexArray::disableAttrib(GLuint index)
-{
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glDisableVertexAttribArray, index);
-#else
-  GX_GLCALL(glDisableVertexArrayAttrib, _vao, index);
-#endif
-}
-
-void GLVertexArray::setAttrib(
-  GLuint index, GLBuffer& buffer, GLintptr offset, GLsizei stride,
-  GLint size, GLenum type, GLboolean normalized)
-{
-#if defined(GX_GL33) || defined(GX_GL42)
-  bindCheck();
-  bufferBindCheck(buffer);
-  GX_GLCALL(glVertexAttribPointer, index, size, type, normalized, stride,
-            reinterpret_cast<const void*>(offset));
-#elif defined(GX_GL43)
-  // attribindex & bindingindex set the same for simplicity
-  bindCheck();
-  GX_GLCALL(glBindVertexBuffer, index, buffer.id(), offset, stride);
-  GX_GLCALL(glVertexAttribBinding, index, index);
-  GX_GLCALL(glVertexAttribFormat, index, size, type, normalized, 0);
-#else
-  // attribindex & bindingindex set the same for simplicity
-  GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
-  GX_GLCALL(glVertexArrayAttribBinding, _vao, index, index);
-  GX_GLCALL(glVertexArrayAttribFormat, _vao, index, size, type, normalized, 0);
-#endif
-}
-
-void GLVertexArray::setAttribI(
-  GLuint index, GLBuffer& buffer, GLintptr offset,
-  GLsizei stride, GLint size, GLenum type)
-{
-#if defined(GX_GL33) || defined(GX_GL42)
-  bindCheck();
-  bufferBindCheck(buffer);
-  GX_GLCALL(glVertexAttribIPointer, index, size, type, stride,
-	 reinterpret_cast<const void*>(offset));
-#elif defined(GX_GL43)
-  // attribindex & bindingindex set the same for simplicity
-  bindCheck();
-  GX_GLCALL(glBindVertexBuffer, index, buffer.id(), offset, stride);
-  GX_GLCALL(glVertexAttribBinding, index, index);
-  GX_GLCALL(glVertexAttribIFormat, index, size, type, 0);
-#else
-  // attribindex & bindingindex set the same for simplicity
-  GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
-  GX_GLCALL(glVertexArrayAttribBinding, _vao, index, index);
-  GX_GLCALL(glVertexArrayAttribIFormat, _vao, index, size, type, 0);
-#endif
-}
-
-void GLVertexArray::setAttribL(
-  GLuint index, GLBuffer& buffer, GLintptr offset,
-  GLsizei stride, GLint size, GLenum type)
-{
-#if defined(GX_GL33) || defined(GX_GL42)
-  bindCheck();
-  bufferBindCheck(buffer);
-  GX_GLCALL(glVertexAttribLPointer, index, size, type, stride,
-            reinterpret_cast<const void*>(offset));
-#elif defined(GX_GL43)
-  // attribindex & bindingindex set the same for simplicity
-  bindCheck();
-  GX_GLCALL(glBindVertexBuffer, index, buffer.id(), offset, stride);
-  GX_GLCALL(glVertexAttribBinding, index, index);
-  GX_GLCALL(glVertexAttribLFormat, index, size, type, 0);
-#else
-  // attribindex & bindingindex set the same for simplicity
-  GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
-  GX_GLCALL(glVertexArrayAttribBinding, _vao, index, index);
-  GX_GLCALL(glVertexArrayAttribLFormat, _vao, index, size, type, 0);
-#endif
-}
-
-void GLVertexArray::setAttribDivisor(GLuint index, GLuint divisor)
-{
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-  bindCheck();
-  GX_GLCALL(glVertexAttribDivisor, index, divisor);
-#else
-  GX_GLCALL(glVertexArrayBindingDivisor, _vao, index, divisor);
-#endif
-}
-
-void GLVertexArray::cleanup() noexcept
-{
-  if (_vao) {
-#if defined(GX_GL33) || defined(GX_GL42) || defined(GX_GL43)
-    if (GLLastVertexArrayBind == _vao) { GLLastVertexArrayBind = 0; }
-#endif
-    GX_GLCALL(glDeleteVertexArrays, 1, &_vao);
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glEnableVertexAttribArray, index);
+  } else {
+    GX_GLCALL(glEnableVertexArrayAttrib, _vao, index);
   }
 }
 
-} // end GX_GLNAMESPACE
+template<int VER>
+void gx::GLVertexArray<VER>::disableAttrib(GLuint index)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glDisableVertexAttribArray, index);
+  } else {
+    GX_GLCALL(glDisableVertexArrayAttrib, _vao, index);
+  }
+}
+
+template<int VER>
+void gx::GLVertexArray<VER>::setAttrib(
+  GLuint index, GLBuffer<VER>& buffer, GLintptr offset, GLsizei stride,
+  GLint size, GLenum type, GLboolean normalized)
+{
+  if constexpr (VER < 43) {
+    bindCheck();
+    bufferBindCheck(buffer);
+    GX_GLCALL(glVertexAttribPointer, index, size, type, normalized, stride,
+              reinterpret_cast<const void*>(offset));
+  } else if constexpr (VER < 45) {
+    // attribindex & bindingindex set the same for simplicity
+    bindCheck();
+    GX_GLCALL(glBindVertexBuffer, index, buffer.id(), offset, stride);
+    GX_GLCALL(glVertexAttribBinding, index, index);
+    GX_GLCALL(glVertexAttribFormat, index, size, type, normalized, 0);
+  } else {
+    // attribindex & bindingindex set the same for simplicity
+    GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
+    GX_GLCALL(glVertexArrayAttribBinding, _vao, index, index);
+    GX_GLCALL(glVertexArrayAttribFormat, _vao, index, size, type, normalized, 0);
+  }
+}
+
+template<int VER>
+void gx::GLVertexArray<VER>::setAttribI(
+  GLuint index, GLBuffer<VER>& buffer, GLintptr offset,
+  GLsizei stride, GLint size, GLenum type)
+{
+  if constexpr (VER < 43) {
+    bindCheck();
+    bufferBindCheck(buffer);
+    GX_GLCALL(glVertexAttribIPointer, index, size, type, stride,
+              reinterpret_cast<const void*>(offset));
+  } else if constexpr (VER < 45) {
+    // attribindex & bindingindex set the same for simplicity
+    bindCheck();
+    GX_GLCALL(glBindVertexBuffer, index, buffer.id(), offset, stride);
+    GX_GLCALL(glVertexAttribBinding, index, index);
+    GX_GLCALL(glVertexAttribIFormat, index, size, type, 0);
+  } else {
+    // attribindex & bindingindex set the same for simplicity
+    GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
+    GX_GLCALL(glVertexArrayAttribBinding, _vao, index, index);
+    GX_GLCALL(glVertexArrayAttribIFormat, _vao, index, size, type, 0);
+  }
+}
+
+template<int VER>
+void gx::GLVertexArray<VER>::setAttribL(
+  GLuint index, GLBuffer<VER>& buffer, GLintptr offset,
+  GLsizei stride, GLint size, GLenum type)
+{
+  if constexpr (VER < 43) {
+    bindCheck();
+    bufferBindCheck(buffer);
+    GX_GLCALL(glVertexAttribLPointer, index, size, type, stride,
+              reinterpret_cast<const void*>(offset));
+  } else if constexpr (VER < 45) {
+    // attribindex & bindingindex set the same for simplicity
+    bindCheck();
+    GX_GLCALL(glBindVertexBuffer, index, buffer.id(), offset, stride);
+    GX_GLCALL(glVertexAttribBinding, index, index);
+    GX_GLCALL(glVertexAttribLFormat, index, size, type, 0);
+  } else {
+    // attribindex & bindingindex set the same for simplicity
+    GX_GLCALL(glVertexArrayVertexBuffer, _vao, index, buffer.id(), offset, stride);
+    GX_GLCALL(glVertexArrayAttribBinding, _vao, index, index);
+    GX_GLCALL(glVertexArrayAttribLFormat, _vao, index, size, type, 0);
+  }
+}
+
+template<int VER>
+void gx::GLVertexArray<VER>::setAttribDivisor(GLuint index, GLuint divisor)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glVertexAttribDivisor, index, divisor);
+  } else {
+    GX_GLCALL(glVertexArrayBindingDivisor, _vao, index, divisor);
+  }
+}
+
+template<int VER>
+void gx::GLVertexArray<VER>::cleanup() noexcept
+{
+  if (_vao) {
+    if constexpr (VER < 45) {
+      if (GLLastVertexArrayBind == _vao) { GLLastVertexArrayBind = 0; }
+    }
+    GX_GLCALL(glDeleteVertexArrays, 1, &_vao);
+  }
+}

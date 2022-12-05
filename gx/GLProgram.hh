@@ -10,12 +10,12 @@
 #include "OpenGL.hh"
 #include <utility>
 #include <string>
-//#include <memory>
 
+namespace gx {
+  class GLProgram;
+}
 
-inline namespace GX_GLNAMESPACE {
-
-class GLProgram
+class gx::GLProgram
 {
  public:
   GLProgram() = default;
@@ -88,10 +88,10 @@ class GLProgram
 
 
 // **** Inline Implementations ****
-GLProgram::GLProgram(GLProgram&& p) noexcept
+gx::GLProgram::GLProgram(GLProgram&& p) noexcept
   : _prog{p.release()} { }
 
-GLProgram& GLProgram::operator=(GLProgram&& p) noexcept
+gx::GLProgram& gx::GLProgram::operator=(GLProgram&& p) noexcept
 {
   if (this != &p) {
     cleanup();
@@ -100,14 +100,14 @@ GLProgram& GLProgram::operator=(GLProgram&& p) noexcept
   return *this;
 }
 
-GLuint GLProgram::init()
+GLuint gx::GLProgram::init()
 {
   cleanup();
   _prog = glCreateProgram();
   return _prog;
 }
 
-bool GLProgram::link()
+bool gx::GLProgram::link()
 {
   GX_GLCALL(glLinkProgram, _prog);
 
@@ -116,7 +116,7 @@ bool GLProgram::link()
   return status;
 }
 
-bool GLProgram::validate()
+bool gx::GLProgram::validate()
 {
   GX_GLCALL(glValidateProgram, _prog);
 
@@ -125,7 +125,7 @@ bool GLProgram::validate()
   return status;
 }
 
-std::string GLProgram::infoLog() const
+std::string gx::GLProgram::infoLog() const
 {
   GLint logLen = 0;
   GX_GLCALL(glGetProgramiv, _prog, GL_INFO_LOG_LENGTH, &logLen);
@@ -140,7 +140,7 @@ std::string GLProgram::infoLog() const
   return {tmp, std::size_t(len)};
 }
 
-GLint GLProgram::getAttribLocation(const char* name) const
+GLint gx::GLProgram::getAttribLocation(const char* name) const
 {
   const auto loc = glGetAttribLocation(_prog, name);
   #ifdef GX_DEBUG_GL
@@ -150,7 +150,7 @@ GLint GLProgram::getAttribLocation(const char* name) const
   return loc;
 }
 
-GLint GLProgram::getUniformLocation(const char* name) const
+GLint gx::GLProgram::getUniformLocation(const char* name) const
 {
   const auto loc = glGetUniformLocation(_prog, name);
   #ifdef GX_DEBUG_GL
@@ -160,7 +160,7 @@ GLint GLProgram::getUniformLocation(const char* name) const
   return loc;
 }
 
-GLuint GLProgram::getUniformBlockIndex(const char* blockName) const
+GLuint gx::GLProgram::getUniformBlockIndex(const char* blockName) const
 {
   const auto index = glGetUniformBlockIndex(_prog, blockName);
   #ifdef GX_DEBUG_GL
@@ -170,11 +170,9 @@ GLuint GLProgram::getUniformBlockIndex(const char* blockName) const
   return index;
 }
 
-void GLProgram::cleanup() noexcept
+void gx::GLProgram::cleanup() noexcept
 {
   if (_prog) {
     GX_GLCALL(glDeleteProgram, _prog);
   }
 }
-
-} // end GX_GLNAMESPACE

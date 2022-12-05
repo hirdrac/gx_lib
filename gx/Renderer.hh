@@ -30,7 +30,6 @@ class gx::Renderer
   Renderer& operator=(const Renderer&) = delete;
 
   // setup methods
-  virtual void setWindowHints(bool debug) = 0;
   virtual bool init(GLFWwindow* win) = 0;
 
   // texture methods

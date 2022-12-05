@@ -15,10 +15,19 @@
 #include "Color.hh"
 #include "Projection.hh"
 #include "Logger.hh"
+#include "GLProgram.hh"
+#include "GLBuffer.hh"
+#include "GLVertexArray.hh"
+#include "GLUniform.hh"
+#include "GLTexture.hh"
 #include "OpenGL.hh"
 #include "Assert.hh"
 #include <GLFW/glfw3.h>
 #include <cstring>
+#include <vector>
+#include <unordered_map>
+#include <mutex>
+
 using namespace gx;
 
 
@@ -37,16 +46,29 @@ namespace {
     }
   }
 
+  template<int VER>
   [[nodiscard]] GLProgram makeProgram(const char* vsrc, const char* fsrc)
   {
+    const char* srcHeader;
+    if constexpr (VER < 42) {
+      srcHeader = "#version 330 core\n"
+        "#extension GL_ARB_shading_language_packing : enable\n";
+    } else if constexpr (VER < 43) {
+      srcHeader = "#version 420 core\n";
+    } else if constexpr (VER < 45) {
+      srcHeader = "#version 430 core\n";
+    } else {
+      srcHeader = "#version 450 core\n";
+    }
+
     GLShader vshader;
-    if (!vshader.init(GL_VERTEX_SHADER, vsrc, GLSL_SOURCE_HEADER)) {
+    if (!vshader.init(GL_VERTEX_SHADER, vsrc, srcHeader)) {
       GX_LOG_ERROR("vshader error: ", vshader.infoLog());
       return {};
     }
 
     GLShader fshader;
-    if (!fshader.init(GL_FRAGMENT_SHADER, fsrc, GLSL_SOURCE_HEADER)) {
+    if (!fshader.init(GL_FRAGMENT_SHADER, fsrc, srcHeader)) {
       GX_LOG_ERROR("fshader error: ", fshader.infoLog());
       return {};
     }
@@ -58,6 +80,20 @@ namespace {
     }
 
     return prog;
+  }
+
+  void setCullFace(int cap)
+  {
+    const bool cw = cap & CULL_CW;
+    const bool ccw = cap & CULL_CCW;
+    // front face set to clockwise in renderFrame()
+    if (cw && ccw) {
+      GX_GLCALL(glCullFace, GL_FRONT_AND_BACK);
+    } else if (cw) {
+      GX_GLCALL(glCullFace, GL_FRONT);
+    } else if (ccw) {
+      GX_GLCALL(glCullFace, GL_BACK);
+    }
   }
 
   // DrawEntry iterator reading helper functions
@@ -92,39 +128,151 @@ namespace {
     *ptr++ = {pt.x,pt.y,pt.z, n.x,n.y,n.z, tx.x,tx.y, c}; }
 }
 
-void OpenGLRenderer::setWindowHints(bool debug)
-{
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-  //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-
-  // use to force specific GL version for context
-  //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR);
-  //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
-  //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, debug ? GLFW_TRUE : GLFW_FALSE);
+namespace gx {
+  template<int VER> class OpenGLRenderer;
 }
 
-bool OpenGLRenderer::init(GLFWwindow* win)
+
+// **** OpenGLRenderer ****
+template<int VER>
+class gx::OpenGLRenderer final : public gx::Renderer
+{
+ public:
+  // gx::Renderer methods
+  bool init(GLFWwindow* win) override;
+  TextureID setTexture(TextureID id, const Image& img, int levels,
+                       FilterType minFilter, FilterType magFilter) override;
+  void freeTexture(TextureID id) override;
+  void draw(int width, int height,
+            std::initializer_list<const DrawLayer*> dl) override;
+  void renderFrame() override;
+
+ private:
+  int _width = 0, _height = 0;
+
+  static constexpr int SHADER_COUNT = 4;
+  GLProgram _sp[SHADER_COUNT];
+  GLUniform1i _sp_texUnit[SHADER_COUNT];
+
+  GLBuffer<VER> _uniformBuf;
+  struct UniformData {
+    Mat4 viewT{INIT_ZERO};
+    Mat4 projT{INIT_ZERO};
+    Vec3 lightPos{INIT_ZERO};
+    uint32_t lightA;
+    uint32_t lightD;
+    uint32_t modColor;
+  };
+
+  GLVertexArray<VER> _vao;
+  GLBuffer<VER> _vbo;
+
+  struct TextureEntry {
+    GLTexture2D<VER> tex;
+    int flags = 0;
+    int unit = -1;
+    int channels = 0;
+  };
+  std::unordered_map<TextureID,TextureEntry> _textures;
+
+  enum GLOperation : uint32_t {
+    OP_null,
+
+    // set uniform data
+    OP_viewT,         // <OP val*16> (17)
+    OP_projT,         // <OP val*16> (17)
+    OP_modColor,      // <OP rgba8> (2)
+    OP_light,         // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
+    OP_no_light,      // <OP> (1)
+
+    // set GL state
+    OP_capabilities,  // <OP cap> (2)
+    OP_lineWidth,     // <OP width> (2)
+    OP_bgColor,       // <OP rgba8> (2)
+
+    // draw
+    OP_clear_color,    // <OP> (1)
+    OP_clear_depth,    // <OP> (1)
+    OP_clear_all,      // <OP> (1)
+    OP_draw_lines,     // <OP first count> (3)
+    OP_draw_triangles, // <OP first count texID> (4)
+  };
+
+  struct OpEntry {
+    union {
+      GLOperation op;
+      float    fval;
+      int32_t  ival;
+      uint32_t uval;
+    };
+
+    OpEntry(GLOperation o) : op{o} { }
+    OpEntry(float f) : fval{f} { }
+    OpEntry(int32_t i) : ival{i} { }
+    OpEntry(uint32_t u) : uval{u} { }
+  };
+  static_assert(sizeof(OpEntry) == 4);
+
+  std::vector<OpEntry> _opData;
+  GLOperation _lastOp = OP_null;
+  int _currentGLCap = -1; // current GL capability state
+  std::mutex _glMutex;
+
+  void addOp(GLOperation op, const Mat4& m) {
+    _opData.reserve(_opData.size() + 17);
+    _opData.push_back(op);
+    for (float v : m) { _opData.push_back(v); }
+    _lastOp = op;
+  }
+
+  template<class... Args>
+  void addOp(GLOperation op, const Args&... args) {
+    _opData.reserve(_opData.size() + sizeof...(args) + 1);
+    _opData.push_back(op);
+    (_opData.push_back(args), ...);
+    _lastOp = op;
+  }
+
+  void addDrawLines(int32_t& first, int32_t count) {
+    if (_lastOp == OP_draw_lines) {
+      const std::size_t s = _opData.size();
+      const int32_t last_first = _opData[s - 2].ival;
+      int32_t& last_count = _opData[s - 1].ival;
+      if (first == (last_first + last_count)) {
+        last_count += count;
+        first += count;
+        return;
+      }
+    }
+    addOp(OP_draw_lines, first, count);
+    first += count;
+  }
+
+  void addDrawTriangles(int32_t& first, int32_t count, TextureID tid) {
+    if (_lastOp == OP_draw_triangles) {
+      const std::size_t s = _opData.size();
+      const int32_t last_first = _opData[s - 3].ival;
+      int32_t& last_count = _opData[s - 2].ival;
+      const TextureID last_tid = _opData[s - 1].uval;
+      if (first == (last_first + last_count) && last_tid == tid) {
+        last_count += count;
+        first += count;
+        return;
+      }
+    }
+    addOp(OP_draw_triangles, first, count, tid);
+    first += count;
+  }
+
+  void setGLCapabilities(int cap);
+};
+
+template<int VER>
+bool OpenGLRenderer<VER>::init(GLFWwindow* win)
 {
   std::lock_guard lg{_glMutex};
   _window = win;
-  setCurrentContext(win);
-  if (!GLSetupContext(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
-    return false;
-  }
-
-  GX_LOG_INFO("GLVersion: ", GLVersion.major, ".", GLVersion.minor);
-  if (GLVersion.major < GL_VERSION_MAJOR
-      || (GLVersion.major == GL_VERSION_MAJOR
-          && GLVersion.minor < GL_VERSION_MINOR)) {
-    GX_LOG_ERROR("OpenGL version ", GL_VERSION_MAJOR, ".", GL_VERSION_MINOR,
-                 " or higher required");
-    return false;
-  }
-
-  _maxTextureSize = GLTexture2D::maxSize();
+  _maxTextureSize = GLTexture2D<VER>::maxSize();
   glfwSwapInterval(1); // enable V-SYNC
 
   _uniformBuf.init(sizeof(UniformData), nullptr);
@@ -152,7 +300,7 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     "in vec4 v_color;"
     "out vec4 fragColor;"
     "void main() { fragColor = v_color; }";
-  _sp[0] = makeProgram(SP0V_SRC, SP0F_SRC);
+  _sp[0] = makeProgram<VER>(SP0V_SRC, SP0F_SRC);
 
   // mono color texture shader (fonts)
   static const char* SP1V_SRC =
@@ -177,7 +325,7 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     "  if (a == 0.0) discard;"
     "  fragColor = vec4(v_color.rgb, v_color.a * a);"
     "}";
-  _sp[1] = makeProgram(SP1V_SRC, SP1F_SRC);
+  _sp[1] = makeProgram<VER>(SP1V_SRC, SP1F_SRC);
 
   // full color texture shader (images)
   static const char* SP2F_SRC =
@@ -186,7 +334,7 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     "uniform sampler2D texUnit;"
     "out vec4 fragColor;"
     "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }";
-  _sp[2] = makeProgram(SP1V_SRC, SP2F_SRC);
+  _sp[2] = makeProgram<VER>(SP1V_SRC, SP2F_SRC);
 
   // **** 3d shading w/ lighting ****
   static const char* SP3V_SRC =
@@ -222,7 +370,7 @@ bool OpenGLRenderer::init(GLFWwindow* win)
     "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
     "  fragColor = v_color * vec4((v_lightD * lt) + v_lightA, 1.0);"
     "}";
-    _sp[3] = makeProgram(SP3V_SRC, SP3F_SRC);
+    _sp[3] = makeProgram<VER>(SP3V_SRC, SP3F_SRC);
 
   #undef UNIFORM_BLOCK_SRC
 
@@ -251,7 +399,8 @@ bool OpenGLRenderer::init(GLFWwindow* win)
   return status;
 }
 
-TextureID OpenGLRenderer::setTexture(
+template<int VER>
+TextureID OpenGLRenderer<VER>::setTexture(
   TextureID id, const Image& img, int levels,
   FilterType minFilter, FilterType magFilter)
 {
@@ -283,7 +432,7 @@ TextureID OpenGLRenderer::setTexture(
 
   setCurrentContext(_window);
 
-  GLTexture2D& t = ePtr->tex;
+  auto& t = ePtr->tex;
   if (!t || t.width() != img.width() || t.height() != img.height()
       || t.internalFormat() != texformat) {
     t.init(std::max(1, levels), texformat, img.width(), img.height());
@@ -326,14 +475,16 @@ TextureID OpenGLRenderer::setTexture(
   return id;
 }
 
-void OpenGLRenderer::freeTexture(TextureID id)
+template<int VER>
+void OpenGLRenderer<VER>::freeTexture(TextureID id)
 {
   std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
   _textures.erase(id);
 }
 
-void OpenGLRenderer::draw(
+template<int VER>
+void OpenGLRenderer<VER>::draw(
   int width, int height, std::initializer_list<const DrawLayer*> dl)
 {
   unsigned int vsize = 0; // vertices needed
@@ -393,8 +544,8 @@ void OpenGLRenderer::draw(
   _height = height;
 
   if (vsize == 0) {
-    _vbo = GLBuffer{};
-    _vao = GLVertexArray{};
+    _vbo = {};
+    _vao = {};
   } else if (!_vbo) {
     _vbo.init();
     _vao.init();
@@ -759,7 +910,8 @@ void OpenGLRenderer::draw(
 #endif
 }
 
-void OpenGLRenderer::renderFrame()
+template<int VER>
+void OpenGLRenderer<VER>::renderFrame()
 {
   std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
@@ -902,7 +1054,8 @@ void OpenGLRenderer::renderFrame()
   GLClearState();
 }
 
-void OpenGLRenderer::setGLCapabilities(int cap)
+template<int VER>
+void OpenGLRenderer<VER>::setGLCapabilities(int cap)
 {
   constexpr int CULL = CULL_CW | CULL_CCW;
   GX_ASSERT(cap >= 0);
@@ -948,16 +1101,32 @@ void OpenGLRenderer::setGLCapabilities(int cap)
   _currentGLCap = cap;
 }
 
-void OpenGLRenderer::setCullFace(int cap)
+
+// **** Functions ****
+std::unique_ptr<Renderer> gx::makeOpenGLRenderer(GLFWwindow* win)
 {
-  const bool cw = cap & CULL_CW;
-  const bool ccw = cap & CULL_CCW;
-  // front face set to clockwise in renderFrame()
-  if (cw && ccw) {
-    GX_GLCALL(glCullFace, GL_FRONT_AND_BACK);
-  } else if (cw) {
-    GX_GLCALL(glCullFace, GL_FRONT);
-  } else if (ccw) {
-    GX_GLCALL(glCullFace, GL_BACK);
+  setCurrentContext(win);
+  if (!GLSetupContext(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
+    return {};
+  }
+
+  const int ver = (GLVersion.major * 10) + GLVersion.minor;
+  if (ver < 33) {
+    GX_LOG_ERROR("OpenGL 3.3 or higher is required");
+    return {};
+  }
+
+  if (ver >= 45) {
+    GX_LOG_INFO("OpenGL 4.5 Renderer");
+    return std::make_unique<OpenGLRenderer<45>>();
+  } else if (ver >= 43) {
+    GX_LOG_INFO("OpenGL 4.3 Renderer");
+    return std::make_unique<OpenGLRenderer<43>>();
+  } else if (ver >= 42) {
+    GX_LOG_INFO("OpenGL 4.2 Renderer");
+    return std::make_unique<OpenGLRenderer<42>>();
+  } else {
+    GX_LOG_INFO("OpenGL 3.3 Renderer");
+    return std::make_unique<OpenGLRenderer<33>>();
   }
 }
