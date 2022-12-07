@@ -27,7 +27,6 @@
 #include <vector>
 #include <unordered_map>
 #include <mutex>
-
 using namespace gx;
 
 
@@ -80,6 +79,55 @@ namespace {
     }
 
     return prog;
+  }
+
+  uint32_t calcVSize(const DrawList& dl)
+  {
+    unsigned int vsize = 0;
+    const DrawEntry* d    = dl.data();
+    const DrawEntry* dEnd = d + dl.size();
+
+    while (d < dEnd) {
+      const DrawCmd cmd = d->cmd;
+      switch (cmd) {
+        case CMD_color:        d += 2; break;
+        case CMD_texture:      d += 2; break;
+        case CMD_lineWidth:    d += 2; break;
+        case CMD_normal3:      d += 4; break;
+        case CMD_line2:        d += 5;  vsize += 2; break;
+        case CMD_line3:        d += 7;  vsize += 2; break;
+        case CMD_line2C:       d += 7;  vsize += 2; break;
+        case CMD_line3C:       d += 9;  vsize += 2; break;
+        case CMD_triangle2:    d += 7;  vsize += 3; break;
+        case CMD_triangle3:    d += 10; vsize += 3; break;
+        case CMD_triangle2T:   d += 13; vsize += 3; break;
+        case CMD_triangle3T:   d += 16; vsize += 3; break;
+        case CMD_triangle2C:   d += 10; vsize += 3; break;
+        case CMD_triangle3C:   d += 13; vsize += 3; break;
+        case CMD_triangle2TC:  d += 16; vsize += 3; break;
+        case CMD_triangle3TC:  d += 19; vsize += 3; break;
+        case CMD_triangle3NTC: d += 28; vsize += 3; break;
+        case CMD_quad2:        d += 9;  vsize += 6; break;
+        case CMD_quad3:        d += 13; vsize += 6; break;
+        case CMD_quad2T:       d += 17; vsize += 6; break;
+        case CMD_quad3T:       d += 21; vsize += 6; break;
+        case CMD_quad2C:       d += 13; vsize += 6; break;
+        case CMD_quad3C:       d += 17; vsize += 6; break;
+        case CMD_quad2TC:      d += 21; vsize += 6; break;
+        case CMD_quad3TC:      d += 25; vsize += 6; break;
+        case CMD_quad3NTC:     d += 37; vsize += 6; break;
+        case CMD_rectangle:    d += 5;  vsize += 6; break;
+        case CMD_rectangleT:   d += 9;  vsize += 6; break;
+
+        default:
+          d = dEnd; // stop reading at first invalid cmd
+          GX_LOG_ERROR("unknown DrawCmd value: ", int(cmd));
+          break;
+      }
+    }
+
+    GX_ASSERT(d == dEnd);
+    return vsize;
   }
 
   void setCullFace(int cap)
@@ -487,53 +535,8 @@ template<int VER>
 void OpenGLRenderer<VER>::draw(
   int width, int height, std::initializer_list<const DrawLayer*> dl)
 {
-  unsigned int vsize = 0; // vertices needed
-  for (const DrawLayer* lPtr : dl) {
-    const DrawEntry* data     = lPtr->entries.data();
-    const DrawEntry* data_end = data + lPtr->entries.size();
-
-    const DrawEntry* d = data;
-    while (d < data_end) {
-      const DrawCmd cmd = d->cmd;
-      switch (cmd) {
-        case CMD_color:        d += 2; break;
-        case CMD_texture:      d += 2; break;
-        case CMD_lineWidth:    d += 2; break;
-        case CMD_normal3:      d += 4; break;
-        case CMD_line2:        d += 5;  vsize += 2; break;
-        case CMD_line3:        d += 7;  vsize += 2; break;
-        case CMD_line2C:       d += 7;  vsize += 2; break;
-        case CMD_line3C:       d += 9;  vsize += 2; break;
-        case CMD_triangle2:    d += 7;  vsize += 3; break;
-        case CMD_triangle3:    d += 10; vsize += 3; break;
-        case CMD_triangle2T:   d += 13; vsize += 3; break;
-        case CMD_triangle3T:   d += 16; vsize += 3; break;
-        case CMD_triangle2C:   d += 10; vsize += 3; break;
-        case CMD_triangle3C:   d += 13; vsize += 3; break;
-        case CMD_triangle2TC:  d += 16; vsize += 3; break;
-        case CMD_triangle3TC:  d += 19; vsize += 3; break;
-        case CMD_triangle3NTC: d += 28; vsize += 3; break;
-        case CMD_quad2:        d += 9;  vsize += 6; break;
-        case CMD_quad3:        d += 13; vsize += 6; break;
-        case CMD_quad2T:       d += 17; vsize += 6; break;
-        case CMD_quad3T:       d += 21; vsize += 6; break;
-        case CMD_quad2C:       d += 13; vsize += 6; break;
-        case CMD_quad3C:       d += 17; vsize += 6; break;
-        case CMD_quad2TC:      d += 21; vsize += 6; break;
-        case CMD_quad3TC:      d += 25; vsize += 6; break;
-        case CMD_quad3NTC:     d += 37; vsize += 6; break;
-        case CMD_rectangle:    d += 5;  vsize += 6; break;
-        case CMD_rectangleT:   d += 9;  vsize += 6; break;
-
-        default:
-          d = data_end; // stop reading at first invalid cmd
-          GX_LOG_ERROR("unknown DrawCmd value: ", int(cmd));
-          break;
-      }
-    }
-
-    GX_ASSERT(d == data_end);
-  }
+  unsigned int vsize = 0; // vertices needed for all layers
+  for (const DrawLayer* lPtr : dl) { vsize += calcVSize(lPtr->entries); }
 
   std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
