@@ -81,7 +81,7 @@ namespace {
     return prog;
   }
 
-  uint32_t calcVSize(const DrawList& dl)
+  [[nodiscard]] uint32_t calcVSize(const DrawList& dl)
   {
     unsigned int vsize = 0;
     const DrawEntry* d    = dl.data();
@@ -434,13 +434,13 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
 #if 0
   // debug output
   float val[2] = {};
-  glGetFloatv(GL_ALIASED_LINE_WIDTH_RANGE, val);
+  GX_GLCALL(glGetFloatv, GL_ALIASED_LINE_WIDTH_RANGE, val);
   println("GL_ALIASED_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
 
-  glGetFloatv(GL_SMOOTH_LINE_WIDTH_RANGE, val);
+  GX_GLCALL(glGetFloatv, GL_SMOOTH_LINE_WIDTH_RANGE, val);
   println("GL_SMOOTH_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
 
-  glGetFloatv(GL_SMOOTH_LINE_WIDTH_GRANULARITY, val);
+  GX_GLCALL(glGetFloatv, GL_SMOOTH_LINE_WIDTH_GRANULARITY, val);
   println("GL_SMOOTH_LINE_WIDTH_GRANULARITY: ", val[0]);
 #endif
 
