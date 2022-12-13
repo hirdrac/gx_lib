@@ -202,14 +202,15 @@ namespace gx {
   using GLTexture2DMultisample = GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE>;
 
   template<int VER>
-  using GLTexture2DMultisampleArray = GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE_ARRAY>;
+  using GLTexture2DMultisampleArray =
+    GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE_ARRAY>;
 }
 
 
 // **** Inline Implementations ****
 template<int VER, GLenum TARGET>
 gx::GLTextureT<VER,TARGET>::GLTextureT(GLTextureT<VER,TARGET>&& t) noexcept
-  : _tex(t.release())
+  : _tex{t.release()}
 {
   _internalformat = t._internalformat;
   _levels = t._levels;
@@ -328,16 +329,16 @@ GLuint gx::GLTextureT<VER,TARGET>::init(
     bindCheck();
     if constexpr (TARGET == GL_TEXTURE_3D || TARGET == GL_PROXY_TEXTURE_3D) {
       for (int i = 0; i < levels; ++i) {
-        GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
-                  GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth,
+                  0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
         width = std::max(1, (width / 2));
         height = std::max(1, (height / 2));
         depth = std::max(1, (depth / 2));
       }
     } else {
       for (int i = 0; i < levels; ++i) {
-        GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth, 0,
-                  GL_RED, GL_UNSIGNED_BYTE, nullptr);
+        GX_GLCALL(glTexImage3D, TARGET, i, internalformat, width, height, depth,
+                  0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
         width = std::max(1, (width / 2));
         height = std::max(1, (height / 2));
       }
@@ -345,10 +346,12 @@ GLuint gx::GLTextureT<VER,TARGET>::init(
   } else if constexpr (VER < 45) {
     GX_GLCALL(glGenTextures, 1, &_tex);
     bindCheck();
-    GX_GLCALL(glTexStorage3D, TARGET, levels, internalformat, width, height, depth);
+    GX_GLCALL(glTexStorage3D, TARGET, levels, internalformat,
+              width, height, depth);
   } else {
     GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
-    GX_GLCALL(glTextureStorage3D, _tex, levels, internalformat, width, height, depth);
+    GX_GLCALL(glTextureStorage3D, _tex, levels, internalformat,
+              width, height, depth);
   }
   return _tex;
 }
@@ -362,7 +365,8 @@ GLuint gx::GLTextureT<VER,TARGET>::init(
 //   4.5 - glTextureStorage3DMultisample
 
 template<int VER, GLenum TARGET>
-GLuint gx::GLTextureT<VER,TARGET>::attachBuffer(GLenum internalformat, GLuint buffer)
+GLuint gx::GLTextureT<VER,TARGET>::attachBuffer(
+  GLenum internalformat, GLuint buffer)
 {
   _internalformat = internalformat;
   _levels = 0;
