@@ -139,6 +139,9 @@ class gx::Gui
 
   GuiEvent _event{}, _event2{};
 
+  int64_t _lastClickTime = 0;
+  int _clickCount = 0;
+
   ElemID _heldID = 0;
   GuiElemType _heldType = GUI_NULL;
   float _heldX = 0, _heldY = 0;

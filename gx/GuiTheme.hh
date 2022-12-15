@@ -143,7 +143,8 @@ struct gx::GuiTheme
 
   RGBA8 cursorColor = packRGBA8(1.0f,1.0f,.6f,1.0f);
   RGBA8 textSelectColor = packRGBA8(.5f,.5f,.5f,1.0f);
-  uint32_t cursorBlinkTime = 400000; // 1 sec
+  uint32_t multiClickTime = 300000; // .3 sec
+  uint32_t cursorBlinkTime = 400000; // .4 sec
   uint16_t cursorWidth = 3;
 
   uint16_t panelBorder = 8;

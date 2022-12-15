@@ -11,6 +11,7 @@
 #include "System.hh"
 #include "Logger.hh"
 #include "Assert.hh"
+#include "Print.hh"
 #include <algorithm>
 using namespace gx;
 
@@ -819,20 +820,39 @@ void Gui::processMouseEvent(Window& win)
     win.setMouseShape(shape);
   }
 
+  // double/tripple click check
+  if (lpressEvent && pPtr) {
+    const int64_t t = win.lastPollTime();
+    const GuiTheme& thm = *(pPtr->theme);
+    if ((t - _lastClickTime) > thm.multiClickTime
+        || ++_clickCount > 3) { _clickCount = 1; }
+    _lastClickTime = t;
+  }
+  if (moveEvent) { _clickCount = 0; }
+
   // update focus
-  if (lpressEvent) {
-    if (type == GUI_ENTRY) {
-      setFocus(win, ePtr);
-      const GuiTheme& thm = *(pPtr->theme);
-      _cursorBlinkTime = thm.cursorBlinkTime;
-      const auto& entry = ePtr->entry();
+  if (lpressEvent && type == GUI_ENTRY) {
+    setFocus(win, ePtr);
+    const GuiTheme& thm = *(pPtr->theme);
+    _cursorBlinkTime = thm.cursorBlinkTime;
+    const auto& entry = ePtr->entry();
+    if (_clickCount == 3) {
+      // triple click - select line
+      _focusRangeStart = 0;
+      _focusCursorPos = lengthUTF8(entry.text);
+    } else {
       _focusCursorPos = _focusRangeStart = lengthUTF8(
         thm.font->fitText(entry.text, win.mouseX() - entry.tx + 1));
-    } else {
-      setFocus(win, nullptr);
+      if (_clickCount == 2) {
+        // double click - select word
+        while (_focusRangeStart > 0 && entry.text[_focusRangeStart-1] != ' ')
+        { --_focusRangeStart; }
+        while (_focusCursorPos < entry.text.size()
+               && entry.text[_focusCursorPos] != ' ')
+        { ++_focusCursorPos; }
+      }
     }
   } else if (lbuttonDown && anyButtonEvent) {
-    // click in other Gui instance clears our focus
     setFocus(win, nullptr);
   }
 
