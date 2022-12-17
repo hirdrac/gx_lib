@@ -791,80 +791,23 @@ void Gui::processMouseEvent(Window& win)
   const bool moveEvent = win.allEvents() & EVENT_MOUSE_MOVE;
 
   // get elem at mouse pointer
-  MouseShapeEnum shape = MOUSESHAPE_ARROW;
   Panel* pPtr = nullptr;
   GuiElem* ePtr = nullptr;
   ElemID id = 0;
   GuiElemType type = GUI_NULL;
   if (win.mouseIn()) {
-    for (auto& ptr : _panels) {
-      Panel& p = *ptr;
-      const float px = win.mouseX() - p.layout.x;
-      const float py = win.mouseY() - p.layout.y;
-      ePtr = findElemByXY(p.root, px, py, _popupType);
-      if (ePtr) {
-        if (ePtr->_enabled) {
-          id = ePtr->_id;
-          type = ePtr->type;
-          pPtr = ptr.get();
-          if (type == GUI_ENTRY) { shape = MOUSESHAPE_IBEAM; }
-        }
+    for (auto& p : _panels) {
+      const float px = win.mouseX() - p->layout.x;
+      const float py = win.mouseY() - p->layout.y;
+      if (!(ePtr = findElemByXY(p->root, px, py, _popupType))) { continue; }
 
-        win.removeEvent(EVENT_MOUSE_ANY_BUTTON);
-        break;
+      win.removeEvent(EVENT_MOUSE_ANY_BUTTON);
+      if (ePtr->_enabled) {
+        id = ePtr->_id;
+        type = ePtr->type;
+        pPtr = p.get();
       }
-    }
-  }
-
-  if (shape != win.mouseShape()) {
-    win.setMouseShape(shape);
-  }
-
-  // double/tripple click check
-  if (lpressEvent && pPtr) {
-    const int64_t t = win.lastPollTime();
-    const GuiTheme& thm = *(pPtr->theme);
-    if ((t - _lastClickTime) > thm.multiClickTime
-        || ++_clickCount > 3) { _clickCount = 1; }
-    _lastClickTime = t;
-  }
-  if (moveEvent) { _clickCount = 0; }
-
-  // update focus
-  if (lpressEvent && type == GUI_ENTRY) {
-    setFocus(win, ePtr);
-    const GuiTheme& thm = *(pPtr->theme);
-    _cursorBlinkTime = thm.cursorBlinkTime;
-    const auto& entry = ePtr->entry();
-    if (_clickCount == 3) {
-      // triple click - select line
-      _focusRangeStart = 0;
-      _focusCursorPos = lengthUTF8(entry.text);
-    } else {
-      _focusCursorPos = _focusRangeStart = lengthUTF8(
-        thm.font->fitText(entry.text, win.mouseX() - entry.tx + 1));
-      if (_clickCount == 2) {
-        // double click - select word
-        while (_focusRangeStart > 0 && entry.text[_focusRangeStart-1] != ' ')
-        { --_focusRangeStart; }
-        while (_focusCursorPos < entry.text.size()
-               && entry.text[_focusCursorPos] != ' ')
-        { ++_focusCursorPos; }
-      }
-    }
-  } else if (lbuttonDown && anyButtonEvent) {
-    setFocus(win, nullptr);
-  }
-
-  // select text in entry w/ mouse
-  if (lbuttonDown && moveEvent && type == GUI_ENTRY) {
-    const GuiTheme& thm = *(pPtr->theme);
-    const auto& entry = ePtr->entry();
-    const std::size_t newPos = lengthUTF8(
-      thm.font->fitText(entry.text, win.mouseX() - entry.tx + 1));
-    if (newPos != _focusCursorPos) {
-      _focusCursorPos = newPos;
-      _needRender = true;
+      break;
     }
   }
 
@@ -878,19 +821,75 @@ void Gui::processMouseEvent(Window& win)
     }
   }
 
-  if (lbuttonDown && _heldType == GUI_TITLEBAR) {
-    if (win.events() & EVENT_MOUSE_MOVE) {
-      const auto [panelP,elemP] = findElem(_heldID);
-      GX_ASSERT(panelP != nullptr);
-      Panel& p = *panelP;
-      raisePanel(p.id);
+  // double/tripple click check
+  if (lpressEvent && pPtr) {
+    const int64_t t = win.lastPollTime();
+    const GuiTheme& thm = *(pPtr->theme);
+    if ((t - _lastClickTime) > thm.multiClickTime
+        || ++_clickCount > 3) { _clickCount = 1; }
+    _lastClickTime = t;
+  }
+  if (moveEvent) { _clickCount = 0; }
+
+  if (lbuttonDown && anyButtonEvent && type != GUI_ENTRY) {
+    setFocus(win, nullptr);
+  }
+
+  // element specific behavior
+  MouseShapeEnum shape = MOUSESHAPE_ARROW;
+  if (_heldType == GUI_TITLEBAR) {
+    if (lbuttonDown && win.events() & EVENT_MOUSE_MOVE) {
+      if (_heldID != id) {
+        const auto [panelP,elemP] = findElem(_heldID);
+        GX_ASSERT(panelP != nullptr);
+        pPtr = panelP;
+        ePtr = elemP;
+        id = _heldID;
+        type = _heldType;
+      }
+
+      raisePanel(pPtr->id);
       const float mx = std::clamp(win.mouseX(), 0.0f, float(win.width()));
       const float my = std::clamp(win.mouseY(), 0.0f, float(win.height()));
-      p.layout.x += mx - _heldX;
-      p.layout.y += my - _heldY;
+      pPtr->layout.x += mx - _heldX;
+      pPtr->layout.y += my - _heldY;
       _heldX = mx;
       _heldY = my;
       _needRender = true;
+    }
+  } else if (type == GUI_ENTRY) {
+    shape = MOUSESHAPE_IBEAM;
+    const GuiTheme& thm = *(pPtr->theme);
+    if (lpressEvent) {
+      // update focus
+      setFocus(win, ePtr);
+      _cursorBlinkTime = thm.cursorBlinkTime;
+      const auto& entry = ePtr->entry();
+      if (_clickCount == 3) {
+        // triple click - select line
+        _focusRangeStart = 0;
+        _focusCursorPos = lengthUTF8(entry.text);
+      } else {
+        _focusCursorPos = _focusRangeStart = lengthUTF8(
+          thm.font->fitText(entry.text, win.mouseX() - entry.tx + 1));
+        if (_clickCount == 2) {
+          // double click - select word
+          while (_focusRangeStart > 0 && entry.text[_focusRangeStart-1] != ' ')
+          { --_focusRangeStart; }
+          while (_focusCursorPos < entry.text.size()
+                 && entry.text[_focusCursorPos] != ' ')
+          { ++_focusCursorPos; }
+        }
+      }
+    } else if (lbuttonDown && moveEvent && _heldID == id) {
+      // select text in entry w/ mouse
+      const auto& entry = ePtr->entry();
+      const std::size_t newPos = lengthUTF8(
+        thm.font->fitText(entry.text, win.mouseX() - entry.tx + 1));
+      if (newPos != _focusCursorPos) {
+        _focusCursorPos = newPos;
+        _needRender = true;
+      }
     }
   } else if (hasPopup(type)) {
     const bool pressEvent = lpressEvent || (type == GUI_MENU && rpressEvent);
@@ -911,8 +910,7 @@ void Gui::processMouseEvent(Window& win)
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
     if (lbuttonEvent) {
-      Panel& p = *pPtr;
-      GuiElem* parent = findParentListSelect(p.root, id);
+      GuiElem* parent = findParentListSelect(pPtr->root, id);
       if (parent) {
         GuiElem& ls = *parent;
         ls.item().no = ePtr->item().no;
@@ -920,45 +918,54 @@ void Gui::processMouseEvent(Window& win)
         const GuiElem& src = ePtr->elems[0];
         e0.label().text = src.label().text;
         e0.eid  = src.eid;
-        const GuiTheme& thm = *p.theme;
+        const GuiTheme& thm = *(pPtr->theme);
         const float b = thm.border;
         calcPos(e0, thm, ls._x + b, ls._y + b, ls._x + ls._w - b,
                 ls._y + ls._h - b);
-        addEvent(p, ls, win.lastPollTime());
+        addEvent(*pPtr, ls, win.lastPollTime());
         deactivatePopups();
       }
     }
-  } else {
-    if (lpressEvent && id != 0) {
-      _heldID = id;
-      _heldType = type;
-      _heldTime = win.lastPollTime();
-      _heldX = win.mouseX();
-      _heldY = win.mouseY();
-      _needRender = true;
-      if (type == GUI_BUTTON_PRESS) {
-        _repeatDelay = ePtr->button().repeatDelay;
-        addEvent(*pPtr, *ePtr, win.lastPollTime());
-      }
-    } else if ((_heldType == GUI_BUTTON_PRESS) && (_heldID != id)) {
-      // clear hold if cursor moves off BUTTON_PRESS
-      clearHeld();
-      _needRender = true;
-    } else if (!lbuttonDown && (_heldID != 0)) {
-      if ((type == GUI_BUTTON || type == GUI_CHECKBOX)
-          && lbuttonEvent && (_heldID == id)) {
-        // activate if cursor is over element & button is released
-        addEvent(*pPtr, *ePtr, win.lastPollTime());
-        if (type == GUI_CHECKBOX) { ePtr->checkbox().set = !ePtr->checkbox().set; }
-      }
-
-      clearHeld();
-      _needRender = true;
+  } else if (type == GUI_BUTTON_PRESS) {
+    if (lpressEvent) {
+      _repeatDelay = ePtr->button().repeatDelay;
+      addEvent(*pPtr, *ePtr, win.lastPollTime());
     }
-
-    if (_popupID != 0 && anyButtonEvent) {
-      deactivatePopups();
+  } else if (type == GUI_BUTTON) {
+    // activate if cursor is over element & button is released
+    if (!lbuttonDown && lbuttonEvent && _heldID == id) {
+      addEvent(*pPtr, *ePtr, win.lastPollTime());
     }
+  } else if (type == GUI_CHECKBOX) {
+    // activate if cursor is over element & button is released
+    if (!lbuttonDown && lbuttonEvent && _heldID == id) {
+      addEvent(*pPtr, *ePtr, win.lastPollTime());
+      ePtr->checkbox().set = !ePtr->checkbox().set;
+    }
+  }
+
+  // update cursor gfx
+  if (shape != win.mouseShape()) {
+    win.setMouseShape(shape);
+  }
+
+  // held state update
+  if (lpressEvent && id != 0) {
+    _heldID = id;
+    _heldType = type;
+    _heldTime = win.lastPollTime();
+    _heldX = win.mouseX();
+    _heldY = win.mouseY();
+    _needRender = true;
+  } else if ((_heldType == GUI_BUTTON_PRESS && _heldID != id)
+             || (!lbuttonDown && _heldID != 0)) {
+    clearHeld();
+    _needRender = true;
+  }
+
+  // popup cleanup
+  if (!hasPopup(type) && _popupID != 0 && anyButtonEvent) {
+    deactivatePopups();
   }
 }
 
