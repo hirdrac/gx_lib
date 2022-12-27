@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
   gui.newPanel(
     theme, 60, 80, gx::ALIGN_TOP_LEFT,
     gx::guiVFrame(
-      gx::guiSpacer(gx::ALIGN_HJUSTIFY, 0,0,0,8, gx::guiTitleBar("BUTTONS")),
+      gx::guiMargin(gx::guiTitleBar("BUTTONS"), 0,0,0,8),
       gx::guiHFrame(
         gx::guiButton(1, "B1\nline 2"),
         gx::guiButton(2, gx::ALIGN_BOTTOM, "B2"),
@@ -81,8 +81,7 @@ int main(int argc, char* argv[])
   gui.newPanel(
     theme, 60, 400, gx::ALIGN_TOP_LEFT,
     gx::guiHFrame(
-      gx::guiSpacer(
-        gx::ALIGN_VJUSTIFY, 0,0,4,0, gx::guiVTitleBar("ENTRIES")),
+      gx::guiMargin(gx::guiVTitleBar("ENTRIES"), 0,0,4,0),
       gx::guiVFrame(
         gx::guiHFrame(
           gx::guiLabel(gx::ALIGN_CENTER_LEFT, " R"),
@@ -101,7 +100,7 @@ int main(int argc, char* argv[])
   gui.newPanel(
     theme, 400, 80, gx::ALIGN_TOP_LEFT,
     gx::guiVFrame(
-      gx::guiSpacer(gx::ALIGN_HJUSTIFY, 0,0,0,8, gx::guiTitleBar()),
+      gx::guiMargin(gx::guiTitleBar(), 0,0,0,8),
       gx::guiCheckbox(51, true,  "Option 1"),
       gx::guiCheckbox(52, false, "Option 2"),
       gx::guiHLine(),
@@ -113,8 +112,7 @@ int main(int argc, char* argv[])
   gui.newPanel(
     theme, 600, 80, gx::ALIGN_TOP_LEFT,
     gx::guiVFrame(
-      gx::guiSpacer(gx::ALIGN_HJUSTIFY, 0,0,0,8,
-                    gx::guiTitleBar("LIST SELECTORS")),
+      gx::guiMargin(gx::guiTitleBar("LIST SELECTORS"), 0,0,0,8),
       gx::guiHFrame(
         gx::guiListSelect(
           60, gx::ALIGN_JUSTIFY,

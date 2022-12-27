@@ -24,7 +24,7 @@ namespace gx {
     GUI_NULL = 0,
 
     // layout types
-    GUI_HFRAME, GUI_VFRAME, GUI_SPACER,
+    GUI_HFRAME, GUI_VFRAME,
 
     // draw types
     GUI_PANEL, GUI_POPUP,
@@ -101,18 +101,17 @@ class gx::GuiElem
   AlignEnum align;
   EventID eid;
 
+  // layout margins
+  int16_t l_margin = 0; // left
+  int16_t t_margin = 0; // top
+  int16_t r_margin = 0; // right
+  int16_t b_margin = 0; // bottom
+
   // elem type specific properties
   struct LabelProps {
     std::string text;
     float minLength;
     int32_t minLines;
-  };
-
-  struct SpacerProps {
-    int16_t left = 0;
-    int16_t top = 0;
-    int16_t right = 0;
-    int16_t bottom = 0;
   };
 
   struct ButtonProps {
@@ -145,7 +144,6 @@ class gx::GuiElem
 
   std::variant<
     LabelProps,    // LABEL,VLABEL
-    SpacerProps,   // SPACER
     ButtonProps,   // BUTTON,BUTTON_PRESS
     CheckboxProps, // CHECKBOX
     ItemProps,     // LISTSELECT,LISTSELECT_ITEM
@@ -158,7 +156,6 @@ class gx::GuiElem
   const type& name() const { return std::get<type>(props); }
 
   GETTER(label,LabelProps)
-  GETTER(spacer,SpacerProps)
   GETTER(button,ButtonProps)
   GETTER(checkbox,CheckboxProps)
   GETTER(item,ItemProps)
@@ -168,8 +165,9 @@ class gx::GuiElem
 
   // layout state
   ElemID _id = 0;
-  float _x = 0, _y = 0;  // layout position relative to panel
-  float _w = 0, _h = 0;  // layout size
+  float _x = 0, _y = 0;  // element position relative to panel
+  float _w = 0, _h = 0;  // element size
+    // NOTE: position/size doesn't include margins
   bool _active = false;  // popup/menu activated
   bool _enabled = true;
 
@@ -182,4 +180,10 @@ class gx::GuiElem
   [[nodiscard]] bool contains(float x, float y) const {
     return (x >= _x) && (x < (_x + _w)) && (y >= _y) && (y < (_y + _h));
   }
+
+  [[nodiscard]] float marginW() const { return l_margin + r_margin; }
+  [[nodiscard]] float marginH() const { return t_margin + b_margin; }
+
+  [[nodiscard]] float layoutW() const { return _w + marginW(); }
+  [[nodiscard]] float layoutH() const { return _h + marginH(); }
 };

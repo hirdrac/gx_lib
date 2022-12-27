@@ -39,40 +39,14 @@ namespace gx {
     return {GUI_VFRAME, align, 0, {elems...}};
   }
 
-  // Spacer
-  [[nodiscard]] inline GuiElem guiSpacer(int16_t width, int16_t height)
-  {
-    GuiElem e{GUI_SPACER, ALIGN_CENTER, 0};
-    e.props = GuiElem::SpacerProps{.left = width, .top = height};
-    return e;
-  }
-
-  [[nodiscard]] inline GuiElem guiSpacer(
-    AlignEnum align, int16_t width, int16_t height)
-  {
-    GuiElem e{GUI_SPACER, align, 0};
-    e.props = GuiElem::SpacerProps{.left = width, .top = height};
-    return e;
-  }
-
-  [[nodiscard]] inline GuiElem guiSpacer(
-    int16_t left, int16_t top, int16_t right, int16_t bottom,
-    const GuiElem& elem)
-  {
-    GuiElem e{GUI_SPACER, ALIGN_CENTER, 0, {elem}};
-    e.props = GuiElem::SpacerProps{
-      .left = left, .top = top, .right = right, .bottom = bottom};
-    return e;
-  }
-
-  [[nodiscard]] inline GuiElem guiSpacer(
-    AlignEnum align, int16_t left, int16_t top, int16_t right, int16_t bottom,
-    const GuiElem& elem)
-  {
-    GuiElem e{GUI_SPACER, align, 0, {elem}};
-    e.props = GuiElem::SpacerProps{
-      .left = left, .top = top, .right = right, .bottom = bottom};
-    return e;
+  // Margin Set
+  [[nodiscard]] inline GuiElem&& guiMargin(
+    GuiElem&& elem, int16_t left, int16_t top, int16_t right, int16_t bottom) {
+    elem.l_margin = left;
+    elem.t_margin = top;
+    elem.r_margin = right;
+    elem.b_margin = bottom;
+    return std::move(elem);
   }
 
   // Label

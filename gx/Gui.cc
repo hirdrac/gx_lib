@@ -329,26 +329,15 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
   switch (def.type) {
     case GUI_HFRAME:
       for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_VJUSTIFY) { e._h = def._h; resizedElem(thm, e); }
+        if (e.align & ALIGN_VJUSTIFY) {
+          e._h = def._h - e.marginH(); resizedElem(thm, e);
+        }
       }
       break;
     case GUI_VFRAME:
       for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_HJUSTIFY) { e._w = def._w; resizedElem(thm, e); }
-      }
-      break;
-    case GUI_SPACER:
-      if (!def.elems.empty()) {
-        GuiElem& e = def.elems[0];
-        if (e.align & ALIGN_JUSTIFY) {
-          const auto& spacer = def.spacer();
-          if (e.align & ALIGN_HJUSTIFY) {
-            e._w = def._w - (spacer.left + spacer.right);
-          }
-          if (e.align & ALIGN_VJUSTIFY) {
-            e._h = def._h - (spacer.top + spacer.bottom);
-          }
-          resizedElem(thm, e);
+        if (e.align & ALIGN_HJUSTIFY) {
+          e._w = def._w - e.marginW(); resizedElem(thm, e);
         }
       }
       break;
@@ -356,15 +345,15 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
     case GUI_POPUP: {
       GuiElem& e = def.elems[0];
       const float b2 = borderVal(thm, def.type) * 2;
-      e._w = def._w - b2;
-      e._h = def._h - b2;
+      e._w = def._w - b2 - e.marginW();
+      e._h = def._h - b2 - e.marginH();
       resizedElem(thm, e);
       break;
     }
     case GUI_LISTSELECT: {
       // listselect popup list width
       GuiElem& e1 = def.elems[1]; // GUI_POPUP
-      e1._w = def._w + (thm.popupBorder * 2.0f);
+      e1._w = def._w + (thm.popupBorder * 2.0f) - e1.marginW();
       resizedElem(thm, e1);
       break;
     }
@@ -382,17 +371,17 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
     case GUI_HFRAME: {
       float max_w = 0, max_h = 0;
       for (const GuiElem& e : def.elems) {
-        max_w = std::max(max_w, e._w);
-        max_h = std::max(max_h, e._h);
+        max_w = std::max(max_w, e.layoutW());
+        max_h = std::max(max_h, e.layoutH());
       }
       float total_w = -thm.frameSpacing;
       for (GuiElem& e : def.elems) {
         if (e.align & ALIGN_JUSTIFY) {
-          if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; }
-          if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; }
+          if (e.align & ALIGN_HJUSTIFY) { e._w = max_w - e.marginW(); }
+          if (e.align & ALIGN_VJUSTIFY) { e._h = max_h - e.marginH(); }
           resizedElem(thm, e);
         }
-        total_w += e._w + thm.frameSpacing;
+        total_w += e.layoutW() + thm.frameSpacing;
       }
       def._w = total_w;
       def._h = max_h;
@@ -401,31 +390,20 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
     case GUI_VFRAME: {
       float max_w = 0, max_h = 0;
       for (const GuiElem& e : def.elems) {
-        max_w = std::max(max_w, e._w);
-        max_h = std::max(max_h, e._h);
+        max_w = std::max(max_w, e.layoutW());
+        max_h = std::max(max_h, e.layoutH());
       }
       float total_h = -thm.frameSpacing;
       for (GuiElem& e : def.elems) {
         if (e.align & ALIGN_JUSTIFY) {
-          if (e.align & ALIGN_HJUSTIFY) { e._w = max_w; }
-          if (e.align & ALIGN_VJUSTIFY) { e._h = max_h; }
+          if (e.align & ALIGN_HJUSTIFY) { e._w = max_w - e.marginW(); }
+          if (e.align & ALIGN_VJUSTIFY) { e._h = max_h - e.marginH(); }
           resizedElem(thm, e);
         }
-        total_h += e._h + thm.frameSpacing;
+        total_h += e.layoutH() + thm.frameSpacing;
       }
       def._w = max_w;
       def._h = total_h;
-      break;
-    }
-    case GUI_SPACER: {
-      const auto& spacer = def.spacer();
-      def._w = spacer.left + spacer.right;
-      def._h = spacer.top + spacer.bottom;
-      if (!def.elems.empty()) {
-        const GuiElem& e = def.elems[0];
-        def._w += e._w;
-        def._h += e._h;
-      }
       break;
     }
     case GUI_LABEL: {
@@ -457,15 +435,17 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
     case GUI_CHECKBOX: {
       const GuiElem& e = def.elems[0];
       const Font& fnt = *thm.font;
-      def._w = fnt.glyphWidth(thm.checkCode) + (thm.border * 3) + e._w;
-      def._h = std::max(float(fnt.size() - 1 + (thm.border * 2)), e._h);
+      def._w = fnt.glyphWidth(thm.checkCode) + (thm.border * 3) + e.layoutW();
+      def._h = std::max(float(fnt.size() - 1 + (thm.border * 2)), e._h)
+        + e.marginH();
       break;
     }
     case GUI_SUBMENU: {
       // menu header
       const GuiElem& e = def.elems[0];
-      def._w = e._w + (thm.border * 3) + thm.font->glyphWidth(thm.subMenuCode);
-      def._h = e._h + (thm.border * 2);
+      def._w = e.layoutW() + (thm.border * 3)
+        + thm.font->glyphWidth(thm.subMenuCode);
+      def._h = e.layoutH() + (thm.border * 2);
       break;
     }
     case GUI_LISTSELECT: {
@@ -473,16 +453,16 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
       GuiElem& e1 = def.elems[1]; // GUI_POPUP
       const GuiElem* item = findItem(e1.elems[0], 0);
       GX_ASSERT(item != nullptr);
-      def._w = item->_w;
-      def._h = item->_h;
+      def._w = item->layoutW();
+      def._h = item->layoutH();
       break;
     }
     case GUI_LISTSELECT_ITEM: {
       const GuiElem& e = def.elems[0];
-      def._w = e._w + (thm.border * 3)
+      def._w = e.layoutW() + (thm.border * 3)
         + std::max(thm.font->glyphWidth(thm.listSelectCode),
                    thm.font->glyphWidth(thm.listSelectOpenCode));
-      def._h = e._h + (thm.border * 2);
+      def._h = e.layoutH() + (thm.border * 2);
       break;
     }
     case GUI_ENTRY: {
@@ -515,8 +495,8 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
       } else {
         const GuiElem& e = def.elems[0];
         const float b2 = borderVal(thm, def.type) * 2;
-        def._w = e._w + b2;
-        def._h = e._h + b2;
+        def._w = e.layoutW() + b2;
+        def._h = e.layoutH() + b2;
       }
       break;
   }
@@ -525,6 +505,11 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
 static void calcPos(GuiElem& def, const GuiTheme& thm,
                     float left, float top, float right, float bottom)
 {
+  left   += def.l_margin;
+  top    += def.t_margin;
+  right  -= def.r_margin;
+  bottom -= def.b_margin;
+
   switch (HAlign(def.align)) {
     case ALIGN_LEFT:  def._x = left; break;
     case ALIGN_RIGHT: def._x = right - def._w; break;
@@ -548,33 +533,25 @@ static void calcPos(GuiElem& def, const GuiTheme& thm,
     case GUI_HFRAME: {
       const float fs = thm.frameSpacing;
       float total_w = 0;
-      for (const GuiElem& e : def.elems) { total_w += e._w + fs; }
+      for (const GuiElem& e : def.elems) { total_w += e.layoutW() + fs; }
       for (GuiElem& e : def.elems) {
-        total_w -= e._w + fs;
+        total_w -= e.layoutW() + fs;
         calcPos(e, thm, left, top, right - total_w, bottom);
-        left = e._x + e._w + fs;
+        left = e._x + e._w + e.r_margin + fs;
       }
       break;
     }
     case GUI_VFRAME: {
       const float fs = thm.frameSpacing;
       float total_h = 0;
-      for (const GuiElem& e : def.elems) { total_h += e._h + fs; }
+      for (const GuiElem& e : def.elems) { total_h += e.layoutH() + fs; }
       for (GuiElem& e : def.elems) {
-        total_h -= e._h + fs;
+        total_h -= e.layoutH() + fs;
         calcPos(e, thm, left, top, right, bottom - total_h);
-        top = e._y + e._h + fs;
+        top = e._y + e._h + e.b_margin + fs;
       }
       break;
     }
-    case GUI_SPACER:
-      if (!def.elems.empty()) {
-        const auto& spacer = def.spacer();
-        calcPos(def.elems[0], thm,
-                left + spacer.left, top + spacer.top,
-                right - spacer.right, bottom - spacer.bottom);
-      }
-      break;
     case GUI_CHECKBOX:
       left += thm.font->glyphWidth(thm.checkCode) + (thm.border * 3);
       calcPos(def.elems[0], thm, left, top, right, bottom);
@@ -583,24 +560,24 @@ static void calcPos(GuiElem& def, const GuiTheme& thm,
       GuiElem& e0 = def.elems[0];
       calcPos(e0, thm, left, top, right, bottom);
       // always position menu frame below menu button for now
-      top = e0._y + e0._h + thm.border;
+      top = e0._y + e0.layoutH() + thm.border;
       GuiElem& e1 = def.elems[1];
-      calcPos(e1, thm, left, top, left + e1._w, top + e1._h);
+      calcPos(e1, thm, left, top, left + e1.layoutW(), top + e1.layoutH());
       break;
     }
     case GUI_SUBMENU: {
       const float b = thm.border;
       calcPos(def.elems[0], thm, left + b, top + b, right - b, bottom - b);
       // sub-menu items
-      left += def._w;
+      left += def.layoutW();
       GuiElem& e1 = def.elems[1];
-      calcPos(e1, thm, left, top, left + e1._w, top + e1._h);
+      calcPos(e1, thm, left, top, left + e1.layoutW(), top + e1.layoutH());
       break;
     }
     case GUI_LISTSELECT: {
       const float b = thm.border;
       calcPos(def.elems[0], thm, left + b, top + b, right - b, bottom - b);
-      calcPos(def.elems[1], thm, left - thm.popupBorder, top + def._h,
+      calcPos(def.elems[1], thm, left - thm.popupBorder, bottom,
               right, bottom);
       break;
     }
@@ -1591,7 +1568,6 @@ bool Gui::drawElem(
     }
     case GUI_HFRAME:
     case GUI_VFRAME:
-    case GUI_SPACER:
       break; // layout only - nothing to draw
     default:
       drawRec(dc, ex, ey, ew, eh, thm, style);
