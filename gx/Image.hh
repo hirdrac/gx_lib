@@ -1,6 +1,6 @@
 //
 // gx/Image.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // 8-bits per channel variable channel image
 //
@@ -47,10 +47,10 @@ class gx::Image
 
   // image editing methods
   [[nodiscard]] bool canEdit() const { return _storage.get(); }
-  bool clear();
-  bool setPixel(int x, int y, const uint8_t* channels_vals);
-  bool stamp(int x, int y, const Image& sub_image);
-  bool stamp(int x, int y, const Glyph& g);
+  void clear();
+  void plot(int x, int y, const uint8_t* channels_vals);
+  void stamp(int x, int y, const Image& sub_image);
+  void stamp(int x, int y, const Glyph& g);
 
  private:
   const uint8_t* _data;

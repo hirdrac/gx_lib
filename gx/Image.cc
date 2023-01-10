@@ -1,6 +1,6 @@
 //
 // gx/Image.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "Image.hh"
@@ -77,24 +77,22 @@ bool Image::loadFromMemory(const void* mem, std::size_t memSize)
   return true;
 }
 
-bool Image::clear()
+void Image::clear()
 {
   GX_ASSERT(canEdit());
   std::memset(_storage.get(), 0, size());
-  return true;
 }
 
-bool Image::setPixel(int x, int y, const uint8_t* channel_vals)
+void Image::plot(int x, int y, const uint8_t* channel_vals)
 {
   GX_ASSERT(canEdit());
   const int offset = ((y * _width) + x) * _channels;
   GX_ASSERT((offset >= 0) && (offset + _channels) <= int(size()));
 
   std::memcpy(_storage.get() + offset, channel_vals, std::size_t(_channels));
-  return true;
 }
 
-bool Image::stamp(int x, int y, const Image& sub_image)
+void Image::stamp(int x, int y, const Image& sub_image)
 {
   GX_ASSERT(canEdit());
   GX_ASSERT(_channels == sub_image.channels());
@@ -112,10 +110,9 @@ bool Image::stamp(int x, int y, const Image& sub_image)
     dst += dw;
     src += sw;
   }
-  return true;
 }
 
-bool Image::stamp(int x, int y, const Glyph& g)
+void Image::stamp(int x, int y, const Glyph& g)
 {
   GX_ASSERT(canEdit());
   GX_ASSERT(_channels == 1);
@@ -131,5 +128,4 @@ bool Image::stamp(int x, int y, const Glyph& g)
     dst += _width;
     src += g.width;
   }
-  return true;
 }
