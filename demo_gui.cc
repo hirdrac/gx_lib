@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
   // button demo
   gx::Gui gui;
   gui.newPanel(
-    theme, 60, 80, gx::ALIGN_TOP_LEFT,
+    theme, 60, 80, gx::ALIGN_TOP_LEFT, gx::PANEL_FLOATING,
     gx::guiVFrame(
       gx::guiMargin(gx::guiTitleBar("BUTTONS"), 0,0,0,8),
       gx::guiHFrame(
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
   // pull-down menu demo
   gui.newPanel(
-    theme, 0, 0, gx::ALIGN_TOP_LEFT,
+    theme, 0, 0, gx::ALIGN_TOP_LEFT, 0,
     gx::guiHFrame(
       gx::guiMenu(
         "File",
@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
   // text entry demo
   gui.newPanel(
-    theme, 60, 400, gx::ALIGN_TOP_LEFT,
+    theme, 60, 400, gx::ALIGN_TOP_LEFT, gx::PANEL_FLOATING,
     gx::guiHFrame(
       gx::guiMargin(gx::guiVTitleBar("ENTRIES"), 0,0,4,0),
       gx::guiVFrame(
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
 
   // checkbox demo
   gui.newPanel(
-    theme, 400, 80, gx::ALIGN_TOP_LEFT,
+    theme, 400, 80, gx::ALIGN_TOP_LEFT, gx::PANEL_FLOATING,
     gx::guiVFrame(
       gx::guiMargin(gx::guiTitleBar(), 0,0,0,8),
       gx::guiCheckbox(51, true,  "Option 1"),
@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 
   // list select demo
   gui.newPanel(
-    theme, 600, 80, gx::ALIGN_TOP_LEFT,
+    theme, 600, 80, gx::ALIGN_TOP_LEFT, gx::PANEL_FLOATING,
     gx::guiVFrame(
       gx::guiMargin(gx::guiTitleBar("LIST SELECTORS"), 0,0,0,8),
       gx::guiHFrame(

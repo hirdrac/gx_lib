@@ -800,6 +800,7 @@ void Gui::processMouseEvent(Window& win)
 
   // double/tripple click check
   if (lpressEvent && pPtr) {
+    if (pPtr->flags & PANEL_FLOATING) { raisePanel(pPtr->id); }
     const int64_t t = win.lastPollTime();
     const GuiTheme& thm = *(pPtr->theme);
     if ((t - _lastClickTime) > thm.multiClickTime
@@ -825,7 +826,6 @@ void Gui::processMouseEvent(Window& win)
         type = _heldType;
       }
 
-      raisePanel(pPtr->id);
       const float mx = std::clamp(win.mouseX(), 0.0f, float(win.width()));
       const float my = std::clamp(win.mouseY(), 0.0f, float(win.height()));
       pPtr->layout.x += mx - _heldX;

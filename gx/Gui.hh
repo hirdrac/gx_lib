@@ -25,6 +25,9 @@ namespace gx {
   class Font;
   class Gui;
   struct GuiEvent;
+
+  // panel flags
+  constexpr int PANEL_FLOATING = 1;
 }
 
 
@@ -42,10 +45,10 @@ struct gx::GuiEvent
 class gx::Gui
 {
  public:
-  inline PanelID newPanel(const GuiTheme& theme, float x, float y,
-                          AlignEnum align, GuiElem&& elems);
-  inline PanelID newPanel(const GuiTheme& theme, float x, float y,
-                          AlignEnum align, const GuiElem& elems);
+  template<class ElemT>
+  PanelID newPanel(const GuiTheme& theme, float x, float y,
+                   AlignEnum align, int flags, ElemT&& elems);
+
   void clear();
   void deletePanel(PanelID id);
   void raisePanel(PanelID id);
@@ -68,7 +71,7 @@ class gx::Gui
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // render data & flag if data was changed last update
 
-  template<typename... Args>
+  template<class... Args>
   void setBGColor(const Args&... args) { _layer.setBGColor(args...); }
 
   void setElemState(PanelID pid, EventID eid, bool enable);
@@ -115,10 +118,16 @@ class gx::Gui
   bool setBool(PanelID pid, EventID eid, bool val);
   bool setItemNo(PanelID pid, EventID eid, int itemNo);
 
+  // TODO: methods to update menu/listselect items
+
  private:
   struct Panel {
-    const GuiTheme* theme;
+    // set at creation
     GuiElem root;
+    const GuiTheme* theme;
+    int flags;
+
+    // other attributes
     PanelID id = 0;
     Rect layout{};
     bool needLayout = false;
@@ -190,19 +199,15 @@ class gx::Gui
   PanelPtr removePanel(PanelID id);
 };
 
-// **** Inline Implementations ****
-gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
-                              AlignEnum align, GuiElem&& elems)
-{
-  PanelPtr ptr{
-    new Panel{&theme, {GUI_PANEL, ALIGN_TOP_LEFT, 0, {std::move(elems)}}}};
-  return addPanel(std::move(ptr), x, y, align);
-}
 
-gx::PanelID gx::Gui::newPanel(const GuiTheme& theme, float x, float y,
-                              AlignEnum align, const GuiElem& elems)
+// **** Inline Implementations ****
+template<class ElemT>
+gx::PanelID gx::Gui::newPanel(
+  const GuiTheme& theme, float x, float y, AlignEnum align, int flags,
+  ElemT&& elems)
 {
-  PanelPtr ptr{
-    new Panel{&theme, {GUI_PANEL, ALIGN_TOP_LEFT, 0, {elems}}}};
+  PanelPtr ptr{new Panel{
+      {GUI_PANEL, ALIGN_TOP_LEFT, 0, {std::forward<ElemT>(elems)}},
+      &theme, flags}};
   return addPanel(std::move(ptr), x, y, align);
 }
