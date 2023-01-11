@@ -17,7 +17,6 @@ namespace gx {
   using ElemID = int32_t;   // internal GuiElem ID
   using EventID = int32_t;  // user specified event value
 
-  class GuiTexture;
   class GuiElem;
 
   enum GuiElemType {
@@ -62,34 +61,6 @@ namespace gx {
     double value = 0;
   };
 }
-
-
-class gx::GuiTexture
-{
- public:
-  GuiTexture() = default;
-  GuiTexture(TextureID id) : _tid{id} { }
-  ~GuiTexture() { cleanup(); }
-
-  // copy/assign (new copy does not receive texture)
-  GuiTexture(const GuiTexture&) { }
-  GuiTexture& operator=(const GuiTexture&) {
-    cleanup(); _tid = 0; return *this; }
-
-  // move/move-assign (transfer texture ownership)
-  GuiTexture(GuiTexture&& t) noexcept
-    : _tid{std::exchange(t._tid, 0)} { }
-  GuiTexture& operator=(GuiTexture&& t) noexcept {
-    cleanup(); _tid = std::exchange(t._tid, 0); return *this; }
-
-  // other methods
-  [[nodiscard]] explicit operator bool() const { return _tid != 0; }
-  [[nodiscard]] TextureID id() const { return _tid; }
-
- private:
-  TextureID _tid = 0;
-  void cleanup();
-};
 
 
 class gx::GuiElem
