@@ -1,6 +1,6 @@
 //
 // gx/GuiBuilder.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // Functions for creating GuiElem objects for use with Gui class
 //
@@ -264,17 +264,19 @@ namespace gx {
   // Menu
   template<typename... Elems>
   [[nodiscard]] inline GuiElem guiMenu(
-    std::string_view text, const Elems&... items)
+    EventID id, std::string_view text, const Elems&... items)
   {
-    return {GUI_MENU, ALIGN_TOP_LEFT, 0,
+    return {GUI_MENU, ALIGN_TOP_LEFT, id,
             {guiLabel(ALIGN_CENTER, text),
              GuiElem{GUI_POPUP, ALIGN_TOP_LEFT, 0, {guiVFrame(items...)}}}};
   }
 
-  [[nodiscard]] inline GuiElem guiMenuItem(EventID id, std::string_view text)
+  [[nodiscard]] inline GuiElem guiMenuItem(int no, std::string_view text)
   {
-    return {GUI_MENU_ITEM, ALIGN_JUSTIFY, id,
-            {guiLabel(ALIGN_CENTER_LEFT, text)}};
+    GuiElem e{GUI_MENU_ITEM, ALIGN_JUSTIFY, 0,
+              {guiLabel(ALIGN_CENTER_LEFT, text)}};
+    e.props = GuiElem::ItemProps{.no = no};
+    return e;
   }
 
   template<typename... Elems>

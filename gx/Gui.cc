@@ -1,6 +1,6 @@
 //
 // gx/Gui.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "Gui.hh"
@@ -49,11 +49,6 @@ using namespace gx;
   }
 }
 
-[[nodiscard]] static constexpr bool isPopupItem(GuiElemType type)
-{
-  return (type == GUI_MENU_ITEM) || (type == GUI_LISTSELECT_ITEM);
-}
-
 static void deactivate(GuiElem& def)
 {
   def._active = false;
@@ -79,9 +74,14 @@ static int allElemState(GuiElem& def, bool enable)
   return count;
 }
 
+[[nodiscard]] static constexpr bool isItemType(GuiElemType type)
+{
+  return (type == GUI_MENU_ITEM) || (type == GUI_LISTSELECT_ITEM);
+}
+
 [[nodiscard]] static inline bool canSelect(const GuiElem& e)
 {
-  return (e.type == GUI_LISTSELECT_ITEM) || (e.type == GUI_TITLEBAR)
+  return isItemType(e.type) || (e.type == GUI_TITLEBAR)
     || ((e.eid != 0) && (e.type != GUI_LABEL) && (e.type != GUI_VLABEL));
 }
 
@@ -205,7 +205,7 @@ template<class T>
 {
   // NOTE: skips root in search
   for (GuiElem& e : root.elems) {
-    if (e.type == GUI_LISTSELECT_ITEM && (no == 0 || e.item().no == no)) {
+    if (isItemType(e.type) && (no == 0 || e.item().no == no)) {
       return &e;
     } else if (!e.elems.empty()) {
       GuiElem* e2 = findItem(e, no);
@@ -215,14 +215,16 @@ template<class T>
   return nullptr;
 }
 
-[[nodiscard]] static GuiElem* findParentListSelect(GuiElem& root, ElemID id)
+[[nodiscard]] static GuiElem* findItemParent(GuiElem& root, ElemID id)
 {
   // NOTE: skips root in search
+  // NOTE: assumes 'id' is of an elem in a MENU or LISTSELECT
   for (GuiElem& e : root.elems) {
-    if (e.type == GUI_LISTSELECT && findByElemID(e.elems[1], id)) {
+    if ((e.type == GUI_MENU || e.type == GUI_LISTSELECT)
+        && findByElemID(e.elems[1], id)) {
       return &e;
-    } else if (!isMenu(e.type) && !e.elems.empty()) {
-      GuiElem* e2 = findParentListSelect(e, id);
+    } else if (!hasPopup(e.type) && !e.elems.empty()) {
+      GuiElem* e2 = findItemParent(e, id);
       if (e2) { return e2; }
     }
   }
@@ -683,7 +685,7 @@ bool Gui::update(Window& win)
       }
 
       const auto [panelP,elemP] = findElem(_heldID);
-      if (elemP) { addEvent(*panelP, *elemP, now); }
+      if (elemP) { addEvent(*panelP, *elemP, 0, now); }
     }
   } else if (_popupID != 0) {
     deactivatePopups();
@@ -791,7 +793,7 @@ void Gui::processMouseEvent(Window& win)
   // update hoverID
   if (_hoverID != id) {
     const ElemID hid =
-      (!lbuttonDown || isPopupItem(type) || id == _heldID) ? id : 0;
+      (!lbuttonDown || isItemType(type) || id == _heldID) ? id : 0;
     if (_hoverID != hid) {
       _hoverID = hid;
       _needRender = true;
@@ -879,18 +881,23 @@ void Gui::processMouseEvent(Window& win)
     }
   } else if (type == GUI_MENU_ITEM) {
     if (lbuttonEvent || rbuttonEvent) {
-      addEvent(*pPtr, *ePtr, win.lastPollTime());
-      deactivatePopups();
+      GuiElem* parent = findItemParent(pPtr->root, id);
+      if (parent) {
+        addEvent(*pPtr, *parent, ePtr->item().no, win.lastPollTime());
+        deactivatePopups();
+      }
     } else if (_popupID != id) {
       // activate on menu item to close sub-menus if necessary
       activatePopup(*pPtr, *ePtr);
     }
   } else if (type == GUI_LISTSELECT_ITEM) {
     if (lbuttonEvent) {
-      GuiElem* parent = findParentListSelect(pPtr->root, id);
+      GuiElem* parent = findItemParent(pPtr->root, id);
       if (parent) {
+        const int item_no = ePtr->item().no;
         GuiElem& ls = *parent;
-        ls.item().no = ePtr->item().no;
+        GX_ASSERT(ls.type == GUI_LISTSELECT);
+        ls.item().no = item_no;
         GuiElem& e0 = ls.elems[0];
         const GuiElem& src = ePtr->elems[0];
         e0.label().text = src.label().text;
@@ -899,24 +906,24 @@ void Gui::processMouseEvent(Window& win)
         const float b = thm.border;
         calcPos(e0, thm, ls._x + b, ls._y + b, ls._x + ls._w - b,
                 ls._y + ls._h - b);
-        addEvent(*pPtr, ls, win.lastPollTime());
+        addEvent(*pPtr, ls, item_no, win.lastPollTime());
         deactivatePopups();
       }
     }
   } else if (type == GUI_BUTTON_PRESS) {
     if (lpressEvent) {
       _repeatDelay = ePtr->button().repeatDelay;
-      addEvent(*pPtr, *ePtr, win.lastPollTime());
+      addEvent(*pPtr, *ePtr, 0, win.lastPollTime());
     }
   } else if (type == GUI_BUTTON) {
     // activate if cursor is over element & button is released
     if (!lbuttonDown && lbuttonEvent && _heldID == id) {
-      addEvent(*pPtr, *ePtr, win.lastPollTime());
+      addEvent(*pPtr, *ePtr, 0, win.lastPollTime());
     }
   } else if (type == GUI_CHECKBOX) {
     // activate if cursor is over element & button is released
     if (!lbuttonDown && lbuttonEvent && _heldID == id) {
-      addEvent(*pPtr, *ePtr, win.lastPollTime());
+      addEvent(*pPtr, *ePtr, 0, win.lastPollTime());
       ePtr->checkbox().set = !ePtr->checkbox().set;
     }
   }
@@ -1221,7 +1228,7 @@ void Gui::setFocus(Window& win, const GuiElem* e)
           entry.text = "0";
         }
       }
-      addEvent(*panelP, *elemP, win.lastPollTime());
+      addEvent(*panelP, *elemP, 0, win.lastPollTime());
     }
   }
 
@@ -1487,7 +1494,7 @@ bool Gui::drawElem(
     case GUI_LISTSELECT_ITEM:
       drawRec(dc, ex, ey, ew, eh, thm, style);
       if (thm.listSelectItemCode != 0) {
-        const GuiElem* parent = findParentListSelect(p.root, def._id);
+        const GuiElem* parent = findItemParent(p.root, def._id);
         if (parent && parent->item().no == def.item().no) {
           const float b = thm.border;
           dc2.color(style->textColor);
@@ -1685,7 +1692,7 @@ static bool buttonActionSet(GuiElem& target, double value)
   return true;
 }
 
-void Gui::addEvent(const Panel& p, const GuiElem& e, int64_t t)
+void Gui::addEvent(const Panel& p, const GuiElem& e, int item_no, int64_t t)
 {
   GuiElem* target = nullptr;
   if (e.type == GUI_BUTTON || e.type == GUI_BUTTON_PRESS) {
@@ -1717,12 +1724,9 @@ void Gui::addEvent(const Panel& p, const GuiElem& e, int64_t t)
   }
 
   const GuiElem& eventElem = target ? *target : e;
-  if (_event) {
-    // save event for next update
-    _event2 = {p.id, eventElem.eid, eventElem.type, t};
-  } else {
-    _event = {p.id, eventElem.eid, eventElem.type, t};
-  }
+  // save event for next update if there is already an event
+  (_event ? _event2 : _event) =
+    {t, p.id, eventElem.eid, item_no, eventElem.type};
 }
 
 Gui::PanelPtr Gui::removePanel(PanelID id)

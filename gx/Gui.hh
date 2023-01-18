@@ -1,6 +1,6 @@
 //
 // gx/Gui.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // Graphical user interface rendering & event handling
 //
@@ -33,10 +33,11 @@ namespace gx {
 
 struct gx::GuiEvent
 {
+  int64_t time;
   PanelID pid;
   EventID eid;
+  int item_no;
   GuiElemType type;
-  int64_t time;
 
   [[nodiscard]] explicit operator bool() const { return eid != 0; }
 };
@@ -195,7 +196,7 @@ class gx::Gui
     _repeatDelay = -1;
   }
 
-  void addEvent(const Panel& p, const GuiElem& e, int64_t t);
+  void addEvent(const Panel& p, const GuiElem& e, int item_no, int64_t t);
   PanelPtr removePanel(PanelID id);
 };
 

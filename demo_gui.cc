@@ -1,6 +1,6 @@
 //
 // demo_gui.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "gx/Window.hh"
@@ -57,13 +57,13 @@ int main(int argc, char* argv[])
     theme, 0, 0, gx::ALIGN_TOP_LEFT, 0,
     gx::guiHFrame(
       gx::guiMenu(
-        "File",
+        11, "File",
         gx::guiMenuItem(11, "Open..."),
         gx::guiMenuItem(12, "Save..."),
         gx::guiHLine(),
         gx::guiMenuItem(99, "Quit")),
       gx::guiMenu(
-        "Help",
+        12, "Help",
         gx::guiMenuItem(13, "Manual"),
         gx::guiMenuItem(14, "About"),
         gx::guiSubMenu(
@@ -171,7 +171,12 @@ int main(int argc, char* argv[])
           gx::println_err("\ttext:\"", gui.eventText(), "\"");
           break;
         case gx::GUI_LISTSELECT:
-          gx::println_err("\titem_no:", gui.eventItemNo());
+          gx::println_err("\titem_no:", gui.event().item_no);
+          break;
+        case gx::GUI_MENU:
+          gx::println_err("\tmenu_item_no:", gui.event().item_no);
+          // check quit menu item
+          if (gui.event().item_no == 99) { running = false; }
           break;
         case gx::GUI_CHECKBOX:
           gx::println_err("\tset:", gui.eventBool());
@@ -180,6 +185,7 @@ int main(int argc, char* argv[])
           gx::println_err();
           break;
       }
+      // check quit button
       if (gui.event().eid == 99) { running = false; }
     }
 
