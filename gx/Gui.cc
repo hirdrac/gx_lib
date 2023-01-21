@@ -645,11 +645,11 @@ void Gui::lowerPanel(PanelID id)
 
 bool Gui::getPanelLayout(PanelID id, Rect& layout) const
 {
-  const Panel* p = nullptr;
-  for (auto& pPtr : _panels) { if (pPtr->id == id) { p = pPtr.get(); break; } }
-  if (!p) { return false; }
+  const Panel* pPtr = nullptr;
+  for (auto& p : _panels) { if (p->id == id) { pPtr = p.get(); break; } }
+  if (!pPtr) { return false; }
 
-  layout = p->layout;
+  layout = pPtr->layout;
   return true;
 }
 
@@ -662,13 +662,12 @@ bool Gui::update(Window& win)
   _event2 = {};
   _needRedraw = false;
 
-  for (auto& pPtr : _panels) {
-    Panel& p = *pPtr;
+  for (auto& p : _panels) {
     // size & position update
-    if (p.needLayout) {
-      calcSize(p.root, *p.theme);
-      calcPos(p.root, *p.theme, 0, 0, p.layout.w, p.layout.h);
-      p.needLayout = false;
+    if (p->needLayout) {
+      calcSize(p->root, *p->theme);
+      calcPos(p->root, *p->theme, 0, 0, p->layout.w, p->layout.h);
+      p->needLayout = false;
     }
   }
 
@@ -744,7 +743,7 @@ bool Gui::update(Window& win)
 
 void Gui::deactivatePopups()
 {
-  for (auto& pPtr : _panels) { deactivate(pPtr->root); }
+  for (auto& p : _panels) { deactivate(p->root); }
   _popupID = 0;
   _popupType = GUI_NULL;
   _needRender = true;
@@ -1250,18 +1249,17 @@ void Gui::setElemState(PanelID pid, EventID eid, bool enable)
 void Gui::setAllElemState(PanelID id, bool enable)
 {
   int count = 0;
-  for (auto& pPtr : _panels) {
-    Panel& p = *pPtr;
-    if (id == 0 || p.id == id) { count += allElemState(p.root, enable); }
+  for (auto& p : _panels) {
+    if (id == 0 || p->id == id) { count += allElemState(p->root, enable); }
   }
   _needRender |= (count > 0);
 }
 
 bool Gui::setText(PanelID pid, EventID eid, std::string_view text)
 {
-  for (auto& pPtr : _panels) {
-    if (pid != 0 && pid != pPtr->id) { continue; }
-    GuiElem* e = findByEventID(pPtr->root, eid);
+  for (auto& p : _panels) {
+    if (pid != 0 && pid != p->id) { continue; }
+    GuiElem* e = findByEventID(p->root, eid);
     if (!e) { continue; }
 
     switch (e->type) {
@@ -1275,7 +1273,7 @@ bool Gui::setText(PanelID pid, EventID eid, std::string_view text)
       case GUI_LABEL:
       case GUI_VLABEL:
         e->label().text = text;
-        pPtr->needLayout = true;
+        p->needLayout = true;
         break;
 
       default:
@@ -1315,7 +1313,7 @@ PanelID Gui::addPanel(PanelPtr ptr, float x, float y, AlignEnum align)
 
   if (ptr->id <= 0) {
     PanelID id = 0;
-    for (auto& pPtr : _panels) { id = std::max(id, pPtr->id); }
+    for (auto& p : _panels) { id = std::max(id, p->id); }
     ptr->id = id + 1;
   } else {
     removePanel(ptr->id);
@@ -1608,18 +1606,18 @@ bool Gui::drawPopup(Window& win, Panel& p, GuiElem& def,
 
 std::pair<Gui::Panel*,GuiElem*> Gui::findElem(ElemID id)
 {
-  for (auto& pPtr : _panels) {
-    GuiElem* e = findByElemID(pPtr->root, id);
-    if (e) { return {pPtr.get(),e}; }
+  for (auto& p : _panels) {
+    GuiElem* e = findByElemID(p->root, id);
+    if (e) { return {p.get(),e}; }
   }
   return {nullptr,nullptr};
 }
 
 GuiElem* Gui::findEventElem(PanelID pid, EventID eid)
 {
-  for (auto& pPtr : _panels) {
-    if (pid != 0 && pid != pPtr->id) { continue; }
-    GuiElem* e = findByEventID(pPtr->root, eid);
+  for (auto& p : _panels) {
+    if (pid != 0 && pid != p->id) { continue; }
+    GuiElem* e = findByEventID(p->root, eid);
     if (e) { return e; }
   }
   return nullptr;
@@ -1627,9 +1625,9 @@ GuiElem* Gui::findEventElem(PanelID pid, EventID eid)
 
 const GuiElem* Gui::findEventElem(PanelID pid, EventID eid) const
 {
-  for (auto& pPtr : _panels) {
-    if (pid != 0 && pid != pPtr->id) { continue; }
-    const GuiElem* e = findByEventID(pPtr->root, eid);
+  for (auto& p : _panels) {
+    if (pid != 0 && pid != p->id) { continue; }
+    const GuiElem* e = findByEventID(p->root, eid);
     if (e) { return e; }
   }
   return nullptr;
