@@ -1,12 +1,11 @@
 //
 // gx/GuiElem.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #pragma once
 #include "Align.hh"
 #include "Types.hh"
-#include <utility>
 #include <vector>
 #include <string>
 #include <initializer_list>
@@ -117,7 +116,7 @@ class gx::GuiElem
     LabelProps,    // LABEL,VLABEL
     ButtonProps,   // BUTTON,BUTTON_PRESS
     CheckboxProps, // CHECKBOX
-    ItemProps,     // LISTSELECT,LISTSELECT_ITEM
+    ItemProps,     // LISTSELECT,LISTSELECT_ITEM,MENU_ITEM
     EntryProps,    // ENTRY
     ImageProps     // IMAGE
     > props;
