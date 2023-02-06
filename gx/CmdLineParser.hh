@@ -1,11 +1,12 @@
 //
 // gx/CmdLineParser.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // Helper class for parsing command line arguments.
 //
 // Option arguments must follow one of these forms:
 //  -x         (single letter option flag)
+//  -x<int>    (single letter option with integer)
 //  -x=val     (short option with value)
 //  -x val     (short option with value)
 //  --xxx      (long option flag)
@@ -24,6 +25,7 @@
 #include <string_view>
 #include <type_traits>
 #include <charconv>
+#include <cctype>
 
 
 namespace gx {
@@ -68,16 +70,23 @@ class gx::CmdLineParser
   {
     if (!option()) { return false; }
 
-    if (shortName != '\0' && _arg.size() > 2
-        && _arg[1] == shortName && _arg[2] == '=') {
-      // short name option with value in same arg string (-x=...)
-      return convertVal(_arg.substr(3), value);
+    if (shortName != '\0' && _arg.size() > 2 && _arg[1] == shortName) {
+      if (_arg[2] == '=') {
+        // short name option with value in same arg string (-x=<value>)
+        return convertVal(_arg.substr(3), value);
+      } else {
+        // short name option with integer (-x<int>)
+        bool allDigit = true;
+        const std::string_view numStr = _arg.substr(2);
+        for (auto ch : numStr) { allDigit &= std::isdigit(ch); }
+        return allDigit ? convertVal(numStr, value) : false;
+      }
     }
 
     const std::size_t len = longName.size() + 2;
     if (!longName.empty() && _arg.size() > len && _arg[1] == '-'
         && _arg.substr(2,len-2) == longName && _arg[len] == '=') {
-      // long name option with value in same arg string (--xxx=...)
+      // long name option with value in same arg string (--xxx=<value>)
       return convertVal(_arg.substr(len+1), value);
     }
 
