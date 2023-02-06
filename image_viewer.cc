@@ -1,6 +1,6 @@
 //
 // image_viewer.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 // TODO: fullscreen zoom w/ mouse wheel
@@ -20,6 +20,7 @@
 #include "gx/Texture.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
+#include "gx/CmdLineParser.hh"
 #include <vector>
 
 
@@ -46,24 +47,48 @@ std::pair<int,int> calcSize(const gx::Window& win, const gx::Image& img)
   return {iw,ih};
 }
 
+int showUsage(char** argv)
+{
+  gx::println("Usage: ", argv[0], " [options] <image file(s)>");
+  gx::println("Options:");
+  gx::println("  -h,--help  Show usage");
+  return 0;
+}
+
+int errorUsage(char** argv)
+{
+  gx::println_err("Try '", argv[0], " --help' for more information.");
+  return -1;
+}
+
 int main(int argc, char* argv[])
 {
   if (argc < 2) {
-    gx::println_err("Usage: ", argv[0], " <image file(s)>");
-    return -1;
+    gx::println_err("No image filenames specified");
+    return errorUsage(argv);
   }
 
   gx::defaultLogger().disable();
 
   std::vector<Entry> entries;
-  for (int i = 1; i < argc; ++i) {
-    Entry e;
-    e.file = argv[i];
-    if (!e.img.load(e.file)) {
-      gx::println_err("Can't load \"", e.file, "\"");
-      continue;
+  for (gx::CmdLineParser p{argc, argv}; p; ++p) {
+    if (p.option()) {
+      if (p.option('h',"help")) {
+        return showUsage(argv);
+      } else {
+        gx::println_err("ERROR: Bad option '", p.arg(), "'");
+        return errorUsage(argv);
+      }
+    } else {
+      // filename argument
+      Entry e;
+      p.get(e.file);
+      if (!e.img.load(e.file)) {
+        gx::println_err("Can't load \"", e.file, "\"");
+        continue;
+      }
+      entries.push_back(std::move(e));
     }
-    entries.push_back(std::move(e));
   }
 
   if (entries.empty()) {
