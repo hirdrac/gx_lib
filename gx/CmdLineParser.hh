@@ -5,13 +5,13 @@
 // Helper class for parsing command line arguments.
 //
 // Option arguments must follow one of these forms:
-//  -x         (single letter option flag)
-//  -x<int>    (single letter option with integer)
-//  -x=val     (short option with value)
-//  -x val     (short option with value)
-//  --xxx      (long option flag)
-//  --xxx=val  (long option with value)
-//  --xxx val  (long option with value)
+//  -x             single letter option flag
+//  -x<int>        single letter option with integer
+//  -x=<value>     single letter option with value
+//  -x <value>     single letter option with value
+//  --xxx          long option flag
+//  --xxx=<value>  long option with value
+//  --xxx <value>  long option with value
 //
 // Combining single letter options (ex: "-l -a" -> "-la") currently not
 // supported.
