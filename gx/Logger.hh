@@ -1,6 +1,6 @@
 //
 // gx/Logger.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #pragma once
@@ -40,6 +40,7 @@ class gx::Logger
   [[nodiscard]] LogLevel level() const { return _level; }
   void setLevel(LogLevel lvl) { _level = lvl; }
   void disable() { _level = LVL_DISABLED; }
+  void showMS(bool enable) { _showMS = enable; }
 
   // log method
   template<typename... Args>
@@ -53,6 +54,7 @@ class gx::Logger
  private:
   std::unique_ptr<LoggerImpl> _impl;
   LogLevel _level = LVL_INFO;
+  bool _showMS = true;
 
   // methods
   void header(std::ostringstream& os, LogLevel lvl);
