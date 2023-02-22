@@ -124,7 +124,8 @@ class gx::CmdLineParser
 
   template<class T>
   static bool convertVal(std::string_view v, T& result) {
-    if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
+    static_assert(!std::is_same_v<T,bool>);
+    if constexpr (std::is_arithmetic_v<T>) {
       if (v.empty()) { return false; }
       auto err = std::from_chars(&v[0], &v[v.size()], result);
       return err.ec == std::errc{};
