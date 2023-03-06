@@ -691,18 +691,19 @@ void DrawContext::roundedRectangle(
   _circleSector({x+r,y+h-r}, r, a180, a270, curveSegments);  // bottom/left
 
   // borders/center
-  if (r == curveRadius) {
-    // can fit all borders
-    const float rr = r * 2.0f;
-    _rectangle(x+r, y, w - rr, r);
-    _rectangle(x, y+r, w, h - rr);
-    _rectangle(x+r, y+h-r, w - rr, r);
-  } else if (r < half_w) {
-    // can only fit top/bottom borders
-    _rectangle(x+r, y, w - (r*2.0f), h);
+  const float rr = r * 2.0f;
+  if (r < half_w) {
+    // fill top/bottom borders & center
+    _rectangle(x+r, y, w-rr, h);
+    if (r < half_h) {
+      // fill left border
+      _rectangle(x, y+r, r, h-rr);
+      // fill right border
+      _rectangle(x+w-r, y+r, r, h-rr);
+    }
   } else if (r < half_h) {
-    // can only fit left/right borders
-    _rectangle(x, y+r, w, h - (r*2.0f));
+    // fill left/right borders
+    _rectangle(x, y+r, w, h-rr);
   }
 }
 
@@ -796,14 +797,14 @@ void DrawContext::roundedBorder(
   _arc({x+r,y+h-r}, r, a180, a270, curveSegments, borderWidth);  // bottom/left
 
   // borders/center
-  if (curveRadius < half_w) {
+  if (r < half_w) {
     // top/bottom borders
     const float bw = w - (r * 2.0f);
     _rectangle(x+r, y, bw, borderWidth);
     _rectangle(x+r, y+h-borderWidth, bw, borderWidth);
   }
 
-  if (curveRadius < half_h) {
+  if (r < half_h) {
     // left/right borders
     const float bh = h - (r * 2.0f);
     _rectangle(x, y+r, borderWidth, bh);
@@ -837,7 +838,7 @@ void DrawContext::roundedBorder(
        innerColor, outerColor, fillColor); // bottom/left
 
   // borders/center
-  if (curveRadius < half_w) {
+  if (r < half_w) {
     // top/bottom borders
     const float x0 = x + r;
     const float x1 = x + w - r;
@@ -853,7 +854,7 @@ void DrawContext::roundedBorder(
         x1, y+h,             outerColor);
   }
 
-  if (curveRadius < half_h) {
+  if (r < half_h) {
     // left/right borders
     const float y0 = y + r;
     const float y1 = y + h - r;
@@ -870,14 +871,14 @@ void DrawContext::roundedBorder(
   }
 
   if (fillColor) {
-    if (curveRadius < half_w) {
+    if (r < half_w) {
       // fill top/bottom borders & center
       add(CMD_quad2C,
           x+r,   y+borderWidth,   fillColor,
           x+w-r, y+borderWidth,   fillColor,
           x+r,   y+h-borderWidth, fillColor,
           x+w-r, y+h-borderWidth, fillColor);
-      if (curveRadius < half_h) {
+      if (r < half_h) {
         const float y0 = y + r;
         const float y1 = y + h - r;
 
@@ -894,7 +895,7 @@ void DrawContext::roundedBorder(
             x+w-r,           y1, fillColor,
             x+w-borderWidth, y1, fillColor);
       }
-    } else if (curveRadius < half_h) {
+    } else if (r < half_h) {
       // fill left/right borders & center
       add(CMD_quad2C,
           x,   y+r,   fillColor,
