@@ -1,6 +1,6 @@
 //
 // gx/DrawContext.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "DrawContext.hh"
@@ -588,6 +588,46 @@ void DrawContext::_arc(
   }
 }
 
+void DrawContext::_arc(
+  Vec2 center, float radius, float angle0, float angle1, int segments,
+  float arcWidth, RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
+{
+  const float segmentAngle = (angle1 - angle0) / float(segments);
+  const float innerR = radius - arcWidth;
+
+  const float sa0 = std::sin(angle0), ca0 = std::cos(angle0);
+  Vec2 v0{center.x + (radius * sa0), center.y - (radius * ca0)};
+  Vec2 v1{center.x + (innerR * sa0), center.y - (innerR * ca0)};
+
+  float a = angle0;
+  for (int i = 0; i < segments; ++i) {
+    if (i == segments-1) { a = angle1; } else { a += segmentAngle; }
+
+    const float sa = std::sin(a), ca = std::cos(a);
+    const Vec2 v2{center.x + (radius * sa), center.y - (radius * ca)};
+    const Vec2 v3{center.x + (innerR * sa), center.y - (innerR * ca)};
+
+    if (innerColor | outerColor) {
+      add(CMD_quad2C,
+          v0.x, v0.y, outerColor,
+          v1.x, v1.y, innerColor,
+          v2.x, v2.y, outerColor,
+          v3.x, v3.y, innerColor);
+    }
+
+    if (fillColor) {
+      add(CMD_triangle2C,
+          v1.x, v1.y, fillColor,
+          v3.x, v3.y, fillColor,
+          center.x, center.y, fillColor);
+    }
+
+    // setup for next iteration
+    v0 = v2;
+    v1 = v3;
+  }
+}
+
 void DrawContext::arc(
   Vec2 center, float radius, float startAngle, float endAngle,
   int segments, float arcWidth, RGBA8 color0, RGBA8 color1)
@@ -704,10 +744,8 @@ void DrawContext::border(float x, float y, float w, float h, float borderWidth)
 }
 
 void DrawContext::border(float x, float y, float w, float h, float borderWidth,
-                         RGBA8 innerColor, RGBA8 outerColor)
+                         RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
-  if ((innerColor | outerColor) == 0) { return; }
-
   float x0 = x, y0 = y, x1 = x+w, y1 = y+h;
   const Vertex2C v_A{x0, y0, outerColor};
   const Vertex2C v_B{x1, y0, outerColor};
@@ -716,15 +754,25 @@ void DrawContext::border(float x, float y, float w, float h, float borderWidth,
 
   x0 += borderWidth; y0 += borderWidth;
   x1 -= borderWidth; y1 -= borderWidth;
-  const Vertex2C v_iA{x0, y0, innerColor};
-  const Vertex2C v_iB{x1, y0, innerColor};
-  const Vertex2C v_iC{x0, y1, innerColor};
-  const Vertex2C v_iD{x1, y1, innerColor};
+  Vertex2C v_iA{x0, y0, innerColor};
+  Vertex2C v_iB{x1, y0, innerColor};
+  Vertex2C v_iC{x0, y1, innerColor};
+  Vertex2C v_iD{x1, y1, innerColor};
 
-  quad(v_A, v_B, v_iA, v_iB);
-  quad(v_iC, v_iD, v_C, v_D);
-  quad(v_A, v_iA, v_C, v_iC);
-  quad(v_iB, v_B, v_iD, v_D);
+  if (innerColor | outerColor) {
+    quad(v_A, v_B, v_iA, v_iB);
+    quad(v_iC, v_iD, v_C, v_D);
+    quad(v_A, v_iA, v_C, v_iC);
+    quad(v_iB, v_B, v_iD, v_D);
+  }
+
+  if (fillColor) {
+    v_iA.c = fillColor;
+    v_iB.c = fillColor;
+    v_iC.c = fillColor;
+    v_iD.c = fillColor;
+    quad(v_iA, v_iB, v_iC, v_iD);
+  }
 }
 
 void DrawContext::roundedBorder(
@@ -760,5 +808,99 @@ void DrawContext::roundedBorder(
     const float bh = h - (r * 2.0f);
     _rectangle(x, y+r, borderWidth, bh);
     _rectangle(x+w-borderWidth, y+r, borderWidth, bh);
+  }
+}
+
+void DrawContext::roundedBorder(
+  float x, float y, float w, float h,
+  float curveRadius, int curveSegments, float borderWidth,
+  RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
+{
+  if ((innerColor | outerColor | fillColor) == 0) { return; }
+
+  const float half_w = w * .5f;
+  const float half_h = h * .5f;
+  const float r = std::min(curveRadius, std::min(half_w, half_h));
+
+  // corners
+  constexpr float a90  = degToRad(90.0f);
+  constexpr float a180 = degToRad(180.0f);
+  constexpr float a270 = degToRad(270.0f);
+  constexpr float a360 = degToRad(360.0f);
+  _arc({x+r,y+r}, r, a270, a360, curveSegments, borderWidth,
+       innerColor, outerColor, fillColor); // top/left
+  _arc({x+w-r,y+r}, r, 0, a90, curveSegments, borderWidth,
+       innerColor, outerColor, fillColor); // top/right
+  _arc({x+w-r,y+h-r}, r, a90, a180, curveSegments, borderWidth,
+       innerColor, outerColor, fillColor); // bottom/right
+  _arc({x+r,y+h-r}, r, a180, a270, curveSegments, borderWidth,
+       innerColor, outerColor, fillColor); // bottom/left
+
+  // borders/center
+  if (curveRadius < half_w) {
+    // top/bottom borders
+    const float x0 = x + r;
+    const float x1 = x + w - r;
+    add(CMD_quad2C,
+        x0, y,               outerColor,
+        x1, y,               outerColor,
+        x0, y+borderWidth,   innerColor,
+        x1, y+borderWidth,   innerColor);
+    add(CMD_quad2C,
+        x0, y+h-borderWidth, innerColor,
+        x1, y+h-borderWidth, innerColor,
+        x0, y+h,             outerColor,
+        x1, y+h,             outerColor);
+  }
+
+  if (curveRadius < half_h) {
+    // left/right borders
+    const float y0 = y + r;
+    const float y1 = y + h - r;
+    add(CMD_quad2C,
+        x,               y0, outerColor,
+        x+borderWidth,   y0, innerColor,
+        x,               y1, outerColor,
+        x+borderWidth,   y1, innerColor);
+    add(CMD_quad2C,
+        x+w-borderWidth, y0, innerColor,
+        x+w,             y0, outerColor,
+        x+w-borderWidth, y1, innerColor,
+        x+w,             y1, outerColor);
+  }
+
+  if (fillColor) {
+    if (curveRadius < half_w) {
+      // fill top/bottom borders & center
+      add(CMD_quad2C,
+          x+r,   y+borderWidth,   fillColor,
+          x+w-r, y+borderWidth,   fillColor,
+          x+r,   y+h-borderWidth, fillColor,
+          x+w-r, y+h-borderWidth, fillColor);
+      if (curveRadius < half_h) {
+        const float y0 = y + r;
+        const float y1 = y + h - r;
+
+        // fill left border
+        add(CMD_quad2C,
+            x+borderWidth,   y0, fillColor,
+            x+r,             y0, fillColor,
+            x+borderWidth,   y1, fillColor,
+            x+r,             y1, fillColor);
+        // fill right border
+        add(CMD_quad2C,
+            x+w-r,           y0, fillColor,
+            x+w-borderWidth, y0, fillColor,
+            x+w-r,           y1, fillColor,
+            x+w-borderWidth, y1, fillColor);
+      }
+    } else if (curveRadius < half_h) {
+      // fill left/right borders & center
+      add(CMD_quad2C,
+          x,   y+r,   fillColor,
+          x+w, y+r,   fillColor,
+          x,   y+h-r, fillColor,
+          x+w, y+h-r, fillColor);
+    }
   }
 }

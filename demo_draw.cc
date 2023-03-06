@@ -1,6 +1,6 @@
 //
 // demo_draw.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "gx/Window.hh"
@@ -132,7 +132,12 @@ void draw_border3(gx::DrawContext& dc, float x, float y)
 
 void draw_border4(gx::DrawContext& dc, float x, float y)
 {
-  dc.border(x+20, y+30, 360, 300, 16.0f, WHITE, gx::packRGBA8(1,1,1,0));
+  dc.border(x+20, y+30, 360, 300, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
+}
+
+void draw_border5(gx::DrawContext& dc, float x, float y)
+{
+  dc.border(x+20, y+30, 360, 300, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
 }
 
 void draw_rborder1(gx::DrawContext& dc, float x, float y)
@@ -151,6 +156,18 @@ void draw_rborder3(gx::DrawContext& dc, float x, float y)
 {
   dc.vgradient(y+30, WHITE, y+330, BLACK);
   dc.roundedBorder(x+20, y+30, 360, 300, 40, 4, 8.0f);
+}
+
+void draw_rborder4(gx::DrawContext& dc, float x, float y)
+{
+  dc.roundedBorder(
+    x+20, y+30, 360, 300, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
+}
+
+void draw_rborder5(gx::DrawContext& dc, float x, float y)
+{
+  dc.roundedBorder(
+    x+20, y+30, 360, 300, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
 }
 
 void draw_lines1(gx::DrawContext& dc, float x, float y)
@@ -199,9 +216,12 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"HGradient Border", draw_border2},
   {"VGradient Border", draw_border3},
   {"Shaded Border", draw_border4},
+  {"Shaded Border Filled", draw_border5},
   {"Rounded Border", draw_rborder1},
   {"HGradient Rounded Border", draw_rborder2},
   {"VGradient Rounded Border", draw_rborder3},
+  {"Shaded Rounded Border", draw_rborder4},
+  {"Shaded Rounded Border Filled", draw_rborder5},
   {"Lines", draw_lines1},
   {"Colored Lines", draw_lines2},
 };

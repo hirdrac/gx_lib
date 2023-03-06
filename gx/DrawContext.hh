@@ -1,6 +1,6 @@
 //
 // gx/DrawContext.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 // TODO: textured roundedRectangle()
@@ -171,10 +171,13 @@ class gx::DrawContext
 
   void border(float x, float y, float w, float h, float borderWidth);
   void border(float x, float y, float w, float h, float borderWidth,
-              RGBA8 innerColor, RGBA8 outerColor);
+              RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
   void roundedBorder(float x, float y, float w, float h,
                      float curveRadius, int curveSegments, float borderWidth);
+  void roundedBorder(float x, float y, float w, float h,
+                     float curveRadius, int curveSegments, float borderWidth,
+                     RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
   // Data extraction
   [[nodiscard]] const DrawList& drawList() const { return *_data; }
@@ -218,6 +221,9 @@ class gx::DrawContext
     Vec2 center, float radius, float angle0, float angle1, int segments);
   void _arc(Vec2 center, float radius, float angle0, float angle1,
             int segments, float arcWidth);
+  void _arc(Vec2 center, float radius, float angle0, float angle1,
+            int segments, float arcWidth,
+            RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
   void _quad(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
     add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
