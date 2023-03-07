@@ -169,7 +169,7 @@ void DrawContext::_rectangle(float x, float y, float w, float h)
 void DrawContext::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1)
 {
-  if (!checkColor()) { return; }
+  if ((_color0 | _color1) == 0) { return; }
 
   const float x1 = x + w;
   const float y1 = y + h;
@@ -195,6 +195,7 @@ void DrawContext::rectangle(
       break;
     }
     default:
+      setColor();
       add(CMD_rectangleT, x, y, t0.x, t0.y, x1, y1, t1.x, t1.y);
       break;
   }
@@ -203,7 +204,7 @@ void DrawContext::rectangle(
 void DrawContext::rectangle(
   float x, float y, float w, float h, Vec2 t0, Vec2 t1, const Rect& clip)
 {
-  if (!checkColor()) { return; }
+  if ((_color0 | _color1) == 0) { return; }
 
   float x0 = x;
   float y0 = y;
@@ -241,6 +242,7 @@ void DrawContext::rectangle(
   }
 
   if (_colorMode == CM_SOLID) {
+    setColor();
     add(CMD_rectangleT, x0, y0, tx0, ty0, x1, y1, tx1, ty1);
   } else {
     add(CMD_quad2TC,
@@ -630,9 +632,9 @@ void DrawContext::_arc(
 
 void DrawContext::arc(
   Vec2 center, float radius, float startAngle, float endAngle,
-  int segments, float arcWidth, RGBA8 color0, RGBA8 color1)
+  int segments, float arcWidth, RGBA8 startColor, RGBA8 endColor)
 {
-  if ((color0 | color1) == 0) { return; }
+  if ((startColor | endColor) == 0) { return; }
 
   fixAngles(startAngle, endAngle);
   const float angle0 = degToRad(startAngle);
@@ -641,18 +643,18 @@ void DrawContext::arc(
   const float innerR = radius - arcWidth;
 
   const float sa0 = std::sin(angle0), ca0 = std::cos(angle0);
-  Vertex2C v0{center.x + (radius * sa0), center.y - (radius * ca0), color0};
-  Vertex2C v1{center.x + (innerR * sa0), center.y - (innerR * ca0), color0};
+  Vertex2C v0{center.x + (radius * sa0), center.y - (radius * ca0), startColor};
+  Vertex2C v1{center.x + (innerR * sa0), center.y - (innerR * ca0), startColor};
 
-  const Color full0 = unpackRGBA8(color0);
-  const Color full1 = unpackRGBA8(color1);
+  const Color full0 = unpackRGBA8(startColor);
+  const Color full1 = unpackRGBA8(endColor);
 
   float a = angle0;
   for (int i = 0; i < segments; ++i) {
     RGBA8 c;
     if (i == segments-1) {
       a = angle1;
-      c = color1;
+      c = endColor;
     } else {
       a += segmentAngle;
       const float x = float(i+1) / float(segments);
@@ -709,7 +711,7 @@ void DrawContext::roundedRectangle(
 
 void DrawContext::border(float x, float y, float w, float h, float borderWidth)
 {
-  if (!checkColor()) { return; }
+  if ((_color0 | _color1) == 0) { return; }
 
   const Vec2 A{x,y};
   const Vec2 B{x+w,y};
@@ -722,6 +724,7 @@ void DrawContext::border(float x, float y, float w, float h, float borderWidth)
   const Vec2 iD{x+w-borderWidth,y+h-borderWidth};
 
   if (_colorMode == CM_SOLID) {
+    setColor();
     _quad(A,B,iA,iB); // top
     _quad(iC,iD,C,D); // bottom
     _quad(A,iA,C,iC); // left
@@ -747,6 +750,8 @@ void DrawContext::border(float x, float y, float w, float h, float borderWidth)
 void DrawContext::border(float x, float y, float w, float h, float borderWidth,
                          RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
+  if ((innerColor | outerColor | fillColor) == 0) { return; }
+
   float x0 = x, y0 = y, x1 = x+w, y1 = y+h;
   const Vertex2C v_A{x0, y0, outerColor};
   const Vertex2C v_B{x1, y0, outerColor};

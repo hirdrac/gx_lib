@@ -160,7 +160,7 @@ class gx::DrawContext
   void arc(Vec2 center, float radius, float startAngle, float endAngle,
            int segments, float arcWidth);
   void arc(Vec2 center, float radius, float startAngle, float endAngle,
-           int segments, float arcWidth, RGBA8 color0, RGBA8 color1);
+           int segments, float arcWidth, RGBA8 startColor, RGBA8 endColor);
     // NOTE:
     //  * make start and end angles equal for a full circle
     //  * angles are in degrees
