@@ -1,6 +1,6 @@
 //
 // gx/Renderer.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 // TODO: texture wrap settings
@@ -55,7 +55,7 @@ class gx::Renderer
 
 
 namespace gx {
-  bool updateTexture(TextureID id, const Image& img, int levels,
+  bool updateTexture(TextureID tid, const Image& img, int levels,
                      FilterType minFilter, FilterType magFilter);
   void freeTexture(TextureID tid);
 }

@@ -79,6 +79,8 @@ class gx::Gui
   void enableElem(PanelID pid, EventID eid) { setElemState(pid, eid, true); }
   void disableElem(PanelID pid, EventID eid) { setElemState(pid, eid, false); }
     // enable/disable event generating elements
+    // TODO: add versions that also take item_no for menu/listselect items
+    //  (calling w/o item_no should enable/disable entire menu/listselect)
 
   void setAllElemState(PanelID pid, bool enable);
   void enableAllElem(PanelID pid = 0) { setAllElemState(pid, true); }
