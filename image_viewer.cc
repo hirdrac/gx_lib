@@ -22,7 +22,20 @@
 #include "gx/StringUtil.hh"
 #include "gx/CmdLineParser.hh"
 #include <vector>
+using gx::println;
+using gx::println_err;
 
+
+// globals
+int winWidth = -1;
+int winHeight = -1;
+
+void setWinSize(gx::Window& win, const gx::Image& img)
+{
+  const int w = (winWidth > 0) ? winWidth : img.width();
+  const int h = (winHeight > 0) ? winHeight : img.height();
+  win.setSize(w, h, false);
+}
 
 struct Entry
 {
@@ -49,22 +62,24 @@ std::pair<int,int> calcSize(const gx::Window& win, const gx::Image& img)
 
 int showUsage(char** argv)
 {
-  gx::println("Usage: ", argv[0], " [options] <image file(s)>");
-  gx::println("Options:");
-  gx::println("  -h,--help  Show usage");
+  println("Usage: ", argv[0], " [options] <image file(s)>");
+  println("Options:");
+  println("  --width    Set window width");
+  println("  --height   Set window height");
+  println("  -h,--help  Show usage");
   return 0;
 }
 
 int errorUsage(char** argv)
 {
-  gx::println_err("Try '", argv[0], " --help' for more information.");
+  println_err("Try '", argv[0], " --help' for more information.");
   return -1;
 }
 
 int main(int argc, char* argv[])
 {
   if (argc < 2) {
-    gx::println_err("No image filenames specified");
+    println_err("No image filenames specified");
     return errorUsage(argv);
   }
 
@@ -73,10 +88,14 @@ int main(int argc, char* argv[])
   std::vector<Entry> entries;
   for (gx::CmdLineParser p{argc, argv}; p; ++p) {
     if (p.option()) {
-      if (p.option('h',"help")) {
+      if (p.option(0,"width",winWidth)) {
+        // noop
+      } else if (p.option(0,"height",winHeight)) {
+        // noop
+      } else if (p.option('h',"help")) {
         return showUsage(argv);
       } else {
-        gx::println_err("ERROR: Bad option '", p.arg(), "'");
+        println_err("ERROR: Bad option '", p.arg(), "'");
         return errorUsage(argv);
       }
     } else {
@@ -84,7 +103,7 @@ int main(int argc, char* argv[])
       Entry e;
       p.get(e.file);
       if (!e.img.load(e.file)) {
-        gx::println_err("Can't load \"", e.file, "\"");
+        println_err("Can't load \"", e.file, "\"");
         continue;
       }
       entries.push_back(std::move(e));
@@ -92,15 +111,15 @@ int main(int argc, char* argv[])
   }
 
   if (entries.empty()) {
-    gx::println_err("No images to display");
+    println_err("No images to display");
     return -1;
   }
 
   const int lastNo = int(entries.size()) - 1;
   gx::Window win;
-  win.setSize(entries[0].img.width(), entries[0].img.height(), false);
+  setWinSize(win, entries[0].img);
   if (!win.open(gx::WINDOW_RESIZABLE | gx::WINDOW_FIXED_ASPECT_RATIO)) {
-    gx::println_err("Failed to open window");
+    println_err("Failed to open window");
     return -1;
   }
 
@@ -177,7 +196,7 @@ int main(int argc, char* argv[])
     if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }
     if (win.keyPressCount(gx::KEY_F11, false)) {
       if (win.fullScreen()) {
-        win.setSize(e.img.width(), e.img.height(), false);
+        setWinSize(win, e.img);
       } else {
         win.setSize(0, 0, true);
       }
@@ -201,7 +220,7 @@ int main(int argc, char* argv[])
       entryNo = no;
       if (!win.fullScreen()) {
         const Entry& e2 = entries[std::size_t(entryNo)];
-        win.setSize(e2.img.width(), e2.img.height(), false);
+        setWinSize(win, e2.img);
       }
       refresh = true;
     }
