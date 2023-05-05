@@ -1,6 +1,6 @@
 //
 // gx/embed.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // command line tool to generate source with a file's contents as a static
 // array (useful for embedding default font/image data into a binary so it's
@@ -17,6 +17,7 @@
 #include "CmdLineParser.hh"
 #include "Print.hh"
 #include <fstream>
+#include <cstdint>
 
 
 constexpr int ROW_SIZE = 16;
