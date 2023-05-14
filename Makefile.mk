@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 49 (2023/2/8)
+# Makefile.mk - revision 50 (2023/5/10)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -76,6 +76,7 @@
 #  TEST1.DEPS      additional dependencies for building all test 1 objects
 #
 #  COMPILER        compiler to use (gcc,clang)
+#  LINKER          linker to use instead of default (bfd,gold,lld,mold)
 #  CROSS_COMPILE   binutils and gcc toolchain prefix (i.e. arm-linux-gnueabi-)
 #  STANDARD        language standard(s) of source code
 #  OPT_LEVEL       optimization level for release & profile builds
@@ -176,6 +177,7 @@ RM ?= rm -f --
 
 #### Basic Settings ####
 COMPILER ?= $(firstword $(_compiler_names))
+LINKER ?=
 CROSS_COMPILE ?=
 STANDARD ?=
 OPT_LEVEL ?= 3
@@ -272,6 +274,7 @@ override _clang_cxx := clang++
 override _clang_cc := clang
 override _clang_as := clang -x assembler-with-cpp
 override _clang_ar := llvm-ar
+override _clang_ld := lld
 override _clang_warn := shadow
 override _clang_modern := -Wzero-as-null-pointer-constant -Wregister -Winconsistent-missing-override
 
@@ -314,6 +317,10 @@ CXX = $(CROSS_COMPILE)$(or $(_$(COMPILER)_cxx),c++)
 CC = $(CROSS_COMPILE)$(or $(_$(COMPILER)_cc),cc)
 AS = $(CROSS_COMPILE)$(or $(_$(COMPILER)_as),as)
 AR = $(CROSS_COMPILE)$(or $(_$(COMPILER)_ar),ar)
+
+ifneq ($(strip $(LINKER)),ld)
+  override _linker := $(or $(strip $(LINKER)),$(_$(COMPILER)_ld))
+endif
 
 override _c_ptrn := %.c
 override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x
@@ -793,8 +800,9 @@ else ifneq ($(_build_env),)
     override _$1_subsystem := $$(if $$(_windows),$$(or $$($1.SUBSYSTEM),$$(SUBSYSTEM)))
   endif
 
+  override _$1_link_flags := $(if $(_linker),-fuse-ld=$(_linker))
   ifneq ($$(strip $$($1.LINK_FLAGS)),-)
-    override _$1_link_flags := $$(or $$($1.LINK_FLAGS),$$(LINK_FLAGS))
+    override _$1_link_flags += $$(or $$($1.LINK_FLAGS),$$(LINK_FLAGS))
   endif
 
   ifeq ($$(strip $$($1.STANDARD)),)
