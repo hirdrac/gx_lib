@@ -53,8 +53,11 @@ namespace
       td.tm_year + 1900, td.tm_mon + 1, td.tm_mday,
       td.tm_hour, td.tm_min, td.tm_sec);
     if (show_ms) {
-      len += snprintf(&str[len-1], sizeof(str)-len-1, ".%03ld ",
-                      ts.tv_nsec / 1000000) - 1;
+      const int size = int(sizeof(str)) - len + 1;
+      if (size > 0) {
+        len += snprintf(&str[len-1], std::size_t(size),
+                        ".%03ld ", ts.tv_nsec / 1000000) - 1;
+      }
     }
 
     os.write(str, std::streamsize(len));
