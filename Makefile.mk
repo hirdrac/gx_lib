@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 50 (2023/5/10)
+# Makefile.mk - revision 50 (2023/5/17)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -227,6 +227,13 @@ $(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE LIBS LIBS_TEST DEFINE
   $(if $($x_EXTRA),$(eval override $x += $($x_EXTRA))))
 
 
+#### Default Make Flags ####
+ifneq ($(shell which nproc 2>/dev/null),)
+  override _threads := $(shell nproc)
+  override GNUMAKEFLAGS += --load-average=$(_threads)
+endif
+
+
 #### OS Specific Values ####
 override _uname := $(shell uname -s | tr A-Z a-z)
 override _windows := $(filter cygwin% mingw% msys%,$(_uname))
@@ -326,7 +333,7 @@ override _c_ptrn := %.c
 override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x
 override _asm_ptrn := %.s %.S %.sx
 override _cxx_ptrn := %.cc %.cp %.cxx %.cpp %.CPP %.c++ %.C
-override _cxx_stds := c++98 gnu++98 c++03 gnu++03 c++11 gnu++11 c++14 gnu++14 c++17 gnu++17 c++2a gnu++2a c++20 gnu++20 c++2b gnu++2b c++23 gnu++23
+override _cxx_stds := c++98 gnu++98 c++03 gnu++03 c++11 gnu++11 c++14 gnu++14 c++17 gnu++17 c++2a gnu++2a c++20 gnu++20 c++2b gnu++2b c++23 gnu++23 c++2c gnu++2c c++26 gnu++26
 
 override define _check_standard  # <1:standard var> <2:set prefix>
 override $2_cxx_std := $$(addprefix -std=,$$(filter $$($1),$$(_cxx_stds)))
