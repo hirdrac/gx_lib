@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 51 (2023/5/26)
+# Makefile.mk - revision 51 (2023/5/28)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -103,6 +103,7 @@
 #    pedantic      enforces strict ISO C/C++ compliance
 #    static_rtlib  staticly link with runtime library (libgcc usually)
 #    static_stdlib staticly link with C++ standard library (libstdc++ usually)
+#  OPTIONS_TEST    additional options for all tests
 #  FLAGS           additional compiler flags not otherwise specified
 #  FLAGS_TEST      additional compiler flags for all tests
 #  FLAGS_RELEASE   additional compiler flags for release builds
@@ -130,6 +131,7 @@
 #    DEFINE/OPTIONS/FLAGS/LINK_FLAGS/SOURCE_DIR can be set for specific targets
 #    to override global values (ex.: BIN1.FLAGS = -pthread).
 #    A value of '-' can be used to clear the setting for the target
+#    (note that FLAGS_RELEASE/FLAGS_DEBUG/FLAGS_PROFILE are always applied)
 #
 #  Filename wildcards '*' or '**'(directory hierarchy search) supported
 #    for .SRC,.DEPS,.OBJS,CLEAN_EXTRA,CLOBBER_EXTRA settings
@@ -201,6 +203,7 @@ LIBS_TEST ?=
 DEFINE ?=
 DEFINE_TEST ?=
 OPTIONS ?=
+OPTIONS_TEST ?=
 FLAGS ?=
 FLAGS_TEST ?=
 FLAGS_RELEASE ?=
@@ -227,8 +230,11 @@ override BUILD_TMP := BUILD_TMP
 override LIBPREFIX := lib
 
 # apply *_EXTRA setting values (WARN_EXTRA handled above)
-$(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE INCLUDE_TEST LIBS LIBS_TEST DEFINE DEFINE_TEST OPTIONS FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE LINK_FLAGS EXCLUDE_TARGETS,\
+$(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE INCLUDE_TEST LIBS LIBS_TEST DEFINE DEFINE_TEST OPTIONS OPTIONS_TEST FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE LINK_FLAGS EXCLUDE_TARGETS,\
   $(if $($x_EXTRA),$(eval override $x += $($x_EXTRA))))
+
+# prevent duplicate options being applied to tests
+override OPTIONS_TEST := $(filter-out $(OPTIONS),$(OPTIONS_TEST))
 
 
 #### Default Make Flags ####
@@ -384,42 +390,44 @@ endef
 override _op_list := warn_error pthread lto modern_c++ no_rtti no_except pedantic static_rtlib static_stdlib
 
 override define _check_options  # <1:options var> <2:set prefix>
-ifneq ($$(filter-out $$(_op_list),$$($1)),)
-  $$(error $$(_msgErr)$1: unknown '$$(filter-out $$(_op_list),$$($1))'$$(_end))
-endif
-override $2_op_warn :=
-override $2_op_flags :=
-override $2_op_link :=
-ifneq ($$(filter warn_error,$$($1)),)
-  override $2_op_warn += -Werror
-endif
-ifneq ($$(filter pthread,$$($1)),)
-  override $2_op_flags += -pthread
-endif
-ifneq ($$(filter lto,$$($1)),)
-  override $2_op_flags += -flto=auto
-endif
-ifneq ($$(filter pedantic,$$($1)),)
-  override $2_op_warn += -Wpedantic
-  override $2_op_flags += -pedantic-errors
-endif
-ifneq ($$(filter static_rtlib,$$($1)),)
-  override $2_op_link += -static-libgcc
-endif
-override $2_op_cxx_warn := $$($2_op_warn)
-override $2_op_cxx_flags := $$($2_op_flags)
-override $2_op_cxx_link := $$($2_op_link)
-ifneq ($$(filter modern_c++,$$($1)),)
-  override $2_op_cxx_warn += $$(_$(_compiler)_modern)
-endif
-ifneq ($$(filter no_rtti,$$($1)),)
-  override $2_op_cxx_flags += -fno-rtti
-endif
-ifneq ($$(filter no_except,$$($1)),)
-  override $2_op_cxx_flags += -fno-exceptions
-endif
-ifneq ($$(filter static_stdlib,$$($1)),)
-  override $2_op_cxx_link += -static-libstdc++
+ifneq ($$(strip $$($1)),)
+  ifneq ($$(filter-out $$(_op_list),$$($1)),)
+    $$(error $$(_msgErr)$1: unknown '$$(filter-out $$(_op_list),$$($1))'$$(_end))
+  endif
+  override $2_warn :=
+  override $2_flags :=
+  override $2_link :=
+  ifneq ($$(filter warn_error,$$($1)),)
+    override $2_warn += -Werror
+  endif
+  ifneq ($$(filter pthread,$$($1)),)
+    override $2_flags += -pthread
+  endif
+  ifneq ($$(filter lto,$$($1)),)
+    override $2_flags += -flto=auto
+  endif
+  ifneq ($$(filter pedantic,$$($1)),)
+    override $2_warn += -Wpedantic
+    override $2_flags += -pedantic-errors
+  endif
+  ifneq ($$(filter static_rtlib,$$($1)),)
+    override $2_link += -static-libgcc
+  endif
+  override $2_cxx_warn := $$($2_warn)
+  override $2_cxx_flags := $$($2_flags)
+  override $2_cxx_link := $$($2_link)
+  ifneq ($$(filter modern_c++,$$($1)),)
+    override $2_cxx_warn += $$(_$(_compiler)_modern)
+  endif
+  ifneq ($$(filter no_rtti,$$($1)),)
+    override $2_cxx_flags += -fno-rtti
+  endif
+  ifneq ($$(filter no_except,$$($1)),)
+    override $2_cxx_flags += -fno-exceptions
+  endif
+  ifneq ($$(filter static_stdlib,$$($1)),)
+    override $2_cxx_link += -static-libstdc++
+  endif
 endif
 endef
 
@@ -713,7 +721,8 @@ else ifneq ($(_build_env),)
     $(eval override $t.ALL_FILES := $(foreach x,$(_$t_labels),$($x))))
 
   $(eval $(call _check_standard,STANDARD,))
-  $(eval $(call _check_options,OPTIONS,))
+  $(eval $(call _check_options,OPTIONS,_op))
+  $(eval $(call _check_options,OPTIONS_TEST,_op_test))
 
   override _pkgs := $(call _check_pkgs,PACKAGES)
   override _pkgs_test := $(call _check_pkgs,PACKAGES_TEST)
@@ -735,9 +744,9 @@ else ifneq ($(_build_env),)
 
   ifneq ($(_test_labels),)
     override _test_xflags := $(if $(_pkgs_test),$(call _get_pkg_flags,$(_pkgs) $(_pkgs_test)),$(_pkg_flags)) $(FLAGS) $(FLAGS_TEST) $(FLAGS_$(_$(ENV)_uc))
-    override _cxxflags_$(ENV)-tests := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_cxx_flags) $(_test_xflags))
-    override _cflags_$(ENV)-tests := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_test_xflags))
-    override _asflags_$(ENV)-tests := $(strip $(_$(ENV)_opt) $(_op_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_test_xflags))
+    override _cxxflags_$(ENV)-tests := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_op_test_cxx_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_cxx_flags) $(_op_test_cxx_flags) $(_test_xflags))
+    override _cflags_$(ENV)-tests := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
+    override _asflags_$(ENV)-tests := $(strip $(_$(ENV)_opt) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
     override _src_path_$(ENV)-tests := $(_src_path)
   endif
 
@@ -828,14 +837,14 @@ else ifneq ($(_build_env),)
   endif
 
   ifeq ($$(strip $$($1.OPTIONS)),)
-    override _$1_op_warn := $$(_op_warn)
-    override _$1_op_flags := $$(_op_flags)
-    override _$1_op_link := $$(_op_link)
-    override _$1_op_cxx_warn := $$(_op_cxx_warn)
-    override _$1_op_cxx_flags := $$(_op_cxx_flags)
-    override _$1_op_cxx_link := $$(_op_cxx_link)
+    override _$1_op_warn := $$(_op_warn) $$(if $2,$$(_op_test_warn))
+    override _$1_op_flags := $$(_op_flags) $$(if $2,$$(_op_test_flags))
+    override _$1_op_link := $$(_op_link) $$(if $2,$$(_op_test_link))
+    override _$1_op_cxx_warn := $$(_op_cxx_warn) $$(if $2,$$(_op_test_cxx_warn))
+    override _$1_op_cxx_flags := $$(_op_cxx_flags) $$(if $2,$$(_op_test_cxx_flags))
+    override _$1_op_cxx_link := $$(_op_cxx_link) $$(if $2,$$(_op_test_cxx_link))
   else ifneq ($$(strip $$($1.OPTIONS)),-)
-    $$(eval $$(call _check_options,$1.OPTIONS,_$1))
+    $$(eval $$(call _check_options,$1.OPTIONS,_$1_op))
   endif
 
   ifneq ($$(strip $$($1.PACKAGES)),-)
