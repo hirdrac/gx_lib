@@ -1,5 +1,5 @@
 # gx_lib project makefile
-# Copyright (C) 2022 Richard Bradley
+# Copyright (C) 2023 Richard Bradley
 
 include gx/LIB_gx.mk
 LIB_gx.SOURCE_DIR = gx
@@ -48,7 +48,6 @@ include tests/tests.mk
 
 STANDARD = c++17
 OPTIONS = lto modern_c++
-# NOTE: lto doesn't work for clang on MINGW64/MSys2
 
 # Add extra error checks for OpenGL calls
 DEFINE = GX_DEBUG_GL
@@ -56,6 +55,7 @@ DEFINE = GX_DEBUG_GL
 WARN_EXTRA = fatal-errors cast-qual
 WARN_CXX_EXTRA = extra-semi conversion cast-align
 #FLAGS_RELEASE = -DNDEBUG
+
 
 include Makefile.mk
 
