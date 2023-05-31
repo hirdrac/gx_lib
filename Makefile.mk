@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 51 (2023/5/31)
+# Makefile.mk - revision 51 (2023/6/1)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -192,7 +192,6 @@ else
 endif
 
 BUILD_DIR ?= build
-DEFAULT_ENV ?= $(firstword $(_env_names))
 OUTPUT_LIB_DIR ?= $(OUTPUT_DIR)
 OUTPUT_BIN_DIR ?= $(OUTPUT_DIR)
 
@@ -234,8 +233,43 @@ else ifneq ($(_linux),)
 endif
 
 
+#### Terminal Output ####
+# _fg1 - binary/library built
+# _fg2 - warning or removal notice
+# _fg3 - test passed
+# _fg4 - test failed or fatal error
+ifneq ($(and $(MAKE_TERMOUT),$(MAKE_TERMERR)),)
+  ifneq ($(shell which setterm 2>/dev/null),)
+    override _bold := $(shell setterm --bold on)
+    override _fg0 := $(shell setterm --foreground default)
+    override _fg1 := $(shell setterm --foreground cyan)
+    override _fg2 := $(shell setterm --foreground magenta)
+    override _fg3 := $(shell setterm --foreground green)
+    override _fg4 := $(shell setterm --foreground red)
+    override _end := $(shell setterm --default)
+  else
+    override _bold := $(shell echo -e '\e[1m')
+    override _fg0 := $(shell echo -e '\e[39m')
+    override _fg1 := $(shell echo -e '\e[36m')
+    override _fg2 := $(shell echo -e '\e[35m')
+    override _fg3 := $(shell echo -e '\e[32m')
+    override _fg4 := $(shell echo -e '\e[31m')
+    override _end := $(shell echo -e '\e[m')
+  endif
+  override _msgInfo := $(_bold)$(_fg1)
+  override _msgWarn := $(_bold)$(_fg2)
+  override _msgErr := $(_bold)$(_fg4)
+endif
+
+
 #### Environment Details ####
 override _env_names := release debug profile
+override _default_env := $(or $(strip $(DEFAULT_ENV)),$(firstword $(_env_names)))
+ifeq ($(filter $(_default_env),$(_env_names)),)
+  $(error $(_msgErr)DEFAULT_ENV: invalid value$(_end))
+endif
+MAKECMDGOALS ?= $(_default_env)
+
 override _opt_lvl = $(or $(strip $($1.OPT_LEVEL)),$(strip $(OPT_LEVEL)))
 override _debug_opt_lvl = $(or $(strip $($1.OPT_LEVEL_DEBUG)),$(strip $(OPT_LEVEL_DEBUG)))
 
@@ -267,35 +301,6 @@ override _clang_ar := llvm-ar
 override _clang_ld := lld
 override _clang_warn := shadow
 override _clang_modern := -Wzero-as-null-pointer-constant -Wregister -Winconsistent-missing-override
-
-
-#### Terminal Output ####
-# _fg1 - binary/library built
-# _fg2 - warning or removal notice
-# _fg3 - test passed
-# _fg4 - test failed or fatal error
-ifneq ($(and $(MAKE_TERMOUT),$(MAKE_TERMERR)),)
-  ifneq ($(shell which setterm 2>/dev/null),)
-    override _bold := $(shell setterm --bold on)
-    override _fg0 := $(shell setterm --foreground default)
-    override _fg1 := $(shell setterm --foreground cyan)
-    override _fg2 := $(shell setterm --foreground magenta)
-    override _fg3 := $(shell setterm --foreground green)
-    override _fg4 := $(shell setterm --foreground red)
-    override _end := $(shell setterm --default)
-  else
-    override _bold := $(shell echo -e '\e[1m')
-    override _fg0 := $(shell echo -e '\e[39m')
-    override _fg1 := $(shell echo -e '\e[36m')
-    override _fg2 := $(shell echo -e '\e[35m')
-    override _fg3 := $(shell echo -e '\e[32m')
-    override _fg4 := $(shell echo -e '\e[31m')
-    override _end := $(shell echo -e '\e[m')
-  endif
-  override _msgInfo := $(_bold)$(_fg1)
-  override _msgWarn := $(_bold)$(_fg2)
-  override _msgErr := $(_bold)$(_fg4)
-endif
 
 
 #### Compiler/Standard Specific Setup ####
@@ -549,11 +554,6 @@ ifneq ($(words $(_all_names)),$(words $(sort $(_all_names))))
   $(error $(_msgErr)Duplicate binary/library/file names [$(_msgWarn)$(call _find_dups,$(_all_names))$(_msgErr)]$(_end))
 endif
 
-ifeq ($(filter $(DEFAULT_ENV),$(_env_names)),)
-  $(error $(_msgErr)DEFAULT_ENV: invalid value$(_end))
-endif
-MAKECMDGOALS ?= $(DEFAULT_ENV)
-
 override define _check_dir # <1:dir var>
 ifeq ($$(filter 0 1,$$(words $$($1))),)
   $$(error $$(_msgErr)$1: spaces not allowed$$(_end))
@@ -651,8 +651,8 @@ override define _setup_env2 # <1:build env>
 override _$1_build2_targets := $$(filter-out $$(_filter_targets),$$(_$1_build_targets))
 override _$1_test2_targets := $$(filter-out $$(_filter_targets),$$(_$1_test_targets))
 override _$1_goals := $$(sort\
-  $$(if $$(filter $$(if $$(filter $1,$$(DEFAULT_ENV)),all) $1,$$(MAKECMDGOALS)),$$(_$1_build2_targets))\
-  $$(if $$(filter $$(if $$(filter $1,$$(DEFAULT_ENV)),tests) tests_$1,$$(MAKECMDGOALS)),$$(_$1_test2_targets))\
+  $$(if $$(filter $$(if $$(filter $1,$$(_default_env)),all) $1,$$(MAKECMDGOALS)),$$(_$1_build2_targets))\
+  $$(if $$(filter $$(if $$(filter $1,$$(_default_env)),tests) tests_$1,$$(MAKECMDGOALS)),$$(_$1_test2_targets))\
   $$(filter $$(_$1_build_targets) $$(sort $$(_$1_aliases)),$$(MAKECMDGOALS)))
 endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env2,$e)))
@@ -942,9 +942,9 @@ endif
 #### Main Targets ####
 .PHONY: $(_base_targets)
 
-.DEFAULT_GOAL = $(DEFAULT_ENV)
-all: $(DEFAULT_ENV)
-tests: tests_$(DEFAULT_ENV)
+.DEFAULT_GOAL = $(_default_env)
+all: $(_default_env)
+tests: tests_$(_default_env)
 
 info:
 	@echo '$(_msgInfo)==== Build Target Info ====$(_end)'
@@ -957,7 +957,7 @@ info:
 
 help:
 	@echo '$(_msgInfo)==== Command Help ====$(_end)'
-	@echo '$(_bold)make$(_end) or $(_bold)make all$(_end)   builds default environment ($(_bold)$(_fg3)$(DEFAULT_ENV)$(_end))'
+	@echo '$(_bold)make$(_end) or $(_bold)make all$(_end)   builds default environment ($(_bold)$(_fg3)$(_default_env)$(_end))'
 	@echo '$(_bold)make $(_fg3)<env>$(_end)         builds specified environment'
 	@echo '                   available: $(_bold)$(_fg3)$(_env_names)$(_end)'
 	@echo '$(_bold)make clean$(_end)         removes all build files except for made binaries/libraries'
