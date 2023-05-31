@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 51 (2023/5/30)
+# Makefile.mk - revision 51 (2023/5/31)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -101,8 +101,8 @@
 #    no_rtti       disable C++ RTTI
 #    no_except     disable C++ exceptions
 #    pedantic      enforces strict ISO C/C++ compliance
-#    static_rtlib  staticly link with runtime library (libgcc usually)
-#    static_stdlib staticly link with C++ standard library (libstdc++ usually)
+#    static_rtlib  statically link with runtime library (libgcc usually)
+#    static_stdlib statically link with C++ standard library (libstdc++ usually)
 #  OPTIONS_TEST    additional options for all tests
 #  FLAGS           additional compiler flags not otherwise specified
 #  FLAGS_TEST      additional compiler flags for all tests
@@ -180,10 +180,6 @@ RM ?= rm -f --
 
 
 #### Basic Settings ####
-COMPILER ?=
-LINKER ?=
-CROSS_COMPILE ?=
-STANDARD ?=
 OPT_LEVEL ?= 3
 OPT_LEVEL_DEBUG ?= g
 ifndef WARN
@@ -194,34 +190,11 @@ else
   WARN_C ?= $(WARN) $(WARN_EXTRA)
   WARN_CXX ?= $(WARN) $(WARN_EXTRA)
 endif
-PACKAGES ?=
-PACKAGES_TEST ?=
-INCLUDE ?=
-INCLUDE_TEST ?=
-LIBS ?=
-LIBS_TEST ?=
-DEFINE ?=
-DEFINE_TEST ?=
-OPTIONS ?=
-OPTIONS_TEST ?=
-FLAGS ?=
-FLAGS_TEST ?=
-FLAGS_RELEASE ?=
-FLAGS_DEBUG ?=
-FLAGS_PROFILE ?=
-LINK_FLAGS ?=
 
 BUILD_DIR ?= build
 DEFAULT_ENV ?= $(firstword $(_env_names))
-OUTPUT_DIR ?=
 OUTPUT_LIB_DIR ?= $(OUTPUT_DIR)
 OUTPUT_BIN_DIR ?= $(OUTPUT_DIR)
-CLEAN_EXTRA ?=
-CLOBBER_EXTRA ?=
-SUBDIRS ?=
-SYMLINKS ?=
-SOURCE_DIR ?=
-EXCLUDE_TARGETS ?=
 
 # default values to be more obvious if used/handled improperly
 override ENV := ENV
@@ -597,7 +570,7 @@ $(eval $(call _check_dir,SOURCE_DIR))
 
 override _build_dir := $(filter-out .,$(strip $(BUILD_DIR:%/=%)))
 ifeq ($(_build_dir),)
-  $(error $(_msgErr)Invalid BUILD_DIR$(_end))
+  $(error $(_msgErr)BUILD_DIR: invalid value$(_end))
 endif
 override _src_path := $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
 override _symlinks := $(addprefix $(_src_path),$(SYMLINKS))
