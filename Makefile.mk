@@ -347,10 +347,10 @@ endef
 override _pkg_n = $(word 1,$(subst :, ,$1))
 override _pkg_v = $(word 2,$(subst :, ,$1))
 override _check_pkgs =\
-$(sort $(foreach x,$($1),\
+$(foreach x,$($1),\
   $(if $(shell $(PKGCONF) $(call _pkg_n,$x) $(if $(call _pkg_v,$x),--atleast-version=$(call _pkg_v,$x),--exists) && echo '1'),\
     $(call _pkg_n,$x),\
-    $(warning $(_msgWarn)$1: package '$(call _pkg_n,$x)'$(if $(call _pkg_v,$x), [version >= $(call _pkg_v,$x)]) not found$(_end)))))
+    $(warning $(_msgWarn)$1: package '$(call _pkg_n,$x)'$(if $(call _pkg_v,$x), [version >= $(call _pkg_v,$x)]) not found$(_end))))
 
 override _get_pkg_flags = $(if $1,$(strip $(shell $(PKGCONF) $1 --cflags)))
 override _get_pkg_libs = $(if $1,$(strip $(shell $(PKGCONF) $1 --libs)))
@@ -708,7 +708,7 @@ else ifneq ($(_build_env),)
   override _warn_c := $(call _format_warn,$(WARN_C))
 
   # setup compile flags for each build path
-  override _pkg_flags := $(call _get_pkg_flags,$(_pkgs))
+  override _pkg_flags := $(call _get_pkg_flags,$(sort $(_pkgs)))
   override _xflags :=  $(_pkg_flags) $(FLAGS) $(FLAGS_$(_$(ENV)_uc))
   override _cxxflags_$(ENV) := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_define) $(_include) $(_op_cxx_flags) $(_xflags))
   override _cflags_$(ENV) := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_xflags))
@@ -716,7 +716,7 @@ else ifneq ($(_build_env),)
   override _src_path_$(ENV) := $(_src_path)
 
   ifneq ($(_test_labels),)
-    override _test_xflags := $(if $(_pkgs_test),$(call _get_pkg_flags,$(_pkgs) $(_pkgs_test)),$(_pkg_flags)) $(FLAGS) $(FLAGS_TEST) $(FLAGS_$(_$(ENV)_uc))
+    override _test_xflags := $(if $(_pkgs_test),$(call _get_pkg_flags,$(sort $(_pkgs) $(_pkgs_test))),$(_pkg_flags)) $(FLAGS) $(FLAGS_TEST) $(FLAGS_$(_$(ENV)_uc))
     override _cxxflags_$(ENV)-tests := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_op_test_cxx_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_cxx_flags) $(_op_test_cxx_flags) $(_test_xflags))
     override _cflags_$(ENV)-tests := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
     override _asflags_$(ENV)-tests := $(strip $(_$(ENV)_opt) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
@@ -821,7 +821,7 @@ else ifneq ($(_build_env),)
   endif
 
   ifneq ($$(strip $$($1.PACKAGES)),-)
-    override _$1_pkgs := $$(or $$(call _check_pkgs,$1.PACKAGES),$$(_pkgs))
+    override _$1_pkgs := $$(or $$(call _check_pkgs,$1.PACKAGES),$$(_pkgs) $$(if $2,$$(_pkgs_test)))
   endif
 
   ifneq ($$(strip $$($1.LIBS)),-)
@@ -854,7 +854,7 @@ else ifneq ($(_build_env),)
     override _$1_req_libs2 := $$(filter-out $1,$$(foreach x,$$($1.OBJS),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs))))
   endif
 
-  override _$1_xpkgs := $$(sort $$(_$1_pkgs) $$(if $2,$$(_pkgs_test)) $$(_$1_req_pkgs1) $$(_$1_req_pkgs2))
+  override _$1_xpkgs := $$(sort $$(_$1_pkgs) $$(_$1_req_pkgs1) $$(_$1_req_pkgs2))
   ifneq ($$(_$1_xpkgs),)
     override _$1_pkg_libs := $$(call _get_pkg_libs,$$(_$1_xpkgs))
     override _$1_pkg_flags := $$(call _get_pkg_flags,$$(_$1_xpkgs))
