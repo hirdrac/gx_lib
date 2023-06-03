@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 51 (2023/6/1)
+# Makefile.mk - revision 51 (2023/6/2)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -118,8 +118,8 @@
 #  BUILD_DIR       directory for generated object/prerequisite files
 #  DEFAULT_ENV     default environment to build (release,debug,profile)
 #  OUTPUT_DIR      default output directory (defaults to current directory)
-#  OUTPUT_LIB_DIR  directory for generated libraries (defaults to OUTPUT_DIR)
 #  OUTPUT_BIN_DIR  directory for generated binaries (defaults to OUTPUT_DIR)
+#  OUTPUT_LIB_DIR  directory for generated libraries (defaults to OUTPUT_DIR)
 #  CLEAN_EXTRA     extra files to delete for 'clean' target
 #  CLOBBER_EXTRA   extra files to delete for 'clobber' target
 #  SUBDIRS         sub-directories to also make with base targets
@@ -192,8 +192,6 @@ else
 endif
 
 BUILD_DIR ?= build
-OUTPUT_LIB_DIR ?= $(OUTPUT_DIR)
-OUTPUT_BIN_DIR ?= $(OUTPUT_DIR)
 
 # default values to be more obvious if used/handled improperly
 override ENV := ENV
@@ -559,6 +557,8 @@ ifeq ($$(filter 0 1,$$(words $$($1))),)
   $$(error $$(_msgErr)$1: spaces not allowed$$(_end))
 else ifneq ($$(findstring *,$$($1)),)
   $$(error $$(_msgErr)$1: wildcard '*' not allowed$$(_end))
+else ifeq ($$(strip $$($1)),-)
+  $$(error $$(_msgErr)$1: invalid value$$(_end))
 endif
 endef
 
@@ -572,6 +572,11 @@ override _build_dir := $(filter-out .,$(strip $(BUILD_DIR:%/=%)))
 ifeq ($(_build_dir),)
   $(error $(_msgErr)BUILD_DIR: invalid value$(_end))
 endif
+
+override _output_bin_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_BIN_DIR)),$(strip $(OUTPUT_DIR))))
+override _output_lib_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_LIB_DIR)),$(strip $(OUTPUT_DIR))))
+  # output dirs can contain variables like '$(ENV)'
+
 override _src_path := $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
 override _symlinks := $(addprefix $(_src_path),$(SYMLINKS))
 
@@ -590,8 +595,8 @@ override define _setup_env0  # <1:build env>
 override ENV := $1
 override SFX := $$(_$1_sfx)
 override BUILD_TMP := $$(_build_dir)/$$(ENV)_tmp
-override _$1_ldir := $$(if $$(OUTPUT_LIB_DIR),$$(OUTPUT_LIB_DIR:%/=%)/)
-override _$1_bdir := $$(if $$(OUTPUT_BIN_DIR),$$(OUTPUT_BIN_DIR:%/=%)/)
+override _$1_bdir := $$(if $$(_output_bin_dir),$$(_output_bin_dir)/)
+override _$1_ldir := $$(if $$(_output_lib_dir),$$(_output_lib_dir)/)
 endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env0,$e)))
 
