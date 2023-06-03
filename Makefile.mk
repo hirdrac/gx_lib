@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 51 (2023/6/2)
+# Makefile.mk - revision 51 (2023/6/3)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -994,17 +994,17 @@ $(foreach e,$(_env_names),$(eval $(call _setup_env_targets,$e)))
 
 
 ifneq ($(filter clean $(foreach e,$(_env_names),clean_$e),$(MAKECMDGOALS)),)
-  override _clean_extra := $(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f))
+  override _clean_extra := $(filter-out $(MAKEFILE_LIST),$(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f)))
 endif
 
 clean:
 	@$(RM) "$(_build_dir)/".*_ver $(foreach x,$(_symlinks),"$x")
-	@([ -d "$(_build_dir)" ] && rmdir -p -- "$(_build_dir)") || true
 	@for X in $(_clean_extra); do\
 	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
+	@([ -d "$(_build_dir)" ] && rmdir -p -- "$(_build_dir)") || true
 
 ifneq ($(filter clobber,$(MAKECMDGOALS)),)
-  override _clobber_extra := $(foreach f,$(CLOBBER_EXTRA),$(call _do_wildcard,$f))
+  override _clobber_extra := $(filter-out $(MAKEFILE_LIST),$(foreach f,$(CLOBBER_EXTRA),$(call _do_wildcard,$f)))
 endif
 
 clobber: clean
