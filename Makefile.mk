@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 51 (2023/6/3)
+# Makefile.mk - revision 51 (2023/6/4)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -993,7 +993,7 @@ endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env_targets,$e)))
 
 
-ifneq ($(filter clean $(foreach e,$(_env_names),clean_$e),$(MAKECMDGOALS)),)
+ifneq ($(filter clean $(foreach e,$(_env_names),clean_$e) clobber,$(MAKECMDGOALS)),)
   override _clean_extra := $(filter-out $(MAKEFILE_LIST),$(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f)))
 endif
 
