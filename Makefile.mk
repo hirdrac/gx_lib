@@ -975,7 +975,7 @@ help:
 
 .gitignore:
 	@echo '$(_build_dir)/'
-	@for X in $(sort $(filter-out $(_build_dir)/%,$(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_file_targets)))); do\
+	@for X in $(sort $(filter-out $(_build_dir)/%,$(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_links) $(_$e_file_targets)))); do\
 	  echo "$$X"; done
 
 override define _setup_env_targets  # <1:build env>
@@ -993,25 +993,22 @@ endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env_targets,$e)))
 
 
-ifneq ($(filter clean $(foreach e,$(_env_names),clean_$e) clobber,$(MAKECMDGOALS)),)
-  override _clean_extra := $(filter-out $(MAKEFILE_LIST),$(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f)))
+ifneq ($(filter clean,$(MAKECMDGOALS)),)
+  override _clean_files := $(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f))
+else ifneq ($(filter clobber,$(MAKECMDGOALS)),)
+  override _clean_files := $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_links) $(_$e_file_targets)) $(foreach f,$(CLEAN_EXTRA) $(CLOBBER_EXTRA),$(call _do_wildcard,$f)) core gmon.out
+  override _clean_dirs := $(foreach d,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_libbin_targets) $(_$e_file_targets),$(dir $x))))),"$d")
 endif
 
 clean:
 	@$(RM) "$(_build_dir)/".*_ver $(foreach x,$(_symlinks),"$x")
-	@for X in $(_clean_extra); do\
+	@for X in $(filter-out $(MAKEFILE_LIST),$(_clean_files)); do\
 	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
+	@for X in $(_clean_dirs); do\
+	  ([ -d "$$X" ] && rmdir -p --ignore-fail-on-non-empty -- "$$X") || true; done
 	@([ -d "$(_build_dir)" ] && rmdir -p -- "$(_build_dir)") || true
 
-ifneq ($(filter clobber,$(MAKECMDGOALS)),)
-  override _clobber_extra := $(filter-out $(MAKEFILE_LIST),$(foreach f,$(CLOBBER_EXTRA),$(call _do_wildcard,$f)))
-endif
-
 clobber: clean
-	@for X in $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_file_targets) $(_$e_links)) core gmon.out $(_clobber_extra); do\
-	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
-	@for X in $(foreach y,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_libbin_targets) $(_$e_file_targets),$(dir $x))))),"$y"); do\
-	  ([ -d "$$X" ] && rmdir -p --ignore-fail-on-non-empty -- "$$X") || true; done
 
 override define _make_subdir_target  # <1:target>
 $1: _subdir_$1
