@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 52 (2023/6/7)
+# Makefile.mk - revision 52 (2023/6/8)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -868,7 +868,7 @@ else ifneq ($(_build_env),)
   override _$1_xlibs := $$(call _format_libs,$$(_$1_libs) $$(_$1_req_libs1) $$(_$1_req_libs2))
 
   # NOTE: LIBS before PACKAGES libs in case included static lib requires package
-  override _$1_xflags := $$(_$1_pkg_flags) $$(_$1_flags) $$(FLAGS_$$(_$$(ENV)_uc))
+  override _$1_xflags := $$(_$1_pkg_flags) $$(FLAGS_$$(_$$(ENV)_uc)) $$(_$1_flags)
   override _cxxflags_$$(ENV)-$1 := $$(strip $$(_$1_cxx_std) $$(call _$$(ENV)_opt,$1) $$(_warn_cxx) $$(_$1_op_cxx_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_cxx_flags) $$(_$1_xflags))
   override _cflags_$$(ENV)-$1 := $$(strip $$(_$1_c_std) $$(call _$$(ENV)_opt,$1) $$(_warn_c) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
   override _asflags_$$(ENV)-$1 := $$(strip $$(call _$$(ENV)_opt,$1) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
