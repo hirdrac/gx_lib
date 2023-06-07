@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 51 (2023/6/4)
+# Makefile.mk - revision 52 (2023/6/7)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -350,12 +350,12 @@ $(foreach x,$($1),\
     $(call _pkg_n,$x),\
     $(warning $(_msgWarn)$1: package '$(call _pkg_n,$x)'$(if $(call _pkg_v,$x), [version >= $(call _pkg_v,$x)]) not found$(_end))))
 
-override _get_pkg_flags = $(if $1,$(strip $(shell $(PKGCONF) $1 --cflags)))
-override _get_pkg_libs = $(if $1,$(strip $(shell $(PKGCONF) $1 --libs)))
+override _get_pkg_flags = $(if $1,$(shell $(PKGCONF) $1 --cflags))
+override _get_pkg_libs = $(if $1,$(shell $(PKGCONF) $1 --libs))
 
 override define _verify_pkgs  # <1:config pkgs var> <2:valid pkgs>
-ifeq ($$($1),)
-else ifeq ($$($1),-)
+ifeq ($$(strip $$($1)),)
+else ifeq ($$(strip $$($1)),-)
 else ifneq ($$(words $$($1)),$$(words $$($2)))
   $$(error $$(_msgErr)Cannot build because of package error$$(_end))
 endif
@@ -993,11 +993,11 @@ endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env_targets,$e)))
 
 
-ifneq ($(filter clean,$(MAKECMDGOALS)),)
-  override _clean_files := $(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f))
-else ifneq ($(filter clobber,$(MAKECMDGOALS)),)
+ifneq ($(filter clobber,$(MAKECMDGOALS)),)
   override _clean_files := $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_links) $(_$e_file_targets)) $(foreach f,$(CLEAN_EXTRA) $(CLOBBER_EXTRA),$(call _do_wildcard,$f)) core gmon.out
   override _clean_dirs := $(foreach d,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_libbin_targets) $(_$e_file_targets),$(dir $x))))),"$d")
+else ifneq ($(filter clean,$(MAKECMDGOALS)),)
+  override _clean_files := $(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f))
 endif
 
 clean:
