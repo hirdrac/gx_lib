@@ -714,14 +714,14 @@ else ifneq ($(_build_env),)
 
   # setup compile flags for each build path
   override _pkg_flags := $(call _get_pkg_flags,$(sort $(_pkgs)))
-  override _xflags :=  $(_pkg_flags) $(FLAGS) $(FLAGS_$(_$(ENV)_uc))
+  override _xflags :=  $(_pkg_flags) $(FLAGS_$(_$(ENV)_uc)) $(FLAGS)
   override _cxxflags_$(ENV) := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_define) $(_include) $(_op_cxx_flags) $(_xflags))
   override _cflags_$(ENV) := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_xflags))
   override _asflags_$(ENV) := $(strip $(_$(ENV)_opt) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_xflags))
   override _src_path_$(ENV) := $(_src_path)
 
   ifneq ($(_test_labels),)
-    override _test_xflags := $(if $(_pkgs_test),$(call _get_pkg_flags,$(sort $(_pkgs) $(_pkgs_test))),$(_pkg_flags)) $(FLAGS) $(FLAGS_TEST) $(FLAGS_$(_$(ENV)_uc))
+    override _test_xflags := $(if $(_pkgs_test),$(call _get_pkg_flags,$(sort $(_pkgs) $(_pkgs_test))),$(_pkg_flags)) $(FLAGS_$(_$(ENV)_uc)) $(FLAGS) $(FLAGS_TEST)
     override _cxxflags_$(ENV)-tests := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_op_test_cxx_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_cxx_flags) $(_op_test_cxx_flags) $(_test_xflags))
     override _cflags_$(ENV)-tests := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
     override _asflags_$(ENV)-tests := $(strip $(_$(ENV)_opt) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
