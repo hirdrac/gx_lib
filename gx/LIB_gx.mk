@@ -2,7 +2,6 @@
 
 LIB_gx = libgx
 LIB_gx.TYPE = static
-LIB_gx.STANDARD = c++17
 LIB_gx.SRC =\
   Camera.cc DrawContext.cc Font.cc Gui.cc Image.cc Logger.cc\
   OpenGL.cc OpenGLRenderer.cc Renderer.cc System.cc Texture.cc\
