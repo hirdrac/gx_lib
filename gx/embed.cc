@@ -13,28 +13,34 @@
 //       - .align, .globl, .incbin
 //       - assembly include could be done with just a macro, but dependency
 //         handling would need support in build
+// TODO: option for row size
+// TODO: option for array values only
+//       (for including file directly into array definition)
 
 #include "CmdLineParser.hh"
 #include "Print.hh"
 #include <fstream>
 #include <cstdint>
 
+// put in global namespace for convenience
+using gx::print, gx::println, gx::println_err;
+
 
 constexpr int ROW_SIZE = 16;
 
 
-int showUsage(char** argv)
+int showUsage(const char* const* argv)
 {
-  gx::println("Usage: ", argv[0], " [options] <input file> <array name>");
-  gx::println("Options:");
-  gx::println("  -a,--alignas=[]  Alignment for data array");
-  gx::println("  -h,--help        Show usage");
+  println("Usage: ", argv[0], " [options] <input file> <array name>");
+  println("Options:");
+  println("  -a,--alignas=[]  Alignment for data array");
+  println("  -h,--help        Show usage");
   return 0;
 }
 
-int errorUsage(char** argv)
+int errorUsage(const char* const* argv)
 {
-  gx::println_err("Try '", argv[0], " --help' for more information.");
+  println_err("Try '", argv[0], " --help' for more information.");
   return -1;
 }
 
@@ -43,14 +49,17 @@ int main(int argc, char** argv)
   std::string file, outVar;
   unsigned int alignVal = 0;
 
-  for (gx::CmdLineParser p(argc, argv); p; ++p) {
+  for (gx::CmdLineParser p{argc, argv}; p; ++p) {
     if (p.option()) {
       if (p.option('h',"help")) {
         return showUsage(argv);
       } else if (p.option('a',"alignas", alignVal)) {
-        // TODO: verify alignas is power of 2
+        if ((alignVal & (alignVal - 1)) != 0) {
+          println_err("ERROR: alignas value not a power of 2");
+          return errorUsage(argv);
+        }
       } else {
-        gx::println_err("ERROR: bad option '", p.arg(), "'");
+        println_err("ERROR: bad option '", p.arg(), "'");
         return errorUsage(argv);
       }
     } else if (file.empty()) {
@@ -66,18 +75,18 @@ int main(int argc, char** argv)
 
   std::ifstream fs{file, std::ios_base::binary};
   if (!fs) {
-    gx::println_err("Can't read file '", file, "'");
+    println_err("Can't read file '", file, "'");
     return -1;
   }
 
   const std::size_t x = file.rfind('/');
-  std::string name = (x == std::string::npos) ? file : file.substr(x+1);
+  const std::string name = (x == std::string::npos) ? file : file.substr(x+1);
 
-  gx::println("// generated from '", file, "'\n");
-  gx::println("char ", outVar, "Name[] = \"", name, "\";");
-  gx::println("char ", outVar, "File[] = \"", file, "\";");
-  if (alignVal > 0) { gx::print("alignas(", alignVal, ") "); }
-  gx::print("unsigned char ", outVar, "[] = {");
+  println("// generated from '", file, "'\n");
+  println("char ", outVar, "Name[] = \"", name, "\";");
+  println("char ", outVar, "File[] = \"", file, "\";");
+  if (alignVal > 0) { print("alignas(", alignVal, ") "); }
+  print("unsigned char ", outVar, "[] = {");
   for (;;) {
     char val[ROW_SIZE];
     fs.read(val, ROW_SIZE);
@@ -87,14 +96,14 @@ int main(int argc, char** argv)
       if (len == 0) { break; }
     }
 
-    gx::println();
+    println();
     for (int i = 0; i < len; ++i) {
       const auto v = uint8_t(val[i]);
-      gx::print(uint32_t(v), ",");
+      print(uint32_t{v}, ",");
     }
   }
 
-  gx::println("\n};");
-  gx::println("unsigned long ", outVar, "Size = sizeof(", outVar, ");");
+  println("\n};");
+  println("unsigned long ", outVar, "Size = sizeof(", outVar, ");");
   return 0;
 }
