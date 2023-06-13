@@ -13,13 +13,13 @@
 //       - .align, .globl, .incbin
 //       - assembly include could be done with just a macro, but dependency
 //         handling would need support in build
-// TODO: option for row size
 // TODO: option for array values only
 //       (for including file directly into array definition)
 
 #include "CmdLineParser.hh"
 #include "Print.hh"
 #include <fstream>
+#include <vector>
 #include <cstdint>
 
 // put in global namespace for convenience
@@ -34,6 +34,7 @@ int showUsage(const char* const* argv)
   println("Usage: ", argv[0], " [options] <input file> <array name>");
   println("Options:");
   println("  -a,--alignas=[]  Alignment for data array");
+  println("  -r,--rowsize=[]  Number of elements per row (default ", ROW_SIZE, ")");
   println("  -h,--help        Show usage");
   return 0;
 }
@@ -48,6 +49,7 @@ int main(int argc, char** argv)
 {
   std::string file, outVar;
   unsigned int alignVal = 0;
+  int rowSize = ROW_SIZE;
 
   for (gx::CmdLineParser p{argc, argv}; p; ++p) {
     if (p.option()) {
@@ -58,6 +60,8 @@ int main(int argc, char** argv)
           println_err("ERROR: alignas value not a power of 2");
           return errorUsage(argv);
         }
+      } else if (p.option('r',"rowsize", rowSize)) {
+        if (rowSize <= 0) { rowSize = ROW_SIZE; }
       } else {
         println_err("ERROR: bad option '", p.arg(), "'");
         return errorUsage(argv);
@@ -81,6 +85,8 @@ int main(int argc, char** argv)
 
   const std::size_t x = file.rfind('/');
   const std::string name = (x == std::string::npos) ? file : file.substr(x+1);
+  std::vector<char> buffer;
+  buffer.resize(rowSize);
 
   println("// generated from '", file, "'\n");
   println("char ", outVar, "Name[] = \"", name, "\";");
@@ -88,17 +94,16 @@ int main(int argc, char** argv)
   if (alignVal > 0) { print("alignas(", alignVal, ") "); }
   print("unsigned char ", outVar, "[] = {");
   for (;;) {
-    char val[ROW_SIZE];
-    fs.read(val, ROW_SIZE);
-    std::streamsize len = ROW_SIZE;
+    fs.read(buffer.data(), buffer.size());
+    std::streamsize len = buffer.size();
     if (fs.eof()) {
       len = fs.gcount();
-      if (len == 0) { break; }
+      if (len <= 0) { break; }
     }
 
     println();
     for (int i = 0; i < len; ++i) {
-      const auto v = uint8_t(val[i]);
+      const auto v = uint8_t(buffer[i]);
       print(uint32_t{v}, ",");
     }
   }
