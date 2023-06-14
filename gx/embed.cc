@@ -8,7 +8,6 @@
 //
 
 // TODO: add option to encode as 2/4/8 byte values
-// TODO: 'const' & 'constexpr' options to add const/constexpr to definitions
 // TODO: option for assembly .incbin instead of C++ array
 //       - .align, .globl, .incbin
 //       - assembly include could be done with just a macro, but dependency
@@ -35,6 +34,8 @@ int showUsage(const char* const* argv)
   println("Options:");
   println("  -a,--alignas=[]  Alignment for data array");
   println("  -r,--rowsize=[]  Number of elements per row (default ", ROW_SIZE, ")");
+  println("  --const          Declare all variables const");
+  println("  --constexpr      Declare all variables constexpr");
   println("  -h,--help        Show usage");
   return 0;
 }
@@ -50,6 +51,7 @@ int main(int argc, char** argv)
   std::string file, outVar;
   unsigned int alignVal = 0;
   int rowSize = ROW_SIZE;
+  enum { NONE, CONST, CONSTEXPR } mode = NONE;
 
   for (gx::CmdLineParser p{argc, argv}; p; ++p) {
     if (p.option()) {
@@ -62,6 +64,10 @@ int main(int argc, char** argv)
         }
       } else if (p.option('r',"rowsize", rowSize)) {
         if (rowSize <= 0) { rowSize = ROW_SIZE; }
+      } else if (p.option(0,"const")) {
+        mode = CONST;
+      } else if (p.option(0,"constexpr")) {
+        mode = CONSTEXPR;
       } else {
         println_err("ERROR: bad option '", p.arg(), "'");
         return errorUsage(argv);
@@ -87,12 +93,14 @@ int main(int argc, char** argv)
   const std::string name = (x == std::string::npos) ? file : file.substr(x+1);
   std::vector<char> buffer;
   buffer.resize(rowSize);
+  const char* prefix =
+    (mode == CONST) ? "const " : ((mode == CONSTEXPR) ? "constexpr " : "");
 
   println("// generated from '", file, "'\n");
-  println("char ", outVar, "Name[] = \"", name, "\";");
-  println("char ", outVar, "File[] = \"", file, "\";");
+  println(prefix, "char ", outVar, "Name[] = \"", name, "\";");
+  println(prefix, "char ", outVar, "File[] = \"", file, "\";");
   if (alignVal > 0) { print("alignas(", alignVal, ") "); }
-  print("unsigned char ", outVar, "[] = {");
+  print(prefix, "unsigned char ", outVar, "[] = {");
   for (;;) {
     fs.read(buffer.data(), buffer.size());
     std::streamsize len = buffer.size();
@@ -109,6 +117,6 @@ int main(int argc, char** argv)
   }
 
   println("\n};");
-  println("unsigned long ", outVar, "Size = sizeof(", outVar, ");");
+  println(prefix, "unsigned long ", outVar, "Size = sizeof(", outVar, ");");
   return 0;
 }
