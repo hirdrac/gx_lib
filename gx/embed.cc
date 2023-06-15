@@ -92,7 +92,7 @@ int main(int argc, char** argv)
   const std::size_t x = file.rfind('/');
   const std::string name = (x == std::string::npos) ? file : file.substr(x+1);
   std::vector<char> buffer;
-  buffer.resize(rowSize);
+  buffer.resize(std::size_t(rowSize));
   const char* prefix =
     (mode == CONST) ? "const " : ((mode == CONSTEXPR) ? "constexpr " : "");
 
@@ -102,8 +102,8 @@ int main(int argc, char** argv)
   if (alignVal > 0) { print("alignas(", alignVal, ") "); }
   print(prefix, "unsigned char ", outVar, "[] = {");
   for (;;) {
-    fs.read(buffer.data(), buffer.size());
-    std::streamsize len = buffer.size();
+    fs.read(buffer.data(), std::streamsize(buffer.size()));
+    auto len = std::streamsize(buffer.size());
     if (fs.eof()) {
       len = fs.gcount();
       if (len <= 0) { break; }
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
 
     println();
     for (int i = 0; i < len; ++i) {
-      const auto v = uint8_t(buffer[i]);
+      const auto v = uint8_t(buffer[std::size_t(i)]);
       print(uint32_t{v}, ",");
     }
   }
