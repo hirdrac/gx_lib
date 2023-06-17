@@ -1,6 +1,6 @@
 //
 // gx/GLTexture.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // wrapper for OpenGL texture object
 // (texture target as a template parameter)
@@ -160,7 +160,6 @@ class gx::GLTextureT
     }
   }
 
-  static void setUnpackAlignment(GLsizei width, GLenum format, GLenum type);
   inline void cleanup() noexcept;
 
   // prevent copy/assignment
@@ -411,7 +410,7 @@ template<int VER, GLenum TARGET>
 void gx::GLTextureT<VER,TARGET>::setSubImage1D(
   GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void* pixels)
 {
-  setUnpackAlignment(width, format, type);
+  GLSetUnpackAlignment(width, format, type);
   if constexpr (VER < 45) {
     bindCheck();
     GX_GLCALL(glTexSubImage1D, TARGET, level, xoffset, width, format, type, pixels);
@@ -425,7 +424,7 @@ void gx::GLTextureT<VER,TARGET>::setSubImage2D(
   GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
   GLenum format, GLenum type, const void* pixels)
 {
-  setUnpackAlignment(width, format, type);
+  GLSetUnpackAlignment(width, format, type);
   if constexpr (VER < 45) {
     bindCheck();
     GX_GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
@@ -442,7 +441,7 @@ void gx::GLTextureT<VER,TARGET>::setSubImage3D(
   GLsizei width, GLsizei height, GLsizei depth,
   GLenum format, GLenum type, const void* pixels)
 {
-  setUnpackAlignment(width, format, type);
+  GLSetUnpackAlignment(width, format, type);
   if constexpr (VER < 45) {
     bindCheck();
     if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
@@ -522,19 +521,6 @@ float gx::GLTextureT<VER,TARGET>::coordY(float y) const
   } else {
     return y / float(_height);
   }
-}
-
-template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::setUnpackAlignment(
-  GLsizei width, GLenum format, GLenum type)
-{
-  const int x = width * GLPixelSize(format, type);
-  int align = 8;
-  if (x & 1) { align = 1; }
-  else if (x & 2) { align = 2; }
-  else if (x & 4) { align = 4; }
-
-  GX_GLCALL(glPixelStorei, GL_UNPACK_ALIGNMENT, align);
 }
 
 template<int VER, GLenum TARGET>

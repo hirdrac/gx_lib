@@ -1,6 +1,6 @@
 //
 // gx/OpenGL.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "OpenGL.hh"
@@ -150,4 +150,15 @@ int gx::GLCheckErrors(std::string_view msg, const char* file, int line)
   }
 
   return count;
+}
+
+void gx::GLSetUnpackAlignment(GLsizei width, GLenum format, GLenum type)
+{
+  const int x = width * GLPixelSize(format, type);
+  int align = 8;
+  if (x & 1) { align = 1; }
+  else if (x & 2) { align = 2; }
+  else if (x & 4) { align = 4; }
+
+  GX_GLCALL(glPixelStorei, GL_UNPACK_ALIGNMENT, align);
 }

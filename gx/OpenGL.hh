@@ -1,8 +1,8 @@
 //
 // gx/OpenGL.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
-// OpenGL API include & generic utility functions
+// OpenGL API include & utility functions
 //
 
 #pragma once
@@ -39,6 +39,10 @@ int GLCheckErrors(std::string_view msg, const char* file = __FILE__,
 
 [[nodiscard]] std::string GLErrorStr(GLenum error);
   // returns error string (return value of glGetError)
+
+void GLSetUnpackAlignment(GLsizei width, GLenum format, GLenum type);
+  // calculate & set alignment requirements for the start of each pixel row
+  // for glReadPixels/glTextureImage*/glTextureSubImage* functions
 
 [[nodiscard]] constexpr int GLTypeSize(GLenum type)
 {
