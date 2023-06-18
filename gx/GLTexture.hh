@@ -6,7 +6,6 @@
 // (texture target as a template parameter)
 //
 
-// TODO: split off GLTextureBufferT from GLTextureT
 // TODO: split GLTextureT into GLTexture2DT & GLTexture3DT
 
 #pragma once
@@ -15,8 +14,40 @@
 #include <memory>
 
 namespace gx {
-  template<int VER>                class GLTexture1DT;
+  template<int VER>                class GLTexture1D;
   template<int VER, GLenum TARGET> class GLTextureT;
+  template<int VER>                class GLTextureBuffer;
+
+
+  // **** Helper Type Aliases ****
+  template<int VER>
+  using GLTexture2D = GLTextureT<VER,GL_TEXTURE_2D>;
+
+  template<int VER>
+  using GLTexture3D = GLTextureT<VER,GL_TEXTURE_3D>;
+
+  template<int VER>
+  using GLTexture1DArray = GLTextureT<VER,GL_TEXTURE_1D_ARRAY>;
+
+  template<int VER>
+  using GLTexture2DArray = GLTextureT<VER,GL_TEXTURE_2D_ARRAY>;
+
+  template<int VER>
+  using GLTextureRectangle = GLTextureT<VER,GL_TEXTURE_RECTANGLE>;
+
+  template<int VER>
+  using GLTextureCubeMap = GLTextureT<VER,GL_TEXTURE_CUBE_MAP>;
+
+  template<int VER>
+  using GLTextureCubeMapArray = GLTextureT<VER,GL_TEXTURE_CUBE_MAP_ARRAY>;
+
+  template<int VER>
+  using GLTexture2DMultisample = GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE>;
+
+  template<int VER>
+  using GLTexture2DMultisampleArray =
+    GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE_ARRAY>;
+
 
   // **** Texture constants based on target ****
   template<GLenum TARGET> struct GLTextureVals {
@@ -46,20 +77,20 @@ namespace gx {
 
 // **** Main texture template definition ****
 template<int VER>
-class gx::GLTexture1DT
+class gx::GLTexture1D
 {
  public:
-  using type = GLTexture1DT<VER>;
+  using type = GLTexture1D<VER>;
 
-  GLTexture1DT() = default;
-  ~GLTexture1DT() { if (GLInitialized) cleanup(); }
+  GLTexture1D() = default;
+  ~GLTexture1D() { if (GLInitialized) cleanup(); }
 
   // prevent copy/assignment
-  GLTexture1DT(const type&) = delete;
+  GLTexture1D(const type&) = delete;
   type& operator=(const type&) = delete;
 
   // allow move/move-assign
-  inline GLTexture1DT(type&& t) noexcept;
+  inline GLTexture1D(type&& t) noexcept;
   inline type& operator=(type&& t) noexcept;
 
   // operators
@@ -125,7 +156,14 @@ class gx::GLTexture1DT
     }
   }
 
-  inline void cleanup() noexcept;
+  void cleanup() noexcept {
+    if (_tex) {
+      if constexpr (VER < 45) {
+        if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
+      }
+      GX_GLCALL(glDeleteTextures, 1, &_tex);
+    }
+  }
 };
 
 
@@ -167,10 +205,6 @@ class gx::GLTextureT
 		     GLsizei width, GLsizei height, GLsizei depth);
     // for GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_CUBE_MAP_ARRAY
 
-  inline GLuint attachBuffer(GLenum internalformat, GLuint buffer);
-  inline void detachBuffer();
-    // for GL_TEXTURE_BUFFER
-
   GLuint release() noexcept { return std::exchange(_tex, 0); }
     // releases ownership of managed texture object, returns object id
 
@@ -200,16 +234,14 @@ class gx::GLTextureT
 
   inline void getImage(
     GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels);
-    // not valid for GL_TEXTURE_BUFFER
 
   inline void generateMipmap();
-    // for GL_TEXTURE_1D, GL_TEXTURE_2D, GL_TEXTURE_3D, GL_TEXTURE_1D_ARRAY,
+    // for GL_TEXTURE_2D, GL_TEXTURE_3D, GL_TEXTURE_1D_ARRAY,
     //   GL_TEXTURE_2D_ARRAY, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_CUBE_MAP_ARRAY
-    // not valid for GL_TEXTURE_RECTANGLE, GL_TEXTURE_BUFFER,
+    // not valid for GL_TEXTURE_RECTANGLE,
     //   GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_2D_MULTISAMPLE_ARRAY
 
   inline void clear(GLint level);
-    // not valid for GL_TEXTURE_BUFFER
 
   // set texture parameters
   inline void setParameter(GLenum pname, GLfloat param);
@@ -241,52 +273,87 @@ class gx::GLTextureT
     }
   }
 
-  inline void cleanup() noexcept;
+  void cleanup() noexcept {
+    if (_tex) {
+      if constexpr (VER < 45) {
+        if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
+      }
+      GX_GLCALL(glDeleteTextures, 1, &_tex);
+    }
+  }
 };
 
 
-namespace gx {
-  // **** Helper Type Aliases ****
-  template<int VER>
-  using GLTexture1D = GLTexture1DT<VER>;
+template<int VER>
+class gx::GLTextureBuffer
+{
+ public:
+  using type = GLTextureBuffer<VER>;
 
-  template<int VER>
-  using GLTexture2D = GLTextureT<VER,GL_TEXTURE_2D>;
+  GLTextureBuffer() = default;
+  ~GLTextureBuffer() { if (GLInitialized) cleanup(); }
 
-  template<int VER>
-  using GLTexture3D = GLTextureT<VER,GL_TEXTURE_3D>;
+  // prevent copy/assignment
+  GLTextureBuffer(const type&) = delete;
+  type& operator=(const type&) = delete;
 
-  template<int VER>
-  using GLTexture1DArray = GLTextureT<VER,GL_TEXTURE_1D_ARRAY>;
+  // allow move/move-assign
+  inline GLTextureBuffer(type&& t) noexcept;
+  inline type& operator=(type&& t) noexcept;
 
-  template<int VER>
-  using GLTexture2DArray = GLTextureT<VER,GL_TEXTURE_2D_ARRAY>;
+  // operators
+  [[nodiscard]] explicit operator bool() const { return _tex; }
 
-  template<int VER>
-  using GLTextureRectangle = GLTextureT<VER,GL_TEXTURE_RECTANGLE>;
+  // accessors
+  [[nodiscard]] static GLenum target() { return GL_TEXTURE_BUFFER; }
+  [[nodiscard]] GLuint id() const { return _tex; }
+  [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
 
-  template<int VER>
-  using GLTextureCubeMap = GLTextureT<VER,GL_TEXTURE_CUBE_MAP>;
+  // methods
+  inline GLuint attachBuffer(GLenum internalformat, GLuint buffer);
+  inline void detachBuffer();
 
-  template<int VER>
-  using GLTextureCubeMapArray = GLTextureT<VER,GL_TEXTURE_CUBE_MAP_ARRAY>;
+  GLuint release() noexcept { return std::exchange(_tex, 0); }
+    // releases ownership of managed texture object, returns object id
 
-  template<int VER>
-  using GLTextureBuffer = GLTextureT<VER,GL_TEXTURE_BUFFER>;
+  inline static void bindUnit(GLuint unit, GLuint tex);
+  void bindUnit(GLuint unit) const { bindUnit(unit, _tex); }
+  static void unbindUnit(GLuint unit) { bindUnit(unit, 0); }
 
-  template<int VER>
-  using GLTexture2DMultisample = GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE>;
+  [[nodiscard]] static GLint maxSize() {
+    GLint s = 0;
+    GX_GLCALL(glGetIntegerv, GLTextureVals<target()>::pnameMaxSize, &s);
+    return s;
+  }
 
-  template<int VER>
-  using GLTexture2DMultisampleArray =
-    GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE_ARRAY>;
-}
+ private:
+  GLuint _tex = 0;
+  GLenum _internalformat = GL_NONE;
+  // track attached buffer ID?
+
+  void bindCheck() {
+    if (GLLastTextureBind != _tex) {
+      // don't care which unit is active
+      GX_GLCALL(glBindTexture, target(), _tex);
+      GLLastTextureBind = _tex;
+    }
+  }
+
+  void cleanup() noexcept {
+    if (_tex) {
+      if constexpr (VER < 45) {
+        if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
+      }
+      GX_GLCALL(glDeleteTextures, 1, &_tex);
+    }
+  }
+};
 
 
 // **** Inline Implementations ****
-// GLTexture1DT
+// GLTexture1D
 template<int VER>
-gx::GLTexture1DT<VER>::GLTexture1DT(GLTexture1DT<VER>&& t) noexcept
+gx::GLTexture1D<VER>::GLTexture1D(GLTexture1D<VER>&& t) noexcept
   : _tex{t.release()}
 {
   _internalformat = t._internalformat;
@@ -295,8 +362,8 @@ gx::GLTexture1DT<VER>::GLTexture1DT(GLTexture1DT<VER>&& t) noexcept
 }
 
 template<int VER>
-gx::GLTexture1DT<VER>&
-gx::GLTexture1DT<VER>::operator=(GLTexture1DT<VER>&& t) noexcept
+gx::GLTexture1D<VER>&
+gx::GLTexture1D<VER>::operator=(GLTexture1D<VER>&& t) noexcept
 {
   if (this != &t) {
     cleanup();
@@ -309,7 +376,7 @@ gx::GLTexture1DT<VER>::operator=(GLTexture1DT<VER>&& t) noexcept
 }
 
 template<int VER>
-GLuint gx::GLTexture1DT<VER>::init(
+GLuint gx::GLTexture1D<VER>::init(
   GLsizei levels, GLenum internalformat, GLsizei width)
 {
   cleanup();
@@ -336,7 +403,7 @@ GLuint gx::GLTexture1DT<VER>::init(
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::bindUnit(GLuint unit, GLuint tex)
+void gx::GLTexture1D<VER>::bindUnit(GLuint unit, GLuint tex)
 {
   if constexpr (VER < 45) {
     GX_GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
@@ -348,7 +415,7 @@ void gx::GLTexture1DT<VER>::bindUnit(GLuint unit, GLuint tex)
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::setSubImage1D(
+void gx::GLTexture1D<VER>::setSubImage1D(
   GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void* pixels)
 {
   GLSetUnpackAlignment(width, format, type);
@@ -361,7 +428,7 @@ void gx::GLTexture1DT<VER>::setSubImage1D(
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::getImage(
+void gx::GLTexture1D<VER>::getImage(
   GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels)
 {
   if constexpr (VER < 45) {
@@ -373,7 +440,7 @@ void gx::GLTexture1DT<VER>::getImage(
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::generateMipmap()
+void gx::GLTexture1D<VER>::generateMipmap()
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -384,7 +451,7 @@ void gx::GLTexture1DT<VER>::generateMipmap()
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::clear(GLint level)
+void gx::GLTexture1D<VER>::clear(GLint level)
 {
   const GLenum format = GLBaseFormat(_internalformat);
   const GLenum type = (format == GL_DEPTH_STENCIL)
@@ -400,7 +467,7 @@ void gx::GLTexture1DT<VER>::clear(GLint level)
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::setParameter(GLenum pname, GLfloat param)
+void gx::GLTexture1D<VER>::setParameter(GLenum pname, GLfloat param)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -411,7 +478,7 @@ void gx::GLTexture1DT<VER>::setParameter(GLenum pname, GLfloat param)
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::setParameter(GLenum pname, GLint param)
+void gx::GLTexture1D<VER>::setParameter(GLenum pname, GLint param)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -422,7 +489,7 @@ void gx::GLTexture1DT<VER>::setParameter(GLenum pname, GLint param)
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::setParameterv(GLenum pname, const GLfloat* params)
+void gx::GLTexture1D<VER>::setParameterv(GLenum pname, const GLfloat* params)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -433,7 +500,7 @@ void gx::GLTexture1DT<VER>::setParameterv(GLenum pname, const GLfloat* params)
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::setParameterv(GLenum pname, const GLint* params)
+void gx::GLTexture1D<VER>::setParameterv(GLenum pname, const GLint* params)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -444,7 +511,7 @@ void gx::GLTexture1DT<VER>::setParameterv(GLenum pname, const GLint* params)
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::setParameterIv(GLenum pname, const GLint* params)
+void gx::GLTexture1D<VER>::setParameterIv(GLenum pname, const GLint* params)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -455,7 +522,7 @@ void gx::GLTexture1DT<VER>::setParameterIv(GLenum pname, const GLint* params)
 }
 
 template<int VER>
-void gx::GLTexture1DT<VER>::setParameterIv(GLenum pname, const GLuint* params)
+void gx::GLTexture1D<VER>::setParameterIv(GLenum pname, const GLuint* params)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -595,37 +662,6 @@ GLuint gx::GLTextureT<VER,TARGET>::init(
 //   4.5 - glTextureStorage3DMultisample
 
 template<int VER, GLenum TARGET>
-GLuint gx::GLTextureT<VER,TARGET>::attachBuffer(
-  GLenum internalformat, GLuint buffer)
-{
-  _internalformat = internalformat;
-  _levels = 0;
-  _width = 0;
-  _height = 0;
-  _depth = 0;
-  if constexpr (VER < 45) {
-    if (!_tex) { GX_GLCALL(glGenTextures, 1, &_tex); }
-    bindCheck();
-    GX_GLCALL(glTexBuffer, TARGET, internalformat, buffer);
-  } else {
-    if (!_tex) { GX_GLCALL(glCreateTextures, TARGET, 1, &_tex); }
-    GX_GLCALL(glTextureBuffer, _tex, internalformat, buffer);
-  }
-  return _tex;
-}
-
-template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::detachBuffer()
-{
-  if constexpr (VER < 45) {
-    bindCheck();
-    GX_GLCALL(glTexBuffer, TARGET, _internalformat, 0);
-  } else {
-    GX_GLCALL(glTextureBuffer, _tex, _internalformat, 0);
-  }
-}
-
-template<int VER, GLenum TARGET>
 void gx::GLTextureT<VER,TARGET>::bindUnit(GLuint unit, GLuint tex)
 {
   if constexpr (VER < 45) {
@@ -720,17 +756,6 @@ void gx::GLTextureT<VER,TARGET>::clear(GLint level)
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::cleanup() noexcept
-{
-  if (_tex) {
-    if constexpr (VER < 45) {
-      if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
-    }
-    GX_GLCALL(glDeleteTextures, 1, &_tex);
-  }
-}
-
-template<int VER, GLenum TARGET>
 void gx::GLTextureT<VER,TARGET>::setParameter(GLenum pname, GLfloat param)
 {
   if constexpr (VER < 45) {
@@ -793,5 +818,65 @@ void gx::GLTextureT<VER,TARGET>::setParameterIv(GLenum pname, const GLuint* para
     GX_GLCALL(glTexParameterIuiv, TARGET, pname, params);
   } else {
     GX_GLCALL(glTextureParameterIuiv, _tex, pname, params);
+  }
+}
+
+
+// GLTextureBuffer
+template<int VER>
+gx::GLTextureBuffer<VER>::GLTextureBuffer(GLTextureBuffer<VER>&& t) noexcept
+  : _tex{t.release()}
+{
+  _internalformat = t._internalformat;
+}
+
+template<int VER>
+gx::GLTextureBuffer<VER>&
+gx::GLTextureBuffer<VER>::operator=(GLTextureBuffer<VER>&& t) noexcept
+{
+  if (this != &t) {
+    cleanup();
+    _tex = t.release();
+    _internalformat = t._internalformat;
+  }
+  return *this;
+}
+
+template<int VER>
+GLuint gx::GLTextureBuffer<VER>::attachBuffer(
+  GLenum internalformat, GLuint buffer)
+{
+  _internalformat = internalformat;
+  if constexpr (VER < 45) {
+    if (!_tex) { GX_GLCALL(glGenTextures, 1, &_tex); }
+    bindCheck();
+    GX_GLCALL(glTexBuffer, target(), internalformat, buffer);
+  } else {
+    if (!_tex) { GX_GLCALL(glCreateTextures, target(), 1, &_tex); }
+    GX_GLCALL(glTextureBuffer, _tex, internalformat, buffer);
+  }
+  return _tex;
+}
+
+template<int VER>
+void gx::GLTextureBuffer<VER>::detachBuffer()
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexBuffer, target(), _internalformat, 0);
+  } else {
+    GX_GLCALL(glTextureBuffer, _tex, _internalformat, 0);
+  }
+}
+
+template<int VER>
+void gx::GLTextureBuffer<VER>::bindUnit(GLuint unit, GLuint tex)
+{
+  if constexpr (VER < 45) {
+    GX_GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
+    GX_GLCALL(glBindTexture, target(), tex);
+    GLLastTextureBind = tex;
+  } else {
+    GX_GLCALL(glBindTextureUnit, unit, tex);
   }
 }
