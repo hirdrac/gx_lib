@@ -6,7 +6,8 @@
 // (texture target as a template parameter)
 //
 
-// TODO: split GLTextureT into GLTexture2DT & GLTexture3DT
+// FIXME: GL_TEXTURE_CUBE_MAP/GL_TEXTURE_CUBE_MAP_ARRAY broken
+//   see https://www.khronos.org/opengl/wiki/Cubemap_Texture
 
 #pragma once
 #include "OpenGL.hh"
@@ -15,38 +16,39 @@
 
 namespace gx {
   template<int VER>                class GLTexture1D;
-  template<int VER, GLenum TARGET> class GLTextureT;
+  template<int VER, GLenum TARGET> class GLTexture2DT;
+  template<int VER, GLenum TARGET> class GLTexture3DT;
   template<int VER>                class GLTextureBuffer;
 
 
-  // **** Helper Type Aliases ****
+  // **** Helper type aliases ****
   template<int VER>
-  using GLTexture2D = GLTextureT<VER,GL_TEXTURE_2D>;
+  using GLTexture2D = GLTexture2DT<VER,GL_TEXTURE_2D>;
 
   template<int VER>
-  using GLTexture3D = GLTextureT<VER,GL_TEXTURE_3D>;
+  using GLTexture1DArray = GLTexture2DT<VER,GL_TEXTURE_1D_ARRAY>;
 
   template<int VER>
-  using GLTexture1DArray = GLTextureT<VER,GL_TEXTURE_1D_ARRAY>;
+  using GLTextureRectangle = GLTexture2DT<VER,GL_TEXTURE_RECTANGLE>;
 
   template<int VER>
-  using GLTexture2DArray = GLTextureT<VER,GL_TEXTURE_2D_ARRAY>;
+  using GLTextureCubeMap = GLTexture2DT<VER,GL_TEXTURE_CUBE_MAP>;
 
   template<int VER>
-  using GLTextureRectangle = GLTextureT<VER,GL_TEXTURE_RECTANGLE>;
+  using GLTexture2DMultisample = GLTexture2DT<VER,GL_TEXTURE_2D_MULTISAMPLE>;
 
   template<int VER>
-  using GLTextureCubeMap = GLTextureT<VER,GL_TEXTURE_CUBE_MAP>;
+  using GLTexture3D = GLTexture3DT<VER,GL_TEXTURE_3D>;
 
   template<int VER>
-  using GLTextureCubeMapArray = GLTextureT<VER,GL_TEXTURE_CUBE_MAP_ARRAY>;
+  using GLTexture2DArray = GLTexture3DT<VER,GL_TEXTURE_2D_ARRAY>;
 
   template<int VER>
-  using GLTexture2DMultisample = GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE>;
+  using GLTextureCubeMapArray = GLTexture3DT<VER,GL_TEXTURE_CUBE_MAP_ARRAY>;
 
   template<int VER>
   using GLTexture2DMultisampleArray =
-    GLTextureT<VER,GL_TEXTURE_2D_MULTISAMPLE_ARRAY>;
+    GLTexture3DT<VER,GL_TEXTURE_2D_MULTISAMPLE_ARRAY>;
 
 
   // **** Texture constants based on target ****
@@ -168,20 +170,119 @@ class gx::GLTexture1D
 
 
 template<int VER, GLenum TARGET>
-class gx::GLTextureT
+class gx::GLTexture2DT
 {
  public:
-  using type = GLTextureT<VER,TARGET>;
+  using type = GLTexture2DT<VER,TARGET>;
 
-  GLTextureT() = default;
-  ~GLTextureT() { if (GLInitialized) cleanup(); }
+  GLTexture2DT() = default;
+  ~GLTexture2DT() { if (GLInitialized) cleanup(); }
 
   // prevent copy/assignment
-  GLTextureT(const type&) = delete;
+  GLTexture2DT(const type&) = delete;
   type& operator=(const type&) = delete;
 
   // allow move/move-assign
-  inline GLTextureT(type&& t) noexcept;
+  inline GLTexture2DT(type&& t) noexcept;
+  inline type& operator=(type&& t) noexcept;
+
+  // operators
+  [[nodiscard]] explicit operator bool() const { return _tex; }
+
+  // accessors
+  [[nodiscard]] static GLenum target() { return TARGET; }
+  [[nodiscard]] GLuint id() const { return _tex; }
+  [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
+  [[nodiscard]] GLsizei levels() const { return _levels; }
+  [[nodiscard]] GLsizei width() const { return _width; }
+  [[nodiscard]] GLsizei height() const { return _height; }
+
+  // methods
+  inline GLuint init(GLsizei levels, GLenum internalformat,
+		     GLsizei width, GLsizei height);
+    // for GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY, GL_TEXTURE_RECTANGLE,
+    //   GL_TEXTURE_CUBE_MAP
+
+  GLuint release() noexcept { return std::exchange(_tex, 0); }
+    // releases ownership of managed texture object, returns object id
+
+  inline static void bindUnit(GLuint unit, GLuint tex);
+  void bindUnit(GLuint unit) const { bindUnit(unit, _tex); }
+  static void unbindUnit(GLuint unit) { bindUnit(unit, 0); }
+
+  inline void setSubImage2D(
+    GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+    GLenum format, GLenum type, const void* pixels);
+
+  template<typename PixelT>
+  void setSubImage2D(GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                     GLsizei height, GLenum format, const PixelT* pixels) {
+    setSubImage2D(level, xoffset, yoffset, width, height, format,
+                  GLType_v<PixelT>, pixels); }
+
+  inline void getImage(
+    GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels);
+
+  inline void generateMipmap();
+    // not valid for GL_TEXTURE_RECTANGLE, GL_TEXTURE_2D_MULTISAMPLE
+
+  inline void clear(GLint level);
+
+  // set texture parameters
+  inline void setParameter(GLenum pname, GLfloat param);
+  inline void setParameter(GLenum pname, GLint param);
+  inline void setParameterv(GLenum pname, const GLfloat* params);
+  inline void setParameterv(GLenum pname, const GLint* params);
+  inline void setParameterIv(GLenum pname, const GLint* params);
+  inline void setParameterIv(GLenum pname, const GLuint* params);
+
+  [[nodiscard]] static GLint maxSize() {
+    GLint s = 0;
+    GX_GLCALL(glGetIntegerv, GLTextureVals<TARGET>::pnameMaxSize, &s);
+    return s;
+  }
+
+ private:
+  GLuint _tex = 0;
+  GLenum _internalformat = GL_NONE;
+  GLsizei _levels = 0;
+  GLsizei _width = 0;
+  GLsizei _height = 0;
+
+  void bindCheck() {
+    if (GLLastTextureBind != _tex) {
+      // don't care which unit is active
+      GX_GLCALL(glBindTexture, TARGET, _tex);
+      GLLastTextureBind = _tex;
+    }
+  }
+
+  void cleanup() noexcept {
+    if (_tex) {
+      if constexpr (VER < 45) {
+        if (GLLastTextureBind == _tex) { GLLastTextureBind = 0; }
+      }
+      GX_GLCALL(glDeleteTextures, 1, &_tex);
+    }
+  }
+};
+
+
+template<int VER, GLenum TARGET>
+class gx::GLTexture3DT
+{
+ public:
+  using type = GLTexture3DT<VER,TARGET>;
+
+  GLTexture3DT() = default;
+  ~GLTexture3DT() { if (GLInitialized) cleanup(); }
+
+  // prevent copy/assignment
+  GLTexture3DT(const type&) = delete;
+  type& operator=(const type&) = delete;
+
+  // allow move/move-assign
+  inline GLTexture3DT(type&& t) noexcept;
   inline type& operator=(type&& t) noexcept;
 
   // operators
@@ -198,10 +299,6 @@ class gx::GLTextureT
 
   // methods
   inline GLuint init(GLsizei levels, GLenum internalformat,
-		     GLsizei width, GLsizei height);
-    // for GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY, GL_TEXTURE_RECTANGLE,
-    //   GL_TEXTURE_CUBE_MAP
-  inline GLuint init(GLsizei levels, GLenum internalformat,
 		     GLsizei width, GLsizei height, GLsizei depth);
     // for GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_CUBE_MAP_ARRAY
 
@@ -212,19 +309,11 @@ class gx::GLTextureT
   void bindUnit(GLuint unit) const { bindUnit(unit, _tex); }
   static void unbindUnit(GLuint unit) { bindUnit(unit, 0); }
 
-  inline void setSubImage2D(
-    GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-    GLenum format, GLenum type, const void* pixels);
   inline void setSubImage3D(
     GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
     GLsizei width, GLsizei height, GLsizei depth,
     GLenum format, GLenum type, const void* pixels);
 
-  template<typename PixelT>
-  void setSubImage2D(GLint level, GLint xoffset, GLint yoffset, GLsizei width,
-                     GLsizei height, GLenum format, const PixelT* pixels) {
-    setSubImage2D(level, xoffset, yoffset, width, height, format,
-                  GLType_v<PixelT>, pixels); }
   template<typename PixelT>
   void setSubImage3D(GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                      GLsizei width, GLsizei height, GLsizei depth,
@@ -236,10 +325,7 @@ class gx::GLTextureT
     GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels);
 
   inline void generateMipmap();
-    // for GL_TEXTURE_2D, GL_TEXTURE_3D, GL_TEXTURE_1D_ARRAY,
-    //   GL_TEXTURE_2D_ARRAY, GL_TEXTURE_CUBE_MAP, GL_TEXTURE_CUBE_MAP_ARRAY
-    // not valid for GL_TEXTURE_RECTANGLE,
-    //   GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+    // not valid for GL_TEXTURE_2D_MULTISAMPLE_ARRAY
 
   inline void clear(GLint level);
 
@@ -350,8 +436,7 @@ class gx::GLTextureBuffer
 };
 
 
-// **** Inline Implementations ****
-// GLTexture1D
+// **** GLTexture1D implementation ****
 template<int VER>
 gx::GLTexture1D<VER>::GLTexture1D(GLTexture1D<VER>&& t) noexcept
   : _tex{t.release()}
@@ -533,21 +618,20 @@ void gx::GLTexture1D<VER>::setParameterIv(GLenum pname, const GLuint* params)
 }
 
 
-// GLTextureT
+// **** GLTexture2DT implementation ****
 template<int VER, GLenum TARGET>
-gx::GLTextureT<VER,TARGET>::GLTextureT(GLTextureT<VER,TARGET>&& t) noexcept
+gx::GLTexture2DT<VER,TARGET>::GLTexture2DT(GLTexture2DT<VER,TARGET>&& t) noexcept
   : _tex{t.release()}
 {
   _internalformat = t._internalformat;
   _levels = t._levels;
   _width = t._width;
   _height = t._height;
-  _depth = t._depth;
 }
 
 template<int VER, GLenum TARGET>
-gx::GLTextureT<VER,TARGET>&
-gx::GLTextureT<VER,TARGET>::operator=(GLTextureT<VER,TARGET>&& t) noexcept
+gx::GLTexture2DT<VER,TARGET>&
+gx::GLTexture2DT<VER,TARGET>::operator=(GLTexture2DT<VER,TARGET>&& t) noexcept
 {
   if (this != &t) {
     cleanup();
@@ -556,13 +640,12 @@ gx::GLTextureT<VER,TARGET>::operator=(GLTextureT<VER,TARGET>&& t) noexcept
     _levels = t._levels;
     _width = t._width;
     _height = t._height;
-    _depth = t._depth;
   }
   return *this;
 }
 
 template<int VER, GLenum TARGET>
-GLuint gx::GLTextureT<VER,TARGET>::init(
+GLuint gx::GLTexture2DT<VER,TARGET>::init(
   GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
 {
   cleanup();
@@ -570,11 +653,11 @@ GLuint gx::GLTextureT<VER,TARGET>::init(
   _levels = levels;
   _width = width;
   _height = height;
-  _depth = 0;
   if constexpr (VER < 42) {
     GX_GLCALL(glGenTextures, 1, &_tex);
     bindCheck();
     if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
+      // FIXME: move to dedicated GLTextureCubeMap class
       for (int i = 0; i < levels; ++i) {
         for (unsigned int f = 0; f < 6; ++f) {
           GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i,
@@ -600,18 +683,187 @@ GLuint gx::GLTextureT<VER,TARGET>::init(
       }
     }
   } else if constexpr (VER < 45) {
+    // FIXME: GL_TEXTURE_CUBE_MAP not handled
     GX_GLCALL(glGenTextures, 1, &_tex);
     bindCheck();
     GX_GLCALL(glTexStorage2D, TARGET, levels, internalformat, width, height);
   } else {
+    // FIXME: GL_TEXTURE_CUBE_MAP not handled
     GX_GLCALL(glCreateTextures, TARGET, 1, &_tex);
     GX_GLCALL(glTextureStorage2D, _tex, levels, internalformat, width, height);
   }
   return _tex;
 }
 
+// TODO: init for GL_TEXTURE_2D_MULTISAMPLE
+//   3.3 - glTexImage2DMultisample
+//   4.5 - glTextureStorage2DMultisample
+
 template<int VER, GLenum TARGET>
-GLuint gx::GLTextureT<VER,TARGET>::init(
+void gx::GLTexture2DT<VER,TARGET>::bindUnit(GLuint unit, GLuint tex)
+{
+  if constexpr (VER < 45) {
+    GX_GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
+    GX_GLCALL(glBindTexture, TARGET, tex);
+    GLLastTextureBind = tex;
+  } else {
+    GX_GLCALL(glBindTextureUnit, unit, tex);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::setSubImage2D(
+  GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
+  GLenum format, GLenum type, const void* pixels)
+{
+  GLSetUnpackAlignment(width, format, type);
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
+              width, height, format, type, pixels);
+  } else {
+    GX_GLCALL(glTextureSubImage2D, _tex, level, xoffset, yoffset,
+              width, height, format, type, pixels);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::getImage(
+  GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glGetTexImage, TARGET, level, format, type, pixels);
+  } else {
+    GX_GLCALL(glGetTextureImage, _tex, level, format, type, bufSize, pixels);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::generateMipmap()
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glGenerateMipmap, TARGET);
+  } else {
+    GX_GLCALL(glGenerateTextureMipmap, _tex);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::clear(GLint level)
+{
+  const GLenum format = GLBaseFormat(_internalformat);
+  const GLenum type = (format == GL_DEPTH_STENCIL)
+    ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
+
+  if constexpr (VER < 44) {
+    const int pixel_size = GLPixelSize(format, type);
+    const auto empty = std::make_unique<GLubyte[]>(
+      _width * _height * pixel_size);
+    setSubImage2D(level, 0, 0, _width, _height, format, empty.get());
+  } else {
+    GX_GLCALL(glClearTexImage, _tex, level, format, type, nullptr);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::setParameter(GLenum pname, GLfloat param)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameterf, TARGET, pname, param);
+  } else {
+    GX_GLCALL(glTextureParameterf, _tex, pname, param);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::setParameter(GLenum pname, GLint param)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameteri, TARGET, pname, param);
+  } else {
+    GX_GLCALL(glTextureParameteri, _tex, pname, param);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::setParameterv(GLenum pname, const GLfloat* params)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameterfv, TARGET, pname, params);
+  } else {
+    GX_GLCALL(glTextureParameterfv, _tex, pname, params);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::setParameterv(GLenum pname, const GLint* params)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameteriv, TARGET, pname, params);
+  } else {
+    GX_GLCALL(glTextureParameteriv, _tex, pname, params);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::setParameterIv(GLenum pname, const GLint* params)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameterIiv, TARGET, pname, params);
+  } else {
+    GX_GLCALL(glTextureParameterIiv, _tex, pname, params);
+  }
+}
+
+template<int VER, GLenum TARGET>
+void gx::GLTexture2DT<VER,TARGET>::setParameterIv(GLenum pname, const GLuint* params)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glTexParameterIuiv, TARGET, pname, params);
+  } else {
+    GX_GLCALL(glTextureParameterIuiv, _tex, pname, params);
+  }
+}
+
+
+// **** GLTexture3DT implementation ****
+template<int VER, GLenum TARGET>
+gx::GLTexture3DT<VER,TARGET>::GLTexture3DT(GLTexture3DT<VER,TARGET>&& t) noexcept
+  : _tex{t.release()}
+{
+  _internalformat = t._internalformat;
+  _levels = t._levels;
+  _width = t._width;
+  _height = t._height;
+  _depth = t._depth;
+}
+
+template<int VER, GLenum TARGET>
+gx::GLTexture3DT<VER,TARGET>&
+gx::GLTexture3DT<VER,TARGET>::operator=(GLTexture3DT<VER,TARGET>&& t) noexcept
+{
+  if (this != &t) {
+    cleanup();
+    _tex = t.release();
+    _internalformat = t._internalformat;
+    _levels = t._levels;
+    _width = t._width;
+    _height = t._height;
+    _depth = t._depth;
+  }
+  return *this;
+}
+
+template<int VER, GLenum TARGET>
+GLuint gx::GLTexture3DT<VER,TARGET>::init(
   GLsizei levels, GLenum internalformat,
   GLsizei width, GLsizei height, GLsizei depth)
 {
@@ -653,16 +905,12 @@ GLuint gx::GLTextureT<VER,TARGET>::init(
   return _tex;
 }
 
-// TODO: init for GL_TEXTURE_2D_MULTISAMPLE
-//   3.3 - glTexImage2DMultisample
-//   4.5 - glTextureStorage2DMultisample
-
 // TODO: init for GL_TEXTURE_2D_MULTISAMPLE_ARRAY
 //   3.3 - glTexImage3DMultisample
 //   4.5 - glTextureStorage3DMultisample
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::bindUnit(GLuint unit, GLuint tex)
+void gx::GLTexture3DT<VER,TARGET>::bindUnit(GLuint unit, GLuint tex)
 {
   if constexpr (VER < 45) {
     GX_GLCALL(glActiveTexture, GL_TEXTURE0 + unit);
@@ -674,23 +922,7 @@ void gx::GLTextureT<VER,TARGET>::bindUnit(GLuint unit, GLuint tex)
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::setSubImage2D(
-  GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
-  GLenum format, GLenum type, const void* pixels)
-{
-  GLSetUnpackAlignment(width, format, type);
-  if constexpr (VER < 45) {
-    bindCheck();
-    GX_GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
-              width, height, format, type, pixels);
-  } else {
-    GX_GLCALL(glTextureSubImage2D, _tex, level, xoffset, yoffset,
-              width, height, format, type, pixels);
-  }
-}
-
-template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::setSubImage3D(
+void gx::GLTexture3DT<VER,TARGET>::setSubImage3D(
   GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
   GLsizei width, GLsizei height, GLsizei depth,
   GLenum format, GLenum type, const void* pixels)
@@ -699,6 +931,7 @@ void gx::GLTextureT<VER,TARGET>::setSubImage3D(
   if constexpr (VER < 45) {
     bindCheck();
     if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
+      // FIXME: move to dedicated GLTextureCubeMap class
       GX_GLCALL(glTexSubImage2D, GLenum(GL_TEXTURE_CUBE_MAP_POSITIVE_X + zoffset),
                 level, xoffset, yoffset, width, height, format, type, pixels);
     } else {
@@ -712,7 +945,7 @@ void gx::GLTextureT<VER,TARGET>::setSubImage3D(
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::getImage(
+void gx::GLTexture3DT<VER,TARGET>::getImage(
   GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels)
 {
   if constexpr (VER < 45) {
@@ -724,7 +957,7 @@ void gx::GLTextureT<VER,TARGET>::getImage(
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::generateMipmap()
+void gx::GLTexture3DT<VER,TARGET>::generateMipmap()
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -735,7 +968,7 @@ void gx::GLTextureT<VER,TARGET>::generateMipmap()
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::clear(GLint level)
+void gx::GLTexture3DT<VER,TARGET>::clear(GLint level)
 {
   const GLenum format = GLBaseFormat(_internalformat);
   const GLenum type = (format == GL_DEPTH_STENCIL)
@@ -744,19 +977,15 @@ void gx::GLTextureT<VER,TARGET>::clear(GLint level)
   if constexpr (VER < 44) {
     const int pixel_size = GLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(
-      _width * _height * std::max(_depth,1) * pixel_size);
-    if (_depth > 0) {
-      setSubImage3D(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
-    } else {
-      setSubImage2D(level, 0, 0, _width, _height, format, empty.get());
-    }
+      _width * _height * _depth * pixel_size);
+    setSubImage3D(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
   } else {
     GX_GLCALL(glClearTexImage, _tex, level, format, type, nullptr);
   }
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::setParameter(GLenum pname, GLfloat param)
+void gx::GLTexture3DT<VER,TARGET>::setParameter(GLenum pname, GLfloat param)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -767,7 +996,7 @@ void gx::GLTextureT<VER,TARGET>::setParameter(GLenum pname, GLfloat param)
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::setParameter(GLenum pname, GLint param)
+void gx::GLTexture3DT<VER,TARGET>::setParameter(GLenum pname, GLint param)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -778,7 +1007,7 @@ void gx::GLTextureT<VER,TARGET>::setParameter(GLenum pname, GLint param)
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::setParameterv(GLenum pname, const GLfloat* params)
+void gx::GLTexture3DT<VER,TARGET>::setParameterv(GLenum pname, const GLfloat* params)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -789,7 +1018,7 @@ void gx::GLTextureT<VER,TARGET>::setParameterv(GLenum pname, const GLfloat* para
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::setParameterv(GLenum pname, const GLint* params)
+void gx::GLTexture3DT<VER,TARGET>::setParameterv(GLenum pname, const GLint* params)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -800,7 +1029,7 @@ void gx::GLTextureT<VER,TARGET>::setParameterv(GLenum pname, const GLint* params
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::setParameterIv(GLenum pname, const GLint* params)
+void gx::GLTexture3DT<VER,TARGET>::setParameterIv(GLenum pname, const GLint* params)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -811,7 +1040,7 @@ void gx::GLTextureT<VER,TARGET>::setParameterIv(GLenum pname, const GLint* param
 }
 
 template<int VER, GLenum TARGET>
-void gx::GLTextureT<VER,TARGET>::setParameterIv(GLenum pname, const GLuint* params)
+void gx::GLTexture3DT<VER,TARGET>::setParameterIv(GLenum pname, const GLuint* params)
 {
   if constexpr (VER < 45) {
     bindCheck();
@@ -822,7 +1051,7 @@ void gx::GLTextureT<VER,TARGET>::setParameterIv(GLenum pname, const GLuint* para
 }
 
 
-// GLTextureBuffer
+// **** GLTextureBuffer implementation ****
 template<int VER>
 gx::GLTextureBuffer<VER>::GLTextureBuffer(GLTextureBuffer<VER>&& t) noexcept
   : _tex{t.release()}
