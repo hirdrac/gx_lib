@@ -2,8 +2,7 @@
 // gx/GLTexture.hh
 // Copyright (C) 2023 Richard Bradley
 //
-// wrapper for OpenGL texture object
-// (texture target as a template parameter)
+// wrappers for OpenGL texture objects
 //
 
 // FIXME: GL_TEXTURE_CUBE_MAP/GL_TEXTURE_CUBE_MAP_ARRAY broken
@@ -85,19 +84,8 @@ class gx::GLTexture1D
  public:
   using type = GLTexture1D<VER>;
 
-  GLTexture1D() = default;
-  ~GLTexture1D() = default;
-
-  // prevent copy/assignment
-  GLTexture1D(const type&) = delete;
-  type& operator=(const type&) = delete;
-
-  // allow move/move-assign
-  inline GLTexture1D(type&& t) noexcept;
-  inline type& operator=(type&& t) noexcept;
-
   // operators
-  [[nodiscard]] explicit operator bool() const { return _tex.id; }
+  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
 
   // accessors
   [[nodiscard]] static GLenum target() { return GL_TEXTURE_1D; }
@@ -132,17 +120,17 @@ class gx::GLTexture1D
 
   // set texture parameters
   void setParameter(GLenum pname, GLfloat param) {
-    return _tex.setParameterf(pname, param); }
+    _tex.setParameterf(pname, param); }
   void setParameter(GLenum pname, GLint param) {
-    return _tex.setParameteri(pname, param); }
+    _tex.setParameteri(pname, param); }
   void setParameterv(GLenum pname, const GLfloat* params) {
-    return _tex.setParameterfv(pname, params); }
+    _tex.setParameterfv(pname, params); }
   void setParameterv(GLenum pname, const GLint* params) {
-    return _tex.setParameteriv(pname, params); }
+    _tex.setParameteriv(pname, params); }
   void setParameterIv(GLenum pname, const GLint* params) {
-    return _tex.setParameterIiv(pname, params); }
+    _tex.setParameterIiv(pname, params); }
   void setParameterIv(GLenum pname, const GLuint* params) {
-    return _tex.setParameterIiuv(pname, params); }
+    _tex.setParameterIiuv(pname, params); }
 
   [[nodiscard]] static GLint maxSize() {
     GLint s = 0;
@@ -164,19 +152,8 @@ class gx::GLTexture2DT
  public:
   using type = GLTexture2DT<VER,TARGET>;
 
-  GLTexture2DT() = default;
-  ~GLTexture2DT() = default;
-
-  // prevent copy/assignment
-  GLTexture2DT(const type&) = delete;
-  type& operator=(const type&) = delete;
-
-  // allow move/move-assign
-  inline GLTexture2DT(type&& t) noexcept;
-  inline type& operator=(type&& t) noexcept;
-
   // operators
-  [[nodiscard]] explicit operator bool() const { return _tex.id; }
+  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
 
   // accessors
   [[nodiscard]] static GLenum target() { return TARGET; }
@@ -218,17 +195,17 @@ class gx::GLTexture2DT
 
   // set texture parameters
   void setParameter(GLenum pname, GLfloat param) {
-    return _tex.setParameterf(pname, param); }
+    _tex.setParameterf(pname, param); }
   void setParameter(GLenum pname, GLint param) {
-    return _tex.setParameteri(pname, param); }
+    _tex.setParameteri(pname, param); }
   void setParameterv(GLenum pname, const GLfloat* params) {
-    return _tex.setParameterfv(pname, params); }
+    _tex.setParameterfv(pname, params); }
   void setParameterv(GLenum pname, const GLint* params) {
-    return _tex.setParameteriv(pname, params); }
+    _tex.setParameteriv(pname, params); }
   void setParameterIv(GLenum pname, const GLint* params) {
-    return _tex.setParameterIiv(pname, params); }
+    _tex.setParameterIiv(pname, params); }
   void setParameterIv(GLenum pname, const GLuint* params) {
-    return _tex.setParameterIiuv(pname, params); }
+    _tex.setParameterIiuv(pname, params); }
 
   [[nodiscard]] static GLint maxSize() {
     GLint s = 0;
@@ -251,23 +228,12 @@ class gx::GLTexture3DT
  public:
   using type = GLTexture3DT<VER,TARGET>;
 
-  GLTexture3DT() = default;
-  ~GLTexture3DT() = default;
-
-  // prevent copy/assignment
-  GLTexture3DT(const type&) = delete;
-  type& operator=(const type&) = delete;
-
-  // allow move/move-assign
-  inline GLTexture3DT(type&& t) noexcept;
-  inline type& operator=(type&& t) noexcept;
-
   // operators
-  [[nodiscard]] explicit operator bool() const { return _tex.id; }
+  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
 
   // accessors
   [[nodiscard]] static GLenum target() { return TARGET; }
-  [[nodiscard]] GLuint id() const { return _tex; }
+  [[nodiscard]] GLuint id() const { return _tex.id; }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
   [[nodiscard]] GLsizei levels() const { return _levels; }
   [[nodiscard]] GLsizei width() const { return _width; }
@@ -307,17 +273,17 @@ class gx::GLTexture3DT
 
   // set texture parameters
   void setParameter(GLenum pname, GLfloat param) {
-    return _tex.setParameterf(pname, param); }
+    _tex.setParameterf(pname, param); }
   void setParameter(GLenum pname, GLint param) {
-    return _tex.setParameteri(pname, param); }
+    _tex.setParameteri(pname, param); }
   void setParameterv(GLenum pname, const GLfloat* params) {
-    return _tex.setParameterfv(pname, params); }
+    _tex.setParameterfv(pname, params); }
   void setParameterv(GLenum pname, const GLint* params) {
-    return _tex.setParameteriv(pname, params); }
+    _tex.setParameteriv(pname, params); }
   void setParameterIv(GLenum pname, const GLint* params) {
-    return _tex.setParameterIiv(pname, params); }
+    _tex.setParameterIiv(pname, params); }
   void setParameterIv(GLenum pname, const GLuint* params) {
-    return _tex.setParameterIiuv(pname, params); }
+    _tex.setParameterIiuv(pname, params); }
 
   [[nodiscard]] static GLint maxSize() {
     GLint s = 0;
@@ -341,19 +307,8 @@ class gx::GLTextureBuffer
  public:
   using type = GLTextureBuffer<VER>;
 
-  GLTextureBuffer() = default;
-  ~GLTextureBuffer() = default;
-
-  // prevent copy/assignment
-  GLTextureBuffer(const type&) = delete;
-  type& operator=(const type&) = delete;
-
-  // allow move/move-assign
-  inline GLTextureBuffer(type&& t) noexcept;
-  inline type& operator=(type&& t) noexcept;
-
   // operators
-  [[nodiscard]] explicit operator bool() const { return _tex.id; }
+  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
 
   // accessors
   [[nodiscard]] static GLenum target() { return GL_TEXTURE_BUFFER; }
@@ -383,28 +338,6 @@ class gx::GLTextureBuffer
 
 
 // **** GLTexture1D implementation ****
-template<int VER>
-gx::GLTexture1D<VER>::GLTexture1D(GLTexture1D<VER>&& t) noexcept
-  : _tex{t._tex}
-{
-  _internalformat = t._internalformat;
-  _levels = t._levels;
-  _width = t._width;
-}
-
-template<int VER>
-gx::GLTexture1D<VER>&
-gx::GLTexture1D<VER>::operator=(GLTexture1D<VER>&& t) noexcept
-{
-  if (this != &t) {
-    _tex = t._tex;
-    _internalformat = t._internalformat;
-    _levels = t._levels;
-    _width = t._width;
-  }
-  return *this;
-}
-
 template<int VER>
 GLuint gx::GLTexture1D<VER>::init(
   GLsizei levels, GLenum internalformat, GLsizei width)
@@ -460,30 +393,6 @@ void gx::GLTexture1D<VER>::clear(GLint level)
 
 
 // **** GLTexture2DT implementation ****
-template<int VER, GLenum TARGET>
-gx::GLTexture2DT<VER,TARGET>::GLTexture2DT(GLTexture2DT<VER,TARGET>&& t) noexcept
-  : _tex{t._tex}
-{
-  _internalformat = t._internalformat;
-  _levels = t._levels;
-  _width = t._width;
-  _height = t._height;
-}
-
-template<int VER, GLenum TARGET>
-gx::GLTexture2DT<VER,TARGET>&
-gx::GLTexture2DT<VER,TARGET>::operator=(GLTexture2DT<VER,TARGET>&& t) noexcept
-{
-  if (this != &t) {
-    _tex = t._tex;
-    _internalformat = t._internalformat;
-    _levels = t._levels;
-    _width = t._width;
-    _height = t._height;
-  }
-  return *this;
-}
-
 template<int VER, GLenum TARGET>
 GLuint gx::GLTexture2DT<VER,TARGET>::init(
   GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
@@ -572,32 +481,6 @@ void gx::GLTexture2DT<VER,TARGET>::clear(GLint level)
 
 // **** GLTexture3DT implementation ****
 template<int VER, GLenum TARGET>
-gx::GLTexture3DT<VER,TARGET>::GLTexture3DT(GLTexture3DT<VER,TARGET>&& t) noexcept
-  : _tex{t._tex}
-{
-  _internalformat = t._internalformat;
-  _levels = t._levels;
-  _width = t._width;
-  _height = t._height;
-  _depth = t._depth;
-}
-
-template<int VER, GLenum TARGET>
-gx::GLTexture3DT<VER,TARGET>&
-gx::GLTexture3DT<VER,TARGET>::operator=(GLTexture3DT<VER,TARGET>&& t) noexcept
-{
-  if (this != &t) {
-    _tex = t._tex;
-    _internalformat = t._internalformat;
-    _levels = t._levels;
-    _width = t._width;
-    _height = t._height;
-    _depth = t._depth;
-  }
-  return *this;
-}
-
-template<int VER, GLenum TARGET>
 GLuint gx::GLTexture3DT<VER,TARGET>::init(
   GLsizei levels, GLenum internalformat,
   GLsizei width, GLsizei height, GLsizei depth)
@@ -684,24 +567,6 @@ void gx::GLTexture3DT<VER,TARGET>::clear(GLint level)
 
 // **** GLTextureBuffer implementation ****
 template<int VER>
-gx::GLTextureBuffer<VER>::GLTextureBuffer(GLTextureBuffer<VER>&& t) noexcept
-  : _tex{t._tex}
-{
-  _internalformat = t._internalformat;
-}
-
-template<int VER>
-gx::GLTextureBuffer<VER>&
-gx::GLTextureBuffer<VER>::operator=(GLTextureBuffer<VER>&& t) noexcept
-{
-  if (this != &t) {
-    _tex = t._tex;
-    _internalformat = t._internalformat;
-  }
-  return *this;
-}
-
-template<int VER>
 GLuint gx::GLTextureBuffer<VER>::attachBuffer(
   GLenum internalformat, GLuint buffer)
 {
@@ -783,7 +648,7 @@ struct gx::GLTextureHandle
   static void unbindUnit(GLuint unit) { bindUnit(unit, 0); }
 
   void bindCheck() {
-    // only called if VER < 45
+    // only called for VER < 45
     if (GLLastTextureBind != id) {
       // don't care which unit is active
       GX_GLCALL(glBindTexture, TARGET, id);
