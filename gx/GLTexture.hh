@@ -5,8 +5,10 @@
 // wrappers for OpenGL texture objects
 //
 
-// FIXME: GL_TEXTURE_CUBE_MAP/GL_TEXTURE_CUBE_MAP_ARRAY broken
-//   see https://www.khronos.org/opengl/wiki/Cubemap_Texture
+// TODO: add GLTextureCubeMapArray
+//
+// NOTES:
+//   https://www.khronos.org/opengl/wiki/Cubemap_Texture
 
 #pragma once
 #include "OpenGL.hh"
@@ -17,6 +19,7 @@ namespace gx {
   template<int VER>                class GLTexture1D;
   template<int VER, GLenum TARGET> class GLTexture2DT;
   template<int VER, GLenum TARGET> class GLTexture3DT;
+  template<int VER>                class GLTextureCubeMap;
   template<int VER>                class GLTextureBuffer;
   template<int VER, GLenum TARGET> struct GLTextureHandle;
 
@@ -32,9 +35,6 @@ namespace gx {
   using GLTextureRectangle = GLTexture2DT<VER,GL_TEXTURE_RECTANGLE>;
 
   template<int VER>
-  using GLTextureCubeMap = GLTexture2DT<VER,GL_TEXTURE_CUBE_MAP>;
-
-  template<int VER>
   using GLTexture2DMultisample = GLTexture2DT<VER,GL_TEXTURE_2D_MULTISAMPLE>;
 
   template<int VER>
@@ -42,9 +42,6 @@ namespace gx {
 
   template<int VER>
   using GLTexture2DArray = GLTexture3DT<VER,GL_TEXTURE_2D_ARRAY>;
-
-  template<int VER>
-  using GLTextureCubeMapArray = GLTexture3DT<VER,GL_TEXTURE_CUBE_MAP_ARRAY>;
 
   template<int VER>
   using GLTexture2DMultisampleArray =
@@ -166,8 +163,7 @@ class gx::GLTexture2DT
   // methods
   inline GLuint init(GLsizei levels, GLenum internalformat,
 		     GLsizei width, GLsizei height);
-    // for GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY, GL_TEXTURE_RECTANGLE,
-    //   GL_TEXTURE_CUBE_MAP
+    // for GL_TEXTURE_2D, GL_TEXTURE_1D_ARRAY, GL_TEXTURE_RECTANGLE
 
   GLuint release() noexcept { return _tex.release(); }
     // releases ownership of managed texture object, returns object id
@@ -243,7 +239,7 @@ class gx::GLTexture3DT
   // methods
   inline GLuint init(GLsizei levels, GLenum internalformat,
 		     GLsizei width, GLsizei height, GLsizei depth);
-    // for GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY, GL_TEXTURE_CUBE_MAP_ARRAY
+    // for GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY
 
   GLuint release() noexcept { return _tex.release(); }
     // releases ownership of managed texture object, returns object id
@@ -298,6 +294,81 @@ class gx::GLTexture3DT
   GLsizei _width = 0;
   GLsizei _height = 0;
   GLsizei _depth = 0;
+};
+
+
+template<int VER>
+class gx::GLTextureCubeMap
+{
+ public:
+  using type = GLTextureCubeMap<VER>;
+
+  // operators
+  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
+
+  // accessors
+  [[nodiscard]] static GLenum target() { return GL_TEXTURE_CUBE_MAP; }
+  [[nodiscard]] GLuint id() const { return _tex.id; }
+  [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
+  [[nodiscard]] GLsizei levels() const { return _levels; }
+  [[nodiscard]] GLsizei width() const { return _width; }
+  [[nodiscard]] GLsizei height() const { return _height; }
+
+  // methods
+  inline GLuint init(GLsizei levels, GLenum internalformat,
+		     GLsizei width, GLsizei height);
+
+  GLuint release() noexcept { return _tex.release(); }
+    // releases ownership of managed texture object, returns object id
+
+  void bindUnit(GLuint unit) const { _tex.bindUnit(unit); }
+
+  inline void setSubImage(
+    GLint level, GLint xoffset, GLint yoffset, GLuint face,
+    GLsizei width, GLsizei height,
+    GLenum format, GLenum type, const void* pixels);
+
+  template<typename PixelT>
+  void setSubImage(
+    GLint level, GLint xoffset, GLint yoffset, GLuint face,
+    GLsizei width, GLsizei height, GLenum format, const PixelT* pixels) {
+    setSubImage(level, xoffset, yoffset, face, width, height, format,
+                GLType_v<PixelT>, pixels); }
+
+  inline void getImage(GLint level, GLuint face, GLenum format, GLenum type,
+                       GLsizei bufSize, void* pixels);
+
+  void generateMipmap() { _tex.generateMipmap(); }
+    // not valid for GL_TEXTURE_RECTANGLE, GL_TEXTURE_2D_MULTISAMPLE
+
+  inline void clear(GLint level);
+
+  // set texture parameters
+  void setParameter(GLenum pname, GLfloat param) {
+    _tex.setParameterf(pname, param); }
+  void setParameter(GLenum pname, GLint param) {
+    _tex.setParameteri(pname, param); }
+  void setParameterv(GLenum pname, const GLfloat* params) {
+    _tex.setParameterfv(pname, params); }
+  void setParameterv(GLenum pname, const GLint* params) {
+    _tex.setParameteriv(pname, params); }
+  void setParameterIv(GLenum pname, const GLint* params) {
+    _tex.setParameterIiv(pname, params); }
+  void setParameterIv(GLenum pname, const GLuint* params) {
+    _tex.setParameterIiuv(pname, params); }
+
+  [[nodiscard]] static GLint maxSize() {
+    GLint s = 0;
+    GX_GLCALL(glGetIntegerv, GLTextureVals<target()>::pnameMaxSize, &s);
+    return s;
+  }
+
+ private:
+  GLTextureHandle<VER,target()> _tex;
+  GLenum _internalformat = GL_NONE;
+  GLsizei _levels = 0;
+  GLsizei _width = 0;
+  GLsizei _height = 0;
 };
 
 
@@ -404,19 +475,8 @@ GLuint gx::GLTexture2DT<VER,TARGET>::init(
   _height = height;
   if constexpr (VER < 42) {
     _tex.bindCheck();
-    if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
-      // FIXME: move to dedicated GLTextureCubeMap class
-      for (int i = 0; i < levels; ++i) {
-        for (unsigned int f = 0; f < 6; ++f) {
-          GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i,
-                    GLint(internalformat), width, height, 0, GL_RED,
-                    GL_UNSIGNED_BYTE, nullptr);
-        }
-        width = std::max(1, (width / 2));
-        height = std::max(1, (height / 2));
-      }
-    } else if constexpr (TARGET == GL_TEXTURE_1D_ARRAY
-                         || TARGET == GL_PROXY_TEXTURE_1D_ARRAY) {
+    if constexpr (TARGET == GL_TEXTURE_1D_ARRAY
+                  || TARGET == GL_PROXY_TEXTURE_1D_ARRAY) {
       for (int i = 0; i < levels; ++i) {
         GX_GLCALL(glTexImage2D, TARGET, i, internalformat, width, height, 0,
                   GL_RED, GL_UNSIGNED_BYTE, nullptr);
@@ -431,11 +491,9 @@ GLuint gx::GLTexture2DT<VER,TARGET>::init(
       }
     }
   } else if constexpr (VER < 45) {
-    // FIXME: GL_TEXTURE_CUBE_MAP not handled
     _tex.bindCheck();
     GX_GLCALL(glTexStorage2D, TARGET, levels, internalformat, width, height);
   } else {
-    // FIXME: GL_TEXTURE_CUBE_MAP not handled
     GX_GLCALL(glTextureStorage2D, _tex.id, levels, internalformat, width, height);
   }
   return _tex.id;
@@ -533,14 +591,8 @@ void gx::GLTexture3DT<VER,TARGET>::setSubImage3D(
   GLSetUnpackAlignment(width, format, type);
   if constexpr (VER < 45) {
     _tex.bindCheck();
-    if constexpr (TARGET == GL_TEXTURE_CUBE_MAP) {
-      // FIXME: move to dedicated GLTextureCubeMap class
-      GX_GLCALL(glTexSubImage2D, GLenum(GL_TEXTURE_CUBE_MAP_POSITIVE_X + zoffset),
-                level, xoffset, yoffset, width, height, format, type, pixels);
-    } else {
-      GX_GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
-                width, height, depth, format, type, pixels);
-    }
+    GX_GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
+              width, height, depth, format, type, pixels);
   } else {
     GX_GLCALL(glTextureSubImage3D, _tex.id, level, xoffset, yoffset, zoffset,
               width, height, depth, format, type, pixels);
@@ -562,6 +614,100 @@ void gx::GLTexture3DT<VER,TARGET>::clear(GLint level)
   } else {
     GX_GLCALL(glClearTexImage, _tex.id, level, format, type, nullptr);
   }
+}
+
+
+// **** GLTextureCubeMap implementation ****
+template<int VER>
+GLuint gx::GLTextureCubeMap<VER>::init(
+  GLsizei levels, GLenum internalformat, GLsizei width, GLsizei height)
+{
+  _tex.init();
+  _internalformat = internalformat;
+  _levels = levels;
+  _width = width;
+  _height = height;
+
+  if constexpr (VER < 45) { GLLastTextureBind = 0; }
+  GX_GLCALL(glBindTexture, target(), _tex.id);
+  if constexpr (VER < 42) {
+    for (int i = 0; i < levels; ++i) {
+      for (unsigned int f = 0; f < 6; ++f) {
+        GX_GLCALL(glTexImage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, i,
+                  GLint(internalformat), width, height, 0, GL_RED,
+                  GL_UNSIGNED_BYTE, nullptr);
+      }
+      width = std::max(1, (width / 2));
+      height = std::max(1, (height / 2));
+    }
+  } else {
+    // NOTE: no direct state access function available (VER >= 45)
+    for (unsigned int f = 0; f < 6; ++f) {
+      GX_GLCALL(glTexStorage2D, GL_TEXTURE_CUBE_MAP_POSITIVE_X + f, levels,
+                internalformat, width, height);
+    }
+  }
+  GX_GLCALL(glBindTexture, target(), 0);
+  return _tex.id;
+}
+
+template<int VER>
+void gx::GLTextureCubeMap<VER>::setSubImage(
+  GLint level, GLint xoffset, GLint yoffset, GLuint face, GLsizei width,
+  GLsizei height, GLenum format, GLenum type, const void* pixels)
+{
+  GLSetUnpackAlignment(width, format, type);
+  if constexpr (VER < 45) {
+    _tex.bindCheck();
+    GX_GLCALL(glTexSubImage2D, GLenum(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face),
+              level, xoffset, yoffset, width, height, format, type, pixels);
+  } else {
+    GX_GLCALL(glTextureSubImage3D, _tex.id, level, xoffset, yoffset, face,
+              width, height, 1, format, type, pixels);
+  }
+}
+
+template<int VER>
+void gx::GLTextureCubeMap<VER>::getImage(
+  GLint level, GLuint face, GLenum format, GLenum type,
+  GLsizei bufSize, void* pixels)
+{
+  // single face reading
+  GX_GLCALL(glBindTexture, target(), _tex.id);
+  if constexpr (VER < 45) {
+    GLLastTextureBind = 0;
+    GX_GLCALL(glGetTexImage, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level,
+              format, type, pixels);
+    // FIXME: bufSize not used
+  } else {
+    GX_GLCALL(glGetnTexImage, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level,
+              format, type, bufSize, pixels);
+  }
+  GX_GLCALL(glBindTexture, target(), 0);
+
+  // TODO: read all faces at one (will require different call for VER < 45)
+  //GX_GLCALL(glGetTextureImage, id, level, format, type, bufSize, pixels);
+}
+
+template<int VER>
+void gx::GLTextureCubeMap<VER>::clear(GLint level)
+{
+  const GLenum format = GLBaseFormat(_internalformat);
+  const GLenum type = (format == GL_DEPTH_STENCIL)
+    ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
+
+  if constexpr (VER < 44) {
+    const int pixel_size = GLPixelSize(format, type);
+    const auto empty = std::make_unique<GLubyte[]>(
+      _width * _height * pixel_size);
+    for (unsigned int f = 0; f < 6; ++f) {
+      setSubImage(level, 0, 0, f, _width, _height, format, empty.get());
+    }
+  } else {
+    GX_GLCALL(glClearTexImage, _tex.id, level, format, type, nullptr);
+  }
+
+  // TODO: clear single face
 }
 
 
