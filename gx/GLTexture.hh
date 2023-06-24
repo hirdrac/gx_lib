@@ -628,8 +628,12 @@ GLuint gx::GLTextureCubeMap<VER>::init(
   _width = width;
   _height = height;
 
-  if constexpr (VER < 45) { GLLastTextureBind = 0; }
-  GX_GLCALL(glBindTexture, target(), _tex.id);
+  if constexpr (VER < 45) {
+    _tex.bindCheck();
+  } else {
+    GX_GLCALL(glBindTexture, target(), _tex.id);
+  }
+
   if constexpr (VER < 42) {
     for (int i = 0; i < levels; ++i) {
       for (unsigned int f = 0; f < 6; ++f) {
@@ -647,7 +651,6 @@ GLuint gx::GLTextureCubeMap<VER>::init(
                 internalformat, width, height);
     }
   }
-  GX_GLCALL(glBindTexture, target(), 0);
   return _tex.id;
 }
 
@@ -673,7 +676,12 @@ void gx::GLTextureCubeMap<VER>::getImage(
   GLsizei bufSize, void* pixels)
 {
   // single face reading
-  GX_GLCALL(glBindTexture, target(), _tex.id);
+  if constexpr (VER < 45) {
+    _tex.bindCheck();
+  } else {
+    GX_GLCALL(glBindTexture, target(), _tex.id);
+  }
+
   if constexpr (VER < 45) {
     GLLastTextureBind = 0;
     GX_GLCALL(glGetTexImage, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level,
@@ -683,7 +691,6 @@ void gx::GLTextureCubeMap<VER>::getImage(
     GX_GLCALL(glGetnTexImage, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level,
               format, type, bufSize, pixels);
   }
-  GX_GLCALL(glBindTexture, target(), 0);
 
   // TODO: read all faces at one (will require different call for VER < 45)
   //GX_GLCALL(glGetTextureImage, id, level, format, type, bufSize, pixels);
