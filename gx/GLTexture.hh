@@ -103,14 +103,14 @@ class gx::GLTexture1D
 
   void bindUnit(GLuint unit) const { _tex.bindUnit(unit); }
 
-  inline void setSubImage1D(
+  inline void setSubImage(
     GLint level, GLint xoffset, GLsizei width,
     GLenum format, GLenum type, const void* pixels);
 
   template<typename PixelT>
-  void setSubImage1D(GLint level, GLint xoffset, GLsizei width,
-                     GLenum format, const PixelT* pixels) {
-    setSubImage1D(level, xoffset, width, format, GLType_v<PixelT>, pixels); }
+  void setSubImage(GLint level, GLint xoffset, GLsizei width,
+                   GLenum format, const PixelT* pixels) {
+    setSubImage(level, xoffset, width, format, GLType_v<PixelT>, pixels); }
 
   void getImage(
     GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels) {
@@ -174,15 +174,15 @@ class gx::GLTexture2DT
 
   void bindUnit(GLuint unit) const { _tex.bindUnit(unit); }
 
-  inline void setSubImage2D(
+  inline void setSubImage(
     GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
     GLenum format, GLenum type, const void* pixels);
 
   template<typename PixelT>
-  void setSubImage2D(GLint level, GLint xoffset, GLint yoffset, GLsizei width,
-                     GLsizei height, GLenum format, const PixelT* pixels) {
-    setSubImage2D(level, xoffset, yoffset, width, height, format,
-                  GLType_v<PixelT>, pixels); }
+  void setSubImage(GLint level, GLint xoffset, GLint yoffset, GLsizei width,
+                   GLsizei height, GLenum format, const PixelT* pixels) {
+    setSubImage(level, xoffset, yoffset, width, height, format,
+                GLType_v<PixelT>, pixels); }
 
   void getImage(
     GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels) {
@@ -250,17 +250,17 @@ class gx::GLTexture3DT
 
   void bindUnit(GLuint unit) const { _tex.bindUnit(unit); }
 
-  inline void setSubImage3D(
+  inline void setSubImage(
     GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
     GLsizei width, GLsizei height, GLsizei depth,
     GLenum format, GLenum type, const void* pixels);
 
   template<typename PixelT>
-  void setSubImage3D(GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
-                     GLsizei width, GLsizei height, GLsizei depth,
-                     GLenum format, const PixelT* pixels) {
-    setSubImage3D(level, xoffset, yoffset, zoffset, width, height, depth,
-                  format, GLType_v<PixelT>, pixels); }
+  void setSubImage(GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
+                   GLsizei width, GLsizei height, GLsizei depth,
+                   GLenum format, const PixelT* pixels) {
+    setSubImage(level, xoffset, yoffset, zoffset, width, height, depth,
+                format, GLType_v<PixelT>, pixels); }
 
   void getImage(
     GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels) {
@@ -435,7 +435,7 @@ GLuint gx::GLTexture1D<VER>::init(
 }
 
 template<int VER>
-void gx::GLTexture1D<VER>::setSubImage1D(
+void gx::GLTexture1D<VER>::setSubImage(
   GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void* pixels)
 {
   GLSetUnpackAlignment(width, format, type);
@@ -457,7 +457,7 @@ void gx::GLTexture1D<VER>::clear(GLint level)
   if constexpr (VER < 44) {
     const int pixel_size = GLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(_width * pixel_size);
-    setSubImage1D(level, 0, _width, format, empty.get());
+    setSubImage(level, 0, _width, format, empty.get());
   } else {
     GX_GLCALL(glClearTexImage, _tex.id, level, format, type, nullptr);
   }
@@ -505,7 +505,7 @@ GLuint gx::GLTexture2DT<VER,TARGET>::init(
 //   4.5 - glTextureStorage2DMultisample
 
 template<int VER, GLenum TARGET>
-void gx::GLTexture2DT<VER,TARGET>::setSubImage2D(
+void gx::GLTexture2DT<VER,TARGET>::setSubImage(
   GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
   GLenum format, GLenum type, const void* pixels)
 {
@@ -531,7 +531,7 @@ void gx::GLTexture2DT<VER,TARGET>::clear(GLint level)
     const int pixel_size = GLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(
       _width * _height * pixel_size);
-    setSubImage2D(level, 0, 0, _width, _height, format, empty.get());
+    setSubImage(level, 0, 0, _width, _height, format, empty.get());
   } else {
     GX_GLCALL(glClearTexImage, _tex.id, level, format, type, nullptr);
   }
@@ -584,7 +584,7 @@ GLuint gx::GLTexture3DT<VER,TARGET>::init(
 //   4.5 - glTextureStorage3DMultisample
 
 template<int VER, GLenum TARGET>
-void gx::GLTexture3DT<VER,TARGET>::setSubImage3D(
+void gx::GLTexture3DT<VER,TARGET>::setSubImage(
   GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
   GLsizei width, GLsizei height, GLsizei depth,
   GLenum format, GLenum type, const void* pixels)
@@ -611,7 +611,7 @@ void gx::GLTexture3DT<VER,TARGET>::clear(GLint level)
     const int pixel_size = GLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(
       _width * _height * _depth * pixel_size);
-    setSubImage3D(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
+    setSubImage(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
   } else {
     GX_GLCALL(glClearTexImage, _tex.id, level, format, type, nullptr);
   }

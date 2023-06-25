@@ -1,6 +1,6 @@
 //
 // gx/OpenGLRenderer.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 // TODO: add blur transparency shader
@@ -487,7 +487,7 @@ TextureID OpenGLRenderer<VER>::setTexture(
     ePtr->channels = img.channels();
   }
 
-  t.setSubImage2D(
+  t.setSubImage(
     0, 0, 0, img.width(), img.height(), imgformat, img.data());
   if (levels > 1) { t.generateMipmap(); }
 
