@@ -8,10 +8,11 @@
 // TODO: add GLTextureCubeMapArray
 //   (requires GL4.0 or ARB_texture_cube_map_array)
 //
-// NOTES:
+// REFERENCES:
 //   https://www.khronos.org/opengl/wiki/Cubemap_Texture
 //   https://www.khronos.org/opengl/wiki/Array_Texture
 //   https://www.khronos.org/opengl/wiki/Texture_Storage
+//   https://registry.khronos.org/OpenGL/extensions/ARB/ARB_direct_state_access.txt
 //   https://registry.khronos.org/OpenGL/extensions/ARB/ARB_texture_cube_map_array.txt
 
 #pragma once
