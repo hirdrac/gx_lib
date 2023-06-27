@@ -1,6 +1,6 @@
 //
 // gx/Camera.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "Camera.hh"
@@ -26,7 +26,7 @@ bool Camera::updateView()
 {
   const float dot = dotProduct(_vnormal, _vup);
   if (dot >= .99999) {
-    GX_LOG_ERROR("bad vup");
+    GX_LOG_ERROR("bad vup: ", _vup);
     return false;
   }
 
