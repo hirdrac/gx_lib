@@ -31,6 +31,7 @@ class gx::Renderer
 
   // setup methods
   virtual bool init(GLFWwindow* win) = 0;
+  virtual bool setSwapInterval(int interval) = 0;
 
   // texture methods
   virtual TextureID setTexture(TextureID id, const Image& img, int levels,
@@ -45,10 +46,12 @@ class gx::Renderer
   // general accessors
   [[nodiscard]] GLFWwindow* window() { return _window; }
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
+  [[nodiscard]] int swapInterval() const { return _swapInterval; }
 
  protected:
   GLFWwindow* _window = nullptr;
   int _maxTextureSize = 0;
+  int _swapInterval = 1;
 
   [[nodiscard]] TextureID newTextureID();
 };

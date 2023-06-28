@@ -188,6 +188,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
  public:
   // gx::Renderer methods
   bool init(GLFWwindow* win) override;
+  bool setSwapInterval(int interval) override;
   TextureID setTexture(TextureID id, const Image& img, int levels,
                        FilterType minFilter, FilterType magFilter) override;
   void freeTexture(TextureID id) override;
@@ -321,7 +322,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   std::lock_guard lg{_glMutex};
   _window = win;
   _maxTextureSize = GLTexture2D<VER>::maxSize();
-  glfwSwapInterval(1); // enable V-SYNC
+  glfwSwapInterval(_swapInterval); // enable V-SYNC
 
   _uniformBuf.init(sizeof(UniformData), nullptr);
   #define UNIFORM_BLOCK_SRC\
@@ -445,6 +446,15 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
 #endif
 
   return status;
+}
+
+template<int VER>
+bool OpenGLRenderer<VER>::setSwapInterval(int interval)
+{
+  std::lock_guard lg{_glMutex};
+  _swapInterval = std::clamp(interval, 0, 60);
+  glfwSwapInterval(_swapInterval);
+  return true;
 }
 
 template<int VER>
