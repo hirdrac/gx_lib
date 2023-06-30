@@ -1148,8 +1148,7 @@ std::unique_ptr<Renderer> gx::makeOpenGLRenderer(GLFWwindow* win)
   GX_LOG_INFO("GL_VENDOR: ", glGetString(GL_VENDOR));
   GX_LOG_INFO("GL_RENDERER: ", glGetString(GL_RENDERER));
   GX_LOG_INFO("GL_VERSION: ", glGetString(GL_VERSION));
-  GX_LOG_TRACE("GL_SHADING_LANGUAGE_VERSION: ", glGetString(GL_SHADING_LANGUAGE_VERSION));
-  GX_LOG_TRACE("GL_EXTENSIONS: ", glGetString(GL_EXTENSIONS));
+  GX_LOG_INFO("GL_SHADING_LANGUAGE_VERSION: ", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
   if (ver >= 45) {
     GX_LOG_INFO("OpenGL 4.5 Renderer");
