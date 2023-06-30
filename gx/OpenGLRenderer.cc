@@ -22,11 +22,13 @@
 #include "GLTexture.hh"
 #include "OpenGL.hh"
 #include "Assert.hh"
+#include "Print.hh"
 #include <GLFW/glfw3.h>
 #include <cstring>
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+#include <chrono>
 using namespace gx;
 
 
@@ -314,6 +316,9 @@ class gx::OpenGLRenderer final : public gx::Renderer
   }
 
   void setGLCapabilities(int cap);
+
+  int64_t _lastFrameTime = 0;
+  int32_t _frames = 0;
 };
 
 template<int VER>
@@ -1065,6 +1070,17 @@ void OpenGLRenderer<VER>::renderFrame()
   glfwSwapBuffers(_window);
   GLCheckErrors("GL error");
   GLClearState();
+
+  // frame rate calculation
+  ++_frames;
+  const int64_t t = std::chrono::duration_cast<std::chrono::seconds>(
+    std::chrono::steady_clock::now().time_since_epoch()).count();
+  if (t - _lastFrameTime >= 1) {
+    _frameRate = _frames;
+    _frames = 0;
+    _lastFrameTime = t;
+    //println("frame rate: ", _frameRate);
+  }
 }
 
 template<int VER>

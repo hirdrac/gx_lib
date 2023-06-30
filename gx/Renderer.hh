@@ -47,11 +47,13 @@ class gx::Renderer
   [[nodiscard]] GLFWwindow* window() { return _window; }
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
   [[nodiscard]] int swapInterval() const { return _swapInterval; }
+  [[nodiscard]] int frameRate() const { return _frameRate; }
 
  protected:
   GLFWwindow* _window = nullptr;
   int _maxTextureSize = 0;
   int _swapInterval = 1;
+  int _frameRate = 0;
 
   [[nodiscard]] TextureID newTextureID();
 };
