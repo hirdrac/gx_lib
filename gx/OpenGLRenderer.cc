@@ -47,6 +47,12 @@ namespace {
     }
   }
 
+  const char* getGLString(GLenum name)
+  {
+    const char* val = reinterpret_cast<const char*>(glGetString(name));
+    return val ? val : "ERROR";
+  }
+
   template<int VER>
   [[nodiscard]] GLProgram makeProgram(const char* vsrc, const char* fsrc)
   {
@@ -1139,28 +1145,28 @@ std::unique_ptr<Renderer> gx::makeOpenGLRenderer(GLFWwindow* win)
     return {};
   }
 
+  GX_LOG_INFO("GL_VENDOR: ", getGLString(GL_VENDOR));
+  GX_LOG_INFO("GL_RENDERER: ", getGLString(GL_RENDERER));
+  GX_LOG_INFO("GL_VERSION: ", getGLString(GL_VERSION));
+  GX_LOG_INFO("GL_SHADING_LANGUAGE_VERSION: ", getGLString(GL_SHADING_LANGUAGE_VERSION));
+
   const int ver = (GLVersion.major * 10) + GLVersion.minor;
   if (ver < 33) {
     GX_LOG_ERROR("OpenGL 3.3 or higher is required");
     return {};
   }
 
-  GX_LOG_INFO("GL_VENDOR: ", glGetString(GL_VENDOR));
-  GX_LOG_INFO("GL_RENDERER: ", glGetString(GL_RENDERER));
-  GX_LOG_INFO("GL_VERSION: ", glGetString(GL_VERSION));
-  GX_LOG_INFO("GL_SHADING_LANGUAGE_VERSION: ", glGetString(GL_SHADING_LANGUAGE_VERSION));
-
   if (ver >= 45) {
-    GX_LOG_INFO("OpenGL 4.5 Renderer");
+    GX_LOG_INFO("OpenGL 4.5 GX_LIB Renderer");
     return std::make_unique<OpenGLRenderer<45>>();
   } else if (ver >= 43) {
-    GX_LOG_INFO("OpenGL 4.3 Renderer");
+    GX_LOG_INFO("OpenGL 4.3 GX_LIB Renderer");
     return std::make_unique<OpenGLRenderer<43>>();
   } else if (ver >= 42) {
-    GX_LOG_INFO("OpenGL 4.2 Renderer");
+    GX_LOG_INFO("OpenGL 4.2 GX_LIB Renderer");
     return std::make_unique<OpenGLRenderer<42>>();
   } else {
-    GX_LOG_INFO("OpenGL 3.3 Renderer");
+    GX_LOG_INFO("OpenGL 3.3 GX_LIB Renderer");
     return std::make_unique<OpenGLRenderer<33>>();
   }
 }
