@@ -1,6 +1,6 @@
 //
 // gx/Font.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 // TODO: investigate using stb_truetype.h
@@ -113,7 +113,7 @@ bool Font::loadFromMemory(const void* mem, std::size_t memSize)
   FT_Face face;
   if (FT_New_Memory_Face(
         ftLib, (const FT_Byte*)mem, FT_Long(memSize), 0, &face)) {
-    GX_LOG_ERROR("FT_New_Memory_Face(), failed");
+    GX_LOG_ERROR("FT_New_Memory_Face() failed");
     return false;
   }
 
