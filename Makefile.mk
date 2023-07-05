@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 52 (2023/6/8)
+# Makefile.mk - revision 52 (2023/7/5)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -1169,15 +1169,9 @@ endif
 endef
 
 
-override define _make_dep  # <1:path> <2:build> <3:src> <4:cmd trigger>
-$1/$(call _src_oname,$3): $$(_src_path_$2)$3 $1/$4 $$(_triggers_$2) | $$(_symlinks)
--include $1/$(call _src_bname,$3).mk
-endef
-
-
-override define _make_dep2  # <1:path> <2:build> <3:src> <4:cmd trigger>
-$1/$(call _src_oname,$3): $3 $1/$4 $$(_triggers_$2) | $$(_symlinks)
--include $1/$(call _src_bname,$3).mk
+override define _make_dep  # <1:path> <2:build> <3:source dir> <4:src file> <5:cmd trigger>
+$1/$(call _src_oname,$4): $3$4 $1/$5 $$(_triggers_$2) | $$(_symlinks)
+-include $1/$(call _src_bname,$4).mk
 endef
 
 
@@ -1195,9 +1189,9 @@ $$(eval $$(call _rebuild_check,$1/.compile_cmd_c,$$(_cc) $$(_cflags_$2) $3))
 $(addprefix $1/,$(call _src_oname,$(filter $(_c_ptrn),$4 $5))): | $1
 	$$(strip $$(_cc) $$(_cflags_$2) $3) -MMD -MP -MF '$$(@:.o=.mk)' -c -o '$$@' $$<
 $(foreach x,$(filter $(_c_ptrn),$4),\
-  $$(eval $$(call _make_dep,$1,$2,$x,.compile_cmd_c)))
+  $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd_c)))
 $(foreach x,$(filter $(_c_ptrn),$5),\
-  $$(eval $$(call _make_dep2,$1,$2,$x,.compile_cmd_c)))
+  $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd_c)))
 endif
 
 ifneq ($$(filter $$(_asm_ptrn),$4 $5),)
@@ -1205,9 +1199,9 @@ $$(eval $$(call _rebuild_check,$1/.compile_cmd_s,$$(_as) $$(_asflags_$2) $3))
 $(addprefix $1/,$(call _src_oname,$(filter $(_asm_ptrn),$4 $5))): | $1
 	$$(strip $$(_as) $$(_asflags_$2) $3) -MMD -MP -MF '$$(@:.o=.mk)' -c -o '$$@' $$<
 $(foreach x,$(filter $(_asm_ptrn),$4),\
-  $$(eval $$(call _make_dep,$1,$2,$x,.compile_cmd_s)))
+  $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd_s)))
 $(foreach x,$(filter $(_asm_ptrn),$5),\
-  $$(eval $$(call _make_dep2,$1,$2,$x,.compile_cmd_s)))
+  $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd_s)))
 endif
 
 ifneq ($$(filter $$(_cxx_ptrn),$4 $5),)
@@ -1215,11 +1209,12 @@ $$(eval $$(call _rebuild_check,$1/.compile_cmd,$$(_cxx) $$(_cxxflags_$2) $3))
 $(addprefix $1/,$(call _src_oname,$(filter $(_cxx_ptrn),$4 $5))): | $1
 	$$(strip $$(_cxx) $$(_cxxflags_$2) $3) -MMD -MP -MF '$$(@:.o=.mk)' -c -o '$$@' $$<
 $(foreach x,$(filter $(_cxx_ptrn),$4),\
-  $$(eval $$(call _make_dep,$1,$2,$x,.compile_cmd)))
+  $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd)))
 $(foreach x,$(filter $(_cxx_ptrn),$5),\
-  $$(eval $$(call _make_dep2,$1,$2,$x,.compile_cmd)))
+  $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd)))
 endif
 endef
+
 
 override _nonpic_labels := $(if $(_pic_flag),$(_static_lib_labels),$(_lib_labels)) $(_bin_labels) $(_test_labels)
 override _pic_labels := $(if $(_pic_flag),$(_shared_lib_labels))
