@@ -21,25 +21,25 @@ FILE2.CMD = ./$(DEP1) $(DEP2) VariableWidthFontData >$(OUT)
 # utility/sample programs
 BIN1 = image_viewer
 BIN1.SRC = image_viewer.cc
-BIN1.LIBS = LIB_gx
+BIN1.OBJS = LIB_gx
 
 BIN2 = text_viewer
 BIN2.SRC = text_viewer.cc $(FILE1)
-BIN2.LIBS = LIB_gx
+BIN2.OBJS = LIB_gx
 
 BIN3 = show_font
 BIN3.SRC = show_font.cc
-BIN3.LIBS = LIB_gx
+BIN3.OBJS = LIB_gx
 
 
 # feature demos/tests
 BIN10 = demo_gui
 BIN10.SRC = demo_gui.cc $(FILE2)
-BIN10.LIBS = LIB_gx
+BIN10.OBJS = LIB_gx
 
 BIN11 = demo_draw
 BIN11.SRC = demo_draw.cc
-BIN11.LIBS = LIB_gx
+BIN11.OBJS = LIB_gx
 
 
 # setup unit tests
