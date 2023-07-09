@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 52 (2023/7/6)
+# Makefile.mk - revision 52 (2023/7/9)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -194,9 +194,9 @@ endif
 BUILD_DIR ?= build
 
 # default values to be more obvious if used/handled improperly
-override ENV := ENV
-override SFX := SFX
-override BUILD_TMP := BUILD_TMP
+override ENV := ENV_NOT_SET
+override SFX := SFX_NOT_SET
+override BUILD_TMP := BUILD_TMP_NOT_SET
 override LIBPREFIX := lib
 
 # apply *_EXTRA setting values (WARN_EXTRA handled above)
@@ -1175,7 +1175,7 @@ $1/$(call _src_oname,$4): $3$4 $1/$5 $$(_triggers_$2) | $$(_symlinks)
 endef
 
 
-override define _make_obj  # <1:path> <2:build> <3:flags> <4:src list> <5:other src>
+override define _make_objs  # <1:path> <2:build> <3:flags> <4:src list> <5:src2 list>
 $1: ; @mkdir -p "$$@"
 $1/%.mk: ; @$$(RM) "$$(@:.mk=.o)"
 
@@ -1253,11 +1253,11 @@ ifneq ($(_build_env),)
 
   # make .o/.mk files for each build path
   $(foreach b,$(sort $(foreach x,$(_nonpic_labels),$(_$x_build))),\
-    $(eval $(call _make_obj,$(_build_dir)/$b,$b,,$(call _get_src,$b),$(call _get_src2,$b))))
+    $(eval $(call _make_objs,$(_build_dir)/$b,$b,,$(call _get_src,$b),$(call _get_src2,$b))))
 
   # use unique build path for all PIC compiled code
   $(foreach b,$(sort $(foreach x,$(_pic_labels),$(_$x_build))),\
-    $(eval $(call _make_obj,$(_build_dir)/$b-pic,$b,$(_pic_flag),$(call _get_pic_src,$b),$(call _get_pic_src2,$b))))
+    $(eval $(call _make_objs,$(_build_dir)/$b-pic,$b,$(_pic_flag),$(call _get_pic_src,$b),$(call _get_pic_src2,$b))))
   endif
 
   # make binary/library/test build targets
