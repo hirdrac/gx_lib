@@ -3,7 +3,6 @@
 // Copyright (C) 2023 Richard Bradley
 //
 
-// TODO: fullscreen zoom w/ mouse wheel
 // TODO: mouse drag of image when zoomed
 // TODO: background loading of images after 1st image loaded
 // TODO: multiple image display in fullscreen (horizontal/vertical)
@@ -45,7 +44,7 @@ struct Entry {
 
 struct ImgSize { float width, height; };
 
-ImgSize calcSize(const gx::Window& win, const gx::Image& img)
+ImgSize calcSize(const gx::Window& win, const gx::Image& img, float scale)
 {
   float iw = float(win.width());
   float ih = float(win.height());
@@ -58,16 +57,17 @@ ImgSize calcSize(const gx::Window& win, const gx::Image& img)
       ih = float(img.height()) * w_ratio;
     }
   }
-  return {iw,ih};
+  return {iw*scale, ih*scale};
 }
 
 int showUsage(char** argv)
 {
   println("Usage: ", argv[0], " [options] <image file(s)>");
   println("Options:");
-  println("  --width    Set window width");
-  println("  --height   Set window height");
-  println("  -h,--help  Show usage");
+  println("  --width       Set window width");
+  println("  --height      Set window height");
+  println("  --fullscreen  Start in fullscreen mode");
+  println("  -h,--help     Show usage");
   return 0;
 }
 
@@ -86,6 +86,7 @@ int main(int argc, char* argv[])
 
   gx::defaultLogger().disable();
 
+  bool startFullScreen = false;
   std::vector<Entry> entries;
   for (gx::CmdLineParser p{argc, argv}; p; ++p) {
     if (p.option()) {
@@ -93,6 +94,8 @@ int main(int argc, char* argv[])
         // noop
       } else if (p.option(0,"height",winHeight)) {
         // noop
+      } else if (p.option(0,"fullscreen")) {
+        startFullScreen = true;
       } else if (p.option('h',"help")) {
         return showUsage(argv);
       } else {
@@ -116,9 +119,17 @@ int main(int argc, char* argv[])
     return -1;
   }
 
+  int zoom = 100;
+  float imgScale = 1.0f;
   const int lastNo = int(entries.size()) - 1;
+
   gx::Window win;
-  setWinSize(win, entries[0].img);
+  if (startFullScreen) {
+    win.setSize(0, 0, true);
+  } else {
+    setWinSize(win, entries[0].img);
+  }
+
   if (!win.open(gx::WINDOW_RESIZABLE | gx::WINDOW_FIXED_ASPECT_RATIO)) {
     println_err("Failed to open window");
     return -1;
@@ -128,7 +139,7 @@ int main(int argc, char* argv[])
 
   int entryNo = 0;
   for (Entry& e : entries) {
-    e.tex.init(ren, e.img, 3, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
+    e.tex.init(ren, e.img, 4, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
   }
 
   gx::DrawLayer dl;
@@ -149,7 +160,7 @@ int main(int argc, char* argv[])
         refresh = false;
       }
 
-      const auto [iw,ih] = calcSize(win, e.img);
+      const auto [iw,ih] = calcSize(win, e.img, imgScale);
       const float ix = std::floor((float(win.width()) - iw) * .5f);
       const float iy = std::floor((float(win.height()) - ih) * .5f);
       dc.clear();
@@ -158,14 +169,14 @@ int main(int argc, char* argv[])
       dc.rectangle(ix, iy, iw, ih, {0,0}, {1,1});
 
       // multi-image horizontal display in fullscreen
-      if (iw < (float(win.width()) - border)) {
+      if (win.fullScreen() && iw < (float(win.width()) - border)) {
         dc.color(gx::GRAY50);
 
         // display previous image(s)
         float prev_x = ix;
         for (int x = entryNo - 1; x >= 0; --x) {
           const Entry& e0 = entries[std::size_t(x)];
-          const auto [iw0,ih0] = calcSize(win, e0.img);
+          const auto [iw0,ih0] = calcSize(win, e0.img, imgScale);
           const float ix0 = std::floor(prev_x - (iw0 + border)); prev_x = ix0;
           if ((ix0+iw0) < 0) { break; }
           const float iy0 = std::floor((float(win.height()) - ih0) * .5f);
@@ -177,7 +188,7 @@ int main(int argc, char* argv[])
         prev_x = ix + iw + border;
         for (int x = entryNo + 1; x <= lastNo; ++x) {
           const Entry& e1 = entries[std::size_t(x)];
-          const auto [iw1,ih1] = calcSize(win, e1.img);
+          const auto [iw1,ih1] = calcSize(win, e1.img, imgScale);
           const float ix1 = prev_x; prev_x += std::floor(iw1 + border);
           if (ix1 > float(win.width())) { break; }
           const float iy1 = std::floor((float(win.height()) - ih1) * .5f);
@@ -194,6 +205,8 @@ int main(int argc, char* argv[])
     gx::Window::pollEvents();
     if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }
     if (win.keyPressCount(gx::KEY_F11, false)) {
+      zoom = 100;
+      imgScale = 1.0f;
       if (win.fullScreen()) {
         setWinSize(win, e.img);
       } else {
@@ -214,6 +227,15 @@ int main(int argc, char* argv[])
     }
     if (win.keyPressCount(gx::KEY_HOME, false)) { no = 0; }
     if (win.keyPressCount(gx::KEY_END, false)) { no = lastNo; }
+
+    if (win.fullScreen() && win.events() & gx::EVENT_MOUSE_SCROLL) {
+      const int zoom2 = std::clamp(zoom + int(win.scrollY()), 20, 400);
+      if (zoom != zoom2) {
+        zoom = zoom2;
+        imgScale = gx::sqr(float(std::max(zoom, 1)) / 100.f);
+        refresh = true;
+      }
+    }
 
     if (no != entryNo) {
       entryNo = no;
