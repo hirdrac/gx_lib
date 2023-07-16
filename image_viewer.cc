@@ -3,7 +3,6 @@
 // Copyright (C) 2023 Richard Bradley
 //
 
-// TODO: mouse drag of image when zoomed
 // TODO: background loading of images after 1st image loaded
 // TODO: multiple image display in fullscreen (horizontal/vertical)
 // TODO: smooth scrolling when moving to next image
@@ -86,6 +85,7 @@ int main(int argc, char* argv[])
 
   gx::defaultLogger().disable();
 
+  // command line processing
   bool startFullScreen = false;
   std::vector<Entry> entries;
   for (gx::CmdLineParser p{argc, argv}; p; ++p) {
@@ -121,6 +121,8 @@ int main(int argc, char* argv[])
 
   int zoom = 100;
   float imgScale = 1.0f;
+  gx::Vec2 imgOffset{gx::INIT_ZERO};
+  gx::Vec2 pressPos{gx::INIT_ZERO};
   const int lastNo = int(entries.size()) - 1;
 
   gx::Window win;
@@ -166,7 +168,7 @@ int main(int argc, char* argv[])
       dc.clear();
       dc.color(gx::WHITE);
       dc.texture(e.tex);
-      dc.rectangle(ix, iy, iw, ih, {0,0}, {1,1});
+      dc.rectangle(ix + imgOffset.x, iy + imgOffset.y, iw, ih, {0,0}, {1,1});
 
       // multi-image horizontal display in fullscreen
       if (win.fullScreen() && iw < (float(win.width()) - border)) {
@@ -178,10 +180,11 @@ int main(int argc, char* argv[])
           const Entry& e0 = entries[std::size_t(x)];
           const auto [iw0,ih0] = calcSize(win, e0.img, imgScale);
           const float ix0 = std::floor(prev_x - (iw0 + border)); prev_x = ix0;
-          if ((ix0+iw0) < 0) { break; }
+          //if ((ix0+iw0) < 0) { break; }
           const float iy0 = std::floor((float(win.height()) - ih0) * .5f);
           dc.texture(e0.tex);
-          dc.rectangle(ix0, iy0, iw0, ih0, {0,0}, {1,1});
+          dc.rectangle(ix0 + imgOffset.x, iy0 + imgOffset.y,
+                       iw0, ih0, {0,0}, {1,1});
         }
 
         // display next image(s)
@@ -190,10 +193,11 @@ int main(int argc, char* argv[])
           const Entry& e1 = entries[std::size_t(x)];
           const auto [iw1,ih1] = calcSize(win, e1.img, imgScale);
           const float ix1 = prev_x; prev_x += std::floor(iw1 + border);
-          if (ix1 > float(win.width())) { break; }
+          //if (ix1 > float(win.width())) { break; }
           const float iy1 = std::floor((float(win.height()) - ih1) * .5f);
           dc.texture(e1.tex);
-          dc.rectangle(ix1, iy1, iw1, ih1, {0,0}, {1,1});
+          dc.rectangle(ix1 + imgOffset.x, iy1 + imgOffset.y,
+                       iw1, ih1, {0,0}, {1,1});
         }
       }
 
@@ -207,6 +211,7 @@ int main(int argc, char* argv[])
     if (win.keyPressCount(gx::KEY_F11, false)) {
       zoom = 100;
       imgScale = 1.0f;
+      imgOffset = {0,0};
       if (win.fullScreen()) {
         setWinSize(win, e.img);
       } else {
@@ -228,16 +233,32 @@ int main(int argc, char* argv[])
     if (win.keyPressCount(gx::KEY_HOME, false)) { no = 0; }
     if (win.keyPressCount(gx::KEY_END, false)) { no = lastNo; }
 
-    if (win.fullScreen() && win.events() & gx::EVENT_MOUSE_SCROLL) {
-      const int zoom2 = std::clamp(zoom + int(win.scrollY()), 20, 400);
-      if (zoom != zoom2) {
-        zoom = zoom2;
-        imgScale = gx::sqr(float(std::max(zoom, 1)) / 100.f);
+    if (win.fullScreen()) {
+      if (win.events() & gx::EVENT_MOUSE_SCROLL) {
+        const int zoom2 = std::clamp(zoom + int(win.scrollY()), 20, 400);
+        if (zoom != zoom2) {
+          zoom = zoom2;
+          imgScale = gx::sqr(float(std::max(zoom, 1)) / 100.f);
+          // TODO: adjust imgOffset to zoom in at mouse point/screen center
+          refresh = true;
+        }
+      }
+
+      if ((win.events() & gx::EVENT_MOUSE_BUTTON1)
+          && (win.buttons() & gx::BUTTON1)) {
+        // press left button
+        pressPos = win.mousePt();
+      } else if ((win.events() & gx::EVENT_MOUSE_MOVE)
+                 && (win.buttons() & gx::BUTTON1)) {
+        // drag w/ button down
+        imgOffset += (win.mousePt() - pressPos);
+        pressPos = win.mousePt();
         refresh = true;
       }
     }
 
     if (no != entryNo) {
+      imgOffset = {0,0};
       entryNo = no;
       if (!win.fullScreen()) {
         const Entry& e2 = entries[std::size_t(entryNo)];
