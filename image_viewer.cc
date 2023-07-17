@@ -119,12 +119,6 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  int zoom = 100;
-  float imgScale = 1.0f;
-  gx::Vec2 imgOffset{gx::INIT_ZERO};
-  gx::Vec2 pressPos{gx::INIT_ZERO};
-  const int lastNo = int(entries.size()) - 1;
-
   gx::Window win;
   if (startFullScreen) {
     win.setSize(0, 0, true);
@@ -136,6 +130,12 @@ int main(int argc, char* argv[])
     println_err("Failed to open window");
     return -1;
   }
+
+  int zoom = 100;
+  float imgScale = 1.0f;
+  gx::Vec2 imgOffset{gx::INIT_ZERO};
+  gx::Vec2 pressPos{gx::INIT_ZERO};
+  const int lastNo = int(entries.size()) - 1;
 
   gx::Renderer& ren = win.renderer();
 
@@ -244,13 +244,9 @@ int main(int argc, char* argv[])
         }
       }
 
-      if ((win.events() & gx::EVENT_MOUSE_BUTTON1)
-          && (win.buttons() & gx::BUTTON1)) {
-        // press left button
+      if (win.buttonPress(gx::BUTTON1)) {
         pressPos = win.mousePt();
-      } else if ((win.events() & gx::EVENT_MOUSE_MOVE)
-                 && (win.buttons() & gx::BUTTON1)) {
-        // drag w/ button down
+      } else if (win.buttonDrag(gx::BUTTON1)) {
         imgOffset += (win.mousePt() - pressPos);
         pressPos = win.mousePt();
         refresh = true;

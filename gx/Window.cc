@@ -1,6 +1,6 @@
 //
 // gx/Window.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "Window.hh"
@@ -384,7 +384,7 @@ void Window::resetEventState()
   _scrollPt.set(0,0);
   _chars.clear();
   for (auto i = _keyStates.begin(); i != _keyStates.end(); ) {
-    if (i->pressed) {
+    if (i->held) {
       i->pressCount = 0;
       i->repeatCount = 0;
       ++i;
@@ -442,12 +442,12 @@ int Window::pollEvents()
   return e;
 }
 
-bool Window::keyPressed(int key) const
+bool Window::keyHeld(int key) const
 {
   auto itr = std::find_if(_keyStates.begin(), _keyStates.end(),
                           [key](const auto& ks){ return ks.key == key; });
   if (itr == _keyStates.end()) { return false; }
-  return itr->pressed || (itr->pressCount > 0);
+  return itr->held || (itr->pressCount > 0);
 }
 
 int Window::keyPressCount(int key, bool includeRepeat) const
@@ -514,9 +514,9 @@ void Window::keyCB(
   KeyState& ks = *itr;
   if (action == GLFW_PRESS) {
     ++ks.pressCount;
-    ks.pressed = true;
+    ks.held = true;
   } else if (action == GLFW_RELEASE) {
-    ks.pressed = false;
+    ks.held = false;
   } else if (action == GLFW_REPEAT) {
     ++ks.repeatCount;
   }

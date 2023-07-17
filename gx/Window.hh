@@ -1,6 +1,6 @@
 //
 // gx/Window.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // encapsulation of OS specific window handling & user input
 //
@@ -48,10 +48,10 @@ namespace gx {
   // event values
   enum {
     BUTTON1 = 1<<0, BUTTON2 = 1<<1, BUTTON3 = 1<<2, BUTTON4 = 1<<3,
-    BUTTON5 = 1<<4, BUTTON6 = 1<<5, BUTTON7 = 1<<6, BUTTON8 = 1<<7
+    BUTTON5 = 1<<4, BUTTON6 = 1<<5, BUTTON7 = 1<<6, BUTTON8 = 1<<7,
   };
 
-  enum { MOD_SHIFT = 1, MOD_CONTROL = 2, MOD_ALT = 4, MOD_SUPER = 8 };
+  enum { MOD_SHIFT = 1, MOD_CONTROL = 2, MOD_ALT = 4, MOD_SUPER = 8, };
 
   enum {
     // special key values (adapted from glfw3.h)
@@ -88,14 +88,14 @@ namespace gx {
     KEY_LSHIFT = 340, KEY_LCONTROL = 341,
     KEY_LALT = 342, KEY_LSUPER = 343,
     KEY_RSHIFT = 344, KEY_RCONTROL = 345,
-    KEY_RALT = 346, KEY_RSUPER = 347, KEY_MENU = 348
+    KEY_RALT = 346, KEY_RSUPER = 347, KEY_MENU = 348,
   };
 
   struct KeyState {
     int16_t key;         // key value
     int16_t pressCount;  // number of press events since pollEvents
     int16_t repeatCount; // number of repeat events since pollEvents
-    bool    pressed;     // key is currently pressed
+    bool    held;        // key is currently held
   };
 
   struct CharInfo {
@@ -129,10 +129,10 @@ namespace gx {
   };
 
   enum MouseModeEnum {
-    MOUSEMODE_NORMAL, // mouse cursor visible and behaves normally
-    MOUSEMODE_HIDE,   // hides mouse cursor when it is over display window
-    MOUSEMODE_DISABLE // hides & grabs mouse cursor and all movement events are
-                      //   relative position changes
+    MOUSEMODE_NORMAL,  // mouse cursor visible and behaves normally
+    MOUSEMODE_HIDE,    // hides mouse cursor when it is over display window
+    MOUSEMODE_DISABLE, // hides & grabs mouse cursor and all movement events
+                       //   are relative position changes
   };
 
   enum MouseShapeEnum {
@@ -211,8 +211,15 @@ class gx::Window
   [[nodiscard]] bool iconified() const { return _iconified; }
   [[nodiscard]] bool focused() const { return _focused; }
 
+  [[nodiscard]] bool buttonPress(int button) const {
+    return (_events & (button<<11)) && (_buttons & button); }
+  [[nodiscard]] bool buttonRelease(int button) const {
+    return (_events & (button<<11)) && !(_buttons & button); }
+  [[nodiscard]] bool buttonDrag(int button) const {
+    return (_events & EVENT_MOUSE_MOVE) && (_buttons & button); }
+
   // key state
-  [[nodiscard]] bool keyPressed(int key) const;
+  [[nodiscard]] bool keyHeld(int key) const;
   [[nodiscard]] int keyPressCount(int key, bool includeRepeat) const;
   [[nodiscard]] const std::vector<KeyState>& keyStates() const {
     return _keyStates; }
