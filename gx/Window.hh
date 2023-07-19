@@ -18,7 +18,7 @@ struct GLFWwindow;
 
 namespace gx {
   // event mask
-  enum {
+  enum EventEnum {
     // window events
     EVENT_CLOSE        = 1<<0,
     EVENT_SIZE         = 1<<1,
@@ -46,12 +46,14 @@ namespace gx {
   };
 
   // event values
-  enum {
+  enum ButtonEnum {
     BUTTON1 = 1<<0, BUTTON2 = 1<<1, BUTTON3 = 1<<2, BUTTON4 = 1<<3,
     BUTTON5 = 1<<4, BUTTON6 = 1<<5, BUTTON7 = 1<<6, BUTTON8 = 1<<7,
   };
 
-  enum { MOD_SHIFT = 1, MOD_CONTROL = 2, MOD_ALT = 4, MOD_SUPER = 8, };
+  enum ModEnum {
+    MOD_SHIFT = 1<<0, MOD_CONTROL = 1<<1, MOD_ALT = 1<<2, MOD_SUPER = 1<<3,
+  };
 
   enum {
     // special key values (adapted from glfw3.h)
@@ -211,12 +213,13 @@ class gx::Window
   [[nodiscard]] bool iconified() const { return _iconified; }
   [[nodiscard]] bool focused() const { return _focused; }
 
-  [[nodiscard]] bool buttonPress(int button) const {
+  [[nodiscard]] bool buttonPress(ButtonEnum button) const {
     return (_events & (button<<11)) && (_buttons & button); }
-  [[nodiscard]] bool buttonRelease(int button) const {
+  [[nodiscard]] bool buttonRelease(ButtonEnum button) const {
     return (_events & (button<<11)) && !(_buttons & button); }
-  [[nodiscard]] bool buttonDrag(int button) const {
-    return (_events & EVENT_MOUSE_MOVE) && (_buttons & button); }
+  [[nodiscard]] bool buttonDrag(int button_mask) const {
+    return (_events & EVENT_MOUSE_MOVE)
+      && ((_buttons & button_mask) == button_mask); }
 
   // key state
   [[nodiscard]] bool keyHeld(int key) const;
