@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 52 (2023/7/10)
+# Makefile.mk - revision 53 (2023/7/20)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -595,7 +595,6 @@ override _output_lib_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_LIB_DIR)),$(str
   # output dirs can contain variables like '$(ENV)'
 
 override _src_path := $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
-override _symlinks := $(addprefix $(_src_path),$(SYMLINKS))
 
 # output target name generation macros - <1:build env> <2:label>
 override _gen_bin_name = $(_$1_bdir)$($2)$(_$1_bsfx)$(_binext)
@@ -1018,7 +1017,7 @@ else ifneq ($(filter clean,$(MAKECMDGOALS)),)
 endif
 
 clean:
-	@$(RM) "$(_build_dir)/".*_ver $(foreach x,$(_symlinks),"$x")
+	@$(RM) "$(_build_dir)/".*_ver $(foreach x,$(SYMLINKS),"$x")
 	@for X in $(filter-out $(MAKEFILE_LIST),$(_clean_files)); do\
 	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
 	@for X in $(_clean_dirs); do\
@@ -1187,7 +1186,7 @@ endef
 
 
 override define _make_dep  # <1:path> <2:build> <3:source dir> <4:src file> <5:cmd file>
-$1/$(call _src_oname,$4): $3$4 $1/$5 $$(_triggers_$2) | $$(_symlinks)
+$1/$(call _src_oname,$4): $3$4 $1/$5 $$(_triggers_$2) | $$(SYMLINKS)
 -include $1/$(call _src_bname,$4).mk
 endef
 
@@ -1247,7 +1246,7 @@ ifneq ($(_build_env),)
   $(_build_dir): ; @mkdir -p "$@"
 
   # symlink creation rule
-  $(foreach x,$(_symlinks),$(eval $x: ; @ln -s . "$x"))
+  $(foreach x,$(SYMLINKS),$(eval $x: ; @ln -s . "$x"))
 
   ifneq ($(_src_labels),)
   # rebuild trigger for compiler version change
