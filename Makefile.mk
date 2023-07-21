@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 53 (2023/7/21)
+# Makefile.mk - revision 53 (2023/7/22)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -811,7 +811,8 @@ else ifneq ($(_build_env),)
   override _$1_src_objs := $$(call _src_oname,$$(_$1_src) $$(_$1_src2))
 
   ifneq ($$(strip $$($1.OBJS)),-)
-    override _$1_other_objs := $$(foreach x,$$($1.OBJS),$$(if $$(filter $$x,$$(_lib_labels)),\
+    override _$1_objs := $$(filter-out $1,$$($1.OBJS))
+    override _$1_other_objs := $$(foreach x,$$(_$1_objs),$$(if $$(filter $$x,$$(_lib_labels)),\
       $$(or $$(_$$x_name),$$(error $$(_msgErr)$1.OBJS: static type required for library '$$x'$$(_end))),$$(call _do_wildcard,$$x,)))
   endif
 
@@ -870,22 +871,17 @@ else ifneq ($(_build_env),)
 
   ## general entry setting parsing (post)
   override define _build_entry2  # <1:label> <2:test flag>
-  override _$1_req_pkgs1 := $$(foreach x,$$(_$1_libs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_pkgs)))
-  override _$1_req_libs1 := $$(filter-out $1,$$(foreach x,$$(_$1_libs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs))))
+  override _$1_req_pkgs := $$(foreach x,$$(_$1_libs) $$(_$1_objs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_pkgs)))
+  override _$1_req_libs := $$(filter-out $1,$$(foreach x,$$(_$1_libs) $$(_$1_objs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs))))
   override _$1_link_deps := $$(foreach x,$$(_$1_libs),$$(if $$(filter $$x,$$(_lib_labels)),$$(or $$(_$$x_shared_name),$$(_$$x_name))))
 
-  ifneq ($$(strip $$($1.OBJS)),-)
-    override _$1_req_pkgs2 := $$(foreach x,$$($1.OBJS),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_pkgs)))
-    override _$1_req_libs2 := $$(filter-out $1,$$(foreach x,$$($1.OBJS),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs))))
-  endif
-
-  override _$1_xpkgs := $$(sort $$(_$1_pkgs) $$(_$1_req_pkgs1) $$(_$1_req_pkgs2))
+  override _$1_xpkgs := $$(sort $$(_$1_pkgs) $$(_$1_req_pkgs))
   ifneq ($$(_$1_xpkgs),)
     override _$1_pkg_libs := $$(call _get_pkg_libs,$$(_$1_xpkgs))
     override _$1_pkg_flags := $$(call _get_pkg_flags,$$(_$1_xpkgs))
   endif
 
-  override _$1_xlibs := $$(call _format_libs,$$(_$1_libs) $$(_$1_req_libs1) $$(_$1_req_libs2))
+  override _$1_xlibs := $$(call _format_libs,$$(_$1_libs) $$(_$1_req_libs))
 
   # NOTE: LIBS before PACKAGES libs in case included static lib requires package
   override _$1_xflags := $$(_$1_pkg_flags) $$(FLAGS_$$(_$$(ENV)_uc)) $$(_$1_flags)
@@ -951,14 +947,11 @@ else ifneq ($(_build_env),)
       $(eval override DEP$n = $(word $n,$(_$x_deps))))\
     $(eval override _$x_command := $(value $x.CMD)))
 
-  # binaries depend on lib goals to make sure libs are built first
-  override _lib_goals :=\
-    $(foreach x,$(_static_lib_labels),$(if $(filter $(_$x_aliases) $(_$x_name),$(_$(ENV)_goals)),$(_$x_name)))\
-    $(foreach x,$(_shared_lib_labels),$(if $(filter $(_$x_shared_aliases) $(_$x_shared_name),$(_$(ENV)_goals)),$(_$x_shared_name)))
-  # tests depend on lib & bin goals to make sure they always build/run last
-  override _bin_goals :=\
-    $(foreach x,$(_bin_labels),$(if $(filter $(_$x_aliases) $(_$x_name),$(_$(ENV)_goals)),$(_$x_name)))
-  # if tests are a stated target, build all test binaries before running them
+  # tests depend on lib/bin/file goals to make sure they always build/run last
+  override _build_goals :=\
+    $(foreach x,$(_shared_lib_labels),$(if $(filter $(_$x_shared_aliases) $(_$x_shared_name),$(_$(ENV)_goals)),$(_$x_shared_name)))\
+    $(foreach x,$(_static_lib_labels) $(_bin_labels) $(_file_labels),$(if $(filter $(_$x_aliases) $(_$x_name),$(_$(ENV)_goals)),$(_$x_name)))
+  # running tests depends on all tests being built first
   override _test_goals :=\
     $(foreach x,$(_test_labels),$(if $(filter $(_$x_aliases) tests tests_$(ENV) $(ENV),$(MAKECMDGOALS)),$(_$x_run)))
 endif
@@ -1139,7 +1132,7 @@ endif
 
 .PHONY: $$(_$1_aliases)
 $$(_$1_aliases): $$(_$1_name)
-$$(_$1_name): $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_trigger) $$(_link_trigger) | $$(_lib_goals)
+$$(_$1_name): $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_trigger) $$(_link_trigger)
 	$$(call _make_path,$$@)
 	$$(_$1_link_cmd)
 	@echo "$$(_msgInfo)Binary '$$@' built$$(_end)"
@@ -1172,7 +1165,7 @@ ifneq ($$(_$1_deps),)
 $$(_$1_all_objs): | $$(_$1_deps)
 endif
 
-$$(_$1_run): $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_trigger) $$(_link_trigger) | $$(_lib_goals) $$(_bin_goals)
+$$(_$1_run): $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_trigger) $$(_link_trigger) | $$(_build_goals)
 	$$(_$1_link_cmd)
 ifeq ($$(filter tests tests_$$(ENV) $1$$(SFX),$$(MAKECMDGOALS)),)
 	@LD_LIBRARY_PATH=.:$$$$LD_LIBRARY_PATH ./$$(_$1_run) $$($1.ARGS);\
