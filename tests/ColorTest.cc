@@ -62,7 +62,7 @@ void test_unpack_pack()
     RGBA8 c2 = packRGBA8(c1);
 
     check(c2,0,0,0,a);
-  }    
+  }
 }
 
 int main(int argc, char** argv)
