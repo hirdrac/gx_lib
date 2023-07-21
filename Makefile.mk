@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 53 (2023/7/20)
+# Makefile.mk - revision 53 (2023/7/21)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -126,6 +126,7 @@
 #  FLAGS_RELEASE   additional compiler flags for release builds
 #  FLAGS_DEBUG     additional compiler flags for debug builds
 #  FLAGS_PROFILE   additional compiler flags for profile builds
+#  RPATH           directories to search for shared library loading
 #  LINK_FLAGS      additional linking flags not otherwise specified
 #  *_EXTRA         available for most settings to provide additional values
 #
@@ -145,8 +146,8 @@
 #  EXCLUDE_TARGETS labels/files not built by default (wildcard '*' allowed)
 #
 #  Settings STANDARD/OPT_LEVEL/OPT_LEVEL_DEBUG/SUBSYSTEM/PACKAGES/INCLUDE/LIBS/
-#    DEFINE/OPTIONS/FLAGS/LINK_FLAGS/SOURCE_DIR can be set for specific targets
-#    to override global values (ex.: BIN1.FLAGS = -pthread).
+#    DEFINE/OPTIONS/FLAGS/RPATH/LINK_FLAGS/SOURCE_DIR can be set for specific
+#    targets to override global values (ex.: BIN1.FLAGS = -pthread).
 #    A value of '-' can be used to clear the setting for the target
 #    (note that FLAGS_RELEASE/FLAGS_DEBUG/FLAGS_PROFILE are always applied)
 #
@@ -217,7 +218,7 @@ override BUILD_TMP := BUILD_TMP_NOT_SET
 override LIBPREFIX := lib
 
 # apply *_EXTRA setting values (WARN_EXTRA handled above)
-$(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE INCLUDE_TEST LIBS LIBS_TEST DEFINE DEFINE_TEST OPTIONS OPTIONS_TEST FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE LINK_FLAGS EXCLUDE_TARGETS,\
+$(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE INCLUDE_TEST LIBS LIBS_TEST DEFINE DEFINE_TEST OPTIONS OPTIONS_TEST FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE RPATH LINK_FLAGS EXCLUDE_TARGETS,\
   $(if $($x_EXTRA),$(eval override $x += $($x_EXTRA))))
 
 # prevent duplicate options being applied to tests
@@ -511,7 +512,7 @@ endef
 $(foreach x,$(_lib_labels) $(_bin_labels),$(eval $(call _check_name,$x)))
 
 # target setting patterns
-override _bin_ptrn := %.SRC %.SRC2 %.OBJS %.LIBS %.STANDARD %.OPT_LEVEL %.OPT_LEVEL_DEBUG %.DEFINE %.INCLUDE %.FLAGS %.LINK_FLAGS %.PACKAGES %.OPTIONS %.DEPS %.SUBSYSTEM %.SOURCE_DIR
+override _bin_ptrn := %.SRC %.SRC2 %.OBJS %.LIBS %.STANDARD %.OPT_LEVEL %.OPT_LEVEL_DEBUG %.DEFINE %.INCLUDE %.FLAGS %.RPATH %.LINK_FLAGS %.PACKAGES %.OPTIONS %.DEPS %.SUBSYSTEM %.SOURCE_DIR
 override _lib_ptrn := %.TYPE %.VERSION $(_bin_ptrn)
 override _test_ptrn := %.ARGS $(_bin_ptrn)
 
@@ -819,6 +820,9 @@ else ifneq ($(_build_env),)
   endif
 
   override _$1_link_flags := $(if $(_linker),-fuse-ld=$(_linker))
+  ifneq ($$(strip $$($1.RPATH)),-)
+    override _$1_link_flags += $$(foreach x,$$(or $$($1.RPATH),$$(RPATH)),-Wl,-rpath=$$x)
+  endif
   ifneq ($$(strip $$($1.LINK_FLAGS)),-)
     override _$1_link_flags += $$(or $$($1.LINK_FLAGS),$$(LINK_FLAGS))
   endif
