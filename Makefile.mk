@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 53 (2023/7/22)
+# Makefile.mk - revision 53 (2023/7/23)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -988,7 +988,7 @@ help:
 
 .gitignore:
 	@echo '$(_build_dir)/'
-	@for X in $(sort $(filter-out $(_build_dir)/%,$(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_links) $(_$e_file_targets)))); do\
+	@for X in $(sort $(filter-out $(_build_dir)/%,$(SYMLINKS) $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_links) $(_$e_file_targets)))); do\
 	  echo "$$X"; done
 
 override define _setup_env_targets  # <1:build env>
