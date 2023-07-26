@@ -1,7 +1,6 @@
-# libgx.a build
+# libgx library build
 
 LIB_gx = libgx
-LIB_gx.TYPE = static
 LIB_gx.SRC =\
   Camera.cc DrawContext.cc Font.cc Gui.cc Image.cc Logger.cc\
   OpenGL.cc OpenGLRenderer.cc Renderer.cc System.cc Texture.cc\
