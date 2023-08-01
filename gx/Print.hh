@@ -14,27 +14,26 @@ namespace gx
 {
   // print()
   template<typename... Args>
-  inline void print(std::ostream& os, const Args&... args)
+  inline void print(std::ostream& os, Args&&... args)
   {
-    ((os << args),...);
+    (os << ... << args);
   }
 
   template<typename... Args>
-  inline void print(const Args&... args)
+  inline void print(Args&&... args)
   {
     print(std::cout, args...);
   }
 
   // println()
   template<typename... Args>
-  inline void println(std::ostream& os, const Args&... args)
+  inline void println(std::ostream& os, Args&&... args)
   {
-    ((os << args),...);
-    os.put('\n');
+    (os << ... << args) << '\n';
   }
 
   template<typename... Args>
-  inline void println(const Args&... args)
+  inline void println(Args&&... args)
   {
     println(std::cout, args...);
   }
@@ -42,13 +41,13 @@ namespace gx
 
   // std error output
   template<typename... Args>
-  inline void print_err(const Args&... args)
+  inline void print_err(Args&&... args)
   {
     print(std::cerr, args...);
   }
 
   template<typename... Args>
-  inline void println_err(const Args&... args)
+  inline void println_err(Args&&... args)
   {
     println(std::cerr, args...);
   }
