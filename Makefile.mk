@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 53 (2023/7/28)
+# Makefile.mk - revision 54 (2023/8/4)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -598,8 +598,8 @@ override _output_lib_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_LIB_DIR)),$(str
 override _src_path := $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
 
 # output target name generation macros - <1:build env> <2:label>
-override _gen_bin_name = $(_$1_bdir)$($2)$(_$1_bsfx)$(_binext)
-override _gen_bin_aliases = $(if $(_$1_bdir),$($2)$(_$1_sfx)) $(if $(_binext),$(_$1_bdir)$($2)$(_$1_bsfx))
+override _gen_bin_name = $(_$1_bdir)$($2)$(_$1_bsfx)
+override _gen_bin_aliases = $(if $(_$1_bdir),$($2)$(_$1_sfx)) $(if $(_binext),$(_$1_bdir)$($2)$(_$1_bsfx)$(_binext))
 override _gen_static_lib_name = $(_$1_ldir)$($2)$(_$1_lsfx).a
 override _gen_static_lib_aliases = $($2)$(_$1_sfx) $(if $(_$1_ldir),$($2)$(_$1_sfx).a)
 override _gen_implib_name = $(_$1_ldir)$($2)$(_$1_lsfx).dll.a
@@ -646,14 +646,15 @@ ifneq ($$(_windows),)
   override _$1_implibs := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_implib_name,$1,$$x))
 endif
 
-override _$1_libbin_targets :=\
+override _$1_lib_targets :=\
   $$(_$1_shared_libs) $$(_$1_implibs)\
-  $$(foreach x,$$(_static_lib_labels),$$(call _gen_static_lib_name,$1,$$x))\
+  $$(foreach x,$$(_static_lib_labels),$$(call _gen_static_lib_name,$1,$$x))
+override _$1_bin_targets :=\
   $$(foreach x,$$(_bin_labels),$$(call _gen_bin_name,$1,$$x))
 
 override _$1_file_targets := $$(foreach x,$$(_file_labels),$$($$x))
 override _$1_test_targets := $$(foreach x,$$(_test_labels),$$x$$(_$1_sfx))
-override _$1_build_targets := $$(_$1_file_targets) $$(_$1_libbin_targets) $$(_$1_test_targets)
+override _$1_build_targets := $$(_$1_file_targets) $$(_$1_lib_targets) $$(_$1_bin_targets) $$(_$1_test_targets)
 
 override _$1_filter_targets :=\
   $$(foreach x,$$(EXCLUDE_TARGETS),$$(call _gen_filter_targets,$1,$$(subst *,%,$$x)))
@@ -989,7 +990,7 @@ help:
 
 .gitignore:
 	@echo '$(_build_dir)/'
-	@for X in $(sort $(filter-out $(_build_dir)/%,$(SYMLINKS) $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_links) $(_$e_file_targets)))); do\
+	@for X in $(sort $(filter-out $(_build_dir)/%,$(SYMLINKS) $(foreach e,$(_env_names),$(_$e_lib_targets) $(addsuffix $(_binext),$(_$e_bin_targets)) $(_$e_links) $(_$e_file_targets)))); do\
 	  echo "$$X"; done
 
 override define _setup_env_targets  # <1:build env>
@@ -1008,8 +1009,8 @@ $(foreach e,$(_env_names),$(eval $(call _setup_env_targets,$e)))
 
 
 ifneq ($(filter clobber,$(MAKECMDGOALS)),)
-  override _clean_files := $(foreach e,$(_env_names),$(_$e_libbin_targets) $(_$e_links) $(_$e_file_targets)) $(foreach f,$(CLEAN_EXTRA) $(CLOBBER_EXTRA),$(call _do_wildcard,$f)) core gmon.out
-  override _clean_dirs := $(foreach d,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_libbin_targets) $(_$e_file_targets),$(dir $x))))),"$d")
+  override _clean_files := $(foreach e,$(_env_names),$(_$e_lib_targets) $(_$e_bin_targets) $(_$e_links) $(_$e_file_targets)) $(foreach f,$(CLEAN_EXTRA) $(CLOBBER_EXTRA),$(call _do_wildcard,$f)) core gmon.out
+  override _clean_dirs := $(foreach d,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_lib_targets) $(_$e_bin_targets) $(_$e_file_targets),$(dir $x))))),"$d")
 else ifneq ($(filter clean,$(MAKECMDGOALS)),)
   override _clean_files := $(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f))
 endif
