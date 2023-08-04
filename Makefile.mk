@@ -120,6 +120,7 @@
 #    pedantic      enforces strict ISO C/C++ compliance
 #    static_rtlib  statically link with runtime library (libgcc usually)
 #    static_stdlib statically link with C++ standard library (libstdc++ usually)
+#    mapfile       generate a link map file for binaries & shared libraries
 #  OPTIONS_TEST    additional options for all tests
 #  FLAGS           additional compiler flags not otherwise specified
 #  FLAGS_TEST      additional compiler flags for all tests
@@ -381,7 +382,7 @@ endef
 
 
 #### OPTIONS handling ####
-override _op_list := warn_error pthread lto modern_c++ no_rtti no_except pedantic static_rtlib static_stdlib
+override _op_list := warn_error pthread lto modern_c++ no_rtti no_except pedantic static_rtlib static_stdlib mapfile
 
 override define _check_options  # <1:options var> <2:set prefix>
 ifneq ($$(strip $$($1)),)
@@ -837,6 +838,7 @@ else ifneq ($(_build_env),)
   endif
 
   ifeq ($$(strip $$($1.OPTIONS)),)
+    override _$1_options := $$(OPTIONS) $(if $2,$$(OPTIONS_TEST))
     override _$1_op_warn := $$(_op_warn) $(if $2,$$(_op_test_warn))
     override _$1_op_flags := $$(_op_flags) $(if $2,$$(_op_test_flags))
     override _$1_op_link := $$(_op_link) $(if $2,$$(_op_test_link))
@@ -844,6 +846,7 @@ else ifneq ($(_build_env),)
     override _$1_op_cxx_flags := $$(_op_cxx_flags) $(if $2,$$(_op_test_cxx_flags))
     override _$1_op_cxx_link := $$(_op_cxx_link) $(if $2,$$(_op_test_cxx_link))
   else ifneq ($$(strip $$($1.OPTIONS)),-)
+    override _$1_options := $$($1.OPTIONS)
     $$(eval $$(call _check_options,$1.OPTIONS,_$1_op))
   endif
 
@@ -1008,8 +1011,13 @@ $(foreach e,$(_env_names),$(eval $(call _setup_env_targets,$e)))
 
 
 ifneq ($(filter clobber,$(MAKECMDGOALS)),)
-  override _clean_files := $(foreach e,$(_env_names),$(_$e_lib_targets) $(_$e_bin_targets) $(_$e_links) $(_$e_file_targets)) $(foreach f,$(CLEAN_EXTRA) $(CLOBBER_EXTRA),$(call _do_wildcard,$f)) core gmon.out
-  override _clean_dirs := $(foreach d,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_lib_targets) $(_$e_bin_targets) $(_$e_file_targets),$(dir $x))))),"$d")
+  override _clean_files :=\
+    $(foreach e,$(_env_names),\
+      $(_$e_lib_targets) $(_$e_bin_targets) $(_$e_links) $(_$e_file_targets)\
+      $(addsuffix .map,$(_$e_shared_libs) $(_$e_bin_targets)))\
+    $(foreach f,$(CLEAN_EXTRA) $(CLOBBER_EXTRA),$(call _do_wildcard,$f)) core gmon.out
+  override _clean_dirs :=\
+    $(foreach d,$(sort $(filter-out ./,$(foreach e,$(_env_names),$(foreach x,$(_$e_lib_targets) $(_$e_bin_targets) $(_$e_file_targets),$(dir $x))))),"$d")
 else ifneq ($(filter clean,$(MAKECMDGOALS)),)
   override _clean_files := $(foreach f,$(CLEAN_EXTRA),$(call _do_wildcard,$f))
 endif
@@ -1103,7 +1111,7 @@ endef
 override define _make_shared_lib  # <1:label>
 override _$1_shared_build_dir := $$(_$1_build_dir)$$(if $$(_pic_flag),-pic)
 override _$1_shared_objs := $$(addprefix $$(_$1_shared_build_dir)/,$$(_$1_src_objs))
-override _$1_shared_link_cmd := cd '$$(_$1_shared_build_dir)'; $$(strip $$(call _do_link,$1) $$(_pic_flag) -shared $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '../../$$(_$1_shared_name)'
+override _$1_shared_link_cmd := cd '$$(_$1_shared_build_dir)'; $$(strip $$(call _do_link,$1) $$(_pic_flag) -shared $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '../../$$(_$1_shared_name)' $$(if $$(filter mapfile,$$(_$1_options)),-Wl$$(_comma)-Map=../../$$(_$1_shared_name).map)
 override _$1_shared_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1-shared
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_shared_trigger),_$1_shared_link_cmd))
 
@@ -1123,7 +1131,7 @@ endef
 
 # binary build
 override define _make_bin  # <1:label>
-override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '../../$$(_$1_name)'
+override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '../../$$(_$1_name)' $$(if $$(filter mapfile,$$(_$1_options)),-Wl$$(_comma)-Map=../../$$(_$1_name).map)
 override _$1_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
@@ -1158,7 +1166,7 @@ endef
 # - always execute test binary if a test target was specified otherwise only
 #     run test if rebuilt
 override define _make_test  # <1:label>
-override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '$$(_$1_name)'
+override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '$$(_$1_name)' $$(if $$(filter mapfile,$$(_$1_options)),-Wl$$(_comma)-Map=$$(_$1_name).map)
 override _$1_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
