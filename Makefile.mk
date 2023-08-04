@@ -837,41 +837,41 @@ else ifneq ($(_build_env),)
   endif
 
   ifeq ($$(strip $$($1.OPTIONS)),)
-    override _$1_op_warn := $$(_op_warn) $$(if $2,$$(_op_test_warn))
-    override _$1_op_flags := $$(_op_flags) $$(if $2,$$(_op_test_flags))
-    override _$1_op_link := $$(_op_link) $$(if $2,$$(_op_test_link))
-    override _$1_op_cxx_warn := $$(_op_cxx_warn) $$(if $2,$$(_op_test_cxx_warn))
-    override _$1_op_cxx_flags := $$(_op_cxx_flags) $$(if $2,$$(_op_test_cxx_flags))
-    override _$1_op_cxx_link := $$(_op_cxx_link) $$(if $2,$$(_op_test_cxx_link))
+    override _$1_op_warn := $$(_op_warn) $(if $2,$$(_op_test_warn))
+    override _$1_op_flags := $$(_op_flags) $(if $2,$$(_op_test_flags))
+    override _$1_op_link := $$(_op_link) $(if $2,$$(_op_test_link))
+    override _$1_op_cxx_warn := $$(_op_cxx_warn) $(if $2,$$(_op_test_cxx_warn))
+    override _$1_op_cxx_flags := $$(_op_cxx_flags) $(if $2,$$(_op_test_cxx_flags))
+    override _$1_op_cxx_link := $$(_op_cxx_link) $(if $2,$$(_op_test_cxx_link))
   else ifneq ($$(strip $$($1.OPTIONS)),-)
     $$(eval $$(call _check_options,$1.OPTIONS,_$1_op))
   endif
 
   ifneq ($$(strip $$($1.PACKAGES)),-)
-    override _$1_pkgs := $$(or $$(call _check_pkgs,$1.PACKAGES),$$(_pkgs) $$(if $2,$$(_pkgs_test)))
+    override _$1_pkgs := $$(or $$(call _check_pkgs,$1.PACKAGES),$$(_pkgs) $(if $2,$$(_pkgs_test)))
   endif
 
   ifneq ($$(strip $$($1.LIBS)),-)
-    override _$1_libs := $$(filter-out $1,$$(or $$($1.LIBS),$$(LIBS) $$(if $2,$$(LIBS_TEST))))
+    override _$1_libs := $$(filter-out $1,$$(or $$($1.LIBS),$$(LIBS) $(if $2,$$(LIBS_TEST))))
   endif
 
   ifneq ($$(strip $$($1.DEFINE)),-)
-    override _$1_define := $$(or $$(call _format_define,$$($1.DEFINE)),$$(_define) $$(if $2,$$(_define_test)))
+    override _$1_define := $$(or $$(call _format_define,$$($1.DEFINE)),$$(_define) $(if $2,$$(_define_test)))
   endif
 
   ifneq ($$(strip $$($1.INCLUDE)),-)
-    override _$1_include := $$(or $$(call _format_include,$$($1.INCLUDE)),$$(_include) $$(if $2,$$(_include_test)))
+    override _$1_include := $$(or $$(call _format_include,$$($1.INCLUDE)),$$(_include) $(if $2,$$(_include_test)))
   endif
 
   ifneq ($$(strip $$($1.FLAGS)),-)
-    override _$1_flags := $$(or $$($1.FLAGS),$$(FLAGS) $$(if $2,$$(FLAGS_TEST)))
+    override _$1_flags := $$(or $$($1.FLAGS),$$(FLAGS) $(if $2,$$(FLAGS_TEST)))
   endif
   endef
   $(foreach x,$(_lib_labels) $(_bin_labels),$(eval $(call _build_entry1,$x,)))
   $(foreach x,$(_test_labels),$(eval $(call _build_entry1,$x,test)))
 
   ## general entry setting parsing (post)
-  override define _build_entry2  # <1:label> <2:test flag>
+  override define _build_entry2  # <1:label>
   override _$1_req_pkgs := $$(foreach x,$$(_$1_libs) $$(_$1_objs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_pkgs)))
   override _$1_req_libs := $$(filter-out $1,$$(foreach x,$$(_$1_libs) $$(_$1_objs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs))))
   override _$1_link_deps := $$(foreach x,$$(_$1_libs),$$(if $$(filter $$x,$$(_lib_labels)),$$(or $$(_$$x_shared_name),$$(_$$x_name))))
@@ -913,8 +913,7 @@ else ifneq ($(_build_env),)
   override _$1_build_dir := $$(_build_dir)/$$(_$1_build)
   override _$1_all_objs := $$(addprefix $$(_$1_build_dir)/,$$(_$1_src_objs))
   endef
-  $(foreach x,$(_lib_labels) $(_bin_labels),$(eval $(call _build_entry2,$x,)))
-  $(foreach x,$(_test_labels),$(eval $(call _build_entry2,$x,test)))
+  $(foreach x,$(_src_labels),$(eval $(call _build_entry2,$x)))
 
   # NOTES:
   # - <label>.DEPS can cause an isolated build even though there are no compile
