@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 54 (2023/8/4)
+# Makefile.mk - revision 54 (2023/8/5)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -1082,11 +1082,13 @@ override _fix_path = $(foreach x,$1,\
 $(if $(filter -L%,$(filter-out -L/% -L~%,$x)),-L../../$(patsubst -L%,%,$x),\
 $(if $(filter-out /% ~% -%,$x),../../$x,$x)))
 
-# link binary/test/shared lib - <1:label>
-override _do_link = $(filter-out -D% -U% -I%,\
+# link binary/test/shared lib - <1:label> <2:extra flags> <3:output name>
+override _do_link = $(strip $(filter-out -D% -U% -I%,\
 $(if $(filter cxx,$(_$1_lang)),\
 $(_cxx) $(_$1_cxx_std) $(call _$(ENV)_opt,$1) $(_$1_op_cxx_flags),\
-$(_cc) $(_$1_c_std) $(call _$(ENV)_opt,$1) $(_$1_op_flags)) $(_$1_xflags)) $(_$1_ldflags)
+$(_cc) $(_$1_c_std) $(call _$(ENV)_opt,$1) $(_$1_op_flags))\
+$(_$1_xflags)) $(_$1_ldflags) $2 $(_$1_src_objs) $(call _fix_path,$(_$1_other_objs) $(_$1_xlibs)) $(_$1_pkg_libs)\
+-o '$3' $(if $(filter mapfile,$(_$1_options)),-Wl$(_comma)-Map='$3.map'))
 
 # static library build
 override define _make_static_lib  # <1:label>
@@ -1111,7 +1113,7 @@ endef
 override define _make_shared_lib  # <1:label>
 override _$1_shared_build_dir := $$(_$1_build_dir)$$(if $$(_pic_flag),-pic)
 override _$1_shared_objs := $$(addprefix $$(_$1_shared_build_dir)/,$$(_$1_src_objs))
-override _$1_shared_link_cmd := cd '$$(_$1_shared_build_dir)'; $$(strip $$(call _do_link,$1) $$(_pic_flag) -shared $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '../../$$(_$1_shared_name)' $$(if $$(filter mapfile,$$(_$1_options)),-Wl$$(_comma)-Map=../../$$(_$1_shared_name).map)
+override _$1_shared_link_cmd := cd '$$(_$1_shared_build_dir)'; $$(call _do_link,$1,$$(_pic_flag) -shared,../../$$(_$1_shared_name))
 override _$1_shared_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1-shared
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_shared_trigger),_$1_shared_link_cmd))
 
@@ -1131,7 +1133,7 @@ endef
 
 # binary build
 override define _make_bin  # <1:label>
-override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '../../$$(_$1_name)' $$(if $$(filter mapfile,$$(_$1_options)),-Wl$$(_comma)-Map=../../$$(_$1_name).map)
+override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(call _do_link,$1,,../../$$(_$1_name))
 override _$1_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
@@ -1166,7 +1168,7 @@ endef
 # - always execute test binary if a test target was specified otherwise only
 #     run test if rebuilt
 override define _make_test  # <1:label>
-override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(strip $$(call _do_link,$1) $$(_$1_src_objs) $$(call _fix_path,$$(_$1_other_objs) $$(_$1_xlibs)) $$(_$1_pkg_libs)) -o '$$(_$1_name)' $$(if $$(filter mapfile,$$(_$1_options)),-Wl$$(_comma)-Map=$$(_$1_name).map)
+override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(call _do_link,$1,,$$(_$1_name))
 override _$1_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
