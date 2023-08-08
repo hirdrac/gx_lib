@@ -12,8 +12,6 @@
 //       - .align, .globl, .incbin
 //       - assembly include could be done with just a macro, but dependency
 //         handling would need support in build
-// TODO: option for array values only
-//       (for including file directly into array definition)
 
 #include "CmdLineParser.hh"
 #include "Print.hh"
@@ -34,6 +32,7 @@ int showUsage(const char* const* argv)
   println("Options:");
   println("  -a,--alignas=[]  Alignment for data array");
   println("  -r,--rowsize=[]  Number of elements per row (default ", ROW_SIZE, ")");
+  println("  -d,--dataonly    Only output array data (array name not required)");
   println("  --const          Declare all variables const");
   println("  --constexpr      Declare all variables constexpr");
   println("  -h,--help        Show usage");
@@ -52,6 +51,7 @@ int main(int argc, char** argv)
   unsigned int alignVal = 0;
   int rowSize = ROW_SIZE;
   enum { NONE, CONST, CONSTEXPR } mode = NONE;
+  bool dataOnly = false;
 
   for (gx::CmdLineParser p{argc, argv}; p; ++p) {
     if (p.option()) {
@@ -64,6 +64,8 @@ int main(int argc, char** argv)
         }
       } else if (p.option('r',"rowsize", rowSize)) {
         if (rowSize <= 0) { rowSize = ROW_SIZE; }
+      } else if (p.option('d',"dataonly")) {
+        dataOnly = true;
       } else if (p.option(0,"const")) {
         mode = CONST;
       } else if (p.option(0,"constexpr")) {
@@ -79,7 +81,7 @@ int main(int argc, char** argv)
     }
   }
 
-  if (file.empty() || outVar.empty()) {
+  if (file.empty() || (outVar.empty() && !dataOnly)) {
     return errorUsage(argv);
   }
 
@@ -96,11 +98,14 @@ int main(int argc, char** argv)
   const char* prefix =
     (mode == CONST) ? "const " : ((mode == CONSTEXPR) ? "constexpr " : "");
 
-  println("// generated from '", file, "'\n");
-  println(prefix, "char ", outVar, "Name[] = \"", name, "\";");
-  println(prefix, "char ", outVar, "File[] = \"", file, "\";");
-  if (alignVal > 0) { print("alignas(", alignVal, ") "); }
-  print(prefix, "unsigned char ", outVar, "[] = {");
+  if (!dataOnly) {
+    println("// generated from '", file, "'\n");
+    println(prefix, "char ", outVar, "Name[] = \"", name, "\";");
+    println(prefix, "char ", outVar, "File[] = \"", file, "\";");
+    if (alignVal > 0) { print("alignas(", alignVal, ") "); }
+    println(prefix, "unsigned char ", outVar, "[] = {");
+  }
+
   for (;;) {
     fs.read(buffer.data(), std::streamsize(buffer.size()));
     auto len = std::streamsize(buffer.size());
@@ -109,14 +114,16 @@ int main(int argc, char** argv)
       if (len <= 0) { break; }
     }
 
-    println();
     for (int i = 0; i < len; ++i) {
       const auto v = uint8_t(buffer[std::size_t(i)]);
       print(uint32_t{v}, ",");
     }
+    println();
   }
 
-  println("\n};");
-  println(prefix, "unsigned long ", outVar, "Size = sizeof(", outVar, ");");
+  if (!dataOnly) {
+    println("};");
+    println(prefix, "unsigned long ", outVar, "Size = sizeof(", outVar, ");");
+  }
   return 0;
 }
