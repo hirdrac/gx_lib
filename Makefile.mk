@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 54 (2023/8/5)
+# Makefile.mk - revision 55 (2023/8/16)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -339,7 +339,7 @@ ifneq ($(strip $(LINKER)),-)
 endif
 
 override _c_ptrn := %.c
-override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x
+override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x c23 gnu23
 override _asm_ptrn := %.s %.S %.sx
 override _cxx_ptrn := %.cc %.cp %.cxx %.cpp %.CPP %.c++ %.C
 override _cxx_stds := c++98 gnu++98 c++03 gnu++03 c++11 gnu++11 c++14 gnu++14 c++17 gnu++17 c++2a gnu++2a c++20 gnu++20 c++2b gnu++2b c++23 gnu++23 c++2c gnu++2c c++26 gnu++26
