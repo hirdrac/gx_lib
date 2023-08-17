@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 55 (2023/8/16)
+# Makefile.mk - revision 55 (2023/8/17)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -596,7 +596,7 @@ override _output_bin_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_BIN_DIR)),$(str
 override _output_lib_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_LIB_DIR)),$(strip $(OUTPUT_DIR))))
   # output dirs can contain variables like '$(ENV)'
 
-override _src_path := $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
+override _source_dir = $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
 
 # output target name generation macros - <1:build env> <2:label>
 override _gen_bin_name = $(_$1_bdir)$($2)$(_$1_bsfx)
@@ -737,14 +737,14 @@ else ifneq ($(_build_env),)
   override _cxxflags_$(ENV) := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_define) $(_include) $(_op_cxx_flags) $(_xflags))
   override _cflags_$(ENV) := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_xflags))
   override _asflags_$(ENV) := $(strip $(_$(ENV)_opt) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_xflags))
-  override _src_path_$(ENV) := $(_src_path)
+  override _src_path_$(ENV) := $(_source_dir)
 
   ifneq ($(_test_labels),)
     override _test_xflags := $(if $(_pkgs_test),$(call _get_pkg_flags,$(sort $(_pkgs) $(_pkgs_test))),$(_pkg_flags)) $(FLAGS_$(_$(ENV)_uc)) $(FLAGS) $(FLAGS_TEST)
     override _cxxflags_$(ENV)-tests := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_op_test_cxx_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_cxx_flags) $(_op_test_cxx_flags) $(_test_xflags))
     override _cflags_$(ENV)-tests := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
     override _asflags_$(ENV)-tests := $(strip $(_$(ENV)_opt) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
-    override _src_path_$(ENV)-tests := $(_src_path)
+    override _src_path_$(ENV)-tests := $(_src_path_$(ENV))
   endif
 
   ## entry name & alias target assignment
@@ -785,7 +785,7 @@ else ifneq ($(_build_env),)
   ifneq ($$(strip $$($1.SOURCE_DIR)),-)
     $$(eval $$(call _check_dir,$1.SOURCE_DIR))
     override _$1_source_dir := $$(if $$($1.SOURCE_DIR),$$(filter-out ./,$$($1.SOURCE_DIR:%/=%)/))
-    override _src_path_$$(ENV)-$1 := $$(or $$(_$1_source_dir),$$(_src_path))
+    override _src_path_$$(ENV)-$1 := $$(or $$(_$1_source_dir),$$(_src_path_$$(ENV)))
   endif
 
   override _$1_src := $$(strip $$(foreach x,$$($1.SRC),$$(call _do_wildcard,$$x,$$(_src_path_$$(ENV)-$1))))
@@ -894,7 +894,7 @@ else ifneq ($(_build_env),)
   override _asflags_$$(ENV)-$1 := $$(strip $$(call _$$(ENV)_opt,$1) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
 
   override _$1_build := $$(ENV)-$1
-  ifeq ($$(_src_path_$$(ENV)-$1),$$(_src_path))
+  ifeq ($$(_src_path_$$(ENV)-$1),$$(_src_path_$$(ENV)))
     ifeq ($$(_$1_deps),)
       # if compile flags match then use a shared build path
       ifeq ($$(_cxxflags_$$(ENV)-$1),$$(_cxxflags_$$(ENV)-tests))
@@ -1045,7 +1045,7 @@ endif
 
 
 #### Unknown Target Handling ####
-override _all_src_files := $(foreach x,$(_src_labels),$(addprefix $(or $(_$x_source_dir),$(_src_path)),$(_$x_src)) $(_$x_src2))
+override _all_src_files = $(foreach x,$(_src_labels),$(addprefix $(or $(_$x_source_dir),$(_source_dir)),$(_$x_src)) $(_$x_src2))
 .SUFFIXES:
 .DEFAULT: ; $(error $(_msgErr)$(if $(filter $<,$(_all_src_files)),Missing source file '$<','$<' unknown)$(_end))
 
