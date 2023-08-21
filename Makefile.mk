@@ -1005,7 +1005,7 @@ clean_$1:
 	@([ -d "$$(_build_dir)/$1_tmp" ] && $$(RM) "$$(_build_dir)/$1_tmp/"* && rmdir -- "$$(_build_dir)/$1_tmp") || true
 	@$$(RM) "$$(_build_dir)/.$1-cmd-"*
 	@for D in "$$(_build_dir)/$1"*; do\
-	  ([ -d "$$$$D" ] && echo "$$(_msgWarn)Cleaning '$$$$D'$$(_end)" && $$(RM) "$$$$D/"*.mk "$$$$D/"*.o "$$$$D/__TEST"* "$$$$D/.compile_cmd"* && rmdir -- "$$$$D") || true; done
+	  ([ -d "$$$$D" ] && echo "$$(_msgWarn)Cleaning '$$$$D'$$(_end)" && $$(RM) "$$$$D/"*.mk "$$$$D/"*.o $(if $(_windows),"$$$$D/"*.res) "$$$$D/__TEST"* "$$$$D/.compile_cmd"* && rmdir -- "$$$$D") || true; done
 
 clean: clean_$1
 endef
