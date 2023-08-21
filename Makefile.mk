@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 55 (2023/8/19)
+# Makefile.mk - revision 55 (2023/8/21)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -891,6 +891,7 @@ else ifneq ($(_build_env),)
   override _cxxflags_$$(ENV)-$1 := $$(strip $$(_$1_cxx_std) $$(call _$$(ENV)_opt,$1) $$(_warn_cxx) $$(_$1_op_cxx_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_cxx_flags) $$(_$1_xflags))
   override _cflags_$$(ENV)-$1 := $$(strip $$(_$1_c_std) $$(call _$$(ENV)_opt,$1) $$(_warn_c) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
   override _asflags_$$(ENV)-$1 := $$(strip $$(call _$$(ENV)_opt,$1) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
+  override _rcflags_$$(ENV)-$1 := $$(filter -D% -U% -I%,$$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
 
   override _$1_build := $$(ENV)-$1
   ifeq ($$(_src_path_$$(ENV)-$1),$$(_src_path_$$(ENV)))
@@ -1219,8 +1220,8 @@ endif
 ifneq ($(filter %.rc,$4 $5),)
 $$(eval $$(call _rebuild_check,$1/.compile_cmd_rc,$$(_cc) $$(_cflags_$2) $3))
 $(addprefix $1/,$(call _src_oname,$(filter %.rc,$4 $5))): | $1
-	$$(strip cpp $$(_cflags_$2) $3) -MT '$$@' -MM -MP -MF '$$@.mk' $$<
-	$$(strip windres $$(_cflags_$2) $3 -O coff) -o '$$@' $$<
+	$$(strip cpp $$(_rcflags_$2) $3) -MT '$$@' -MM -MP -MF '$$@.mk' $$<
+	$$(strip windres $$(_rcflags_$2) $3) -O coff -o '$$@' $$<
 $(foreach x,$(filter %.rc,$4),\
   $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd_rc)))
 $(foreach x,$(filter %.rc,$5),\
