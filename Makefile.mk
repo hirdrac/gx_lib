@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 55 (2023/8/18)
+# Makefile.mk - revision 55 (2023/8/19)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -559,7 +559,7 @@ endef
 $(foreach x,$(_file_labels),$(eval $(call _check_file_entry,$x)))
 
 # macro to create object file name from source file (w/paths)
-override _src_oname = $(addsuffix .o,$(subst /,__,$(subst ../,,$(basename $1))))
+override _src_oname = $(foreach x,$1,$(addsuffix $(if $(filter %.rc,$x),.res,.o),$(subst /,__,$(subst ../,,$(basename $x)))))
 
 # macro to get values that appear multiple times in a list (for error messages)
 override _find_dups = $(strip $(foreach x,$(sort $1),$(if $(filter 1,$(words $(filter $x,$1))),,$x)))
@@ -633,16 +633,16 @@ override BUILD_TMP := $$(_build_dir)/$$(ENV)_tmp
 override _$1_lsfx := $$(if $$(filter 1,$$(words $$(filter $$(_$1_ldir),$$(foreach e,$$(_env_names),$$(_$$e_ldir))))),,$$(_$1_sfx))
 override _$1_bsfx := $$(if $$(filter 1,$$(words $$(filter $$(_$1_bdir),$$(foreach e,$$(_env_names),$$(_$$e_bdir))))),,$$(_$1_sfx))
 
-ifneq ($$(_libprefix),lib)
-  override LIBPREFIX := $$(_libprefix)
+ifneq ($(_libprefix),lib)
+  override LIBPREFIX := $(_libprefix)
 endif
 override _$1_shared_libs := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_shared_lib_name,$1,$$x))
 override _$1_shared_aliases := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_shared_lib_aliases,$1,$$x))
 override _$1_links := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_shared_lib_links,$1,$$x))
-ifneq ($$(_libprefix),lib)
+ifneq ($(_libprefix),lib)
   override LIBPREFIX := lib
 endif
-ifneq ($$(_windows),)
+ifneq ($(_windows),)
   override _$1_implibs := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_implib_name,$1,$$x))
 endif
 
@@ -759,7 +759,7 @@ else ifneq ($(_build_env),)
     $(eval override _$x_name := $(call _gen_static_lib_name,$(ENV),$x))\
     $(eval override _$x_aliases := $x$(SFX) $(if $(SFX),$x $($x) $($x).a) $(call _gen_static_lib_aliases,$(ENV),$x)))
 
-  ifneq ($$(_libprefix),lib)
+  ifneq ($(_libprefix),lib)
     override LIBPREFIX := $(_libprefix)
   endif
   $(foreach x,$(_shared_lib_labels),\
@@ -768,7 +768,7 @@ else ifneq ($(_build_env),)
     $(if $(_windows),,\
       $(eval override _$x_soname := $(if $(_$x_major_ver),$(notdir $($x)).so.$(_$x_major_ver)))\
       $(eval override _$x_shared_links := $(call _gen_shared_lib_links,$(ENV),$x))))
-  ifneq ($$(_libprefix),lib)
+  ifneq ($(_libprefix),lib)
     override LIBPREFIX := lib
   endif
 
@@ -787,14 +787,14 @@ else ifneq ($(_build_env),)
     override _src_path_$$(ENV)-$1 := $$(or $$(_$1_source_dir),$$(_src_path_$$(ENV)))
   endif
 
-  override _$1_src := $$(strip $$(foreach x,$$($1.SRC),$$(call _do_wildcard,$$x,$$(_src_path_$$(ENV)-$1))))
-  override _$1_src2 := $$(strip $$(foreach x,$$($1.SRC2),$$(call _do_wildcard,$$x,)))
+  override _$1_src := $$(strip $$(filter-out $(if $(_windows),,%.rc),$$(foreach x,$$($1.SRC),$$(call _do_wildcard,$$x,$$(_src_path_$$(ENV)-$1)))))
+  override _$1_src2 := $$(strip $$(filter-out $(if $(_windows),,%.rc),$$(foreach x,$$($1.SRC2),$$(call _do_wildcard,$$x,))))
   ifeq ($$(strip $$($1.SRC) $$($1.SRC2)),)
     $$(error $$(_msgErr)$1: no source files specified$$(_end))
   else ifneq ($$(words $$(_$1_src) $$(_$1_src2)),$$(words $$(sort $$(_$1_src) $$(_$1_src2))))
     $$(error $$(_msgErr)$1: duplicate source files [$$(_msgWarn)$$(call _find_dups,$$(_$1_src))$$(_msgErr)]$$(_end))
-  else ifneq ($$(filter-out $(_cxx_ptrn) $(_c_ptrn) $(_asm_ptrn),$$(_$1_src) $$(_$1_src2)),)
-    $$(error $$(_msgErr)$1: invalid source files [$$(_msgWarn)$$(filter-out $(_cxx_ptrn) $(_c_ptrn) $(_asm_ptrn),$$(_$1_src) $$(_$1_src2))$$(_msgErr)]$$(_end))
+  else ifneq ($$(filter-out $(_cxx_ptrn) $(_c_ptrn) $(_asm_ptrn) %.rc,$$(_$1_src) $$(_$1_src2)),)
+    $$(error $$(_msgErr)$1: invalid source files [$$(_msgWarn)$$(filter-out $(_cxx_ptrn) $(_c_ptrn) $(_asm_ptrn) %.rc,$$(_$1_src) $$(_$1_src2))$$(_msgErr)]$$(_end))
   endif
 
   ifneq ($$(strip $$($1.SRC)),)
@@ -808,7 +808,7 @@ else ifneq ($(_build_env),)
     endif
   endif
 
-  override _$1_lang := $$(if $$(filter $(_asm_ptrn),$$(_$1_src) $$(_$1_src2)),asm) $$(if $$(filter $(_c_ptrn),$$(_$1_src) $$(_$1_src2)),c) $$(if $$(filter $(_cxx_ptrn),$$(_$1_src) $$(_$1_src2)),cxx)
+  override _$1_lang := $$(if $$(filter $(_asm_ptrn),$$(_$1_src) $$(_$1_src2)),asm) $$(if $$(filter $(_c_ptrn) %.rc,$$(_$1_src) $$(_$1_src2)),c) $$(if $$(filter $(_cxx_ptrn),$$(_$1_src) $$(_$1_src2)),cxx)
   override _$1_src_objs := $$(call _src_oname,$$(_$1_src) $$(_$1_src2))
 
   ifneq ($$(strip $$($1.OBJS)),-)
@@ -818,7 +818,7 @@ else ifneq ($(_build_env),)
   endif
 
   ifneq ($$(strip $$($1.SUBSYSTEM)),-)
-    override _$1_subsystem := $$(if $$(_windows),$$(or $$($1.SUBSYSTEM),$$(SUBSYSTEM)))
+    override _$1_subsystem := $(if $(_windows),$$(or $$($1.SUBSYSTEM),$$(SUBSYSTEM)))
   endif
 
   override _$1_link_flags := $(if $(_linker),-fuse-ld=$(_linker))
@@ -1214,6 +1214,17 @@ $(foreach x,$(filter $(_c_ptrn),$4),\
   $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd_c)))
 $(foreach x,$(filter $(_c_ptrn),$5),\
   $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd_c)))
+endif
+
+ifneq ($(filter %.rc,$4 $5),)
+$$(eval $$(call _rebuild_check,$1/.compile_cmd_rc,$$(_cc) $$(_cflags_$2) $3))
+$(addprefix $1/,$(call _src_oname,$(filter %.rc,$4 $5))): | $1
+	$$(strip cpp $$(_cflags_$2) $3) -MT '$$@' -MM -MP -MF '$$@.mk' $$<
+	$$(strip windres $$(_cflags_$2) $3 -O coff) -o '$$@' $$<
+$(foreach x,$(filter %.rc,$4),\
+  $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd_rc)))
+$(foreach x,$(filter %.rc,$5),\
+  $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd_rc)))
 endif
 
 ifneq ($(filter $(_asm_ptrn),$4 $5),)
