@@ -736,6 +736,7 @@ else ifneq ($(_build_env),)
   override _cxxflags_$(ENV) := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_define) $(_include) $(_op_cxx_flags) $(_xflags))
   override _cflags_$(ENV) := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_xflags))
   override _asflags_$(ENV) := $(strip $(_$(ENV)_opt) $(_op_warn) $(_define) $(_include) $(_op_flags) $(_xflags))
+  override _rcflags_$(ENV) := $(filter -D% -U% -I%,$(_define) $(_include) $(_op_flags) $(_xflags))
   override _src_path_$(ENV) := $(_source_dir)
 
   ifneq ($(_test_labels),)
@@ -743,6 +744,7 @@ else ifneq ($(_build_env),)
     override _cxxflags_$(ENV)-tests := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_op_test_cxx_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_cxx_flags) $(_op_test_cxx_flags) $(_test_xflags))
     override _cflags_$(ENV)-tests := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
     override _asflags_$(ENV)-tests := $(strip $(_$(ENV)_opt) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
+    override _rcflags_$(ENV)-tests := $(filter -D% -U% -I%,$(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
     override _src_path_$(ENV)-tests := $(_src_path_$(ENV))
   endif
 
@@ -1208,7 +1210,7 @@ ifneq ($(words $4 $5),$(words $(sort $(call _src_oname,$4 $5))))
 endif
 
 ifneq ($(filter $(_c_ptrn),$4 $5),)
-$$(eval $$(call _rebuild_check,$1/.compile_cmd_c,$$(_cc) $$(_cflags_$2) $3))
+$$(eval $$(call _rebuild_check,$1/.compile_cmd_c,$$(strip $$(_cc) $$(_cflags_$2) $3)))
 $(addprefix $1/,$(call _src_oname,$(filter $(_c_ptrn),$4 $5))): | $1
 	$$(strip $$(_cc) $$(_cflags_$2) $3) -MMD -MP -MF '$$@.mk' -c -o '$$@' $$<
 $(foreach x,$(filter $(_c_ptrn),$4),\
@@ -1218,7 +1220,7 @@ $(foreach x,$(filter $(_c_ptrn),$5),\
 endif
 
 ifneq ($(filter %.rc,$4 $5),)
-$$(eval $$(call _rebuild_check,$1/.compile_cmd_rc,$$(_cc) $$(_rcflags_$2) $3))
+$$(eval $$(call _rebuild_check,$1/.compile_cmd_rc,$$(strip windres $$(_rcflags_$2) $3) -O coff))
 $(addprefix $1/,$(call _src_oname,$(filter %.rc,$4 $5))): | $1
 	$$(strip cpp $$(_rcflags_$2) $3) -MT '$$@' -MM -MP -MF '$$@.mk' $$<
 	$$(strip windres $$(_rcflags_$2) $3) -O coff -o '$$@' $$<
@@ -1229,7 +1231,7 @@ $(foreach x,$(filter %.rc,$5),\
 endif
 
 ifneq ($(filter $(_asm_ptrn),$4 $5),)
-$$(eval $$(call _rebuild_check,$1/.compile_cmd_s,$$(_as) $$(_asflags_$2) $3))
+$$(eval $$(call _rebuild_check,$1/.compile_cmd_s,$$(strip $$(_as) $$(_asflags_$2) $3)))
 $(addprefix $1/,$(call _src_oname,$(filter $(_asm_ptrn),$4 $5))): | $1
 	$$(strip $$(_as) $$(_asflags_$2) $3) -MMD -MP -MF '$$@.mk' -c -o '$$@' $$<
 $(foreach x,$(filter $(_asm_ptrn),$4),\
@@ -1239,7 +1241,7 @@ $(foreach x,$(filter $(_asm_ptrn),$5),\
 endif
 
 ifneq ($(filter $(_cxx_ptrn),$4 $5),)
-$$(eval $$(call _rebuild_check,$1/.compile_cmd,$$(_cxx) $$(_cxxflags_$2) $3))
+$$(eval $$(call _rebuild_check,$1/.compile_cmd,$$(strip $$(_cxx) $$(_cxxflags_$2) $3)))
 $(addprefix $1/,$(call _src_oname,$(filter $(_cxx_ptrn),$4 $5))): | $1
 	$$(strip $$(_cxx) $$(_cxxflags_$2) $3) -MMD -MP -MF '$$@.mk' -c -o '$$@' $$<
 $(foreach x,$(filter $(_cxx_ptrn),$4),\
