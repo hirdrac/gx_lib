@@ -1218,7 +1218,7 @@ $(foreach x,$(filter $(_c_ptrn),$5),\
 endif
 
 ifneq ($(filter %.rc,$4 $5),)
-$$(eval $$(call _rebuild_check,$1/.compile_cmd_rc,$$(_cc) $$(_cflags_$2) $3))
+$$(eval $$(call _rebuild_check,$1/.compile_cmd_rc,$$(_cc) $$(_rcflags_$2) $3))
 $(addprefix $1/,$(call _src_oname,$(filter %.rc,$4 $5))): | $1
 	$$(strip cpp $$(_rcflags_$2) $3) -MT '$$@' -MM -MP -MF '$$@.mk' $$<
 	$$(strip windres $$(_rcflags_$2) $3) -O coff -o '$$@' $$<
