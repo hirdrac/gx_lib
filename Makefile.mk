@@ -60,8 +60,9 @@
 #
 # Makefile Parameters:
 #  BIN<1-99>       name of binary to build
-#  BIN1.SRC        source files for binary 1 (C/C++ source files, no headers)
-#  BIN1.OBJS       additional binary 1 object dependencies (.o,.a files)
+#  BIN1.SRC        source files for binary 1
+#                  (C++/C/Assembly/WindowsRC source files, no headers)
+#  BIN1.OBJS       additional binary 1 object dependencies (.o/.a files)
 #  BIN1.DEPS       additional dependencies for building all binary 1 objects
 #
 #  LIB<1-99>       name of library to build (without .a/.so/.dll extension)
@@ -92,8 +93,8 @@
 #  TEST1.OBJS      additional unit test 1 object dependencies
 #  TEST1.DEPS      additional dependencies for building all test 1 objects
 #
-#  COMPILER        compiler to use (gcc,clang)
-#  LINKER          linker to use instead of default (bfd,gold,lld,mold)
+#  COMPILER        compiler to use (gcc/clang)
+#  LINKER          linker to use instead of default (bfd/gold/lld/mold)
 #  CROSS_COMPILE   binutils and gcc toolchain prefix (i.e. arm-linux-gnueabi-)
 #  STANDARD        language standard(s) of source code
 #  OPT_LEVEL       optimization level for release & profile builds
@@ -132,10 +133,10 @@
 #  *_EXTRA         available for most settings to provide additional values
 #
 #  <OS>.<VAR>      set OS specific value for any setting - overrides non-OS
-#                    specific value.  WINDOWS,LINUX supported
+#                    specific value (WINDOWS/LINUX supported)
 #
 #  BUILD_DIR       directory for generated object/prerequisite files
-#  DEFAULT_ENV     default environment to build (release,debug,profile)
+#  DEFAULT_ENV     default environment to build (release/debug/profile)
 #  OUTPUT_DIR      default output directory (defaults to current directory)
 #  OUTPUT_BIN_DIR  directory for generated binaries (defaults to OUTPUT_DIR)
 #  OUTPUT_LIB_DIR  directory for generated libraries (defaults to OUTPUT_DIR)
@@ -153,7 +154,7 @@
 #    (note that FLAGS_RELEASE/FLAGS_DEBUG/FLAGS_PROFILE are always applied)
 #
 #  Filename wildcards '*' or '**'(directory hierarchy search) supported
-#    for .SRC,.DEPS,.OBJS,CLEAN_EXTRA,CLOBBER_EXTRA settings
+#    for .SRC/.DEPS/.OBJS/CLEAN_EXTRA/CLOBBER_EXTRA settings
 #
 #  <X>.LIBS/<X>.OBJS can accept LIB labels of library targets. Library
 #    LIBS/PACKAGES/binary will automatically be used in target building.
@@ -198,6 +199,30 @@ PKGCONF ?= pkg-config
 RM ?= rm -f --
 
 
+#### Default Make Flags ####
+ifneq ($(shell which nproc 2>/dev/null),)
+  override _threads := $(shell nproc)
+  override GNUMAKEFLAGS += --load-average=$(_threads)
+endif
+
+
+#### OS Specific Values ####
+override _uname := $(shell uname -s | tr A-Z a-z)
+override _windows := $(filter cygwin% mingw% msys%,$(_uname))
+override _linux := $(filter linux%,$(_uname))
+override _pic_flag := $(if $(_windows),,-fPIC)
+override _libprefix := $(if $(filter cygwin%,$(_uname)),cyg,$(if $(filter msys%,$(_uname)),msys-,lib))
+override _libext := .$(if $(_windows),dll,so)
+override _binext := $(if $(_windows),.exe)
+ifneq ($(_windows),)
+  $(foreach x,$(filter WINDOWS.%,$(.VARIABLES)),\
+    $(eval override $(patsubst WINDOWS.%,%,$x) = $(value $x)))
+else ifneq ($(_linux),)
+  $(foreach x,$(filter LINUX.%,$(.VARIABLES)),\
+    $(eval override $(patsubst LINUX.%,%,$x) = $(value $x)))
+endif
+
+
 #### Basic Settings ####
 OPT_LEVEL ?= 3
 OPT_LEVEL_DEBUG ?= g
@@ -224,30 +249,6 @@ $(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE INCLUDE_TEST LIBS LIB
 
 # prevent duplicate options being applied to tests
 override OPTIONS_TEST := $(filter-out $(OPTIONS),$(OPTIONS_TEST))
-
-
-#### Default Make Flags ####
-ifneq ($(shell which nproc 2>/dev/null),)
-  override _threads := $(shell nproc)
-  override GNUMAKEFLAGS += --load-average=$(_threads)
-endif
-
-
-#### OS Specific Values ####
-override _uname := $(shell uname -s | tr A-Z a-z)
-override _windows := $(filter cygwin% mingw% msys%,$(_uname))
-override _linux := $(filter linux%,$(_uname))
-override _pic_flag := $(if $(_windows),,-fPIC)
-override _libprefix := $(if $(filter cygwin%,$(_uname)),cyg,$(if $(filter msys%,$(_uname)),msys-,lib))
-override _libext := .$(if $(_windows),dll,so)
-override _binext := $(if $(_windows),.exe)
-ifneq ($(_windows),)
-  $(foreach x,$(filter WINDOWS.%,$(.VARIABLES)),\
-    $(eval override $(patsubst WINDOWS.%,%,$x) = $(value $x)))
-else ifneq ($(_linux),)
-  $(foreach x,$(filter LINUX.%,$(.VARIABLES)),\
-    $(eval override $(patsubst LINUX.%,%,$x) = $(value $x)))
-endif
 
 
 #### Terminal Output ####
@@ -901,16 +902,12 @@ else ifneq ($(_build_env),)
       # if compile flags match then use a shared build path
       ifeq ($$(_cxxflags_$$(ENV)-$1),$$(_cxxflags_$$(ENV)-tests))
         ifeq ($$(_cflags_$$(ENV)-$1),$$(_cflags_$$(ENV)-tests))
-          ifeq ($$(_asflags_$$(ENV)-$1),$$(_asflags_$$(ENV)-tests))
-            override _$1_build := $$(ENV)-tests
-          endif
+          override _$1_build := $$(ENV)-tests
         endif
       endif
       ifeq ($$(_cxxflags_$$(ENV)-$1),$$(_cxxflags_$$(ENV)))
         ifeq ($$(_cflags_$$(ENV)-$1),$$(_cflags_$$(ENV)))
-          ifeq ($$(_asflags_$$(ENV)-$1),$$(_asflags_$$(ENV)))
-            override _$1_build := $$(ENV)
-          endif
+          override _$1_build := $$(ENV)
         endif
       endif
     endif
