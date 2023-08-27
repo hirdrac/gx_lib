@@ -1,6 +1,6 @@
 //
 // text_viewer.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // gx_lib example program for text rendering & basic event handling
 //
@@ -32,6 +32,8 @@
 #include <algorithm>
 #include <memory_resource>
 
+using gx::println;
+using gx::println_err;
 
 constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
@@ -86,19 +88,19 @@ class TextBuffer
 
 int showUsage(char** argv)
 {
-  gx::println("Usage: ", argv[0], " [options] <text file>");
-  gx::println("Options:");
-  gx::println("  -f,--font=[]  Font file (defaults to embedded ", FixedWidthFontDataName ,")");
-  gx::println("  -s,--size=[]  Font size (default ", DEFAULT_FONT_SIZE, ")");
-  gx::println("  -l,--line=[]  Line spacing (default ", DEFAULT_LINE_SPACING, ")");
-  gx::println("  -t,--tab=[]   Tab size (default 8)");
-  gx::println("  -h,--help     Show usage");
+  println("Usage: ", argv[0], " [options] <text file>");
+  println("Options:");
+  println("  -f,--font=[]  Font file (defaults to embedded ", FixedWidthFontDataName ,")");
+  println("  -s,--size=[]  Font size (default ", DEFAULT_FONT_SIZE, ")");
+  println("  -l,--line=[]  Line spacing (default ", DEFAULT_LINE_SPACING, ")");
+  println("  -t,--tab=[]   Tab size (default 8)");
+  println("  -h,--help     Show usage");
   return 0;
 }
 
 int errorUsage(char** argv)
 {
-  gx::println_err("Try '", argv[0], " --help' for more information.");
+  println_err("Try '", argv[0], " --help' for more information.");
   return -1;
 }
 
@@ -122,12 +124,12 @@ int main(int argc, char** argv)
         return showUsage(argv);
       } else if (p.option('f',"font", fontName)) {
         if (fontName.empty()) {
-          gx::println_err("ERROR: Empty font name");
+          println_err("ERROR: Empty font name");
           return errorUsage(argv);
         }
       } else if (p.option('s',"size", fontSize)) {
         if (fontSize < 1) {
-          gx::println_err("ERROR: Bad font size");
+          println_err("ERROR: Bad font size");
           return errorUsage(argv);
         }
       } else if (p.option('l',"line", lineSpacing)) {
@@ -135,25 +137,25 @@ int main(int argc, char** argv)
       } else if (p.option('t',"tab", tabSize)) {
         // no tabSize value checking currently
       } else {
-        gx::println_err("ERROR: Bad option '", p.arg(), "'");
+        println_err("ERROR: Bad option '", p.arg(), "'");
         return errorUsage(argv);
       }
     } else if (file.empty()) {
       p.get(file);
     } else {
-      gx::println_err("ERROR: Multiple files not supported");
+      println_err("ERROR: Multiple files not supported");
       return errorUsage(argv);
     }
   }
 
   if (file.empty()) {
-    gx::println_err("ERROR: File name required");
+    println_err("ERROR: File name required");
     return errorUsage(argv);
   }
 
   std::ifstream fs{file};
   if (!fs) {
-    gx::println_err("ERROR: Can't read file '", file, "'");
+    println_err("ERROR: Can't read file '", file, "'");
     return -1;
   }
 
@@ -164,11 +166,11 @@ int main(int argc, char** argv)
   gx::Font fnt{fontSize};
   if (fontName.empty()) {
     if (!fnt.loadFromMemory(FixedWidthFontData, FixedWidthFontDataSize)) {
-      gx::println_err("ERROR: Failed to load embedded font");
+      println_err("ERROR: Failed to load embedded font");
       return -1;
     }
   } else if (!fnt.load(fontName)) {
-    gx::println_err("ERROR: Failed to load font '", fontName, "'");
+    println_err("ERROR: Failed to load font '", fontName, "'");
     return -1;
   }
 
@@ -176,7 +178,7 @@ int main(int argc, char** argv)
   win.setTitle(file);
   win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
   if (!win.open()) {
-    gx::println_err("ERROR: Failed to open window");
+    println_err("ERROR: Failed to open window");
     return -1;
   }
 
