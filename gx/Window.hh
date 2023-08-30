@@ -153,11 +153,11 @@ class gx::Window
   Window();
   ~Window();
 
+  // prevent copy & move
   Window(const Window&) = delete;
   Window& operator=(const Window&) = delete;
-
-  Window(Window&&) noexcept = default;
-  Window& operator=(Window&&) noexcept = default;
+  Window(Window&&) noexcept = delete;
+  Window& operator=(Window&&) noexcept = delete;
 
 
   //// Display Management ////
