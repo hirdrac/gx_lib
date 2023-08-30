@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <chrono>
 #include <mutex>
-#include <set>
+#include <vector>
 #include <GLFW/glfw3.h>
 using namespace gx;
 
@@ -90,7 +90,7 @@ namespace {
   }
 
   // **** Window Instance Tracking ****
-  std::set<Window*> allWindows;
+  std::vector<Window*> allWindows;
   std::mutex allWindowsMutex;
 }
 
@@ -101,14 +101,21 @@ int64_t Window::_lastPollTime = 0;
 Window::Window()
 {
   std::lock_guard lg{allWindowsMutex};
-  allWindows.insert(this);
+  allWindows.push_back(this);
 }
 
 Window::~Window()
 {
   {
     std::lock_guard lg{allWindowsMutex};
-    allWindows.erase(this);
+    //std::erase(allWindows, this);  // C++20
+    for (auto it = allWindows.begin(); it != allWindows.end(); ) {
+      if (*it == this) {
+        it = allWindows.erase(it);
+      } else {
+        ++it;
+      }
+    }
   }
 
   if (_renderer && glfwInitStatus()) {
