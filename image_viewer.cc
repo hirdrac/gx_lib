@@ -7,7 +7,6 @@
 // TODO: multiple image display in fullscreen (horizontal/vertical)
 // TODO: smooth scrolling when moving to next image
 // TODO: don't scroll if all images can fit on screen?
-// TODO: option to enable full logging
 
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
@@ -20,6 +19,7 @@
 #include "gx/StringUtil.hh"
 #include "gx/CmdLineParser.hh"
 #include <vector>
+
 using gx::println;
 using gx::println_err;
 
@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 
   int entryNo = 0;
   for (Entry& e : entries) {
-    e.tex.init(ren, e.img, 4, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
+    e.tex.init(ren, e.img, 6, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
   }
 
   gx::DrawLayer dl;
