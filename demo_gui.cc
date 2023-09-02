@@ -10,6 +10,9 @@
 #include "gx/Gui.hh"
 #include "gx/Print.hh"
 
+using gx::print_err;
+using gx::println_err;
+
 
 constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
@@ -24,7 +27,7 @@ int main(int argc, char* argv[])
 {
   gx::Font fnt{FONT_SIZE};
   if (!fnt.loadFromMemory(VariableWidthFontData, VariableWidthFontDataSize)) {
-    gx::println_err("failed to load font");
+    println_err("failed to load font");
     return -1;
   }
 
@@ -130,7 +133,7 @@ int main(int argc, char* argv[])
   win.setTitle("GUI demo");
   win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
   if (!win.open()) {
-    gx::println_err("failed to open window");
+    println_err("failed to open window");
     return -1;
   }
 
@@ -165,31 +168,31 @@ int main(int argc, char* argv[])
     // update gui
     needRedraw |= gui.update(win);
     if (gui.event()) {
-      gx::print_err("GUI event:", gui.event().eid);
+      print_err("GUI event:", gui.event().eid);
       switch (gui.event().type) {
         case gx::GUI_ENTRY:
-          gx::println_err("\ttext:\"", gui.eventText(), "\"");
+          println_err("\ttext:\"", gui.eventText(), "\"");
           break;
         case gx::GUI_LISTSELECT:
-          gx::println_err("\titem_no:", gui.event().item_no);
+          println_err("\titem_no:", gui.event().item_no);
           break;
         case gx::GUI_MENU:
-          gx::println_err("\tmenu_item_no:", gui.event().item_no);
+          println_err("\tmenu_item_no:", gui.event().item_no);
           // check quit menu item
           if (gui.event().item_no == 99) { running = false; }
           break;
         case gx::GUI_CHECKBOX:
-          gx::println_err("\tset:", gui.eventBool());
+          println_err("\tset:", gui.eventBool());
           break;
         default:
-          gx::println_err();
+          println_err();
           break;
       }
       // check quit button
       if (gui.event().eid == 99) { running = false; }
     }
 
-    //gx::println_err("time ", gx::Window::lastPollTime());
+    //println_err("time ", gx::Window::lastPollTime());
   }
 
   return 0;

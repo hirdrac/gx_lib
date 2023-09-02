@@ -24,7 +24,6 @@
 #include "gx/Logger.hh"
 #include "gx/Print.hh"
 #include "gx/CmdLineParser.hh"
-
 #include <fstream>
 #include <string>
 #include <string_view>
@@ -34,6 +33,7 @@
 
 using gx::println;
 using gx::println_err;
+
 
 constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
