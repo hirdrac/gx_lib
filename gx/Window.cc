@@ -267,13 +267,13 @@ bool Window::open(int flags)
   glfwDefaultWindowHints();
   glfwWindowHint(GLFW_DECORATED, glfwBool(decorated));
   glfwWindowHint(GLFW_RESIZABLE, glfwBool(resizable));
-  glfwWindowHint(GLFW_SAMPLES, _samples);
-  glfwWindowHint(GLFW_DOUBLEBUFFER, glfwBool(doubleBuffer));
   glfwWindowHint(GLFW_VISIBLE, glfwBool(false));
   //glfwWindowHint(GLFW_FOCUSED, glfwBool(false));
   //glfwWindowHint(GLFW_FOCUS_ON_SHOW, glfwBool(false));
 
   // OpenGL specified window hints
+  glfwWindowHint(GLFW_SAMPLES, _samples);
+  glfwWindowHint(GLFW_DOUBLEBUFFER, glfwBool(doubleBuffer));
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
   //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, debug ? GLFW_TRUE : GLFW_FALSE);
@@ -284,8 +284,6 @@ bool Window::open(int flags)
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 
-  int width = _width;
-  int height = _height;
   GLFWmonitor* monitor = glfwGetPrimaryMonitor();
   const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
@@ -297,12 +295,17 @@ bool Window::open(int flags)
 
   _fsWidth = mode->width;
   _fsHeight = mode->height;
-  if (_fullScreen && (width <= 0 || height <= 0)) {
-    width = _fsWidth;
-    height = _fsHeight;
-  } else if (!_sizeSet) {
-    width = 256;
-    height = 256;
+
+  int width = 256;
+  int height = 256;
+  if (_sizeSet) {
+    if (_fullScreen && (_width <= 0 || _height <= 0)) {
+      width = _fsWidth;
+      height = _fsHeight;
+    } else {
+      width = _width;
+      height = _height;
+    }
   }
 
   GLFWwindow* win = glfwCreateWindow(
