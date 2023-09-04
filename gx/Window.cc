@@ -212,7 +212,7 @@ void Window::setSizeLimits(
 
 void Window::setMouseMode(MouseModeEnum mode)
 {
-  int val = cursorInputModeVal(mode);
+  const int val = cursorInputModeVal(mode);
   if (val < 0) {
     GX_LOG_ERROR("setMouseMode(): invalid mode ", mode);
     return;
@@ -256,14 +256,33 @@ bool Window::open(int flags)
     return false;
   }
 
+  initStartTime();
+
+  GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+  const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+  _fsWidth = mode->width;
+  _fsHeight = mode->height;
+
+  int width = 256;
+  int height = 256;
+  if (_sizeSet) {
+    if (_fullScreen && (_width <= 0 || _height <= 0)) {
+      width = _fsWidth;
+      height = _fsHeight;
+    } else {
+      width = _width;
+      height = _height;
+    }
+  }
+
   const bool decorated = flags & (WINDOW_DECORATED | WINDOW_RESIZABLE);
   const bool resizable = flags & WINDOW_RESIZABLE;
   const bool doubleBuffer = true;
   const bool fixedAspectRatio = flags & WINDOW_FIXED_ASPECT_RATIO;
   const bool debug = flags & WINDOW_DEBUG;
 
-  initStartTime();
-
+  // general window hints
   glfwDefaultWindowHints();
   glfwWindowHint(GLFW_DECORATED, glfwBool(decorated));
   glfwWindowHint(GLFW_RESIZABLE, glfwBool(resizable));
@@ -284,29 +303,11 @@ bool Window::open(int flags)
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
 
-  GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-  const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-
   // make sure video mode doesn't change for fullscreen
   glfwWindowHint(GLFW_RED_BITS, mode->redBits);
   glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
   glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
   glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
-
-  _fsWidth = mode->width;
-  _fsHeight = mode->height;
-
-  int width = 256;
-  int height = 256;
-  if (_sizeSet) {
-    if (_fullScreen && (_width <= 0 || _height <= 0)) {
-      width = _fsWidth;
-      height = _fsHeight;
-    } else {
-      width = _width;
-      height = _height;
-    }
-  }
 
   GLFWwindow* win = glfwCreateWindow(
     width, height, _title.c_str(), _fullScreen ? monitor : nullptr, nullptr);
