@@ -27,8 +27,8 @@ BIN2 = text_viewer
 BIN2.SRC = text_viewer.cc $(FILE1)
 BIN2.OBJS = LIB_gx
 
-BIN3 = show_font
-BIN3.SRC = show_font.cc
+BIN3 = font_viewer
+BIN3.SRC = font_viewer.cc
 BIN3.OBJS = LIB_gx
 
 

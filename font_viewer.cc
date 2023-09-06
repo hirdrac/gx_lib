@@ -1,6 +1,6 @@
 //
-// show_font.cc
-// Copyright (C) 2022 Richard Bradley
+// font_viewer.cc
+// Copyright (C) 2023 Richard Bradley
 //
 // displays font atlas texture
 //
