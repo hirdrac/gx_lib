@@ -15,11 +15,13 @@
 #include "gx/StringUtil.hh"
 #include "gx/Unicode.hh"
 
+using gx::println_err;
+
 
 int main(int argc, char** argv)
 {
   if (argc < 3) {
-    gx::println_err("Usage: ", argv[0], " <TTF font file> <size>");
+    println_err("Usage: ", argv[0], " <TTF font file> <size>");
     return -1;
   }
 
@@ -28,14 +30,14 @@ int main(int argc, char** argv)
 
   gx::Font fnt{fontSize};
   if (!fnt.load(fontName)) {
-    gx::println_err("failed to load font '", fontName, "'");
+    println_err("failed to load font '", fontName, "'");
     return -1;
   }
 
   gx::Window win;
   win.setTitle(gx::concat(fontName, " - ", fontSize));
   if (!win.open()) {
-    gx::println_err("failed to open window");
+    println_err("failed to open window");
     return -1;
   }
 
@@ -70,7 +72,7 @@ int main(int argc, char** argv)
       for (auto& [c,g] : fnt.glyphs()) {
         if (tx >= g.t0.x && tx <= g.t1.x && ty >= g.t0.y && ty <= g.t1.y) {
           if (lastCode != c) {
-            gx::println_err("code:",c," '",gx::toUTF8(c),"'");
+            println_err("code:",c," '",gx::toUTF8(c),"'");
             lastCode = c;
           }
           break;
