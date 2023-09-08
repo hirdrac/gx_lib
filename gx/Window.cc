@@ -290,9 +290,16 @@ bool Window::open(int flags)
   //glfwWindowHint(GLFW_FOCUSED, glfwBool(false));
   //glfwWindowHint(GLFW_FOCUS_ON_SHOW, glfwBool(false));
 
-  // OpenGL specified window hints
+  // framebuffer hints
   glfwWindowHint(GLFW_SAMPLES, _samples);
   glfwWindowHint(GLFW_DOUBLEBUFFER, glfwBool(doubleBuffer));
+  // make sure video mode doesn't change for fullscreen
+  glfwWindowHint(GLFW_RED_BITS, mode->redBits);
+  glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
+  glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
+  glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
+
+  // OpenGL specified window hints
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
   //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
   glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, debug ? GLFW_TRUE : GLFW_FALSE);
@@ -302,12 +309,6 @@ bool Window::open(int flags)
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, GL_VERSION_MINOR);
   //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
-
-  // make sure video mode doesn't change for fullscreen
-  glfwWindowHint(GLFW_RED_BITS, mode->redBits);
-  glfwWindowHint(GLFW_GREEN_BITS, mode->greenBits);
-  glfwWindowHint(GLFW_BLUE_BITS, mode->blueBits);
-  glfwWindowHint(GLFW_REFRESH_RATE, mode->refreshRate);
 
   GLFWwindow* win = glfwCreateWindow(
     width, height, _title.c_str(), _fullScreen ? monitor : nullptr, nullptr);
