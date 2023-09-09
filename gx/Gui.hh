@@ -156,7 +156,7 @@ class gx::Gui
 
   ElemID _heldID = 0;
   GuiElemType _heldType = GUI_NULL;
-  float _heldX = 0, _heldY = 0;
+  Vec2 _heldPt{INIT_ZERO};
   int64_t _heldTime = 0;
   int64_t _repeatDelay = -1;        // negative value disables repeat
   std::size_t _focusCursorPos = 0;  // character pos of cursor

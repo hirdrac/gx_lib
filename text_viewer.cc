@@ -253,7 +253,9 @@ int main(int argc, char** argv)
     if (win.keyPressCount(gx::KEY_PAGE_DOWN, true)) { topLine += maxLines; }
     if (win.keyPressCount(gx::KEY_HOME, false)) { topLine = 0; }
     if (win.keyPressCount(gx::KEY_END, false)) { topLine = endLine; }
-    if (win.scrollY() != 0.0f) { topLine -= int(win.scrollY()) * SCROLL_STEP; }
+
+    const float scrollY = win.scrollPt().y;
+    if (scrollY != 0.0f) { topLine -= int(scrollY) * SCROLL_STEP; }
 
     topLine = std::clamp(topLine, 0, endLine);
     if (lastTop != topLine) { redraw = true; }

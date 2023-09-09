@@ -67,8 +67,9 @@ int main(int argc, char** argv)
     ren.renderFrame();
     gx::Window::pollEvents();
     if (win.mouseIn() && (win.events() & gx::EVENT_MOUSE_MOVE)) {
-      const float tx = win.mouseX() / float(win.width());
-      const float ty = win.mouseY() / float(win.height());
+      const auto pt = win.mousePt();
+      const float tx = pt.x / float(win.width());
+      const float ty = pt.y / float(win.height());
       for (auto& [c,g] : fnt.glyphs()) {
         if (tx >= g.t0.x && tx <= g.t1.x && ty >= g.t0.y && ty <= g.t1.y) {
           if (lastCode != c) {

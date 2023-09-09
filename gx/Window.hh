@@ -184,7 +184,6 @@ class gx::Window
     // (in microseconds since first window open)
 
   [[nodiscard]] int events() const { return _events; }
-  [[nodiscard]] int removedEvents() const { return _removedEvents; }
   [[nodiscard]] int allEvents() const { return _events | _removedEvents; }
     // current event mask
 
@@ -199,11 +198,7 @@ class gx::Window
   // mouse state
   [[nodiscard]] MouseModeEnum mouseMode() const { return _mouseMode; }
   [[nodiscard]] MouseShapeEnum mouseShape() const { return _mouseShape; }
-  [[nodiscard]] float mouseX() const { return _mousePt.x; }
-  [[nodiscard]] float mouseY() const { return _mousePt.y; }
   [[nodiscard]] Vec2 mousePt() const { return _mousePt; }
-  [[nodiscard]] float scrollX() const { return _scrollPt.x; }
-  [[nodiscard]] float scrollY() const { return _scrollPt.y; }
   [[nodiscard]] Vec2 scrollPt() const { return _scrollPt; }
   [[nodiscard]] int buttons() const { return _buttons; }
   [[nodiscard]] int mods() const { return _mods; }

@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 
     if (win.fullScreen()) {
       if (win.events() & gx::EVENT_MOUSE_SCROLL) {
-        const int zoom2 = std::clamp(zoom + int(win.scrollY()), 20, 400);
+        const int zoom2 = std::clamp(zoom + int(win.scrollPt().y), 20, 400);
         if (zoom != zoom2) {
           zoom = zoom2;
           imgScale = gx::sqr(float(std::max(zoom, 1)) / 100.f);
