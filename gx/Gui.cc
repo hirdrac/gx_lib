@@ -767,6 +767,7 @@ void Gui::processMouseEvent(Window& win)
   const bool rpressEvent = rbuttonDown & rbuttonEvent;
   const bool anyButtonEvent = win.allEvents() & EVENT_MOUSE_ANY_BUTTON;
   const bool moveEvent = win.allEvents() & EVENT_MOUSE_MOVE;
+  const Vec2 mousePt = win.mousePt();
 
   // get elem at mouse pointer
   Panel* pPtr = nullptr;
@@ -775,7 +776,7 @@ void Gui::processMouseEvent(Window& win)
   GuiElemType type = GUI_NULL;
   if (win.mouseIn()) {
     for (auto& p : _panels) {
-      const Vec2 pt = win.mousePt() - Vec2{p->layout.x, p->layout.y};
+      const Vec2 pt = mousePt - Vec2{p->layout.x, p->layout.y};
       if (!(ePtr = findElemByXY(p->root, pt.x, pt.y, _popupType))) { continue; }
 
       win.removeEvent(EVENT_MOUSE_ANY_BUTTON);
@@ -826,7 +827,6 @@ void Gui::processMouseEvent(Window& win)
         type = _heldType;
       }
 
-      const Vec2 mousePt = win.mousePt();
       const float mx = std::clamp(mousePt.x, 0.0f, float(win.width()));
       const float my = std::clamp(mousePt.y, 0.0f, float(win.height()));
       pPtr->layout.x += mx - _heldPt.x;
@@ -848,7 +848,7 @@ void Gui::processMouseEvent(Window& win)
         _focusCursorPos = lengthUTF8(entry.text);
       } else {
         _focusCursorPos = _focusRangeStart = lengthUTF8(
-          thm.font->fitText(entry.text, win.mousePt().x - entry.tx + 1));
+          thm.font->fitText(entry.text, mousePt.x - entry.tx + 1));
         if (_clickCount == 2) {
           // double click - select word
           while (_focusRangeStart > 0 && entry.text[_focusRangeStart-1] != ' ')
@@ -862,7 +862,7 @@ void Gui::processMouseEvent(Window& win)
       // select text in entry w/ mouse
       const auto& entry = ePtr->entry();
       const std::size_t newPos = lengthUTF8(
-        thm.font->fitText(entry.text, win.mousePt().x - entry.tx + 1));
+        thm.font->fitText(entry.text, mousePt.x - entry.tx + 1));
       if (newPos != _focusCursorPos) {
         _focusCursorPos = newPos;
         _needRender = true;
@@ -936,7 +936,7 @@ void Gui::processMouseEvent(Window& win)
     _heldID = id;
     _heldType = type;
     _heldTime = win.lastPollTime();
-    _heldPt = win.mousePt();
+    _heldPt = mousePt;
     _needRender = true;
   } else if ((_heldType == GUI_BUTTON_PRESS && _heldID != id)
              || (!lbuttonDown && _heldID != 0)) {
