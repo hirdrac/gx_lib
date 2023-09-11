@@ -93,8 +93,7 @@ bool Camera::calcProjection(
 }
 
 bool Camera::calcDirToScreenPt(
-  int screenWidth, int screenHeight,
-  float mouseX, float mouseY, Vec3& result) const
+  int screenWidth, int screenHeight, Vec2 mousePt, Vec3& result) const
 {
   const float sw = float(screenWidth), sh = float(screenHeight);
   const float vlen = std::tan(degToRad(_fov * .5f)) / _zoom;
@@ -112,6 +111,6 @@ bool Camera::calcDirToScreenPt(
   // since we are calculating a direction, just assume eye is at origin
   // and view plane center is just 1 away from eye (in direction of vnormal)
   result = unitVec(
-    _vnormal + (vx * ((mouseX - cx) / cx)) + (vy * -((mouseY - cy) / cy)));
+    _vnormal + (vx * ((mousePt.x - cx) / cx)) + (vy * -((mousePt.y - cy) / cy)));
   return true;
 }
