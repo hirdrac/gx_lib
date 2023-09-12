@@ -25,8 +25,8 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  std::string fontName = argv[1];
-  int fontSize = std::atoi(argv[2]);
+  const std::string fontName = argv[1];
+  const int fontSize = std::atoi(argv[2]);
 
   gx::Font fnt{fontSize};
   if (!fnt.load(fontName)) {

@@ -247,8 +247,9 @@ int main(int argc, char* argv[])
       if (win.buttonPress(gx::BUTTON1)) {
         pressPos = win.mousePt();
       } else if (win.buttonDrag(gx::BUTTON1)) {
-        imgOffset += (win.mousePt() - pressPos);
-        pressPos = win.mousePt();
+        const auto pt = win.mousePt();
+        imgOffset += (pt - pressPos);
+        pressPos = pt;
         refresh = true;
       }
     }
