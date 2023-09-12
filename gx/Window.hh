@@ -97,8 +97,9 @@ namespace gx {
     int16_t key;         // key value
     int16_t pressCount;  // number of press events since pollEvents
     int16_t repeatCount; // number of repeat events since pollEvents
-    bool    held;        // key is currently held
+    int16_t held;        // key is currently held
   };
+  static_assert(sizeof(KeyState) == 8);
 
   struct CharInfo {
     // unicode value
@@ -107,8 +108,9 @@ namespace gx {
     // set if non-printable key (codepoint is zero)
     int16_t key;
     uint8_t mods;
-    bool repeat;
+    int8_t repeat;
   };
+  static_assert(sizeof(CharInfo) == 8);
 
   // Setting values
   enum {
@@ -194,6 +196,8 @@ class gx::Window
   // window state
   [[nodiscard]] bool resized() const { return _events & EVENT_SIZE; }
   [[nodiscard]] bool closed() const { return _events & EVENT_CLOSE; }
+  [[nodiscard]] bool iconified() const { return _iconified; }
+  [[nodiscard]] bool focused() const { return _focused; }
 
   // mouse state
   [[nodiscard]] MouseModeEnum mouseMode() const { return _mouseMode; }
@@ -203,8 +207,6 @@ class gx::Window
   [[nodiscard]] int buttons() const { return _buttons; }
   [[nodiscard]] int mods() const { return _mods; }
   [[nodiscard]] bool mouseIn() const { return _mouseIn; }
-  [[nodiscard]] bool iconified() const { return _iconified; }
-  [[nodiscard]] bool focused() const { return _focused; }
 
   [[nodiscard]] bool buttonPress(ButtonEnum button) const {
     return (_events & (button<<11)) && (_buttons & button); }
