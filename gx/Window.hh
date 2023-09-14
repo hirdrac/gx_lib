@@ -6,6 +6,7 @@
 //
 
 #pragma once
+#include "Renderer.hh"
 #include "Types.hh"
 #include "Assert.hh"
 #include <string_view>
@@ -231,6 +232,12 @@ class gx::Window
     GX_ASSERT(_renderer != nullptr); return *_renderer; }
     // NOTE: Renderer is available once open() is called and will be available
     //   until the Window is destroyed.
+
+  template<typename... Args>
+  void draw(Args&&... args) {
+    _renderer->draw(_width, _height, {args...}); }
+
+  void renderFrame() { _renderer->renderFrame(); }
 
  private:
   std::unique_ptr<Renderer> _renderer;

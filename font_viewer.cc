@@ -61,10 +61,10 @@ int main(int argc, char** argv)
       dc.texture(t);
       dc.rectangle(0, 0, float(win.width()), float(win.height()), {0,0}, {1,1});
 
-      ren.draw(win.width(), win.height(), {&dl});
+      win.draw(&dl);
     }
 
-    ren.renderFrame();
+    win.renderFrame();
     gx::Window::pollEvents();
     if (win.mouseIn() && (win.events() & gx::EVENT_MOUSE_MOVE)) {
       const auto pt = win.mousePt();

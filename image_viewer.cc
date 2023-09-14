@@ -201,10 +201,10 @@ int main(int argc, char* argv[])
         }
       }
 
-      ren.draw(win.width(), win.height(), {&dl});
+      win.draw(&dl);
     }
 
-    ren.renderFrame();
+    win.renderFrame();
 
     gx::Window::pollEvents();
     if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }

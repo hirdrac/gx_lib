@@ -230,10 +230,10 @@ int main(int argc, char** argv)
         ++lineNo;
       }
 
-      ren.draw(win.width(), win.height(), {&dl});
+      win.draw(&dl);
       redraw = false;
     }
-    ren.renderFrame();
+    win.renderFrame();
 
     // handle events
     gx::Window::pollEvents();
