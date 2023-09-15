@@ -11,7 +11,6 @@
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
 #include "gx/Window.hh"
-#include "gx/Renderer.hh"
 #include "gx/DrawLayer.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Texture.hh"
@@ -137,11 +136,9 @@ int main(int argc, char* argv[])
   gx::Vec2 pressPos{gx::INIT_ZERO};
   const int lastNo = int(entries.size()) - 1;
 
-  gx::Renderer& ren = win.renderer();
-
   int entryNo = 0;
   for (Entry& e : entries) {
-    e.tex.init(ren, e.img, 6, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
+    e.tex.init(win, e.img, 6, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
   }
 
   gx::DrawLayer dl;

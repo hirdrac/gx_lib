@@ -1,6 +1,6 @@
 //
 // gx/Font.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // Create texture atlas for font glyph rendering
 //
@@ -54,6 +54,9 @@ class gx::Font
     // load from static glyph data
 
   bool makeAtlas(Renderer& ren);
+
+  template<class T>
+  bool makeAtlas(T& win) { return makeAtlas(win.renderer()); }
 
   [[nodiscard]] float ymin() const { return _ymin; }
   [[nodiscard]] float ymax() const { return _ymax; }

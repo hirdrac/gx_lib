@@ -1,6 +1,6 @@
 //
 // gx/Texture.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #pragma once
@@ -17,7 +17,9 @@ class gx::Texture
 {
  public:
   Texture() = default;
-  Texture(Renderer& ren, const Image& img, int levels = 1,
+
+  template<class T>
+  Texture(T& ren, const Image& img, int levels = 1,
           FilterType minFilter = FILTER_NEAREST,
           FilterType magFilter = FILTER_NEAREST) {
     init(ren, img, levels, minFilter, magFilter); }
@@ -34,6 +36,13 @@ class gx::Texture
   bool init(Renderer& ren, const Image& img, int levels = 1,
             FilterType minFilter = FILTER_NEAREST,
             FilterType magFilter = FILTER_NEAREST);
+
+  template<class T>
+  bool init(T& win, const Image& img, int levels = 1,
+            FilterType minFilter = FILTER_NEAREST,
+            FilterType magFilter = FILTER_NEAREST) {
+    return init(win.renderer(), img, levels, minFilter, magFilter); }
+
   bool update(const Image& img);
 
   [[nodiscard]] TextureID id() const { return _texID; }

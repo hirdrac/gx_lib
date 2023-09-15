@@ -6,7 +6,6 @@
 //
 
 #include "gx/Window.hh"
-#include "gx/Renderer.hh"
 #include "gx/Font.hh"
 #include "gx/Texture.hh"
 #include "gx/DrawLayer.hh"
@@ -41,8 +40,7 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  gx::Renderer& ren = win.renderer();
-  fnt.makeAtlas(ren);
+  fnt.makeAtlas(win);
   const gx::Texture& t = fnt.tex();
 
   win.setSize(t.width(), t.height(), false);

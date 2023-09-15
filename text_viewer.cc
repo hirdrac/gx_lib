@@ -18,7 +18,6 @@
 // TODO: find GUI (control-f)
 
 #include "gx/Window.hh"
-#include "gx/Renderer.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Font.hh"
 #include "gx/Logger.hh"
@@ -182,8 +181,7 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  gx::Renderer& ren = win.renderer();
-  fnt.makeAtlas(ren);
+  fnt.makeAtlas(win);
 
   const float tabWidth = fnt.glyphWidth(' ') * float(tabSize);
   const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
