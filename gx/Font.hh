@@ -21,7 +21,6 @@ namespace gx {
     const uint8_t* bitmap;
   };
 
-  class Image;
   class Font;
   class Renderer;
 }
