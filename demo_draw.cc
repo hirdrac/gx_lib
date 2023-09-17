@@ -4,11 +4,12 @@
 //
 
 #include "gx/Window.hh"
-#include "gx/Renderer.hh"
 #include "gx/Font.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
+
+using gx::println_err;
 
 
 // **** Constants ****
@@ -232,7 +233,7 @@ int main(int argc, char** argv)
 {
   gx::Font fnt{FONT_SIZE};
   if (!fnt.load("data/FreeSans.ttf")) {
-    gx::println_err("failed to load font");
+    println_err("failed to load font");
     return -1;
   }
 
@@ -240,12 +241,11 @@ int main(int argc, char** argv)
   win.setTitle("draw demo");
   win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
   if (!win.open()) {
-    gx::println_err("failed to open window");
+    println_err("failed to open window");
     return -1;
   }
 
-  gx::Renderer& ren = win.renderer();
-  fnt.makeAtlas(ren);
+  fnt.makeAtlas(win);
 
   gx::TextFormatting tf{&fnt};
   const int gfxCount = std::size(gfxData);
@@ -295,11 +295,11 @@ int main(int argc, char** argv)
                 gx::concat("Page ", page+1, " of ", maxPage+1));
       }
 
-      ren.draw(win.width(), win.height(), {&dl});
+      win.draw(&dl);
       redraw = false;
     }
 
-    ren.renderFrame();
+    win.renderFrame();
 
     // handle events
     gx::Window::pollEvents();
