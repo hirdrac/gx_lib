@@ -154,7 +154,7 @@ bool Font::makeAtlas(Renderer& ren)
     const Glyph& g = itr.second;
     if (g.width > maxW) { maxW = g.width; }
     if (g.height > maxH) { maxH = g.height; }
-    totalW += g.width;
+    totalW += g.width + 1;
   }
 
   // calculate texture size
@@ -163,8 +163,8 @@ bool Font::makeAtlas(Renderer& ren)
   int rows = 0;
   do {
     ++rows;
-    texW = maxW + ((totalW + int(_glyphs.size()) + 1) / rows);
-    texH = ((maxH+1) * rows) + 1;
+    texW = maxW + 1 + (totalW / rows);
+    texH = ((maxH + 1) * rows) + 1;
   } while ((texW > texH*2) || (texW > maxSize));
 
   // round up texture size
