@@ -4,7 +4,6 @@
 //
 
 #include "gx/Window.hh"
-#include "gx/Renderer.hh"
 #include "gx/Font.hh"
 #include "gx/GuiBuilder.hh"
 #include "gx/Gui.hh"
@@ -137,8 +136,7 @@ int main(int argc, char* argv[])
     return -1;
   }
 
-  gx::Renderer& ren = win.renderer();
-  fnt.makeAtlas(ren);
+  fnt.makeAtlas(win);
   bool running = true;
   bool needRedraw = true;
 
@@ -149,10 +147,10 @@ int main(int argc, char* argv[])
     // draw frame
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
-      ren.draw(win.width(), win.height(), {&gui.drawLayer()});
+      win.draw(&gui.drawLayer());
       needRedraw = false;
     }
-    ren.renderFrame();
+    win.renderFrame();
 
     // handle events
     gx::Window::pollEvents();
