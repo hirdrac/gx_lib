@@ -26,6 +26,10 @@ int main(int argc, char** argv)
 
   const std::string fontName = argv[1];
   const int fontSize = std::atoi(argv[2]);
+  if (fontSize < 1) {
+    println_err("invalid size '", argv[2], "'");
+    return -1;
+  }
 
   gx::Font fnt{fontSize};
   if (!fnt.load(fontName)) {
