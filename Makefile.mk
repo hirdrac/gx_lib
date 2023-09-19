@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 55 (2023/8/21)
+# Makefile.mk - revision 56 (2023/9/19)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -132,8 +132,8 @@
 #  LINK_FLAGS      additional linking flags not otherwise specified
 #  *_EXTRA         available for most settings to provide additional values
 #
-#  <OS>.<VAR>      set OS specific value for any setting - overrides non-OS
-#                    specific value (WINDOWS/LINUX supported)
+#  <OS>.<VAR>      set WINDOWS/LINUX specific value for any setting
+#                  (overrides non-OS specified value)
 #
 #  BUILD_DIR       directory for generated object/prerequisite files
 #  DEFAULT_ENV     default environment to build (release/debug/profile)
@@ -143,7 +143,8 @@
 #  CLEAN_EXTRA     extra files to delete for 'clean' target
 #  CLOBBER_EXTRA   extra files to delete for 'clobber' target
 #  SUBDIRS         sub-directories to also make with base targets
-#  SYMLINKS        symlinks to the current dir to create for building
+#  SYMLINKS        symlinks to create for building
+#                  (list of <name> OR <name>=<target>; default target is '.')
 #  SOURCE_DIR      source files base directory
 #  EXCLUDE_TARGETS labels/files not built by default (wildcard '*' allowed)
 #
@@ -598,6 +599,14 @@ override _output_lib_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_LIB_DIR)),$(str
 
 override _source_dir = $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
 
+override _symlink_name = $(word 1,$(subst =, ,$1))
+override _symlink_target = $(or $(word 2,$(subst =, ,$1)),.)
+override _symlinks := $(sort $(SYMLINKS))
+override _symlinks_names := $(sort $(foreach s,$(_symlinks),$(call _symlink_name,$s)))
+ifneq ($(words $(_symlinks)),$(words $(_symlinks_names)))
+  $(error $(_msgErr)SYMLINKS: conflicting values$(_end))
+endif
+
 # output target name generation macros - <1:build env> <2:label>
 override _gen_bin_name = $(_$1_bdir)$($2)$(_$1_bsfx)
 override _gen_bin_aliases = $(if $(_$1_bdir),$($2)$(_$1_sfx)) $(if $(_binext),$(_$1_bdir)$($2)$(_$1_bsfx)$(_binext))
@@ -991,7 +1000,7 @@ help:
 
 .gitignore:
 	@echo '$(_build_dir)/'
-	@for X in $(sort $(filter-out $(_build_dir)/%,$(SYMLINKS) $(foreach e,$(_env_names),$(_$e_lib_targets) $(addsuffix $(_binext),$(_$e_bin_targets)) $(_$e_links) $(_$e_file_targets)))); do\
+	@for X in $(sort $(filter-out $(_build_dir)/%,$(_symlinks_names) $(foreach e,$(_env_names),$(_$e_lib_targets) $(addsuffix $(_binext),$(_$e_bin_targets)) $(_$e_links) $(_$e_file_targets)))); do\
 	  echo "$$X"; done
 
 override define _setup_env_targets  # <1:build env>
@@ -1022,7 +1031,9 @@ else ifneq ($(filter clean,$(MAKECMDGOALS)),)
 endif
 
 clean:
-	@$(RM) "$(_build_dir)/".*_ver $(foreach x,$(SYMLINKS),"$x")
+	@$(RM) "$(_build_dir)/".*_ver
+	@for X in $(_symlinks_names); do\
+	  ([ -h "$$X" ] && $(RM) "$$X") || true; done
 	@for X in $(filter-out $(MAKEFILE_LIST),$(_clean_files)); do\
 	  (([ -f "$$X" ] || [ -h "$$X" ]) && echo "$(_msgWarn)Removing '$$X'$(_end)" && $(RM) "$$X") || true; done
 	@for X in $(_clean_dirs); do\
@@ -1193,7 +1204,7 @@ endef
 
 
 override define _make_dep  # <1:path> <2:build> <3:source dir> <4:src file> <5:cmd file>
-$1/$(call _src_oname,$4): $3$4 $1/$5 $$(_triggers_$2) | $$(SYMLINKS)
+$1/$(call _src_oname,$4): $3$4 $1/$5 $$(_triggers_$2)
 -include $1/$(call _src_oname,$4).mk
 endef
 
@@ -1263,8 +1274,9 @@ override _get_pic_src2 = $(sort $(foreach x,$(_pic_labels),$(if $(filter $(_$x_b
 ifneq ($(_build_env),)
   $(_build_dir): ; @mkdir -p "$@"
 
-  # symlink creation rule
-  $(foreach x,$(SYMLINKS),$(eval $x: ; @ln -s . "$x"))
+  # symlink creation
+  $(foreach x,$(_symlinks),\
+    $(shell if [[ -h $(call _symlink_name,$x) || ! -e $(call _symlink_name,$x) ]]; then ln -sfn $(call _symlink_target,$x) "$(call _symlink_name,$x)"; fi))
 
   ifneq ($(_src_labels),)
   # rebuild trigger for compiler version change
