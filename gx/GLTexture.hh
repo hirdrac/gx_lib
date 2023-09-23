@@ -692,7 +692,7 @@ void gx::GLTextureCubeMap<VER>::getImage(
               format, type, bufSize, pixels);
   }
 
-  // TODO: read all faces at one (will require different call for VER < 45)
+  // TODO: read all faces at once (will require different call for VER < 45)
   //GX_GLCALL(glGetTextureImage, id, level, format, type, bufSize, pixels);
 }
 
@@ -814,6 +814,7 @@ struct gx::GLTextureHandle
     if constexpr (VER < 45) {
       bindCheck();
       GX_GLCALL(glGetTexImage, TARGET, level, format, type, pixels);
+      // FIXME: bufSize not used
     } else {
       GX_GLCALL(glGetTextureImage, id, level, format, type, bufSize, pixels);
     }
