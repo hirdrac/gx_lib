@@ -1,6 +1,6 @@
 //
 // gx/Types.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #pragma once
@@ -27,7 +27,15 @@ namespace gx {
 
 
   // basic types
-  struct Rect { float x, y, w, h; };
+  struct Rect {
+    float x, y, w, h;
+
+    Rect() = default;
+    constexpr Rect(float rw, float rh)
+      : x{0}, y{0}, w{rw}, h{rh} { }
+    constexpr Rect(float rx, float ry, float rw, float rh)
+      : x{rx}, y{ry}, w{rw}, h{rh} { }
+  };
 
   struct Vertex2C {
     float x, y; uint32_t c;  // 12 bytes
