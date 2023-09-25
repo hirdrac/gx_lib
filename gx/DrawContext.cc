@@ -138,9 +138,9 @@ void DrawContext::quad(
   }
 }
 
-void DrawContext::rectangle(float x, float y, float w, float h)
+void DrawContext::rectangle(const Rect& r)
 {
-  if (checkColor()) { _rectangle(x, y, w, h); }
+  if (checkColor()) { _rectangle(r.x, r.y, r.w, r.h); }
 }
 
 void DrawContext::_rectangle(float x, float y, float w, float h)
@@ -166,54 +166,55 @@ void DrawContext::_rectangle(float x, float y, float w, float h)
   }
 }
 
-void DrawContext::rectangle(
-  float x, float y, float w, float h, Vec2 t0, Vec2 t1)
+void DrawContext::rectangle(const Rect& r, Vec2 t0, Vec2 t1)
 {
   if ((_color0 | _color1) == 0) { return; }
 
-  const float x1 = x + w;
-  const float y1 = y + h;
+  const float x0 = r.x;
+  const float y0 = r.y;
+  const float x1 = x0 + r.w;
+  const float y1 = y0 + r.h;
   switch (_colorMode) {
     case CM_HGRADIENT: {
-      const RGBA8 c0 = gradientColor(x);
+      const RGBA8 c0 = gradientColor(x0);
       const RGBA8 c1 = gradientColor(x1);
       add(CMD_quad2TC,
-          x, y, t0.x, t0.y, c0,
-          x1, y, t1.x, t0.y, c1,
-          x, y1, t0.x, t1.y, c0,
+          x0, y0, t0.x, t0.y, c0,
+          x1, y0, t1.x, t0.y, c1,
+          x0, y1, t0.x, t1.y, c0,
           x1, y1, t1.x, t1.y, c1);
       break;
     }
     case CM_VGRADIENT: {
-      const RGBA8 c0 = gradientColor(y);
+      const RGBA8 c0 = gradientColor(y0);
       const RGBA8 c1 = gradientColor(y1);
       add(CMD_quad2TC,
-          x, y, t0.x, t0.y, c0,
-          x1, y, t1.x, t0.y, c0,
-          x, y1, t0.x, t1.y, c1,
+          x0, y0, t0.x, t0.y, c0,
+          x1, y0, t1.x, t0.y, c0,
+          x0, y1, t0.x, t1.y, c1,
           x1, y1, t1.x, t1.y, c1);
       break;
     }
     default:
       setColor();
-      add(CMD_rectangleT, x, y, t0.x, t0.y, x1, y1, t1.x, t1.y);
+      add(CMD_rectangleT, x0, y0, t0.x, t0.y, x1, y1, t1.x, t1.y);
       break;
   }
 }
 
 void DrawContext::rectangle(
-  float x, float y, float w, float h, Vec2 t0, Vec2 t1, const Rect& clip)
+  const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip)
 {
   if ((_color0 | _color1) == 0) { return; }
 
-  float x0 = x;
-  float y0 = y;
-  float x1 = x + w;
-  float y1 = y + h;
+  float x0 = r.x;
+  float y0 = r.y;
+  float x1 = x0 + r.w;
+  float y1 = y0 + r.h;
   const float cx0 = clip.x;
   const float cy0 = clip.y;
-  const float cx1 = clip.x + clip.w;
-  const float cy1 = clip.y + clip.h;
+  const float cx1 = cx0 + clip.w;
+  const float cy1 = cy0 + clip.h;
 
   if (x0 >= cx1 || y0 >= cy1 || x1 <= cx0 || y1 <= cy0) {
     return; // completely outside of clip region

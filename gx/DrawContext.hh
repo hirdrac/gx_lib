@@ -133,15 +133,9 @@ class gx::DrawContext
         c.x, c.y, c.z, c.nx, c.ny, c.nz, c.s, c.t, c.c,
         d.x, d.y, d.z, d.nx, d.ny, d.nz, d.s, d.t, d.c); }
 
-  void rectangle(float x, float y, float w, float h);
-  void rectangle(const Rect& r) { rectangle(r.x, r.y, r.w, r.h); }
-  void rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1);
-  void rectangle(const Rect& r, Vec2 t0, Vec2 t1) {
-    rectangle(r.x, r.y, r.w, r.h, t0, t1); }
-  void rectangle(float x, float y, float w, float h, Vec2 t0, Vec2 t1,
-                 const Rect& clip);
-  void rectangle(const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip) {
-    rectangle(r.x, r.y, r.w, r.h, t0, t1, clip); }
+  void rectangle(const Rect& r);
+  void rectangle(const Rect& r, Vec2 t0, Vec2 t1);
+  void rectangle(const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip);
 
   // High-level data entry
   void text(const TextFormatting& tf, float x, float y, AlignEnum align,

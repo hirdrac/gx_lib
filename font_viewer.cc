@@ -61,7 +61,7 @@ int main(int argc, char** argv)
       dc.clear();
       dc.color(gx::WHITE);
       dc.texture(t);
-      dc.rectangle(0, 0, float(win.width()), float(win.height()), {0,0}, {1,1});
+      dc.rectangle({0, 0, float(win.width()), float(win.height())}, {0,0}, {1,1});
 
       win.draw(&dl);
     }

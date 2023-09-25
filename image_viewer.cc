@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
       dc.clear();
       dc.color(gx::WHITE);
       dc.texture(e.tex);
-      dc.rectangle(ix + imgOffset.x, iy + imgOffset.y, iw, ih, {0,0}, {1,1});
+      dc.rectangle({ix + imgOffset.x, iy + imgOffset.y, iw, ih}, {0,0}, {1,1});
 
       // multi-image horizontal display in fullscreen
       if (win.fullScreen() && iw < (float(win.width()) - border)) {
@@ -180,8 +180,8 @@ int main(int argc, char* argv[])
           //if ((ix0+iw0) < 0) { break; }
           const float iy0 = std::floor((float(win.height()) - ih0) * .5f);
           dc.texture(e0.tex);
-          dc.rectangle(ix0 + imgOffset.x, iy0 + imgOffset.y,
-                       iw0, ih0, {0,0}, {1,1});
+          dc.rectangle({ix0 + imgOffset.x, iy0 + imgOffset.y, iw0, ih0},
+                       {0,0}, {1,1});
         }
 
         // display next image(s)
@@ -193,8 +193,8 @@ int main(int argc, char* argv[])
           //if (ix1 > float(win.width())) { break; }
           const float iy1 = std::floor((float(win.height()) - ih1) * .5f);
           dc.texture(e1.tex);
-          dc.rectangle(ix1 + imgOffset.x, iy1 + imgOffset.y,
-                       iw1, ih1, {0,0}, {1,1});
+          dc.rectangle({ix1 + imgOffset.x, iy1 + imgOffset.y, iw1, ih1},
+                       {0,0}, {1,1});
         }
       }
 

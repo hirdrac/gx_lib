@@ -246,7 +246,7 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
 
     switch (style->shapeType) {
       default: // SHAPE_DEFAULT
-        dc.rectangle(x, y, w, h);
+        dc.rectangle({x, y, w, h});
         break;
       case GuiTheme::SHAPE_ROUNDED: {
         dc.roundedRectangle(x, y, w, h, thm.roundedRadius, thm.roundedSegments);
@@ -267,16 +267,16 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
             dc.border(x, y, w, h, 2);
             break;
           case GuiTheme::EDGE_UNDERLINE_1px:
-            dc.rectangle(x, y + h - 1, w, 1);
+            dc.rectangle({x, y + h - 1, w, 1});
             break;
           case GuiTheme::EDGE_UNDERLINE_2px:
-            dc.rectangle(x, y + h - 2, w, 2);
+            dc.rectangle({x, y + h - 2, w, 2});
             break;
           case GuiTheme::EDGE_OVERLINE_1px:
-            dc.rectangle(x, y, w, 1);
+            dc.rectangle({x, y, w, 1});
             break;
           case GuiTheme::EDGE_OVERLINE_2px:
-            dc.rectangle(x, y, w, 2);
+            dc.rectangle({x, y, w, 2});
             break;
         }
         break;
@@ -292,19 +292,19 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
             break;
           case GuiTheme::EDGE_UNDERLINE_1px:
             dc.rectangle(
-              x+thm.roundedRadius, y+h-1, w-(thm.roundedRadius*2), 1);
+              {x+thm.roundedRadius, y+h-1, w-(thm.roundedRadius*2), 1});
             break;
           case GuiTheme::EDGE_UNDERLINE_2px:
             dc.rectangle(
-              x+thm.roundedRadius, y+h-2, w-(thm.roundedRadius*2), 2);
+              {x+thm.roundedRadius, y+h-2, w-(thm.roundedRadius*2), 2});
             break;
           case GuiTheme::EDGE_OVERLINE_1px:
             dc.rectangle(
-              x+thm.roundedRadius, y, w-(thm.roundedRadius*2), 1);
+              {x+thm.roundedRadius, y, w-(thm.roundedRadius*2), 1});
             break;
           case GuiTheme::EDGE_OVERLINE_2px:
             dc.rectangle(
-              x+thm.roundedRadius, y, w-(thm.roundedRadius*2), 2);
+              {x+thm.roundedRadius, y, w-(thm.roundedRadius*2), 2});
             break;
         }
         break;
@@ -1449,13 +1449,13 @@ bool Gui::drawElem(
     case GUI_HLINE: {
       const float b = thm.lineBorder;
       dc.color(style->textColor);
-      dc.rectangle(ex, ey + b, ew, eh - (b*2));
+      dc.rectangle({ex, ey + b, ew, eh - (b*2)});
       break;
     }
     case GUI_VLINE: {
       const float b = thm.lineBorder;
       dc.color(style->textColor);
-      dc.rectangle(ex + b, ey, ew - (b*2), eh);
+      dc.rectangle({ex + b, ey, ew - (b*2), eh});
       break;
     }
     case GUI_CHECKBOX: {
@@ -1552,11 +1552,11 @@ bool Gui::drawElem(
           const float x0 = std::max(std::min(cx,cx2)-1, ex);
           const float x1 = std::min(std::max(cx,cx2)+1, ex+ew);
           dc.color(thm.textSelectColor);
-          dc.rectangle(x0, cy, x1 - x0, ch);
+          dc.rectangle({x0, cy, x1 - x0, ch});
         } else if (_cursorState) {
           // draw cursor
           dc.color(thm.cursorColor);
-          dc.rectangle(cx - 1, cy, cw, ch);
+          dc.rectangle({cx - 1, cy, cw, ch});
         }
       }
       break;
@@ -1564,8 +1564,7 @@ bool Gui::drawElem(
     case GUI_IMAGE: {
       const auto& image = def.image();
       dc.texture(image.texId);
-      dc.rectangle(ex + thm.border, ey + thm.border,
-                   image.width, image.height,
+      dc.rectangle({ex + thm.border, ey + thm.border, image.width, image.height},
                    image.texCoord0, image.texCoord1);
       break;
     }
