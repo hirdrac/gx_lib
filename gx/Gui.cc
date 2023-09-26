@@ -1466,7 +1466,7 @@ bool Gui::drawElem(
       if (def.checkbox().set) {
         dc2.color(style->textColor);
         dc2.glyph({thm.font, float(thm.textSpacing)},
-                  ex + b + thm.checkXOffset, ey + b + thm.checkYOffset,
+                  {ex + b + thm.checkXOffset, ey + b + thm.checkYOffset},
                   ALIGN_TOP_LEFT, thm.checkCode);
       }
       break;
@@ -1475,7 +1475,7 @@ bool Gui::drawElem(
       drawRec(dc, ex, ey, ew, eh, thm, style);
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
-                ex + ew, ey + thm.border, ALIGN_TOP_RIGHT, thm.subMenuCode);
+                {ex + ew, ey + thm.border}, ALIGN_TOP_RIGHT, thm.subMenuCode);
       break;
     case GUI_LISTSELECT: {
       drawRec(dc, ex, ey, ew, eh, thm, style);
@@ -1484,7 +1484,7 @@ bool Gui::drawElem(
         ? thm.listSelectOpenCode : thm.listSelectCode;
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
-                ex + ew - b, ey + b, ALIGN_TOP_RIGHT, code);
+                {ex + ew - b, ey + b}, ALIGN_TOP_RIGHT, code);
       break;
     }
     case GUI_LISTSELECT_ITEM:
@@ -1494,7 +1494,7 @@ bool Gui::drawElem(
         if (parent && parent->item().no == def.item().no) {
           const float b = thm.border;
           dc2.color(style->textColor);
-          dc2.glyph({thm.font, float(thm.textSpacing)}, ex + ew - b, ey + b,
+          dc2.glyph({thm.font, float(thm.textSpacing)}, {ex + ew - b, ey + b},
                     ALIGN_TOP_RIGHT, thm.listSelectItemCode);
         }
       }

@@ -255,7 +255,7 @@ void DrawContext::rectangle(
 }
 
 void DrawContext::glyph(
-  const TextFormatting& tf, float x, float y, AlignEnum align, int code)
+  const TextFormatting& tf, Vec2 pos, AlignEnum align, int code)
 {
   if (!checkColor()) { return; }
 
@@ -269,27 +269,26 @@ void DrawContext::glyph(
 
   if (!g->bitmap) { return; }
 
-  Vec2 cursor{x,y};
   const AlignEnum v_align = VAlign(align);
   if (v_align == ALIGN_TOP) {
-    cursor += tf.advY * f.ymax();
+    pos += tf.advY * f.ymax();
   } else {
     const float fs = float(f.size()) + tf.lineSpacing;
     if (v_align == ALIGN_BOTTOM) {
-      cursor += tf.advY * (f.ymin() - fs);
+      pos += tf.advY * (f.ymin() - fs);
     } else { // ALIGN_VCENTER
-      cursor += tf.advY * ((f.ymax() - fs) * .5f);
+      pos += tf.advY * ((f.ymax() - fs) * .5f);
     }
   }
 
   const AlignEnum h_align = HAlign(align);
   if (h_align != ALIGN_LEFT) {
     const float tw = f.glyphWidth(code);
-    cursor -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
+    pos -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
   }
 
   texture(f.tex());
-  _glyph(*g, tf, cursor, nullptr);
+  _glyph(*g, tf, pos, nullptr);
 }
 
 void DrawContext::_text(
