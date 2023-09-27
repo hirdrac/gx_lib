@@ -292,7 +292,7 @@ void DrawContext::glyph(
 }
 
 void DrawContext::_text(
-  const TextFormatting& tf, float x, float y, AlignEnum align,
+  const TextFormatting& tf, Vec2 pos, AlignEnum align,
   std::string_view text, const Rect* clipPtr)
 {
   if (text.empty() || !checkColor()) { return; }
@@ -302,33 +302,32 @@ void DrawContext::_text(
   const float fs = float(f.size()) + tf.lineSpacing;
   const AlignEnum h_align = HAlign(align);
   const AlignEnum v_align = VAlign(align);
-  Vec2 cursor{x,y};
 
   if (v_align == ALIGN_TOP) {
-    cursor += tf.advY * f.ymax();
+    pos += tf.advY * f.ymax();
   } else {
     int nl = 0;
     for (int ch : text) { nl += (ch == '\n'); }
     if (v_align == ALIGN_BOTTOM) {
-      cursor += tf.advY * (f.ymin() - (fs*float(nl)));
+      pos += tf.advY * (f.ymin() - (fs*float(nl)));
     } else { // ALIGN_VCENTER
-      cursor += tf.advY * ((f.ymax() - (fs*float(nl))) * .5f);
+      pos += tf.advY * ((f.ymax() - (fs*float(nl))) * .5f);
     }
   }
 
   texture(f.tex());
   std::size_t lineStart = 0;
-  Vec2 startCursor = cursor;
+  Vec2 startPos = pos;
 
   for (;;) {
-    const std::size_t pos = text.find('\n', lineStart);
+    const std::size_t i = text.find('\n', lineStart);
     const std::string_view line = text.substr(
-      lineStart, (pos != std::string_view::npos) ? (pos - lineStart) : pos);
+      lineStart, (i != std::string_view::npos) ? (i - lineStart) : i);
 
     if (!line.empty()) {
       if (h_align != ALIGN_LEFT) {
         const float tw = f.calcLength(line, tf.glyphSpacing);
-        cursor -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
+        pos -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
       }
 
       for (UTF8Iterator itr{line}; !itr.done(); itr.next()) {
@@ -340,22 +339,22 @@ void DrawContext::_text(
           GX_ASSERT(g != nullptr);
         }
 
-        if (g->bitmap) { _glyph(*g, tf, cursor, clipPtr); }
-        cursor += tf.advX * (g->advX + tf.glyphSpacing);
+        if (g->bitmap) { _glyph(*g, tf, pos, clipPtr); }
+        pos += tf.advX * (g->advX + tf.glyphSpacing);
       }
     }
 
-    if (pos == std::string_view::npos) { break; }
+    if (i == std::string_view::npos) { break; }
 
     // move to start of next line
-    lineStart = pos + 1;
-    startCursor += tf.advY * fs;
-    cursor = startCursor;
+    lineStart = i + 1;
+    startPos += tf.advY * fs;
+    pos = startPos;
   }
 }
 
 void DrawContext::_glyph(
-  const Glyph& g, const TextFormatting& tf, Vec2 cursor, const Rect* clipPtr)
+  const Glyph& g, const TextFormatting& tf, Vec2 pos, const Rect* clipPtr)
 {
   const Vec2 gx = tf.glyphX * float(g.width);
   const Vec2 gy = tf.glyphY * float(g.height);
@@ -364,7 +363,7 @@ void DrawContext::_glyph(
   //       |/|
   //       C-D
 
-  Vec2 A = cursor + (tf.glyphX * g.left) - (tf.glyphY * g.top);
+  Vec2 A = pos + (tf.glyphX * g.left) - (tf.glyphY * g.top);
   Vec2 B = A + gx;
   Vec2 C = A + gy;
   Vec2 D = C + gx;
