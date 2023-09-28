@@ -283,14 +283,14 @@ int main(int argc, char** argv)
       dc.color(WHITE);
       x = y = 0;
       for (int i = start_gfx; i < end_gfx; ++i) {
-        dc.text(tf, x+(ITEM_WIDTH/2), y+6, gx::ALIGN_TOP_CENTER,
+        dc.text(tf, {x+(ITEM_WIDTH/2), y+6}, gx::ALIGN_TOP_CENTER,
                 gfxData[i].desc);
         x += ITEM_WIDTH;
         if (x > float(win.width() - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }
 
       if (maxPage > 0) {
-        dc.text(tf, float(win.width()-10), float(win.height()-1),
+        dc.text(tf, {float(win.width()-10), float(win.height()-1)},
                 gx::ALIGN_BOTTOM_RIGHT,
                 gx::concat("Page ", page+1, " of ", maxPage+1));
       }

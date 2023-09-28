@@ -138,12 +138,12 @@ class gx::DrawContext
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip);
 
   // High-level data entry
-  void text(const TextFormatting& tf, float x, float y, AlignEnum align,
+  void text(const TextFormatting& tf, Vec2 pos, AlignEnum align,
             std::string_view text) {
-    _text(tf, {x, y}, align, text, nullptr); }
-  void text(const TextFormatting& tf, float x, float y, AlignEnum align,
+    _text(tf, pos, align, text, nullptr); }
+  void text(const TextFormatting& tf, Vec2 pos, AlignEnum align,
             std::string_view text, const Rect& clip) {
-    _text(tf, {x, y}, align, text, &clip); }
+    _text(tf, pos, align, text, &clip); }
   void glyph(const TextFormatting& tf, Vec2 pos, AlignEnum align, int code);
 
   void circleSector(

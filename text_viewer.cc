@@ -216,7 +216,7 @@ int main(int argc, char** argv)
             const std::size_t count =
               (tabPos == std::string_view::npos) ? tabPos : tabPos - i;
             const std::string_view segment = line.substr(i,count);
-            dc.text(tf, tx, ty, gx::ALIGN_TOP_LEFT, segment);
+            dc.text(tf, {tx, ty}, gx::ALIGN_TOP_LEFT, segment);
             i += segment.size() + 1;
             if (tabPos != std::string_view::npos) {
               const float tx2 = tx + fnt.calcLength(segment, 0);

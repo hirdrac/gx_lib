@@ -1438,13 +1438,13 @@ bool Gui::drawElem(
     case GUI_LABEL:
       dc2.color(style->textColor);
       dc2.text({thm.font, float(thm.textSpacing)},
-               ex, ey, ALIGN_TOP_LEFT, def.label().text);
+               {ex, ey}, ALIGN_TOP_LEFT, def.label().text);
       break;
     case GUI_VLABEL:
       dc2.color(style->textColor);
-      dc2.text({thm.font, float(thm.textSpacing), 0,
-                {0,-1}, {1,0}, {0,-1}, {1,0}},
-               ex, ey+eh, ALIGN_TOP_LEFT, def.label().text);
+      dc2.text(
+        {thm.font, float(thm.textSpacing), 0, {0,-1}, {1,0}, {0,-1}, {1,0}},
+        {ex, ey+eh}, ALIGN_TOP_LEFT, def.label().text);
       break;
     case GUI_HLINE: {
       const float b = thm.lineBorder;
@@ -1540,8 +1540,9 @@ bool Gui::drawElem(
       entry.tx = tx;
       dc2.color(style->textColor);
       // TODO: add gradient color if text is off left/right edges
-      dc2.text({thm.font, float(thm.textSpacing)}, tx,
-               ey + thm.entryTopMargin, ALIGN_TOP_LEFT, txt, {ex, ey, ew, eh});
+      dc2.text({thm.font, float(thm.textSpacing)},
+               {tx, ey + thm.entryTopMargin},
+               ALIGN_TOP_LEFT, txt, {ex, ey, ew, eh});
       if (def._id == _focusID) {
         const float cy = ey + float(std::max(int(thm.entryTopMargin), 1) - 1);
         const float ch = float(thm.font->size());
