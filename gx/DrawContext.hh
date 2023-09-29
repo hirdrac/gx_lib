@@ -159,8 +159,7 @@ class gx::DrawContext
     //  * angles are in degrees
     //    angle 0 is (0, -radius) from center, 90 is (radius, 0) from center
 
-  void roundedRectangle(float x, float y, float w, float h,
-                        float curveRadius, int curveSegments);
+  void roundedRectangle(const Rect& r, float curveRadius, int curveSegments);
 
   void border(float x, float y, float w, float h, float borderWidth);
   void border(float x, float y, float w, float h, float borderWidth,

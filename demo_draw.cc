@@ -63,37 +63,37 @@ void draw_circle6(gx::DrawContext& dc, float x, float y)
 void draw_rrect1(gx::DrawContext& dc, float x, float y)
 {
   dc.color(GRAY50);
-  dc.roundedRectangle(x+20, y+30, 360, 300, 60, 4);
+  dc.roundedRectangle({x+20, y+30, 360, 300}, 60, 4);
 }
 
 void draw_rrect2(gx::DrawContext& dc, float x, float y)
 {
   dc.hgradient(x+20, WHITE, x+380, BLACK);
-  dc.roundedRectangle(x+20, y+30, 360, 300, 60, 4);
+  dc.roundedRectangle({x+20, y+30, 360, 300}, 60, 4);
 }
 
 void draw_rrect3(gx::DrawContext& dc, float x, float y)
 {
   dc.vgradient(y+30, WHITE, y+330, BLACK);
-  dc.roundedRectangle(x+20, y+30, 360, 300, 60, 4);
+  dc.roundedRectangle({x+20, y+30, 360, 300}, 60, 4);
 }
 
 void draw_rrect4(gx::DrawContext& dc, float x, float y)
 {
   dc.color(WHITE);
-  dc.roundedRectangle(x+150, y+30, 100, 300, 60, 4);
+  dc.roundedRectangle({x+150, y+30, 100, 300}, 60, 4);
 }
 
 void draw_rrect5(gx::DrawContext& dc, float x, float y)
 {
   dc.color(WHITE);
-  dc.roundedRectangle(x+20, y+130, 360, 100, 60, 4);
+  dc.roundedRectangle({x+20, y+130, 360, 100}, 60, 4);
 }
 
 void draw_rrect6(gx::DrawContext& dc, float x, float y)
 {
   dc.color(WHITE);
-  dc.roundedRectangle(x+150, y+130, 100, 100, 60, 4);
+  dc.roundedRectangle({x+150, y+130, 100, 100}, 60, 4);
 }
 
 void draw_arc1(gx::DrawContext& dc, float x, float y)

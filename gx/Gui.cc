@@ -249,7 +249,8 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
         dc.rectangle({x, y, w, h});
         break;
       case GuiTheme::SHAPE_ROUNDED: {
-        dc.roundedRectangle(x, y, w, h, thm.roundedRadius, thm.roundedSegments);
+        dc.roundedRectangle(
+          {x, y, w, h}, thm.roundedRadius, thm.roundedSegments);
         break;
       }
     }
