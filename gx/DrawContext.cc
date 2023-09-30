@@ -709,10 +709,11 @@ void DrawContext::roundedRectangle(
   }
 }
 
-void DrawContext::border(float x, float y, float w, float h, float borderWidth)
+void DrawContext::border(const Rect& r, float borderWidth)
 {
   if ((_color0 | _color1) == 0) { return; }
 
+  const auto [x,y,w,h] = r;
   const Vec2 A{x,y};
   const Vec2 B{x+w,y};
   const Vec2 C{x,y+h};
@@ -747,12 +748,12 @@ void DrawContext::border(float x, float y, float w, float h, float borderWidth)
   }
 }
 
-void DrawContext::border(float x, float y, float w, float h, float borderWidth,
+void DrawContext::border(const Rect& r, float borderWidth,
                          RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
   if ((innerColor | outerColor | fillColor) == 0) { return; }
 
-  float x0 = x, y0 = y, x1 = x+w, y1 = y+h;
+  float x0 = r.x, y0 = r.y, x1 = r.x+r.w, y1 = r.y+r.h;
   const Vertex2C v_A{x0, y0, outerColor};
   const Vertex2C v_B{x1, y0, outerColor};
   const Vertex2C v_C{x0, y1, outerColor};

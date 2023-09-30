@@ -262,10 +262,10 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
       default: // SHAPE_DEFAULT
         switch (style->edgeType) {
           default: // EDGE_BORDER_1px
-            dc.border(x, y, w, h, 1);
+            dc.border({x, y, w, h}, 1);
             break;
           case GuiTheme::EDGE_BORDER_2px:
-            dc.border(x, y, w, h, 2);
+            dc.border({x, y, w, h}, 2);
             break;
           case GuiTheme::EDGE_UNDERLINE_1px:
             dc.rectangle({x, y + h - 1, w, 1});
