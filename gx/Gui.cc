@@ -285,11 +285,11 @@ static void drawRec(DrawContext& dc, float x, float y, float w, float h,
         switch (style->edgeType) {
           default: // EDGE_BORDER_1px
             dc.roundedBorder(
-              x, y, w, h, thm.roundedRadius, thm.roundedSegments, 1);
+              {x, y, w, h}, thm.roundedRadius, thm.roundedSegments, 1);
             break;
           case GuiTheme::EDGE_BORDER_2px:
             dc.roundedBorder(
-              x, y, w, h, thm.roundedRadius, thm.roundedSegments, 2);
+              {x, y, w, h}, thm.roundedRadius, thm.roundedSegments, 2);
             break;
           case GuiTheme::EDGE_UNDERLINE_1px:
             dc.rectangle(

@@ -144,31 +144,31 @@ void draw_border5(gx::DrawContext& dc, float x, float y)
 void draw_rborder1(gx::DrawContext& dc, float x, float y)
 {
   dc.color(GRAY50);
-  dc.roundedBorder(x+20, y+30, 360, 300, 40, 4, 4.0f);
+  dc.roundedBorder({x+20, y+30, 360, 300}, 40, 4, 4.0f);
 }
 
 void draw_rborder2(gx::DrawContext& dc, float x, float y)
 {
   dc.hgradient(x+20, WHITE, x+380, BLACK);
-  dc.roundedBorder(x+20, y+30, 360, 300, 40, 4, 8.0f);
+  dc.roundedBorder({x+20, y+30, 360, 300}, 40, 4, 8.0f);
 }
 
 void draw_rborder3(gx::DrawContext& dc, float x, float y)
 {
   dc.vgradient(y+30, WHITE, y+330, BLACK);
-  dc.roundedBorder(x+20, y+30, 360, 300, 40, 4, 8.0f);
+  dc.roundedBorder({x+20, y+30, 360, 300}, 40, 4, 8.0f);
 }
 
 void draw_rborder4(gx::DrawContext& dc, float x, float y)
 {
   dc.roundedBorder(
-    x+20, y+30, 360, 300, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
+    {x+20, y+30, 360, 300}, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
 }
 
 void draw_rborder5(gx::DrawContext& dc, float x, float y)
 {
   dc.roundedBorder(
-    x+20, y+30, 360, 300, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
+    {x+20, y+30, 360, 300}, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
 }
 
 void draw_lines1(gx::DrawContext& dc, float x, float y)

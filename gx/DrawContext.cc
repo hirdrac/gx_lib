@@ -783,71 +783,71 @@ void DrawContext::border(const Rect& r, float borderWidth,
 }
 
 void DrawContext::roundedBorder(
-  float x, float y, float w, float h,
-  float curveRadius, int curveSegments, float borderWidth)
+  const Rect& r, float curveRadius, int curveSegments, float borderWidth)
 {
   if (!checkColor()) { return; }
 
+  const auto [x,y,w,h] = r;
   const float half_w = w * .5f;
   const float half_h = h * .5f;
-  const float r = std::min(curveRadius, std::min(half_w, half_h));
+  const float cr = std::min(curveRadius, std::min(half_w, half_h));
 
   // corners
   constexpr float a90  = degToRad(90.0f);
   constexpr float a180 = degToRad(180.0f);
   constexpr float a270 = degToRad(270.0f);
   constexpr float a360 = degToRad(360.0f);
-  _arc({x+r,y+r}, r, a270, a360, curveSegments, borderWidth);    // top/left
-  _arc({x+w-r,y+r}, r, 0, a90, curveSegments, borderWidth);      // top/right
-  _arc({x+w-r,y+h-r}, r, a90, a180, curveSegments, borderWidth); // bottom/right
-  _arc({x+r,y+h-r}, r, a180, a270, curveSegments, borderWidth);  // bottom/left
+  _arc({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth);    // top/left
+  _arc({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth);      // top/right
+  _arc({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth); // bottom/right
+  _arc({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth);  // bottom/left
 
   // borders/center
-  if (r < half_w) {
+  if (cr < half_w) {
     // top/bottom borders
-    const float bw = w - (r * 2.0f);
-    _rectangle(x+r, y, bw, borderWidth);
-    _rectangle(x+r, y+h-borderWidth, bw, borderWidth);
+    const float bw = w - (cr * 2.0f);
+    _rectangle(x+cr, y, bw, borderWidth);
+    _rectangle(x+cr, y+h-borderWidth, bw, borderWidth);
   }
 
-  if (r < half_h) {
+  if (cr < half_h) {
     // left/right borders
-    const float bh = h - (r * 2.0f);
-    _rectangle(x, y+r, borderWidth, bh);
-    _rectangle(x+w-borderWidth, y+r, borderWidth, bh);
+    const float bh = h - (cr * 2.0f);
+    _rectangle(x, y+cr, borderWidth, bh);
+    _rectangle(x+w-borderWidth, y+cr, borderWidth, bh);
   }
 }
 
 void DrawContext::roundedBorder(
-  float x, float y, float w, float h,
-  float curveRadius, int curveSegments, float borderWidth,
+  const Rect& r, float curveRadius, int curveSegments, float borderWidth,
   RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
   if ((innerColor | outerColor | fillColor) == 0) { return; }
 
+  const auto [x,y,w,h] = r;
   const float half_w = w * .5f;
   const float half_h = h * .5f;
-  const float r = std::min(curveRadius, std::min(half_w, half_h));
+  const float cr = std::min(curveRadius, std::min(half_w, half_h));
 
   // corners
   constexpr float a90  = degToRad(90.0f);
   constexpr float a180 = degToRad(180.0f);
   constexpr float a270 = degToRad(270.0f);
   constexpr float a360 = degToRad(360.0f);
-  _arc({x+r,y+r}, r, a270, a360, curveSegments, borderWidth,
+  _arc({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth,
        innerColor, outerColor, fillColor); // top/left
-  _arc({x+w-r,y+r}, r, 0, a90, curveSegments, borderWidth,
+  _arc({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth,
        innerColor, outerColor, fillColor); // top/right
-  _arc({x+w-r,y+h-r}, r, a90, a180, curveSegments, borderWidth,
+  _arc({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth,
        innerColor, outerColor, fillColor); // bottom/right
-  _arc({x+r,y+h-r}, r, a180, a270, curveSegments, borderWidth,
+  _arc({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth,
        innerColor, outerColor, fillColor); // bottom/left
 
   // borders/center
-  if (r < half_w) {
+  if (cr < half_w) {
     // top/bottom borders
-    const float x0 = x + r;
-    const float x1 = x + w - r;
+    const float x0 = x + cr;
+    const float x1 = x + w - cr;
     add(CMD_quad2C,
         x0, y,               outerColor,
         x1, y,               outerColor,
@@ -860,10 +860,10 @@ void DrawContext::roundedBorder(
         x1, y+h,             outerColor);
   }
 
-  if (r < half_h) {
+  if (cr < half_h) {
     // left/right borders
-    const float y0 = y + r;
-    const float y1 = y + h - r;
+    const float y0 = y + cr;
+    const float y1 = y + h - cr;
     add(CMD_quad2C,
         x,               y0, outerColor,
         x+borderWidth,   y0, innerColor,
@@ -877,37 +877,37 @@ void DrawContext::roundedBorder(
   }
 
   if (fillColor) {
-    if (r < half_w) {
+    if (cr < half_w) {
       // fill top/bottom borders & center
       add(CMD_quad2C,
-          x+r,   y+borderWidth,   fillColor,
-          x+w-r, y+borderWidth,   fillColor,
-          x+r,   y+h-borderWidth, fillColor,
-          x+w-r, y+h-borderWidth, fillColor);
-      if (r < half_h) {
-        const float y0 = y + r;
-        const float y1 = y + h - r;
+          x+cr,   y+borderWidth,   fillColor,
+          x+w-cr, y+borderWidth,   fillColor,
+          x+cr,   y+h-borderWidth, fillColor,
+          x+w-cr, y+h-borderWidth, fillColor);
+      if (cr < half_h) {
+        const float y0 = y + cr;
+        const float y1 = y + h - cr;
 
         // fill left border
         add(CMD_quad2C,
             x+borderWidth,   y0, fillColor,
-            x+r,             y0, fillColor,
+            x+cr,            y0, fillColor,
             x+borderWidth,   y1, fillColor,
-            x+r,             y1, fillColor);
+            x+cr,            y1, fillColor);
         // fill right border
         add(CMD_quad2C,
-            x+w-r,           y0, fillColor,
+            x+w-cr,          y0, fillColor,
             x+w-borderWidth, y0, fillColor,
-            x+w-r,           y1, fillColor,
+            x+w-cr,          y1, fillColor,
             x+w-borderWidth, y1, fillColor);
       }
-    } else if (r < half_h) {
+    } else if (cr < half_h) {
       // fill left/right borders & center
       add(CMD_quad2C,
-          x,   y+r,   fillColor,
-          x+w, y+r,   fillColor,
-          x,   y+h-r, fillColor,
-          x+w, y+h-r, fillColor);
+          x,   y+cr,   fillColor,
+          x+w, y+cr,   fillColor,
+          x,   y+h-cr, fillColor,
+          x+w, y+h-cr, fillColor);
     }
   }
 }

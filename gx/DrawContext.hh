@@ -165,9 +165,9 @@ class gx::DrawContext
   void border(const Rect& r, float borderWidth,
               RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
-  void roundedBorder(float x, float y, float w, float h,
+  void roundedBorder(const Rect& r,
                      float curveRadius, int curveSegments, float borderWidth);
-  void roundedBorder(float x, float y, float w, float h,
+  void roundedBorder(const Rect& r,
                      float curveRadius, int curveSegments, float borderWidth,
                      RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
