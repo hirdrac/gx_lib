@@ -234,12 +234,12 @@ void Window::setMouseShape(MouseShapeEnum shape)
   }
 }
 
-void Window::setMousePos(float x, float y)
+void Window::setMousePos(Vec2 pos)
 {
-  _mousePt.set(x, y);
+  _mousePt = pos;
   if (_renderer) {
     GX_ASSERT(isMainThread());
-    glfwSetCursorPos(_renderer->window(), double(x), double(y));
+    glfwSetCursorPos(_renderer->window(), double(pos.x), double(pos.y));
   }
 }
 

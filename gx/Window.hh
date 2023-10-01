@@ -167,7 +167,7 @@ class gx::Window
   void setSizeLimits(int minWidth, int minHeight, int maxWidth, int maxHeight);
   void setMouseMode(MouseModeEnum mode);
   void setMouseShape(MouseShapeEnum shape);
-  void setMousePos(float x, float y);
+  void setMousePos(Vec2 pos);
   void setSamples(int samples);
   bool open(int flags = WINDOW_RESIZABLE);
 
