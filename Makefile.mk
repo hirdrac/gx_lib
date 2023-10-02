@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 56 (2023/9/19)
+# Makefile.mk - revision 56 (2023/10/1)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -321,43 +321,36 @@ override _clang_ld := lld
 override _clang_warn := shadow
 override _clang_modern := -Wzero-as-null-pointer-constant -Wregister -Winconsistent-missing-override
 
-
-#### Compiler/Standard Specific Setup ####
-override _compiler := $(or $(strip $(COMPILER)),$(firstword $(_compiler_names)))
-ifeq ($(filter $(_compiler),$(_compiler_names)),)
-  $(error $(_msgErr)COMPILER: unsupported compiler '$(_compiler)'$(_end))
-endif
-
-override _cross_compile := $(strip $(CROSS_COMPILE))
-override _cxx := $(_cross_compile)$(or $(_$(_compiler)_cxx),c++)
-override _cc := $(_cross_compile)$(or $(_$(_compiler)_cc),cc)
-override _as := $(_cross_compile)$(or $(_$(_compiler)_as),as)
-override _ar := $(_cross_compile)$(or $(_$(_compiler)_ar),ar)
-
-ifneq ($(strip $(LINKER)),-)
-  ifneq ($(strip $(LINKER)),ld)
-    override _linker := $(or $(strip $(LINKER)),$(_$(_compiler)_ld))
-  endif
-endif
-
+# compiler source file patterns
 override _c_ptrn := %.c
-override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x c23 gnu23
 override _asm_ptrn := %.s %.S %.sx
 override _cxx_ptrn := %.cc %.cp %.cxx %.cpp %.CPP %.c++ %.C
+
+# compiler allowed standards
+override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x c23 gnu23
 override _cxx_stds := c++98 gnu++98 c++03 gnu++03 c++11 gnu++11 c++14 gnu++14 c++17 gnu++17 c++2a gnu++2a c++20 gnu++20 c++2b gnu++2b c++23 gnu++23 c++2c gnu++2c c++26 gnu++26
 
+# compiler functions
+override define _check_compiler # <1:compiler name var>
+  ifneq ($$(strip $$($1)),)
+    ifeq ($$(filter $$($1),$$(_compiler_names)),)
+      $$(error $$(_msgErr)$1: unsupported compiler '$$($1)'$$(_end))
+    endif
+  endif
+endef
+
 override define _check_standard  # <1:standard var> <2:set prefix>
-override $2_cxx_std := $$(addprefix -std=,$$(filter $$($1),$$(_cxx_stds)))
-ifeq ($$(filter 0 1,$$(words $$($2_cxx_std))),)
-  $$(error $$(_msgErr)$1: multiple C++ standards not allowed$$(_end))
-endif
-override $2_c_std := $$(addprefix -std=,$$(filter $$($1),$$(_c_stds)))
-ifeq ($$(filter 0 1,$$(words $$($2_c_std))),)
-  $$(error $$(_msgErr)$1: multiple C standards not allowed$$(_end))
-endif
-ifneq ($$(filter-out $$(_cxx_stds) $$(_c_stds),$$($1)),)
-  $$(error $$(_msgErr)$1: unknown '$$(filter-out $$(_cxx_stds) $$(_c_stds),$$($1))'$$(_end))
-endif
+  override $2_cxx_std := $$(addprefix -std=,$$(filter $$($1),$$(_cxx_stds)))
+  ifeq ($$(filter 0 1,$$(words $$($2_cxx_std))),)
+    $$(error $$(_msgErr)$1: multiple C++ standards not allowed$$(_end))
+  endif
+  override $2_c_std := $$(addprefix -std=,$$(filter $$($1),$$(_c_stds)))
+  ifeq ($$(filter 0 1,$$(words $$($2_c_std))),)
+    $$(error $$(_msgErr)$1: multiple C standards not allowed$$(_end))
+  endif
+  ifneq ($$(filter-out $$(_cxx_stds) $$(_c_stds),$$($1)),)
+    $$(error $$(_msgErr)$1: unknown '$$(filter-out $$(_cxx_stds) $$(_c_stds),$$($1))'$$(_end))
+  endif
 endef
 
 
@@ -725,6 +718,22 @@ else ifneq ($(_build_env),)
   override ALL_FILES := $(foreach x,$(_file_labels),$($x))
   $(foreach t,$(_template_labels),\
     $(eval override $t.ALL_FILES := $(foreach x,$(_$t_labels),$($x))))
+
+  # compiler command setup
+  $(eval $(call _check_compiler,COMPILER))
+  override _compiler := $(or $(strip $(COMPILER)),$(firstword $(_compiler_names)))
+
+  override _cross_compile := $(strip $(CROSS_COMPILE))
+  override _cxx := $(_cross_compile)$(or $(_$(_compiler)_cxx),c++)
+  override _cc := $(_cross_compile)$(or $(_$(_compiler)_cc),cc)
+  override _as := $(_cross_compile)$(or $(_$(_compiler)_as),as)
+  override _ar := $(_cross_compile)$(or $(_$(_compiler)_ar),ar)
+
+  ifneq ($(strip $(LINKER)),-)
+    ifneq ($(strip $(LINKER)),ld)
+      override _linker := $(or $(strip $(LINKER)),$(_$(_compiler)_ld))
+    endif
+  endif
 
   $(eval $(call _check_standard,STANDARD,))
   $(eval $(call _check_options,OPTIONS,_op))
@@ -1279,31 +1288,31 @@ ifneq ($(_build_env),)
     $(shell if [[ -h $(call _symlink_name,$x) || ! -e $(call _symlink_name,$x) ]]; then ln -sfn $(call _symlink_target,$x) "$(call _symlink_name,$x)"; fi))
 
   ifneq ($(_src_labels),)
-  # rebuild trigger for compiler version change
-  $(eval $(call _rebuild_check,$(_build_dir)/.$(_compiler)_ver,$(shell $(_cc) --version | head -1)))
+    # rebuild trigger for compiler version change
+    $(eval $(call _rebuild_check,$(_build_dir)/.$(_compiler)_ver,$(shell $(_cc) --version | head -1)))
 
-  # package version change triggers
-  $(foreach p,$(sort $(foreach x,$(_src_labels),$(_$x_xpkgs))),\
-    $(eval $(call _rebuild_check,$(_build_dir)/.pkg_$p_ver,$(shell $(PKGCONF) $p --modversion))))
+    # package version change triggers
+    $(foreach p,$(sort $(foreach x,$(_src_labels),$(_$x_xpkgs))),\
+      $(eval $(call _rebuild_check,$(_build_dir)/.pkg_$p_ver,$(shell $(PKGCONF) $p --modversion))))
 
-  override _triggers_$(ENV) := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_pkgs),$(_build_dir)/.pkg_$p_ver)
-  override _triggers_$(ENV)-tests := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_pkgs) $(_pkgs_test),$(_build_dir)/.pkg_$p_ver)
-  $(foreach x,$(_src_labels),\
-    $(eval override _triggers_$(ENV)-$x := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_$x_xpkgs),$(_build_dir)/.pkg_$p_ver)))
+    override _triggers_$(ENV) := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_pkgs),$(_build_dir)/.pkg_$p_ver)
+    override _triggers_$(ENV)-tests := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_pkgs) $(_pkgs_test),$(_build_dir)/.pkg_$p_ver)
+    $(foreach x,$(_src_labels),\
+      $(eval override _triggers_$(ENV)-$x := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_$x_xpkgs),$(_build_dir)/.pkg_$p_ver)))
 
-  ifneq ($(_linker),)
-    # linker version change trigger
-    override _link_trigger := $(_build_dir)/.$(_linker)_ver
-    $(eval $(call _rebuild_check,$(_link_trigger),$(shell ld.$(_linker) --version | head -1)))
-  endif
+    ifneq ($(_linker),)
+      # linker version change trigger
+      override _link_trigger := $(_build_dir)/.$(_linker)_ver
+      $(eval $(call _rebuild_check,$(_link_trigger),$(shell ld.$(_linker) --version | head -1)))
+    endif
 
-  # make .o/.mk files for each build path
-  $(foreach b,$(sort $(foreach x,$(_nonpic_labels),$(_$x_build))),\
-    $(eval $(call _make_objs,$(_build_dir)/$b,$b,,$(call _get_src,$b),$(call _get_src2,$b))))
+    # make .o/.mk files for each build path
+    $(foreach b,$(sort $(foreach x,$(_nonpic_labels),$(_$x_build))),\
+      $(eval $(call _make_objs,$(_build_dir)/$b,$b,,$(call _get_src,$b),$(call _get_src2,$b))))
 
-  # use unique build path for all PIC compiled code
-  $(foreach b,$(sort $(foreach x,$(_pic_labels),$(_$x_build))),\
-    $(eval $(call _make_objs,$(_build_dir)/$b-pic,$b,$(_pic_flag),$(call _get_pic_src,$b),$(call _get_pic_src2,$b))))
+    # use unique build path for all PIC compiled code
+    $(foreach b,$(sort $(foreach x,$(_pic_labels),$(_$x_build))),\
+      $(eval $(call _make_objs,$(_build_dir)/$b-pic,$b,$(_pic_flag),$(call _get_pic_src,$b),$(call _get_pic_src2,$b))))
   endif
 
   # make binary/library/test build targets
