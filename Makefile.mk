@@ -149,8 +149,9 @@
 #  EXCLUDE_TARGETS labels/files not built by default (wildcard '*' allowed)
 #
 #  Settings STANDARD/OPT_LEVEL/OPT_LEVEL_DEBUG/SUBSYSTEM/PACKAGES/INCLUDE/LIBS/
-#    DEFINE/OPTIONS/FLAGS/RPATH/LINK_FLAGS/SOURCE_DIR can be set for specific
-#    targets to override global values (ex.: BIN1.FLAGS = -pthread).
+#    DEFINE/OPTIONS/FLAGS/RPATH/LINK_FLAGS/SOURCE_DIR/WARN/WARN_C/WARN_CXX
+#    can be set for specific targets to override global values
+#    (ex.: BIN1.FLAGS = -pthread).
 #    A value of '-' can be used to clear the setting for the target
 #    (note that FLAGS_RELEASE/FLAGS_DEBUG/FLAGS_PROFILE are always applied)
 #
@@ -508,7 +509,7 @@ endef
 $(foreach x,$(_lib_labels) $(_bin_labels),$(eval $(call _check_name,$x)))
 
 # target setting patterns
-override _bin_ptrn := %.SRC %.SRC2 %.OBJS %.LIBS %.STANDARD %.OPT_LEVEL %.OPT_LEVEL_DEBUG %.DEFINE %.INCLUDE %.FLAGS %.RPATH %.LINK_FLAGS %.PACKAGES %.OPTIONS %.DEPS %.SUBSYSTEM %.SOURCE_DIR
+override _bin_ptrn := %.SRC %.SRC2 %.OBJS %.LIBS %.STANDARD %.OPT_LEVEL %.OPT_LEVEL_DEBUG %.DEFINE %.INCLUDE %.FLAGS %.RPATH %.LINK_FLAGS %.PACKAGES %.OPTIONS %.DEPS %.SUBSYSTEM %.SOURCE_DIR %.WARN %.WARN_C %.WARN_CXX
 override _lib_ptrn := %.TYPE %.VERSION $(_bin_ptrn)
 override _test_ptrn := %.ARGS $(_bin_ptrn)
 
@@ -889,6 +890,26 @@ else ifneq ($(_build_env),)
     ifneq ($$(strip $$($1.FLAGS)),-)
       override _$1_flags := $$(or $$($1.FLAGS),$$(FLAGS) $(if $2,$$(FLAGS_TEST)))
     endif
+
+    ifeq ($$(strip $$($1.WARN_C)),)
+      ifeq ($$(strip $$($1.WARN)),)
+        override _$1_warn_c := $$(_warn_c)
+      else ifneq ($$(strip $$($1.WARN)),-)
+        override _$1_warn_c := $$(call _format_warn,$$($1.WARN))
+      endif
+    else ifneq ($$(strip $$($1.WARN_C)),-)
+      override _$1_warn_c := $$(call _format_warn,$$($1.WARN_C))
+    endif
+
+    ifeq ($$(strip $$($1.WARN_CXX)),)
+      ifeq ($$(strip $$($1.WARN)),)
+        override _$1_warn_cxx := $$(_warn_cxx)
+      else ifneq ($$(strip $$($1.WARN)),-)
+        override _$1_warn_cxx := $$(call _format_warn,$$($1.WARN))
+      endif
+    else ifneq ($$(strip $$($1.WARN_CXX)),-)
+      override _$1_warn_cxx := $$(call _format_warn,$$($1.WARN_CXX))
+    endif
   endef
   $(foreach x,$(_lib_labels) $(_bin_labels),$(eval $(call _build_entry1,$x,)))
   $(foreach x,$(_test_labels),$(eval $(call _build_entry1,$x,test)))
@@ -909,8 +930,8 @@ else ifneq ($(_build_env),)
 
     # NOTE: LIBS before PACKAGES libs in case included static lib requires package
     override _$1_xflags := $$(_$1_pkg_flags) $$(FLAGS_$$(_$$(ENV)_uc)) $$(_$1_flags)
-    override _cxxflags_$$(ENV)-$1 := $$(strip $$(_$1_cxx_std) $$(call _$$(ENV)_opt,$1) $$(_warn_cxx) $$(_$1_op_cxx_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_cxx_flags) $$(_$1_xflags))
-    override _cflags_$$(ENV)-$1 := $$(strip $$(_$1_c_std) $$(call _$$(ENV)_opt,$1) $$(_warn_c) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
+    override _cxxflags_$$(ENV)-$1 := $$(strip $$(_$1_cxx_std) $$(call _$$(ENV)_opt,$1) $$(_$1_warn_cxx) $$(_$1_op_cxx_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_cxx_flags) $$(_$1_xflags))
+    override _cflags_$$(ENV)-$1 := $$(strip $$(_$1_c_std) $$(call _$$(ENV)_opt,$1) $$(_$1_warn_c) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
     override _asflags_$$(ENV)-$1 := $$(strip $$(call _$$(ENV)_opt,$1) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
     override _rcflags_$$(ENV)-$1 := $$(filter -D% -U% -I%,$$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
 
