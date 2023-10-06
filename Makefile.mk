@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 56 (2023/10/4)
+# Makefile.mk - revision 56 (2023/10/6)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -509,7 +509,7 @@ endef
 $(foreach x,$(_lib_labels) $(_bin_labels),$(eval $(call _check_name,$x)))
 
 # target setting patterns
-override _bin_ptrn := %.SRC %.SRC2 %.OBJS %.LIBS %.STANDARD %.OPT_LEVEL %.OPT_LEVEL_DEBUG %.DEFINE %.INCLUDE %.FLAGS %.RPATH %.LINK_FLAGS %.PACKAGES %.OPTIONS %.DEPS %.SUBSYSTEM %.SOURCE_DIR %.WARN %.WARN_C %.WARN_CXX
+override _bin_ptrn := %.SRC %.SRC2 %.OBJS %.LIBS %.STANDARD %.OPT_LEVEL %.OPT_LEVEL_DEBUG %.DEFINE %.INCLUDE %.FLAGS %.RPATH %.LINKER %.LINK_FLAGS %.PACKAGES %.OPTIONS %.DEPS %.SUBSYSTEM %.SOURCE_DIR %.WARN %.WARN_C %.WARN_CXX
 override _lib_ptrn := %.TYPE %.VERSION $(_bin_ptrn)
 override _test_ptrn := %.ARGS $(_bin_ptrn)
 
@@ -843,7 +843,15 @@ else ifneq ($(_build_env),)
       override _$1_subsystem := $(if $(_windows),$$(or $$($1.SUBSYSTEM),$$(SUBSYSTEM)))
     endif
 
-    override _$1_link_flags := $(if $(_linker),-fuse-ld=$(_linker))
+    ifeq ($$(strip $$($1.LINKER)),)
+      override _$1_linker := $$(_linker)
+    else ifneq ($$(strip $$($1.LINKER)),-)
+      ifneq ($$(strip $$($1.LINKER)),ld)
+        override _$1_linker := $$(or $$(strip $$($1.LINKER)),$$(_$$(_compiler)_ld))
+      endif
+    endif
+
+    override _$1_link_flags := $$(if $$(_$1_linker),-fuse-ld=$$(_$1_linker))
     ifneq ($$(strip $$($1.RPATH)),-)
       override _$1_link_flags += $$(foreach x,$$(or $$($1.RPATH),$$(RPATH)),-Wl,-rpath=$$x)
     endif
@@ -1163,7 +1171,7 @@ endif
 
 .PHONY: $$(_$1_shared_aliases)
 $$(_$1_shared_aliases) $$(_$1_implib): $$(_$1_shared_name)
-$$(_$1_shared_name): $$(_$1_shared_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_shared_trigger) $$(_link_trigger)
+$$(_$1_shared_name): $$(_$1_shared_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_shared_trigger) $$(if $$(_$1_linker),$$(_build_dir)/.$$(_$1_linker)_ver)
 	$$(call _make_path,$$@)
 	$$(call _make_path,$$(_$1_implib))
 	$$(_$1_shared_link_cmd)
@@ -1183,7 +1191,7 @@ endif
 
 .PHONY: $$(_$1_aliases)
 $$(_$1_aliases): $$(_$1_name)
-$$(_$1_name): $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_trigger) $$(_link_trigger)
+$$(_$1_name): $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_trigger) $$(if $$(_$1_linker),$$(_build_dir)/.$$(_$1_linker)_ver)
 	$$(call _make_path,$$@)
 	$$(_$1_link_cmd)
 	@echo "$$(_msgInfo)Binary '$$@' built$$(_end)"
@@ -1216,7 +1224,7 @@ ifneq ($$(_$1_deps),)
 $$(_$1_all_objs): | $$(_$1_deps)
 endif
 
-$$(_$1_run): $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_trigger) $$(_link_trigger) | $$(_build_goals)
+$$(_$1_run): $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_trigger) $$(if $$(_$1_linker),$$(_build_dir)/.$$(_$1_linker)_ver) | $$(_build_goals)
 	$$(_$1_link_cmd)
 ifeq ($$(filter $$(_$1_aliases) tests tests_$$(ENV),$$(MAKECMDGOALS)),)
 	@$(if $(_windows),PATH,LD_LIBRARY_PATH)=$(or $(if $(_windows),$(_output_bin_dir),$(_output_lib_dir)),.):$$$$$(if $(_windows),PATH,LD_LIBRARY_PATH) ./$$(_$1_run) $$($1.ARGS);\
@@ -1321,11 +1329,9 @@ ifneq ($(_build_env),)
     $(foreach x,$(_src_labels),\
       $(eval override _triggers_$(ENV)-$x := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_$x_xpkgs),$(_build_dir)/.pkg_$p_ver)))
 
-    ifneq ($(_linker),)
-      # linker version change trigger
-      override _link_trigger := $(_build_dir)/.$(_linker)_ver
-      $(eval $(call _rebuild_check,$(_link_trigger),$(shell ld.$(_linker) --version | head -1)))
-    endif
+    # linker version change triggers
+    $(foreach i,$(sort $(foreach x,$(_src_labels),$(_$x_linker))),\
+      $(eval $(call _rebuild_check,$(_build_dir)/.$i_ver,$(shell ld.$i --version | head -1))))
 
     # make .o/.mk files for each build path
     $(foreach b,$(sort $(foreach x,$(_nonpic_labels),$(_$x_build))),\
