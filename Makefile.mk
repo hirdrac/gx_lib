@@ -148,10 +148,10 @@
 #  SOURCE_DIR      source files base directory
 #  EXCLUDE_TARGETS labels/files not built by default (wildcard '*' allowed)
 #
-#  Settings STANDARD/OPT_LEVEL/OPT_LEVEL_DEBUG/SUBSYSTEM/PACKAGES/INCLUDE/LIBS/
-#    DEFINE/OPTIONS/FLAGS/RPATH/LINK_FLAGS/SOURCE_DIR/WARN/WARN_C/WARN_CXX
-#    can be set for specific targets to override global values
-#    (ex.: BIN1.FLAGS = -pthread).
+#  Settings STANDARD/OPT_LEVEL/OPT_LEVEL_DEBUG/SUBSYSTEM/PACKAGES/INCLUDE/
+#    LIBS/DEFINE/OPTIONS/FLAGS/RPATH/LINKER/LINK_FLAGS/SOURCE_DIR/
+#    WARN/WARN_C/WARN_CXX can be set for specific targets to override global
+#    values (ex.: BIN1.FLAGS = -pthread).
 #    A value of '-' can be used to clear the setting for the target
 #    (note that FLAGS_RELEASE/FLAGS_DEBUG/FLAGS_PROFILE are always applied)
 #
