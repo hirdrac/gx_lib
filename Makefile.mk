@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 56 (2023/10/6)
+# Makefile.mk - revision 57 (2023/10/18)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -613,11 +613,11 @@ override _gen_shared_lib_links = $(if $(_windows),,$(if $($2.VERSION),$(_$1_ldir
 
 # environment specific setup
 override define _setup_env0  # <1:build env>
-override ENV := $1
-override SFX := $$(_$1_sfx)
-override BUILD_TMP := $$(_build_dir)/$$(ENV)_tmp
-override _$1_bdir := $$(if $$(_output_bin_dir),$$(_output_bin_dir)/)
-override _$1_ldir := $$(if $$(_output_lib_dir),$$(_output_lib_dir)/)
+  override ENV := $1
+  override SFX := $$(_$1_sfx)
+  override BUILD_TMP := $$(_build_dir)/$$(ENV)_tmp
+  override _$1_bdir := $$(if $$(_output_bin_dir),$$(_output_bin_dir)/)
+  override _$1_ldir := $$(if $$(_output_lib_dir),$$(_output_lib_dir)/)
 endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env0,$e)))
 
@@ -631,43 +631,43 @@ $(foreach x,$(filter $2,$(_file_labels)),$($x))\
 $(foreach x,$(filter $2,$(_test_labels)),$x$(_$1_sfx)) $2
 
 override define _setup_env1  # <1:build env>
-override ENV := $1
-override SFX := $$(_$1_sfx)
-override BUILD_TMP := $$(_build_dir)/$$(ENV)_tmp
-override _$1_lsfx := $$(if $$(filter 1,$$(words $$(filter $$(_$1_ldir),$$(foreach e,$$(_env_names),$$(_$$e_ldir))))),,$$(_$1_sfx))
-override _$1_bsfx := $$(if $$(filter 1,$$(words $$(filter $$(_$1_bdir),$$(foreach e,$$(_env_names),$$(_$$e_bdir))))),,$$(_$1_sfx))
+  override ENV := $1
+  override SFX := $$(_$1_sfx)
+  override BUILD_TMP := $$(_build_dir)/$$(ENV)_tmp
+  override _$1_lsfx := $$(if $$(filter 1,$$(words $$(filter $$(_$1_ldir),$$(foreach e,$$(_env_names),$$(_$$e_ldir))))),,$$(_$1_sfx))
+  override _$1_bsfx := $$(if $$(filter 1,$$(words $$(filter $$(_$1_bdir),$$(foreach e,$$(_env_names),$$(_$$e_bdir))))),,$$(_$1_sfx))
 
-ifneq ($(_libprefix),lib)
-  override LIBPREFIX := $(_libprefix)
-endif
-override _$1_shared_libs := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_shared_lib_name,$1,$$x))
-override _$1_shared_aliases := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_shared_lib_aliases,$1,$$x))
-override _$1_links := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_shared_lib_links,$1,$$x))
-ifneq ($(_libprefix),lib)
-  override LIBPREFIX := lib
-endif
-ifneq ($(_windows),)
-  override _$1_implibs := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_implib_name,$1,$$x))
-endif
+  ifneq ($(_libprefix),lib)
+    override LIBPREFIX := $(_libprefix)
+  endif
+  override _$1_shared_libs := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_shared_lib_name,$1,$$x))
+  override _$1_shared_aliases := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_shared_lib_aliases,$1,$$x))
+  override _$1_links := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_shared_lib_links,$1,$$x))
+  ifneq ($(_libprefix),lib)
+    override LIBPREFIX := lib
+  endif
+  ifneq ($(_windows),)
+    override _$1_implibs := $$(foreach x,$$(_shared_lib_labels),$$(call _gen_implib_name,$1,$$x))
+  endif
 
-override _$1_lib_targets :=\
-  $$(_$1_shared_libs) $$(_$1_implibs)\
-  $$(foreach x,$$(_static_lib_labels),$$(call _gen_static_lib_name,$1,$$x))
-override _$1_bin_targets :=\
-  $$(foreach x,$$(_bin_labels),$$(call _gen_bin_name,$1,$$x))
+  override _$1_lib_targets :=\
+    $$(_$1_shared_libs) $$(_$1_implibs)\
+    $$(foreach x,$$(_static_lib_labels),$$(call _gen_static_lib_name,$1,$$x))
+  override _$1_bin_targets :=\
+    $$(foreach x,$$(_bin_labels),$$(call _gen_bin_name,$1,$$x))
 
-override _$1_file_targets := $$(foreach x,$$(_file_labels),$$($$x))
-override _$1_test_targets := $$(foreach x,$$(_test_labels),$$x$$(_$1_sfx))
-override _$1_build_targets := $$(_$1_file_targets) $$(_$1_lib_targets) $$(_$1_bin_targets) $$(_$1_test_targets)
+  override _$1_file_targets := $$(foreach x,$$(_file_labels),$$($$x))
+  override _$1_test_targets := $$(foreach x,$$(_test_labels),$$x$$(_$1_sfx))
+  override _$1_build_targets := $$(_$1_file_targets) $$(_$1_lib_targets) $$(_$1_bin_targets) $$(_$1_test_targets)
 
-override _$1_filter_targets :=\
-  $$(foreach x,$$(EXCLUDE_TARGETS),$$(call _gen_filter_targets,$1,$$(subst *,%,$$x)))
+  override _$1_filter_targets :=\
+    $$(foreach x,$$(EXCLUDE_TARGETS),$$(call _gen_filter_targets,$1,$$(subst *,%,$$x)))
 
-override _$1_aliases :=\
-  $$(foreach x,$$(_all_labels),$$x$$(_$1_sfx))\
-  $$(foreach x,$$(_bin_labels),$$(call _gen_bin_aliases,$1,$$x))\
-  $$(foreach x,$$(_static_lib_labels),$$(call _gen_static_lib_aliases,$1,$$x))\
-  $$(_$1_shared_aliases)
+  override _$1_aliases :=\
+    $$(foreach x,$$(_all_labels),$$x$$(_$1_sfx))\
+    $$(foreach x,$$(_bin_labels),$$(call _gen_bin_aliases,$1,$$x))\
+    $$(foreach x,$$(_static_lib_labels),$$(call _gen_static_lib_aliases,$1,$$x))\
+    $$(_$1_shared_aliases)
 endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env1,$e)))
 
@@ -675,12 +675,12 @@ $(foreach e,$(_env_names),$(eval $(call _setup_env1,$e)))
 override _filter_targets := $(sort $(foreach e,$(_env_names),$(_$e_filter_targets)))
 
 override define _setup_env2 # <1:build env>
-override _$1_build2_targets := $$(filter-out $$(_filter_targets),$$(_$1_build_targets))
-override _$1_test2_targets := $$(filter-out $$(_filter_targets),$$(_$1_test_targets))
-override _$1_goals := $$(sort\
-  $$(if $$(filter $$(if $$(filter $1,$$(_default_env)),all) $1,$$(MAKECMDGOALS)),$$(_$1_build2_targets))\
-  $$(if $$(filter $$(if $$(filter $1,$$(_default_env)),tests) tests_$1,$$(MAKECMDGOALS)),$$(_$1_test2_targets))\
-  $$(filter $$(_$1_build_targets) $$(sort $$(_$1_aliases)),$$(MAKECMDGOALS)))
+  override _$1_build2_targets := $$(filter-out $$(_filter_targets),$$(_$1_build_targets))
+  override _$1_test2_targets := $$(filter-out $$(_filter_targets),$$(_$1_test_targets))
+  override _$1_goals := $$(sort\
+    $$(if $$(filter $$(if $$(filter $1,$$(_default_env)),all) $1,$$(MAKECMDGOALS)),$$(_$1_build2_targets))\
+    $$(if $$(filter $$(if $$(filter $1,$$(_default_env)),tests) tests_$1,$$(MAKECMDGOALS)),$$(_$1_test2_targets))\
+     $$(filter $$(_$1_build_targets) $$(sort $$(_$1_aliases)),$$(MAKECMDGOALS)))
 endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env2,$e)))
 
