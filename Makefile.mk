@@ -323,9 +323,13 @@ override _clang_warn := shadow
 override _clang_modern := -Wzero-as-null-pointer-constant -Wregister -Winconsistent-missing-override
 
 # compiler source file patterns
+override _cxx_ptrn := %.cc %.cp %.cxx %.cpp %.CPP %.c++ %.C
 override _c_ptrn := %.c
 override _asm_ptrn := %.s %.S %.sx
-override _cxx_ptrn := %.cc %.cp %.cxx %.cpp %.CPP %.c++ %.C
+override _rc_ptrn := %.rc
+
+# source files to ignore
+override _src_filter := $(if $(_windows),,$(_rc_ptrn))
 
 # compiler allowed standards
 override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x c23 gnu23
@@ -555,7 +559,7 @@ endef
 $(foreach x,$(_file_labels),$(eval $(call _check_file_entry,$x)))
 
 # macro to create object file name from source file (w/paths)
-override _src_oname = $(foreach x,$1,$(addsuffix $(if $(filter %.rc,$x),.res,.o),$(subst /,__,$(subst ../,,$(basename $x)))))
+override _src_oname = $(foreach x,$1,$(addsuffix $(if $(filter $(_rc_ptrn),$x),.res,.o),$(subst /,__,$(subst ../,,$(basename $x)))))
 
 # macro to get values that appear multiple times in a list (for error messages)
 override _find_dups = $(strip $(foreach x,$(sort $1),$(if $(filter 1,$(words $(filter $x,$1))),,$x)))
@@ -577,20 +581,19 @@ override define _check_dir # <1:dir var>
 endef
 
 $(eval $(call _check_dir,BUILD_DIR))
-$(eval $(call _check_dir,OUTPUT_DIR))
-$(eval $(call _check_dir,OUTPUT_BIN_DIR))
-$(eval $(call _check_dir,OUTPUT_LIB_DIR))
-$(eval $(call _check_dir,SOURCE_DIR))
-
 override _build_dir := $(filter-out .,$(strip $(BUILD_DIR:%/=%)))
 ifeq ($(_build_dir),)
   $(error $(_msgErr)BUILD_DIR: invalid value$(_end))
 endif
 
+$(eval $(call _check_dir,OUTPUT_DIR))
+$(eval $(call _check_dir,OUTPUT_BIN_DIR))
+$(eval $(call _check_dir,OUTPUT_LIB_DIR))
 override _output_bin_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_BIN_DIR)),$(strip $(OUTPUT_DIR))))
 override _output_lib_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_LIB_DIR)),$(strip $(OUTPUT_DIR))))
   # output dirs can contain variables like '$(ENV)'
 
+$(eval $(call _check_dir,SOURCE_DIR))
 override _source_dir = $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
 
 override _symlink_name = $(word 1,$(subst =, ,$1))
@@ -680,7 +683,7 @@ override define _setup_env2 # <1:build env>
   override _$1_goals := $$(sort\
     $$(if $$(filter $$(if $$(filter $1,$$(_default_env)),all) $1,$$(MAKECMDGOALS)),$$(_$1_build2_targets))\
     $$(if $$(filter $$(if $$(filter $1,$$(_default_env)),tests) tests_$1,$$(MAKECMDGOALS)),$$(_$1_test2_targets))\
-     $$(filter $$(_$1_build_targets) $$(sort $$(_$1_aliases)),$$(MAKECMDGOALS)))
+    $$(filter $$(_$1_build_targets) $$(sort $$(_$1_aliases)),$$(MAKECMDGOALS)))
 endef
 $(foreach e,$(_env_names),$(eval $(call _setup_env2,$e)))
 
@@ -809,28 +812,33 @@ else ifneq ($(_build_env),)
       override _src_path_$$(ENV)-$1 := $$(or $$(_$1_source_dir),$$(_src_path_$$(ENV)))
     endif
 
-    override _$1_src := $$(strip $$(filter-out $(if $(_windows),,%.rc),$$(foreach x,$$($1.SRC),$$(call _do_wildcard,$$x,$$(_src_path_$$(ENV)-$1)))))
-    override _$1_src2 := $$(strip $$(filter-out $(if $(_windows),,%.rc),$$(foreach x,$$($1.SRC2),$$(call _do_wildcard,$$x,))))
-    ifeq ($$(strip $$($1.SRC) $$($1.SRC2)),)
-      $$(error $$(_msgErr)$1: no source files specified$$(_end))
-    else ifneq ($$(words $$(_$1_src) $$(_$1_src2)),$$(words $$(sort $$(_$1_src) $$(_$1_src2))))
+    override _$1_src := $$(strip $$(filter-out $(_src_filter),$$(foreach x,$$($1.SRC),$$(call _do_wildcard,$$x,$$(_src_path_$$(ENV)-$1)))))
+    override _$1_src2 := $$(strip $$(filter-out $(_src_filter),$$(foreach x,$$($1.SRC2),$$(call _do_wildcard,$$x,))))
+    ifneq ($$(words $$(_$1_src) $$(_$1_src2)),$$(words $$(sort $$(_$1_src) $$(_$1_src2))))
       $$(error $$(_msgErr)$1: duplicate source files [$$(_msgWarn)$$(call _find_dups,$$(_$1_src))$$(_msgErr)]$$(_end))
-    else ifneq ($$(filter-out $(_cxx_ptrn) $(_c_ptrn) $(_asm_ptrn) %.rc,$$(_$1_src) $$(_$1_src2)),)
-      $$(error $$(_msgErr)$1: invalid source files [$$(_msgWarn)$$(filter-out $(_cxx_ptrn) $(_c_ptrn) $(_asm_ptrn) %.rc,$$(_$1_src) $$(_$1_src2))$$(_msgErr)]$$(_end))
+    else ifneq ($$(filter-out $(_cxx_ptrn) $(_c_ptrn) $(_asm_ptrn) $(_rc_ptrn),$$(_$1_src) $$(_$1_src2)),)
+      $$(error $$(_msgErr)$1: invalid source files [$$(_msgWarn)$$(filter-out $(_cxx_ptrn) $(_c_ptrn) $(_asm_ptrn) $(_rc_ptrn),$$(_$1_src) $$(_$1_src2))$$(_msgErr)]$$(_end))
     endif
 
-    ifneq ($$(strip $$($1.SRC)),)
+    ifneq ($$(findstring *,$$(filter-out $(_src_filter),$$($1.SRC))),)
       ifeq ($$(_$1_src),)
         $$(warning $$(_msgWarn)$1.SRC: no source files match pattern$$(_end))
       endif
     endif
-    ifneq ($$(strip $$($1.SRC2)),)
+    ifneq ($$(findstring *,$$(filter-out $(_src_filter),$$($1.SRC2))),)
       ifeq ($$(_$1_src2),)
         $$(warning $$(_msgWarn)$1.SRC2: no source files match pattern$$(_end))
       endif
     endif
+    ifeq ($$(strip $$(_$1_src) $$(_$1_src2)),)
+      $$(error $$(_msgErr)$1: nothing to compile$$(_end))
+    endif
 
-    override _$1_lang := $$(if $$(filter $(_asm_ptrn),$$(_$1_src) $$(_$1_src2)),asm) $$(if $$(filter $(_c_ptrn) %.rc,$$(_$1_src) $$(_$1_src2)),c) $$(if $$(filter $(_cxx_ptrn),$$(_$1_src) $$(_$1_src2)),cxx)
+    override _$1_lang :=\
+      $$(if $$(filter $(_cxx_ptrn),$$(_$1_src) $$(_$1_src2)),cxx)\
+      $$(if $$(filter $(_c_ptrn),$$(_$1_src) $$(_$1_src2)),c)\
+      $$(if $$(filter $(_asm_ptrn),$$(_$1_src) $$(_$1_src2)),asm)\
+      $$(if $$(filter $(_rc_ptrn),$$(_$1_src) $$(_$1_src2)),rc)
     override _$1_src_objs := $$(call _src_oname,$$(_$1_src) $$(_$1_src2))
 
     ifneq ($$(strip $$($1.OBJS)),-)
@@ -1255,6 +1263,16 @@ ifneq ($(words $4 $5),$(words $(sort $(call _src_oname,$4 $5))))
   $$(error $$(_msgErr)Conflicting object files for $2 - each source file basename must be unique$$(_end))
 endif
 
+ifneq ($(filter $(_cxx_ptrn),$4 $5),)
+$$(eval $$(call _rebuild_check,$1/.compile_cmd,$$(strip $$(_cxx) $$(_cxxflags_$2) $3)))
+$(addprefix $1/,$(call _src_oname,$(filter $(_cxx_ptrn),$4 $5))): | $1
+	$$(strip $$(_cxx) $$(_cxxflags_$2) $3) -MMD -MP -MF '$$@.mk' -c -o '$$@' $$<
+$(foreach x,$(filter $(_cxx_ptrn),$4),\
+  $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd)))
+$(foreach x,$(filter $(_cxx_ptrn),$5),\
+  $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd)))
+endif
+
 ifneq ($(filter $(_c_ptrn),$4 $5),)
 $$(eval $$(call _rebuild_check,$1/.compile_cmd_c,$$(strip $$(_cc) $$(_cflags_$2) $3)))
 $(addprefix $1/,$(call _src_oname,$(filter $(_c_ptrn),$4 $5))): | $1
@@ -1263,17 +1281,6 @@ $(foreach x,$(filter $(_c_ptrn),$4),\
   $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd_c)))
 $(foreach x,$(filter $(_c_ptrn),$5),\
   $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd_c)))
-endif
-
-ifneq ($(filter %.rc,$4 $5),)
-$$(eval $$(call _rebuild_check,$1/.compile_cmd_rc,$$(strip windres $$(_rcflags_$2) $3) -O coff))
-$(addprefix $1/,$(call _src_oname,$(filter %.rc,$4 $5))): | $1
-	$$(strip cpp $$(_rcflags_$2) $3) -MT '$$@' -MM -MP -MF '$$@.mk' $$<
-	$$(strip windres $$(_rcflags_$2) $3) -O coff -o '$$@' $$<
-$(foreach x,$(filter %.rc,$4),\
-  $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd_rc)))
-$(foreach x,$(filter %.rc,$5),\
-  $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd_rc)))
 endif
 
 ifneq ($(filter $(_asm_ptrn),$4 $5),)
@@ -1286,14 +1293,15 @@ $(foreach x,$(filter $(_asm_ptrn),$5),\
   $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd_s)))
 endif
 
-ifneq ($(filter $(_cxx_ptrn),$4 $5),)
-$$(eval $$(call _rebuild_check,$1/.compile_cmd,$$(strip $$(_cxx) $$(_cxxflags_$2) $3)))
-$(addprefix $1/,$(call _src_oname,$(filter $(_cxx_ptrn),$4 $5))): | $1
-	$$(strip $$(_cxx) $$(_cxxflags_$2) $3) -MMD -MP -MF '$$@.mk' -c -o '$$@' $$<
-$(foreach x,$(filter $(_cxx_ptrn),$4),\
-  $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd)))
-$(foreach x,$(filter $(_cxx_ptrn),$5),\
-  $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd)))
+ifneq ($(filter $(_rc_ptrn),$4 $5),)
+$$(eval $$(call _rebuild_check,$1/.compile_cmd_rc,$$(strip windres $$(_rcflags_$2) $3) -O coff))
+$(addprefix $1/,$(call _src_oname,$(filter $(_rc_ptrn),$4 $5))): | $1
+	$$(strip cpp $$(_rcflags_$2) $3) -MT '$$@' -MM -MP -MF '$$@.mk' $$<
+	$$(strip windres $$(_rcflags_$2) $3) -O coff -o '$$@' $$<
+$(foreach x,$(filter $(_rc_ptrn),$4),\
+  $$(eval $$(call _make_dep,$1,$2,$$(_src_path_$2),$x,.compile_cmd_rc)))
+$(foreach x,$(filter $(_rc_ptrn),$5),\
+  $$(eval $$(call _make_dep,$1,$2,,$x,.compile_cmd_rc)))
 endif
 endef
 
