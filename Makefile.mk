@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 57 (2023/10/18)
+# Makefile.mk - revision 57 (2023/10/19)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -389,40 +389,22 @@ override define _check_options  # <1:options var> <2:set prefix>
     ifneq ($$(filter-out $$(_op_list),$$($1)),)
       $$(error $$(_msgErr)$1: unknown '$$(filter-out $$(_op_list),$$($1))'$$(_end))
     endif
-    override $2_warn :=
-    override $2_flags :=
-    override $2_link :=
-    ifneq ($$(filter warn_error,$$($1)),)
-      override $2_warn += -Werror
-    endif
-    ifneq ($$(filter pthread,$$($1)),)
-      override $2_flags += -pthread
-    endif
-    ifneq ($$(filter lto,$$($1)),)
-      override $2_flags += -flto=auto
-    endif
-    ifneq ($$(filter pedantic,$$($1)),)
-      override $2_warn += -Wpedantic
-      override $2_flags += -pedantic-errors
-    endif
-    ifneq ($$(filter static_rtlib,$$($1)),)
-      override $2_link += -static-libgcc
-    endif
-    override $2_cxx_warn := $$($2_warn)
-    override $2_cxx_flags := $$($2_flags)
-    override $2_cxx_link := $$($2_link)
-    ifneq ($$(filter modern_c++,$$($1)),)
-      override $2_cxx_warn += $$(_$(_compiler)_modern)
-    endif
-    ifneq ($$(filter no_rtti,$$($1)),)
-      override $2_cxx_flags += -fno-rtti
-    endif
-    ifneq ($$(filter no_except,$$($1)),)
-      override $2_cxx_flags += -fno-exceptions
-    endif
-    ifneq ($$(filter static_stdlib,$$($1)),)
-      override $2_cxx_link += -static-libstdc++
-    endif
+    override $2_warn :=\
+      $$(if $$(filter warn_error,$$($1)),-Werror)\
+      $$(if $$(filter pedantic,$$($1)),-Wpedantic)
+    override $2_flags :=\
+      $$(if $$(filter pthread,$$($1)),-pthread)\
+      $$(if $$(filter lto,$$($1)),-flto=auto)\
+      $$(if $$(filter pedantic,$$($1)),-pedantic-errors)
+    override $2_link :=\
+      $$(if $$(filter static_rtlib,$$($1)),-static-libgcc)
+    override $2_cxx_warn := $$($2_warn)\
+      $$(if $$(filter modern_c++,$$($1)),$$(_$(_compiler)_modern))
+    override $2_cxx_flags := $$($2_flags)\
+      $$(if $$(filter no_rtti,$$($1)),-fno-rtti)\
+      $$(if $$(filter no_except,$$($1)),-fno-exceptions)
+    override $2_cxx_link := $$($2_link)\
+      $$(if $$(filter static_stdlib,$$($1)),-static-libstdc++)
   endif
 endef
 
