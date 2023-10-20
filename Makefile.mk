@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 57 (2023/10/19)
+# Makefile.mk - revision 57 (2023/10/20)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -676,15 +676,11 @@ override _format_include = $(foreach x,$1,$(if $(filter -%,$x),$x,-I$x))
 override _format_define = $(foreach x,$1,$(if $(filter -%,$x),$x,-D'$x'))
 
 override _format_lib_arg =\
-$(if $(filter -%,$1),$1,\
-$(if $(filter ./,$(dir $1)),,-L$(dir $1)) -l$(if $(filter %.a %.so %.dll,$1),:)$(notdir $1))
-
-override _format_lib_name =\
-$(if $1,$(if $(filter ./,$(dir $1)),,-L$(dir $1)) -l:$(notdir $1))
+$(if $(filter -% %.a,$1),$1,\
+$(if $(filter ./,$(dir $1)),,-L$(patsubst %/,%,$(dir $1))) -l$(if $(filter %.so %.dll,$1),:)$(notdir $1))
 
 override _format_libs = $(foreach x,$1,\
-$(if $(filter $x,$(_lib_labels)),$(or $(call _format_lib_name,$(_$x_shared_name)),$(_$x_name)),\
-$(call _format_lib_arg,$x)))
+$(call _format_lib_arg,$(if $(filter $x,$(_lib_labels)),$(or $(_$x_shared_name),$(_$x_name)),$x)))
 
 # _do_wildcard: <1:file> <2:basedir>
 override _do_wildcard =\
