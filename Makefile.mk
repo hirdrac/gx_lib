@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 57 (2023/10/20)
+# Makefile.mk - revision 57 (2023/10/21)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -600,7 +600,7 @@ override _gen_shared_lib_links = $(if $(_windows),,$(if $($2.VERSION),$(_$1_ldir
 override define _setup_env0  # <1:build env>
   override ENV := $1
   override SFX := $$(_$1_sfx)
-  override BUILD_TMP := $$(_build_dir)/$$(ENV)_tmp
+  override BUILD_TMP := $$(_build_dir)/$1_tmp
   override _$1_bdir := $$(if $$(_output_bin_dir),$$(_output_bin_dir)/)
   override _$1_ldir := $$(if $$(_output_lib_dir),$$(_output_lib_dir)/)
 endef
@@ -618,7 +618,7 @@ $(foreach x,$(filter $2,$(_test_labels)),$x$(_$1_sfx)) $2
 override define _setup_env1  # <1:build env>
   override ENV := $1
   override SFX := $$(_$1_sfx)
-  override BUILD_TMP := $$(_build_dir)/$$(ENV)_tmp
+  override BUILD_TMP := $$(_build_dir)/$1_tmp
   override _$1_lsfx := $$(if $$(filter 1,$$(words $$(filter $$(_$1_ldir),$$(foreach e,$$(_env_names),$$(_$$e_ldir))))),,$$(_$1_sfx))
   override _$1_bsfx := $$(if $$(filter 1,$$(words $$(filter $$(_$1_bdir),$$(foreach e,$$(_env_names),$$(_$$e_bdir))))),,$$(_$1_sfx))
 
