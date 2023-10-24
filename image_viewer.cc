@@ -7,6 +7,7 @@
 // TODO: multiple image display in fullscreen (horizontal/vertical)
 // TODO: smooth scrolling when moving to next image
 // TODO: zoom in/out at mouse point
+// TODO: default starting zoom command line setting
 
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
@@ -232,8 +233,8 @@ int main(int argc, char* argv[])
 
     if (win.fullScreen()) {
       if (win.events() & gx::EVENT_MOUSE_SCROLL) {
-        const bool shiftHeld = win.keyHeld(gx::KEY_LSHIFT) | win.keyHeld(gx::KEY_RSHIFT);
-        const int scroll = static_cast<int>(win.scrollPt().y * (shiftHeld ? 4.0f : 1.0f));
+        const bool shiftHeld = win.keyMods() & gx::MOD_SHIFT;
+        const int scroll = static_cast<int>(win.scrollPt().y * (shiftHeld ? 8.0f : 1.0f));
         const int zoom2 = std::clamp(zoom + scroll, 20, 400);
         if (zoom != zoom2) {
           zoom = zoom2;
