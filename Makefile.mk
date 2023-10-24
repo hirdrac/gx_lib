@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 57 (2023/10/21)
+# Makefile.mk - revision 57 (2023/10/24)
 # Copyright (C) 2023 Richard Bradley
 #
 # Additional contributions from:
@@ -329,7 +329,8 @@ override _asm_ptrn := %.s %.S %.sx
 override _rc_ptrn := %.rc
 
 # source files to ignore
-override _src_filter := $(if $(_windows),,$(_rc_ptrn))
+override _src_filter := $(if $(_windows),,$(_rc_ptrn))\
+  %.h %.hh %.H %.hp %.hxx %.hpp %.HPP %.h++ %.tcc
 
 # compiler allowed standards
 override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x c23 gnu23
