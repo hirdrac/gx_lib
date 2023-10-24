@@ -206,7 +206,6 @@ class gx::Window
   [[nodiscard]] Vec2 mousePt() const { return _mousePt; }
   [[nodiscard]] Vec2 scrollPt() const { return _scrollPt; }
   [[nodiscard]] int buttons() const { return _buttons; }
-  [[nodiscard]] int mods() const { return _mods; }
   [[nodiscard]] bool mouseIn() const { return _mouseIn; }
 
   [[nodiscard]] bool buttonPress(ButtonEnum button) const {
@@ -222,6 +221,7 @@ class gx::Window
   [[nodiscard]] int keyPressCount(int key, bool includeRepeat) const;
   [[nodiscard]] const std::vector<KeyState>& keyStates() const {
     return _keyStates; }
+  [[nodiscard]] int keyMods() const { return _mods; }
 
   // text entry state
   [[nodiscard]] const std::vector<CharInfo>& charData() const {

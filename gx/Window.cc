@@ -527,8 +527,20 @@ void Window::keyCB(
   if (action == GLFW_PRESS) {
     ++ks.pressCount;
     ks.held = true;
+    switch (key) {
+      case KEY_LSHIFT:   case KEY_RSHIFT:   e._mods |= MOD_SHIFT; break;
+      case KEY_LCONTROL: case KEY_RCONTROL: e._mods |= MOD_CONTROL; break;
+      case KEY_LALT:     case KEY_RALT:     e._mods |= MOD_ALT; break;
+      case KEY_LSUPER:   case KEY_RSUPER:   e._mods |= MOD_SUPER; break;
+    }
   } else if (action == GLFW_RELEASE) {
     ks.held = false;
+    switch (key) {
+      case KEY_LSHIFT:   case KEY_RSHIFT:   e._mods &= ~MOD_SHIFT; break;
+      case KEY_LCONTROL: case KEY_RCONTROL: e._mods &= ~MOD_CONTROL; break;
+      case KEY_LALT:     case KEY_RALT:     e._mods &= ~MOD_ALT; break;
+      case KEY_LSUPER:   case KEY_RSUPER:   e._mods &= ~MOD_SUPER; break;
+    }
   } else if (action == GLFW_REPEAT) {
     ++ks.repeatCount;
   }
