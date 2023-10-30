@@ -1,6 +1,6 @@
 //
 // gx/Unicode.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "Unicode.hh"
@@ -69,17 +69,6 @@ std::size_t gx::indexUTF8(std::string_view sv, std::size_t pos)
   UTF8Iterator itr{sv};
   while (!itr.done() && pos > 0) { --pos; itr.next(); }
   return (pos != 0) ? NPOS : itr.pos();
-}
-
-void gx::popbackUTF8(std::string& str)
-{
-  while (!str.empty()) {
-    const int ch = uint8_t(str.back());
-    str.pop_back();
-
-    // stop pop back if char isn't the 2/3/4 char in a multi-char encoding
-    if (!isMultiChar(ch)) { break; }
-  }
 }
 
 bool gx::eraseUTF8(std::string& str, std::size_t pos, std::size_t len)

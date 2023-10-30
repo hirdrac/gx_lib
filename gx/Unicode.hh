@@ -1,6 +1,6 @@
 //
 // gx/Unicode.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // Unicode/UTF-8 utilities
 //
@@ -25,9 +25,6 @@ namespace gx
   [[nodiscard]] std::size_t indexUTF8(std::string_view sv, std::size_t pos);
     // returns string index of specified position for UTF8 encoded string
     // (returns string::npos if pos >= number of UTF8 encoded chars in input)
-
-  void popbackUTF8(std::string& str);
-    // removes last trailing UTF-8 character
 
   bool eraseUTF8(std::string& str, std::size_t pos, std::size_t len);
     // remove len character(s) starting at pos
