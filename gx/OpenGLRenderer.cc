@@ -13,7 +13,6 @@
 #include "DrawEntry.hh"
 #include "Image.hh"
 #include "Color.hh"
-#include "Projection.hh"
 #include "Logger.hh"
 #include "GLProgram.hh"
 #include "GLBuffer.hh"
@@ -182,6 +181,19 @@ namespace {
   inline void vertex3d(
     Vertex3NTC*& ptr, const Vec3& pt, const Vec3& n, Vec2 tx, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, n.x,n.y,n.z, tx.x,tx.y, c}; }
+
+  constexpr Mat4 orthoProjection(float width, float height)
+  {
+    // simple orthogonal projection to OpenGL screen coordinates
+    //  x:[0 width] => x:[-1  1]
+    //  y:[0 height]   y:[ 1 -1]
+    return {
+      2.0f / width, 0, 0, 0,
+      0, -2.0f / height, 0, 0,
+        // negative value flips vertical direction for OpenGL
+      0, 0, 1, 0,
+      -1, 1, 0, 1};
+  }
 }
 
 namespace gx {
