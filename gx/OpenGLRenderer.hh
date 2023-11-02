@@ -1,6 +1,6 @@
 //
 // gx/OpenGLRenderer.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #pragma once
@@ -9,5 +9,5 @@
 
 
 namespace gx {
-  std::unique_ptr<Renderer> makeOpenGLRenderer(GLFWwindow* win);
+  [[nodiscard]] std::unique_ptr<Renderer> makeOpenGLRenderer(GLFWwindow* win);
 }

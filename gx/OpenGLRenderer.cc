@@ -46,7 +46,7 @@ namespace {
     }
   }
 
-  const char* getGLString(GLenum name)
+  [[nodiscard]] const char* getGLString(GLenum name)
   {
     const char* val = reinterpret_cast<const char*>(glGetString(name));
     return val ? val : "ERROR";
@@ -182,7 +182,7 @@ namespace {
     Vertex3NTC*& ptr, const Vec3& pt, const Vec3& n, Vec2 tx, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, n.x,n.y,n.z, tx.x,tx.y, c}; }
 
-  constexpr Mat4 orthoProjection(float width, float height)
+  [[nodiscard]] constexpr Mat4 orthoProjection(float width, float height)
   {
     // simple orthogonal projection to OpenGL screen coordinates
     //  x:[0 width] => x:[-1  1]
