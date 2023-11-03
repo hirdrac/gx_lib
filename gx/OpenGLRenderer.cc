@@ -196,12 +196,10 @@ namespace {
   }
 }
 
-namespace gx {
-  template<int VER> class OpenGLRenderer;
-}
-
 
 // **** OpenGLRenderer ****
+namespace gx { template<int VER> class OpenGLRenderer; }
+
 template<int VER>
 class gx::OpenGLRenderer final : public gx::Renderer
 {
