@@ -202,28 +202,39 @@ int main(int argc, char** argv)
     // draw frame
     if (win.resized() || redraw) {
       dc.clear();
-      dc.color(gx::WHITE);
+      const float win_width = float(win.width());
+      const float win_height = float(win.height());
 
       float ty = 0;
       int lineNo = topLine;
-      while (lineNo < int(buffer.lines()) && ty < float(win.height())) {
+      while (lineNo < int(buffer.lines()) && ty < win_height) {
         if (lineNo >= 0) {
           const std::string_view line = buffer[std::size_t(lineNo)];
           float tx = 0;
+          bool tooLong = false;
           std::size_t i = 0;
           while (i < line.size()) {
             const std::size_t tabPos = line.find('\t',i);
             const std::size_t count =
               (tabPos == std::string_view::npos) ? tabPos : tabPos - i;
             const std::string_view segment = line.substr(i,count);
+            dc.color(gx::WHITE);
             dc.text(tf, {tx, ty}, gx::ALIGN_TOP_LEFT, segment);
+            const float segLen = fnt.calcLength(segment, tf.glyphSpacing);
+            tooLong |= ((tx+segLen) > win_width);
             i += segment.size() + 1;
             if (tabPos != std::string_view::npos) {
-              const float tx2 = tx + fnt.calcLength(segment, 0);
+              const float tx2 = tx + segLen;
               tx = (std::floor(tx2 / tabWidth) + 1.0f) * tabWidth;
             }
           }
+
+          if (tooLong) {
+            dc.color(1.0f,0,0);
+            dc.text(tf, {win_width+1, ty}, gx::ALIGN_TOP_RIGHT, "*");
+          }
         }
+
         ty += float(lineHeight);
         ++lineNo;
       }
