@@ -38,6 +38,7 @@ constexpr int DEFAULT_WIDTH = 1280;
 constexpr int DEFAULT_HEIGHT = 720;
 constexpr int DEFAULT_FONT_SIZE = 20;
 constexpr int DEFAULT_LINE_SPACING = 0;
+constexpr int DEFAULT_GLYPH_SPACING = 0;
 constexpr int DEFAULT_TAB_SIZE = 8;
 
 constexpr int SCROLL_STEP = 3;
@@ -89,12 +90,13 @@ int showUsage(char** argv)
 {
   println("Usage: ", argv[0], " [options] <text file>");
   println("Options:");
-  println("  -f,--font=[]         Font file");
-  println("                       (defaults to embedded ", FixedWidthFontDataName ,")");
-  println("  -s,--size=[]         Font size (default ", DEFAULT_FONT_SIZE, ")");
-  println("  -l,--linespacing=[]  Line spacing (default ", DEFAULT_LINE_SPACING, ")");
-  println("  -t,--tab=[]          Tab size (default ", DEFAULT_TAB_SIZE, ")");
-  println("  -h,--help            Show usage");
+  println("  -f,--font=[]          Font file");
+  println("                        (defaults to embedded ", FixedWidthFontDataName ,")");
+  println("  -s,--size=[]          Font size (default ", DEFAULT_FONT_SIZE, ")");
+  println("  -l,--linespacing=[]   Line spacing (default ", DEFAULT_LINE_SPACING, ")");
+  println("  -g,--glyphspacing=[]  Glyph spacing (default ", DEFAULT_GLYPH_SPACING, ")");
+  println("  -t,--tab=[]           Tab size (default ", DEFAULT_TAB_SIZE, ")");
+  println("  -h,--help             Show usage");
   return 0;
 }
 
@@ -116,6 +118,7 @@ int main(int argc, char** argv)
   std::string fontName;
   int fontSize = DEFAULT_FONT_SIZE;
   int lineSpacing = DEFAULT_LINE_SPACING;
+  int glyphSpacing = DEFAULT_GLYPH_SPACING;
   int tabSize = DEFAULT_TAB_SIZE;
 
   for (gx::CmdLineParser p{argc, argv}; p; ++p) {
@@ -133,9 +136,11 @@ int main(int argc, char** argv)
           return errorUsage(argv);
         }
       } else if (p.option('l',"linespacing", lineSpacing)) {
-        // no lineSpacing value checking currently
+        // no lineSpacing value check currently
+      } else if (p.option('g',"glyphspacing", glyphSpacing)) {
+        // no glyphSpacing value check currently
       } else if (p.option('t',"tab", tabSize)) {
-        // no tabSize value checking currently
+        // no tabSize value check currently
       } else {
         println_err("ERROR: Bad option '", p.arg(), "'");
         return errorUsage(argv);
@@ -193,6 +198,7 @@ int main(int argc, char** argv)
 
   gx::DrawContext dc{dl};
   gx::TextFormatting tf{&fnt};
+  tf.glyphSpacing = float(glyphSpacing);
 
   // main loop
   bool redraw = true;
