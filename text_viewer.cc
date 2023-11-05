@@ -89,11 +89,12 @@ int showUsage(char** argv)
 {
   println("Usage: ", argv[0], " [options] <text file>");
   println("Options:");
-  println("  -f,--font=[]  Font file (defaults to embedded ", FixedWidthFontDataName ,")");
-  println("  -s,--size=[]  Font size (default ", DEFAULT_FONT_SIZE, ")");
-  println("  -l,--line=[]  Line spacing (default ", DEFAULT_LINE_SPACING, ")");
-  println("  -t,--tab=[]   Tab size (default 8)");
-  println("  -h,--help     Show usage");
+  println("  -f,--font=[]         Font file");
+  println("                       (defaults to embedded ", FixedWidthFontDataName ,")");
+  println("  -s,--size=[]         Font size (default ", DEFAULT_FONT_SIZE, ")");
+  println("  -l,--linespacing=[]  Line spacing (default ", DEFAULT_LINE_SPACING, ")");
+  println("  -t,--tab=[]          Tab size (default ", DEFAULT_TAB_SIZE, ")");
+  println("  -h,--help            Show usage");
   return 0;
 }
 
@@ -131,7 +132,7 @@ int main(int argc, char** argv)
           println_err("ERROR: Bad font size");
           return errorUsage(argv);
         }
-      } else if (p.option('l',"line", lineSpacing)) {
+      } else if (p.option('l',"linespacing", lineSpacing)) {
         // no lineSpacing value checking currently
       } else if (p.option('t',"tab", tabSize)) {
         // no tabSize value checking currently
