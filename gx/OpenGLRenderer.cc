@@ -58,7 +58,7 @@ namespace {
     const char* srcHeader;
     if constexpr (VER < 42) {
       srcHeader = "#version 330 core\n"
-        "#extension GL_ARB_shading_language_packing : enable\n";
+        "#extension GL_ARB_shading_language_packing : require\n";
     } else if constexpr (VER < 43) {
       srcHeader = "#version 420 core\n";
     } else if constexpr (VER < 45) {
@@ -151,6 +151,19 @@ namespace {
     }
   }
 
+  constexpr uint32_t packNormal(const Vec3& n) {
+    return uint32_t(int32_t(std::clamp(n.x, -1.0f, 1.0f) * 511.0f) + 511)
+      | uint32_t(int32_t(std::clamp(n.y, -1.0f, 1.0f) * 511.0f) + 511) << 10
+      | uint32_t(int32_t(std::clamp(n.z, -1.0f, 1.0f) * 511.0f) + 511) << 20;
+  }
+
+  constexpr Vec3 unpackNormal(uint32_t n) {
+    return {
+      float(int32_t(n & 0x3ff) - 511) / 511.0f,
+      float(int32_t((n>>10) & 0x3ff) - 511) / 511.0f,
+      float(int32_t((n>>20) & 0x3ff) - 511) / 511.0f};
+  }
+
   // DrawEntry iterator reading helper functions
   inline uint32_t uval(const DrawEntry*& ptr) {
     return (ptr++)->uval; }
@@ -162,50 +175,38 @@ namespace {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
 
   struct Vertex {
-    float x, y, z;       // pos
-    uint32_t c;          // color (packed RGBA)
-    float s, t;          // tex coords
-    float nx, ny, nz;
-
-    // TODO: pack normal, add 'mode' value
-
-    //uint32_t ex0, ex1;   // normal, mode
-      // ex0: uint(int(nx*32727.0f)) | uint(int(ny*32727.0f))<<16
-      // ex1: uint(int(nz*32727.0f)) | mode<<16
-
-    // GLSL unpack
-    // n.xy = unpackSnorm2x16(ex0);
-    // n.z  = unpackSnorm2x16(ex1).x;
-    // mode = ex1>>16;
+    float x, y, z;  // pos
+    uint32_t c;     // color (packed 8-bit RGBA)
+    float s, t;     // tex coords
+    uint32_t n;     // normal (packed 10-bit XYZ)
+    uint32_t m;     // mode (ignored for now)
   };
 
   inline Vertex vertex_val(const DrawEntry*& ptr) {
     const float x = fval(ptr);
     const float y = fval(ptr);
     const float z = fval(ptr);
-    const float nx = fval(ptr);
-    const float ny = fval(ptr);
-    const float nz = fval(ptr);
+    const Vec3  n = fval3(ptr);
     const float s = fval(ptr);
     const float t = fval(ptr);
     const uint32_t c = uval(ptr);
-    return {x,y,z,c,s,t,nx,ny,nz};
+    return {x,y,z,c,s,t,packNormal(n),0};
   }
 
   // vertex output functions
   inline void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,0.0f, c, 0.0f,0.0f, 0.0f,0.0f,1.0f}; }
+    *ptr++ = {pt.x,pt.y,0.0f, c, 0.0f,0.0f, 0, 0}; }
   inline void vertex2d(Vertex*& ptr, Vec2 pt, Vec2 tx, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,0.0f, c, tx.x,tx.y, 0.0f,0.0f,1.0f}; }
+    *ptr++ = {pt.x,pt.y,0.0f, c, tx.x,tx.y, 0, 0}; }
 
   inline void vertex3d(Vertex*& ptr, const Vec3& pt, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, 0.0f,0.0f,0.0f}; }
+    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, 0, 0}; }
   inline void vertex3d(
     Vertex*& ptr, const Vec3& pt, const Vec3& n, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, n.x,n.y,n.z}; }
+    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, packNormal(n), 0}; }
   inline void vertex3d(
     Vertex*& ptr, const Vec3& pt, const Vec3& n, Vec2 tx, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, n.x,n.y,n.z}; }
+    *ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, packNormal(n), 0}; }
 
   [[nodiscard]] constexpr Mat4 orthoProjection(float width, float height)
   {
@@ -435,7 +436,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   static const char* SP3V_SRC =
     "layout(location = 0) in vec3 in_pos;"   // x,y,z
     "layout(location = 1) in uint in_color;"
-    "layout(location = 3) in vec3 in_norm;"  // nx,ny,nz
+    "layout(location = 3) in uint in_norm;"  // nx,ny,nz packed 10-bits each
     UNIFORM_BLOCK_SRC
     "out vec3 v_pos;"
     "out vec3 v_norm;"
@@ -443,9 +444,17 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "out vec3 v_lightPos;"
     "out vec3 v_lightA;"
     "out vec3 v_lightD;"
+
+    "vec3 unpackNormal(uint n) {"
+    "  float x = float(int(n & 0x3ffU) - 511) / 511.0;"
+    "  float y = float(int((n>>10) & 0x3ffU) - 511) / 511.0;"
+    "  float z = float(int((n>>20) & 0x3ffU) - 511) / 511.0;"
+    "  return vec3(x, y, z);"
+    "}"
+
     "void main() {"
     "  v_pos = in_pos;"
-    "  v_norm = in_norm;"
+    "  v_norm = unpackNormal(in_norm);"
     "  v_color = unpackUnorm4x8(in_color) * unpackUnorm4x8(modColor);"
     "  v_lightPos = lightPos;"
     "  v_lightA = unpackUnorm4x8(lightA).rgb;"
@@ -608,19 +617,22 @@ void OpenGLRenderer<VER>::draw(
   } else if (!_vbo) {
     _vbo.init();
     _vao.init();
-    static_assert(sizeof(Vertex) == 36);
+    static_assert(sizeof(Vertex) == 32);
 
     _vao.enableAttrib(0); // vec3 (x,y,z)
-    _vao.setAttrib(0, _vbo, 0, 36, 3, GL_FLOAT, GL_FALSE);
+    _vao.setAttrib(0, _vbo, 0, sizeof(Vertex), 3, GL_FLOAT, GL_FALSE);
 
-    _vao.enableAttrib(1); // uint (r,g,b,a packed int)
-    _vao.setAttribI(1, _vbo, 12, 36, 1, GL_UNSIGNED_INT);
+    _vao.enableAttrib(1); // uint (r,g,b,a 8:8:8:8 packed int)
+    _vao.setAttribI(1, _vbo, 12, sizeof(Vertex), 1, GL_UNSIGNED_INT);
 
     _vao.enableAttrib(2); // vec2 (s,t)
-    _vao.setAttrib(2, _vbo, 16, 36, 2, GL_FLOAT, GL_FALSE);
+    _vao.setAttrib(2, _vbo, 16, sizeof(Vertex), 2, GL_FLOAT, GL_FALSE);
 
-    _vao.enableAttrib(3); // vec3 (nx,ny,nz)
-    _vao.setAttrib(3, _vbo, 24, 36, 3, GL_FLOAT, GL_FALSE);
+    _vao.enableAttrib(3); // uint (x,y,z 10:10:10 packed int)
+    _vao.setAttribI(3, _vbo, 24, sizeof(Vertex), 1, GL_UNSIGNED_INT);
+
+    _vao.enableAttrib(4); // uint
+    _vao.setAttribI(4, _vbo, 28, sizeof(Vertex), 1, GL_UNSIGNED_INT);
   }
 
   Vertex* ptr = nullptr;
