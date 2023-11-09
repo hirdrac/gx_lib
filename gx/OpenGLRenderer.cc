@@ -161,26 +161,51 @@ namespace {
   inline Vec3 fval3(const DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
 
-  inline Vertex3NTC vertex_val(const DrawEntry*& ptr) {
-    return {fval(ptr), fval(ptr), fval(ptr),  // x,y,z
-            fval(ptr), fval(ptr), fval(ptr),  // nx,ny,nz
-            fval(ptr), fval(ptr), uval(ptr)}; // s,t,c
+  struct Vertex {
+    float x, y, z;       // pos
+    uint32_t c;          // color (packed RGBA)
+    float s, t;          // tex coords
+    float nx, ny, nz;
+
+    // TODO: pack normal, add 'mode' value
+
+    //uint32_t ex0, ex1;   // normal, mode
+      // ex0: uint(int(nx*32727.0f)) | uint(int(ny*32727.0f))<<16
+      // ex1: uint(int(nz*32727.0f)) | mode<<16
+
+    // GLSL unpack
+    // n.xy = unpackSnorm2x16(ex0);
+    // n.z  = unpackSnorm2x16(ex1).x;
+    // mode = ex1>>16;
+  };
+
+  inline Vertex vertex_val(const DrawEntry*& ptr) {
+    const float x = fval(ptr);
+    const float y = fval(ptr);
+    const float z = fval(ptr);
+    const float nx = fval(ptr);
+    const float ny = fval(ptr);
+    const float nz = fval(ptr);
+    const float s = fval(ptr);
+    const float t = fval(ptr);
+    const uint32_t c = uval(ptr);
+    return {x,y,z,c,s,t,nx,ny,nz};
   }
 
   // vertex output functions
-  inline void vertex2d(Vertex3NTC*& ptr, Vec2 pt, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,0.0f, 0.0f,0.0f,1.0f, 0.0f,0.0f, c}; }
-  inline void vertex2d(Vertex3NTC*& ptr, Vec2 pt, Vec2 tx, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,0.0f, 0.0f,0.0f,1.0f, tx.x,tx.y, c}; }
+  inline void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,0.0f, c, 0.0f,0.0f, 0.0f,0.0f,1.0f}; }
+  inline void vertex2d(Vertex*& ptr, Vec2 pt, Vec2 tx, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,0.0f, c, tx.x,tx.y, 0.0f,0.0f,1.0f}; }
 
-  inline void vertex3d(Vertex3NTC*& ptr, const Vec3& pt, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, 0.0f,0.0f,0.0f, 0.0f,0.0f, c}; }
+  inline void vertex3d(Vertex*& ptr, const Vec3& pt, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, 0.0f,0.0f,0.0f}; }
   inline void vertex3d(
-    Vertex3NTC*& ptr, const Vec3& pt, const Vec3& n, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, n.x,n.y,n.z, 0.0f,0.0f, c}; }
+    Vertex*& ptr, const Vec3& pt, const Vec3& n, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, n.x,n.y,n.z}; }
   inline void vertex3d(
-    Vertex3NTC*& ptr, const Vec3& pt, const Vec3& n, Vec2 tx, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, n.x,n.y,n.z, tx.x,tx.y, c}; }
+    Vertex*& ptr, const Vec3& pt, const Vec3& n, Vec2 tx, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, n.x,n.y,n.z}; }
 
   [[nodiscard]] constexpr Mat4 orthoProjection(float width, float height)
   {
@@ -359,7 +384,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   // solid color shader
   static const char* SP0V_SRC =
     "layout(location = 0) in vec3 in_pos;" // x,y,z
-    "layout(location = 3) in uint in_color;"
+    "layout(location = 1) in uint in_color;"
     UNIFORM_BLOCK_SRC
     "out vec4 v_color;"
     "void main() {"
@@ -375,8 +400,8 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   // mono color texture shader (fonts)
   static const char* SP1V_SRC =
     "layout(location = 0) in vec3 in_pos;" // x,y,z
+    "layout(location = 1) in uint in_color;"
     "layout(location = 2) in vec2 in_tc;"  // s,t
-    "layout(location = 3) in uint in_color;"
     UNIFORM_BLOCK_SRC
     "out vec4 v_color;"
     "out vec2 v_texCoord;"
@@ -409,8 +434,8 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   // **** 3d shading w/ lighting ****
   static const char* SP3V_SRC =
     "layout(location = 0) in vec3 in_pos;"   // x,y,z
-    "layout(location = 1) in vec3 in_norm;"  // nx,ny,nz
-    "layout(location = 3) in uint in_color;"
+    "layout(location = 1) in uint in_color;"
+    "layout(location = 3) in vec3 in_norm;"  // nx,ny,nz
     UNIFORM_BLOCK_SRC
     "out vec3 v_pos;"
     "out vec3 v_norm;"
@@ -583,20 +608,25 @@ void OpenGLRenderer<VER>::draw(
   } else if (!_vbo) {
     _vbo.init();
     _vao.init();
+    static_assert(sizeof(Vertex) == 36);
+
     _vao.enableAttrib(0); // vec3 (x,y,z)
     _vao.setAttrib(0, _vbo, 0, 36, 3, GL_FLOAT, GL_FALSE);
-    _vao.enableAttrib(1); // vec3 (nx,ny,nz)
-    _vao.setAttrib(1, _vbo, 12, 36, 3, GL_FLOAT, GL_FALSE);
+
+    _vao.enableAttrib(1); // uint (r,g,b,a packed int)
+    _vao.setAttribI(1, _vbo, 12, 36, 1, GL_UNSIGNED_INT);
+
     _vao.enableAttrib(2); // vec2 (s,t)
-    _vao.setAttrib(2, _vbo, 24, 36, 2, GL_FLOAT, GL_FALSE);
-    _vao.enableAttrib(3); // uint (r,g,b,a packed int)
-    _vao.setAttribI(3, _vbo, 32, 36, 1, GL_UNSIGNED_INT);
+    _vao.setAttrib(2, _vbo, 16, 36, 2, GL_FLOAT, GL_FALSE);
+
+    _vao.enableAttrib(3); // vec3 (nx,ny,nz)
+    _vao.setAttrib(3, _vbo, 24, 36, 3, GL_FLOAT, GL_FALSE);
   }
 
-  Vertex3NTC* ptr = nullptr;
+  Vertex* ptr = nullptr;
   if (_vbo) {
-    _vbo.setData(GLsizei(vsize * sizeof(Vertex3NTC)), nullptr, GL_STREAM_DRAW);
-    ptr = static_cast<Vertex3NTC*>(_vbo.map(GL_WRITE_ONLY));
+    _vbo.setData(GLsizei(vsize * sizeof(Vertex)), nullptr, GL_STREAM_DRAW);
+    ptr = static_cast<Vertex*>(_vbo.map(GL_WRITE_ONLY));
     GX_ASSERT(ptr != nullptr);
   }
 
@@ -888,10 +918,10 @@ void OpenGLRenderer<VER>::draw(
           break;
         }
         case CMD_quad3NTC: {
-          const Vertex3NTC v0 = vertex_val(d);
-          const Vertex3NTC v1 = vertex_val(d);
-          const Vertex3NTC v2 = vertex_val(d);
-          const Vertex3NTC v3 = vertex_val(d);
+          const Vertex v0 = vertex_val(d);
+          const Vertex v1 = vertex_val(d);
+          const Vertex v2 = vertex_val(d);
+          const Vertex v3 = vertex_val(d);
           *ptr++ = v0;
           *ptr++ = v1;
           *ptr++ = v2;
