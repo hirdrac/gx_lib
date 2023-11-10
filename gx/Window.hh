@@ -237,7 +237,7 @@ class gx::Window
   void draw(Args&&... args) {
     _renderer->draw(_width, _height, {args...}); }
 
-  void renderFrame() { _renderer->renderFrame(); }
+  void renderFrame() { _renderer->renderFrame(_lastPollTime); }
 
  private:
   std::unique_ptr<Renderer> _renderer;

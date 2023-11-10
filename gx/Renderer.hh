@@ -41,7 +41,7 @@ class gx::Renderer
   // draw methods
   virtual void draw(
     int width, int height, std::initializer_list<const DrawLayer*> dl) = 0;
-  virtual void renderFrame() = 0;
+  virtual void renderFrame(int64_t usecTime) = 0;
 
   // general accessors
   [[nodiscard]] GLFWwindow* window() { return _window; }

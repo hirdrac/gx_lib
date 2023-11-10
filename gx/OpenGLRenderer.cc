@@ -238,7 +238,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   void freeTexture(TextureID id) override;
   void draw(int width, int height,
             std::initializer_list<const DrawLayer*> dl) override;
-  void renderFrame() override;
+  void renderFrame(int64_t usecTime) override;
 
  private:
   int _width = 0, _height = 0;
@@ -987,7 +987,7 @@ void OpenGLRenderer<VER>::draw(
 }
 
 template<int VER>
-void OpenGLRenderer<VER>::renderFrame()
+void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
 {
   std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
