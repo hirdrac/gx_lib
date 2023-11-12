@@ -249,12 +249,15 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   GLBuffer<VER> _uniformBuf;
   struct UniformData {
+    // NOTE: for std140 layout, alignment of array types must be 16 bytes
     Mat4 viewT{INIT_ZERO};
     Mat4 projT{INIT_ZERO};
+    Color modColor{INIT_ZERO};
     Vec3 lightPos{INIT_ZERO};
-    uint32_t lightA;
-    uint32_t lightD;
-    uint32_t modColor;
+    uint32_t pad0;
+    Vec3 lightA{INIT_ZERO};
+    uint32_t pad1;
+    Vec3 lightD{INIT_ZERO};
   };
 
   GLVertexArray<VER> _vao;
@@ -376,10 +379,10 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "layout(std140) uniform ub0 {"\
     "  mat4 viewT;"\
     "  mat4 projT;"\
+    "  vec4 modColor;"\
     "  vec3 lightPos;"\
-    "  uint lightA;"\
-    "  uint lightD;"\
-    "  uint modColor;"\
+    "  vec3 lightA;"\
+    "  vec3 lightD;"\
     "};"
 
   // solid color shader
@@ -389,7 +392,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     UNIFORM_BLOCK_SRC
     "out vec4 v_color;"
     "void main() {"
-    "  v_color = unpackUnorm4x8(in_color) * unpackUnorm4x8(modColor);"
+    "  v_color = unpackUnorm4x8(in_color) * modColor;"
     "  gl_Position = projT * viewT * vec4(in_pos, 1);"
     "}";
   static const char* SP0F_SRC =
@@ -407,7 +410,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "out vec4 v_color;"
     "out vec2 v_texCoord;"
     "void main() {"
-    "  v_color = unpackUnorm4x8(in_color) * unpackUnorm4x8(modColor);"
+    "  v_color = unpackUnorm4x8(in_color) * modColor;"
     "  v_texCoord = in_tc;"
     "  gl_Position = projT * viewT * vec4(in_pos, 1);"
     "}";
@@ -455,10 +458,10 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "void main() {"
     "  v_pos = in_pos;"
     "  v_norm = unpackNormal(in_norm);"
-    "  v_color = unpackUnorm4x8(in_color) * unpackUnorm4x8(modColor);"
+    "  v_color = unpackUnorm4x8(in_color) * modColor;"
     "  v_lightPos = lightPos;"
-    "  v_lightA = unpackUnorm4x8(lightA).rgb;"
-    "  v_lightD = unpackUnorm4x8(lightD).rgb;"
+    "  v_lightA = lightA;"
+    "  v_lightD = lightD;"
     "  gl_Position = projT * viewT * vec4(in_pos, 1);"
     "}";
   static const char* SP3F_SRC =
@@ -1032,13 +1035,13 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         udChanged = true;
         break;
       case OP_modColor:
-        ud.modColor = (d++)->uval;
+        ud.modColor = unpackRGBA8((d++)->uval);
         udChanged = true;
         break;
       case OP_light:
         std::memcpy(ud.lightPos.data(), d, sizeof(float)*3); d += 3;
-        ud.lightA = (d++)->uval;
-        ud.lightD = (d++)->uval;
+        ud.lightA = unpackRGBA8((d++)->uval).rgb();
+        ud.lightD = unpackRGBA8((d++)->uval).rgb();
         useLight = udChanged = true;
         break;
       case OP_no_light:
