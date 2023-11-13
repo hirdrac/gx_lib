@@ -68,13 +68,13 @@ namespace {
     }
 
     GLShader vshader;
-    if (!vshader.init(GL_VERTEX_SHADER, vsrc, srcHeader)) {
+    if (!vshader.init(GL_VERTEX_SHADER, srcHeader, vsrc)) {
       GX_LOG_ERROR("vshader error: ", vshader.infoLog());
       return {};
     }
 
     GLShader fshader;
-    if (!fshader.init(GL_FRAGMENT_SHADER, fsrc, srcHeader)) {
+    if (!fshader.init(GL_FRAGMENT_SHADER, srcHeader, fsrc)) {
       GX_LOG_ERROR("fshader error: ", fshader.infoLog());
       return {};
     }

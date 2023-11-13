@@ -1,6 +1,6 @@
 //
 // gx/GLShader.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // wrapper for OpenGL shader object
 //
@@ -35,8 +35,9 @@ class gx::GLShader
   [[nodiscard]] GLuint id() const { return _shader; }
 
   // methods
-  inline GLuint init(
-    GLenum type, const char* src, const char* header = nullptr);
+  template<typename... SrcArgs>
+  inline GLuint init(GLenum type, SrcArgs... src);
+
   GLuint release() noexcept { return std::exchange(_shader, 0); }
   [[nodiscard]] inline std::string infoLog();
 
@@ -60,19 +61,15 @@ gx::GLShader& gx::GLShader::operator=(GLShader&& s) noexcept
   return *this;
 }
 
-GLuint gx::GLShader::init(GLenum type, const char* src, const char* header)
+template<typename... SrcArgs>
+GLuint gx::GLShader::init(GLenum type, SrcArgs... src)
 {
   cleanup();
   _shader = glCreateShader(type);
   if (!_shader) { return 0; }
 
-  if (header) {
-    const char* src_array[] = { header, src };
-    GX_GLCALL(glShaderSource, _shader, 2, src_array, nullptr);
-  } else {
-    GX_GLCALL(glShaderSource, _shader, 1, &src, nullptr);
-  }
-
+  const char* src_array[] = { src... };
+  GX_GLCALL(glShaderSource, _shader, sizeof...(src), src_array, nullptr);
   GX_GLCALL(glCompileShader, _shader);
   int compile_ok = GL_FALSE;
   GX_GLCALL(glGetShaderiv, _shader, GL_COMPILE_STATUS, &compile_ok);
