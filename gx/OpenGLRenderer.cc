@@ -374,6 +374,10 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   _maxTextureSize = GLTexture2D<VER>::maxSize();
   glfwSwapInterval(_swapInterval); // enable V-SYNC
 
+  // NOTES:
+  // - matrices in GLSL are column major: M*V*P*v
+  // - gx_lib uses row major matrices:    v*P*V*M
+
   _uniformBuf.init(sizeof(UniformData), nullptr);
   #define UNIFORM_BLOCK_SRC\
     "layout(std140) uniform ub0 {"\
@@ -385,24 +389,8 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  vec3 lightD;"\
     "};"
 
-  // solid color shader
-  static const char* SP0V_SRC =
-    "layout(location = 0) in vec3 in_pos;" // x,y,z
-    "layout(location = 1) in uint in_color;"
-    UNIFORM_BLOCK_SRC
-    "out vec4 v_color;"
-    "void main() {"
-    "  v_color = unpackUnorm4x8(in_color) * modColor;"
-    "  gl_Position = projT * viewT * vec4(in_pos, 1);"
-    "}";
-  static const char* SP0F_SRC =
-    "in vec4 v_color;"
-    "out vec4 fragColor;"
-    "void main() { fragColor = v_color; }";
-  _sp[0] = makeProgram<VER>(SP0V_SRC, SP0F_SRC);
-
-  // mono color texture shader (fonts)
-  static const char* SP1V_SRC =
+  // basic vertex shader
+  static const char* SPV_SRC =
     "layout(location = 0) in vec3 in_pos;" // x,y,z
     "layout(location = 1) in uint in_color;"
     "layout(location = 2) in vec2 in_tc;"  // s,t
@@ -414,36 +402,18 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  v_texCoord = in_tc;"
     "  gl_Position = projT * viewT * vec4(in_pos, 1);"
     "}";
-  static const char* SP1F_SRC =
-    "in vec2 v_texCoord;"
-    "in vec4 v_color;"
-    "uniform sampler2D texUnit;"
-    "out vec4 fragColor;"
-    "void main() {"
-    "  float a = texture(texUnit, v_texCoord).r;"
-    "  if (a == 0.0) discard;"
-    "  fragColor = vec4(v_color.rgb, v_color.a * a);"
-    "}";
-  _sp[1] = makeProgram<VER>(SP1V_SRC, SP1F_SRC);
 
-  // full color texture shader (images)
-  static const char* SP2F_SRC =
-    "in vec2 v_texCoord;"
-    "in vec4 v_color;"
-    "uniform sampler2D texUnit;"
-    "out vec4 fragColor;"
-    "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }";
-  _sp[2] = makeProgram<VER>(SP1V_SRC, SP2F_SRC);
-
-  // **** 3d shading w/ lighting ****
-  static const char* SP3V_SRC =
+  // vertex shader w/ lighting support
+  static const char* SPV_LIGHTING_SRC =
     "layout(location = 0) in vec3 in_pos;"   // x,y,z
     "layout(location = 1) in uint in_color;"
+    "layout(location = 2) in vec2 in_tc;"    // s,t
     "layout(location = 3) in uint in_norm;"  // nx,ny,nz packed 10-bits each
     UNIFORM_BLOCK_SRC
     "out vec3 v_pos;"
     "out vec3 v_norm;"
     "out vec4 v_color;"
+    "out vec2 v_texCoord;"
     "out vec3 v_lightPos;"
     "out vec3 v_lightA;"
     "out vec3 v_lightD;"
@@ -459,11 +429,43 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  v_pos = in_pos;"
     "  v_norm = unpackNormal(in_norm);"
     "  v_color = unpackUnorm4x8(in_color) * modColor;"
+    "  v_texCoord = in_tc;"
     "  v_lightPos = lightPos;"
     "  v_lightA = lightA;"
     "  v_lightD = lightD;"
     "  gl_Position = projT * viewT * vec4(in_pos, 1);"
     "}";
+
+  // solid color shader
+  static const char* SP0F_SRC =
+    "in vec4 v_color;"
+    "out vec4 fragColor;"
+    "void main() { fragColor = v_color; }";
+  _sp[0] = makeProgram<VER>(SPV_SRC, SP0F_SRC);
+
+  // mono color texture shader (fonts)
+  static const char* SP1F_SRC =
+    "in vec2 v_texCoord;"
+    "in vec4 v_color;"
+    "uniform sampler2D texUnit;"
+    "out vec4 fragColor;"
+    "void main() {"
+    "  float a = texture(texUnit, v_texCoord).r;"
+    "  if (a == 0.0) discard;"
+    "  fragColor = vec4(v_color.rgb, v_color.a * a);"
+    "}";
+  _sp[1] = makeProgram<VER>(SPV_SRC, SP1F_SRC);
+
+  // full color texture shader (images)
+  static const char* SP2F_SRC =
+    "in vec2 v_texCoord;"
+    "in vec4 v_color;"
+    "uniform sampler2D texUnit;"
+    "out vec4 fragColor;"
+    "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }";
+  _sp[2] = makeProgram<VER>(SPV_SRC, SP2F_SRC);
+
+  // 3d shading w/ lighting shader
   static const char* SP3F_SRC =
     "in vec3 v_pos;"
     "in vec3 v_norm;"
@@ -477,7 +479,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
     "  fragColor = v_color * vec4((v_lightD * lt) + v_lightA, 1.0);"
     "}";
-    _sp[3] = makeProgram<VER>(SP3V_SRC, SP3F_SRC);
+    _sp[3] = makeProgram<VER>(SPV_LIGHTING_SRC, SP3F_SRC);
 
   #undef UNIFORM_BLOCK_SRC
 
