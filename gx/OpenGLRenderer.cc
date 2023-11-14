@@ -53,38 +53,54 @@ namespace {
   }
 
   template<int VER>
-  [[nodiscard]] GLProgram makeProgram(const char* vsrc, const char* fsrc)
+  [[nodiscard]] constexpr const char* shaderHeader()
   {
-    const char* srcHeader;
     if constexpr (VER < 42) {
-      srcHeader = "#version 330 core\n"
+      return "#version 330 core\n"
         "#extension GL_ARB_shading_language_packing : require\n";
     } else if constexpr (VER < 43) {
-      srcHeader = "#version 420 core\n";
+      return "#version 420 core\n";
     } else if constexpr (VER < 45) {
-      srcHeader = "#version 430 core\n";
+      return "#version 430 core\n";
     } else {
-      srcHeader = "#version 450 core\n";
+      return "#version 450 core\n";
     }
+  }
 
+  template<int VER>
+  [[nodiscard]] GLShader makeVertexShader(const char* src)
+  {
     GLShader vshader;
-    if (!vshader.init(GL_VERTEX_SHADER, srcHeader, vsrc)) {
-      GX_LOG_ERROR("vshader error: ", vshader.infoLog());
+    if (!vshader.init(GL_VERTEX_SHADER, shaderHeader<VER>(), src)) {
+      GX_LOG_ERROR("vertex shader error: ", vshader.infoLog());
+      GX_LOG_ERROR("shader src: ", src);
       return {};
     }
+    return vshader;
+  }
 
+  template<int VER>
+  [[nodiscard]] GLShader makeFragmentShader(const char* src)
+  {
     GLShader fshader;
-    if (!fshader.init(GL_FRAGMENT_SHADER, srcHeader, fsrc)) {
-      GX_LOG_ERROR("fshader error: ", fshader.infoLog());
+    if (!fshader.init(GL_FRAGMENT_SHADER, shaderHeader<VER>(), src)) {
+      GX_LOG_ERROR("fragment shader error: ", fshader.infoLog());
+      GX_LOG_ERROR("shader src: ", src);
       return {};
     }
+    return fshader;
+  }
+
+  template<int VER, typename... Shader>
+  [[nodiscard]] GLProgram makeProgram(const Shader&... shaders)
+  {
+    if (!(shaders && ...)) { return {}; }
 
     GLProgram prog;
-    if (!prog.init(vshader, fshader)) {
+    if (!prog.init(shaders...)) {
       GX_LOG_ERROR("program link error: ", prog.infoLog());
       return {};
     }
-
     return prog;
   }
 
@@ -390,7 +406,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "};"
 
   // basic vertex shader
-  static const char* SPV_SRC =
+  GLShader vshader = makeVertexShader<VER>(
     "layout(location = 0) in vec3 in_pos;" // x,y,z
     "layout(location = 1) in uint in_color;"
     "layout(location = 2) in vec2 in_tc;"  // s,t
@@ -401,10 +417,10 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  v_color = unpackUnorm4x8(in_color) * modColor;"
     "  v_texCoord = in_tc;"
     "  gl_Position = projT * viewT * vec4(in_pos, 1);"
-    "}";
+    "}");
 
   // vertex shader w/ lighting support
-  static const char* SPV_LIGHTING_SRC =
+  GLShader vshader2 = makeVertexShader<VER>(
     "layout(location = 0) in vec3 in_pos;"   // x,y,z
     "layout(location = 1) in uint in_color;"
     "layout(location = 2) in vec2 in_tc;"    // s,t
@@ -434,17 +450,16 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  v_lightA = lightA;"
     "  v_lightD = lightD;"
     "  gl_Position = projT * viewT * vec4(in_pos, 1);"
-    "}";
+    "}");
 
   // solid color shader
-  static const char* SP0F_SRC =
+  _sp[0] = makeProgram<VER>(vshader, makeFragmentShader<VER>(
     "in vec4 v_color;"
     "out vec4 fragColor;"
-    "void main() { fragColor = v_color; }";
-  _sp[0] = makeProgram<VER>(SPV_SRC, SP0F_SRC);
+    "void main() { fragColor = v_color; }"));
 
   // mono color texture shader (fonts)
-  static const char* SP1F_SRC =
+  _sp[1] = makeProgram<VER>(vshader, makeFragmentShader<VER>(
     "in vec2 v_texCoord;"
     "in vec4 v_color;"
     "uniform sampler2D texUnit;"
@@ -453,20 +468,18 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  float a = texture(texUnit, v_texCoord).r;"
     "  if (a == 0.0) discard;"
     "  fragColor = vec4(v_color.rgb, v_color.a * a);"
-    "}";
-  _sp[1] = makeProgram<VER>(SPV_SRC, SP1F_SRC);
+    "}"));
 
   // full color texture shader (images)
-  static const char* SP2F_SRC =
+  _sp[2] = makeProgram<VER>(vshader, makeFragmentShader<VER>(
     "in vec2 v_texCoord;"
     "in vec4 v_color;"
     "uniform sampler2D texUnit;"
     "out vec4 fragColor;"
-    "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }";
-  _sp[2] = makeProgram<VER>(SPV_SRC, SP2F_SRC);
+    "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }"));
 
   // 3d shading w/ lighting shader
-  static const char* SP3F_SRC =
+  _sp[3] = makeProgram<VER>(vshader2, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
@@ -478,8 +491,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  vec3 lightDir = normalize(v_lightPos - v_pos);"
     "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
     "  fragColor = v_color * vec4((v_lightD * lt) + v_lightA, 1.0);"
-    "}";
-    _sp[3] = makeProgram<VER>(SPV_LIGHTING_SRC, SP3F_SRC);
+    "}"));
 
   #undef UNIFORM_BLOCK_SRC
 
