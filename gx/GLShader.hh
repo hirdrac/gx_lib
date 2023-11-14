@@ -40,6 +40,7 @@ class gx::GLShader
 
   GLuint release() noexcept { return std::exchange(_shader, 0); }
   [[nodiscard]] inline std::string infoLog();
+  [[nodiscard]] inline bool compileStatus();
 
  private:
   GLuint _shader = 0;
@@ -71,10 +72,8 @@ GLuint gx::GLShader::init(GLenum type, SrcArgs... src)
   const char* src_array[] = { src... };
   GX_GLCALL(glShaderSource, _shader, sizeof...(src), src_array, nullptr);
   GX_GLCALL(glCompileShader, _shader);
-  int compile_ok = GL_FALSE;
-  GX_GLCALL(glGetShaderiv, _shader, GL_COMPILE_STATUS, &compile_ok);
 
-  return compile_ok ? _shader : 0;
+  return compileStatus() ? _shader : 0;
 }
 
 std::string gx::GLShader::infoLog()
@@ -90,6 +89,13 @@ std::string gx::GLShader::infoLog()
   GX_GLCALL(glGetShaderInfoLog, _shader, logLen, &len, tmp);
 
   return {tmp, std::size_t(len)};
+}
+
+bool gx::GLShader::compileStatus()
+{
+  int status = GL_FALSE;
+  GX_GLCALL(glGetShaderiv, _shader, GL_COMPILE_STATUS, &status);
+  return status;
 }
 
 void gx::GLShader::cleanup() noexcept
