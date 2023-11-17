@@ -15,6 +15,7 @@
 #include "DrawList.hh"
 #include "Texture.hh"
 #include "Color.hh"
+#include "Normal.hh"
 #include "Align.hh"
 #include "Types.hh"
 #include <string_view>
@@ -70,11 +71,9 @@ class gx::DrawContext
 
   inline void lineWidth(float w);
 
-  void normal(float x, float y, float z) { add(CMD_normal3, x, y, z); }
-  template<class T> void normal(const T& n) {
-    static_assert(std::size(n) >= 3);
-    normal(n[0], n[1], n[2]);
-  }
+  void normal(float x, float y, float z) { normal(packNormal(x,y,z)); }
+  void normal(const Vec3& n) { normal(packNormal(n)); }
+  void normal(uint32_t n) { add(CMD_normal, n); }
 
   // line drawing
   void line(Vec2 a, Vec2 b);
@@ -104,9 +103,10 @@ class gx::DrawContext
     add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
         b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
   void triangle(const Vertex3NTC& a, const Vertex3NTC& b, const Vertex3NTC& c) {
-    add(CMD_triangle3NTC, a.x, a.y, a.z, a.nx, a.ny, a.nz, a.s, a.t, a.c,
-        b.x, b.y, b.z, b.nx, b.ny, b.nz, b.s, b.t, b.c,
-        c.x, c.y, c.z, c.nx, c.ny, c.nz, c.s, c.t, c.c); }
+    add(CMD_triangle3NTC,
+        a.x, a.y, a.z, packNormal(a.nx, a.ny, a.nz), a.s, a.t, a.c,
+        b.x, b.y, b.z, packNormal(b.nx, b.ny, b.nz), b.s, b.t, b.c,
+        c.x, c.y, c.z, packNormal(c.nx, c.ny, c.nz), c.s, c.t, c.c); }
 
   void quad(const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d);
   void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d);
@@ -128,10 +128,11 @@ class gx::DrawContext
         c.x, c.y, c.z, c.s, c.t, c.c, d.x, d.y, d.z, d.s, d.t, d.c); }
   void quad(const Vertex3NTC& a, const Vertex3NTC& b,
             const Vertex3NTC& c, const Vertex3NTC& d) {
-    add(CMD_quad3NTC, a.x, a.y, a.z, a.nx, a.ny, a.nz, a.s, a.t, a.c,
-        b.x, b.y, b.z, b.nx, b.ny, b.nz, b.s, b.t, b.c,
-        c.x, c.y, c.z, c.nx, c.ny, c.nz, c.s, c.t, c.c,
-        d.x, d.y, d.z, d.nx, d.ny, d.nz, d.s, d.t, d.c); }
+    add(CMD_quad3NTC,
+        a.x, a.y, a.z, packNormal(a.nx, a.ny, a.nz), a.s, a.t, a.c,
+        b.x, b.y, b.z, packNormal(b.nx, b.ny, b.nz), b.s, b.t, b.c,
+        c.x, c.y, c.z, packNormal(c.nx, c.ny, c.nz), c.s, c.t, c.c,
+        d.x, d.y, d.z, packNormal(d.nx, d.ny, d.nz), d.s, d.t, d.c); }
 
   void rectangle(const Rect& r);
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1);

@@ -13,7 +13,7 @@ namespace gx {
     CMD_color,        // <cmd c> (2)
     CMD_texture,      // <cmd id> (2)
     CMD_lineWidth,    // <cmd w> (2)
-    CMD_normal3,      // <cmd x y z> (4)
+    CMD_normal,       // <cmd n> (2)
 
     // drawing commands
     CMD_line2,        // <cmd (x y)x2> (5)
@@ -28,7 +28,7 @@ namespace gx {
     CMD_triangle3C,   // <cmd (x y z c)x3> (13)
     CMD_triangle2TC,  // <cmd (x y s t c)x3> (16)
     CMD_triangle3TC,  // <cmd (x y z s t c)x3> (19)
-    CMD_triangle3NTC, // <cmd (x y z nx ny nz s t c)x3> (28)
+    CMD_triangle3NTC, // <cmd (x y z n s t c)x3> (22)
     CMD_quad2,        // <cmd (x y)x4> (9)
     CMD_quad3,        // <cmd (x y z)x4> (13)
     CMD_quad2T,       // <cmd (x y s t)x4> (17)
@@ -37,7 +37,7 @@ namespace gx {
     CMD_quad3C,       // <cmd (x y z c)x4> (17)
     CMD_quad2TC,      // <cmd (x y s t c)x4> (21)
     CMD_quad3TC,      // <cmd (x y z s t c)x4> (25)
-    CMD_quad3NTC,     // <cmd (x y z nx ny nz s t c)x4> (37)
+    CMD_quad3NTC,     // <cmd (x y z n s t c)x4> (29)
     CMD_rectangle,    // <cmd (x y)x2> (5)
     CMD_rectangleT,   // <cmd (x y s t)x2> (9)
   };

@@ -13,7 +13,6 @@
 #include "DrawEntry.hh"
 #include "Image.hh"
 #include "Color.hh"
-#include "Normal.hh"
 #include "Logger.hh"
 #include "GLProgram.hh"
 #include "GLBuffer.hh"
@@ -117,7 +116,7 @@ namespace {
         case CMD_color:        d += 2; break;
         case CMD_texture:      d += 2; break;
         case CMD_lineWidth:    d += 2; break;
-        case CMD_normal3:      d += 4; break;
+        case CMD_normal:       d += 2; break;
         case CMD_line2:        d += 5;  vsize += 2; break;
         case CMD_line3:        d += 7;  vsize += 2; break;
         case CMD_line2C:       d += 7;  vsize += 2; break;
@@ -130,7 +129,7 @@ namespace {
         case CMD_triangle3C:   d += 13; vsize += 3; break;
         case CMD_triangle2TC:  d += 16; vsize += 3; break;
         case CMD_triangle3TC:  d += 19; vsize += 3; break;
-        case CMD_triangle3NTC: d += 28; vsize += 3; break;
+        case CMD_triangle3NTC: d += 22; vsize += 3; break;
         case CMD_quad2:        d += 9;  vsize += 6; break;
         case CMD_quad3:        d += 13; vsize += 6; break;
         case CMD_quad2T:       d += 17; vsize += 6; break;
@@ -139,7 +138,7 @@ namespace {
         case CMD_quad3C:       d += 17; vsize += 6; break;
         case CMD_quad2TC:      d += 21; vsize += 6; break;
         case CMD_quad3TC:      d += 25; vsize += 6; break;
-        case CMD_quad3NTC:     d += 37; vsize += 6; break;
+        case CMD_quad3NTC:     d += 29; vsize += 6; break;
         case CMD_rectangle:    d += 5;  vsize += 6; break;
         case CMD_rectangleT:   d += 9;  vsize += 6; break;
 
@@ -190,11 +189,11 @@ namespace {
     const float x = fval(ptr);
     const float y = fval(ptr);
     const float z = fval(ptr);
-    const Vec3  n = fval3(ptr);
+    const uint32_t n = uval(ptr);
     const float s = fval(ptr);
     const float t = fval(ptr);
     const uint32_t c = uval(ptr);
-    return {x,y,z,c,s,t,packNormal(n),0};
+    return {x,y,z,c,s,t,n,0};
   }
 
   // vertex output functions
@@ -206,11 +205,11 @@ namespace {
   inline void vertex3d(Vertex*& ptr, const Vec3& pt, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, 0, 0}; }
   inline void vertex3d(
-    Vertex*& ptr, const Vec3& pt, const Vec3& n, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, packNormal(n), 0}; }
+    Vertex*& ptr, const Vec3& pt, uint32_t n, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, n, 0}; }
   inline void vertex3d(
-    Vertex*& ptr, const Vec3& pt, const Vec3& n, Vec2 tx, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, packNormal(n), 0}; }
+    Vertex*& ptr, const Vec3& pt, uint32_t n, Vec2 tx, uint32_t c) {
+    *ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, n, 0}; }
 
   [[nodiscard]] constexpr Mat4 orthoProjection(float width, float height)
   {
@@ -695,7 +694,7 @@ void OpenGLRenderer<VER>::draw(
 
     uint32_t color = 0;
     TextureID tid = 0;
-    Vec3 normal{0,0,0};
+    uint32_t normal = 0;
 
     const DrawEntry* data     = lPtr->entries.data();
     const DrawEntry* data_end = data + lPtr->entries.size();
@@ -704,7 +703,7 @@ void OpenGLRenderer<VER>::draw(
       switch (cmd) {
         case CMD_color:   color  = uval(d); break;
         case CMD_texture: tid    = uval(d); break;
-        case CMD_normal3: normal = fval3(d); break;
+        case CMD_normal:  normal = uval(d); break;
 
         case CMD_lineWidth:
           addOp(OP_lineWidth, fval(d));
