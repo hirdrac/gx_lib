@@ -32,6 +32,7 @@ class gx::Renderer
   // setup methods
   virtual bool init(GLFWwindow* win) = 0;
   virtual bool setSwapInterval(int interval) = 0;
+  virtual bool setFramebufferSize(int width, int height) = 0;
 
   // texture methods
   virtual TextureID setTexture(TextureID id, const Image& img, int levels,
@@ -39,18 +40,21 @@ class gx::Renderer
   virtual void freeTexture(TextureID id) = 0;
 
   // draw methods
-  virtual void draw(
-    int width, int height, std::initializer_list<const DrawLayer*> dl) = 0;
+  virtual void draw(std::initializer_list<const DrawLayer*> dl) = 0;
   virtual void renderFrame(int64_t usecTime) = 0;
 
   // general accessors
   [[nodiscard]] GLFWwindow* window() { return _window; }
+  [[nodiscard]] int framebufferWidth() const { return _fbWidth; }
+  [[nodiscard]] int framebufferHeight() const { return _fbHeight; }
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
   [[nodiscard]] int swapInterval() const { return _swapInterval; }
   [[nodiscard]] int frameRate() const { return _frameRate; }
 
  protected:
   GLFWwindow* _window = nullptr;
+  int _fbWidth = 0;
+  int _fbHeight = 0;
   int _maxTextureSize = 0;
   int _swapInterval = 1;
   int _frameRate = 0;

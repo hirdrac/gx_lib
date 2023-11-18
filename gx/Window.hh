@@ -234,8 +234,7 @@ class gx::Window
     //   until the Window is destroyed.
 
   template<typename... Args>
-  void draw(Args&&... args) {
-    _renderer->draw(_width, _height, {args...}); }
+  void draw(Args&&... args) { _renderer->draw({args...}); }
 
   void renderFrame() { _renderer->renderFrame(_lastPollTime); }
 

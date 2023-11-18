@@ -173,6 +173,7 @@ void Window::setSize(int width, int height, bool fullScreen)
     glfwSetWindowMonitor(win, monitor, wx, wy, width, height, mode->refreshRate);
     _width = width;
     _height = height;
+    _renderer->setFramebufferSize(width, height);
     if (!_sizeSet) {
       showWindow(win);
     } else {
@@ -317,13 +318,13 @@ bool Window::open(int flags)
     return false;
   }
 
-  glfwGetFramebufferSize(win, &_width, &_height);
-  //println("new window size: ", _width, " x ", _height);
-
   auto ren = makeOpenGLRenderer(win);
   if (!ren || !ren->init(win)) { return false; }
 
+  _width = ren->framebufferWidth();
+  _height = ren->framebufferHeight();
   _renderer = std::move(ren);
+
   glfwSetWindowUserPointer(win, this);
   glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
   glfwSetCursor(win, getCursorInstance(_mouseShape));
@@ -500,6 +501,7 @@ void Window::sizeCB(GLFWwindow* win, int width, int height)
   e._events |= EVENT_SIZE;
   e._width = width;
   e._height = height;
+  if (e._renderer) { e._renderer->setFramebufferSize(width, height); }
   e.updateMouseState(win);
 }
 

@@ -236,16 +236,14 @@ class gx::OpenGLRenderer final : public gx::Renderer
   // gx::Renderer methods
   bool init(GLFWwindow* win) override;
   bool setSwapInterval(int interval) override;
+  bool setFramebufferSize(int width, int height) override;
   TextureID setTexture(TextureID id, const Image& img, int levels,
                        FilterType minFilter, FilterType magFilter) override;
   void freeTexture(TextureID id) override;
-  void draw(int width, int height,
-            std::initializer_list<const DrawLayer*> dl) override;
+  void draw(std::initializer_list<const DrawLayer*> dl) override;
   void renderFrame(int64_t usecTime) override;
 
  private:
-  int _width = 0, _height = 0;
-
   static constexpr int SHADER_COUNT = 4;
   GLProgram _sp[SHADER_COUNT];
   GLUniform1i _sp_texUnit[SHADER_COUNT];
@@ -374,6 +372,10 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
 {
   std::lock_guard lg{_glMutex};
   _window = win;
+
+  glfwGetFramebufferSize(win, &_fbWidth, &_fbHeight);
+  //println("new window size: ", _fbWidth, " x ", _fbHeight);
+
   _maxTextureSize = GLTexture2D<VER>::maxSize();
   glfwSwapInterval(_swapInterval); // enable V-SYNC
 
@@ -517,6 +519,15 @@ bool OpenGLRenderer<VER>::setSwapInterval(int interval)
 }
 
 template<int VER>
+bool OpenGLRenderer<VER>::setFramebufferSize(int width, int height)
+{
+  std::lock_guard lg{_glMutex};
+  _fbWidth = width;
+  _fbHeight = height;
+  return true;
+}
+
+template<int VER>
 TextureID OpenGLRenderer<VER>::setTexture(
   TextureID id, const Image& img, int levels,
   FilterType minFilter, FilterType magFilter)
@@ -601,8 +612,7 @@ void OpenGLRenderer<VER>::freeTexture(TextureID id)
 }
 
 template<int VER>
-void OpenGLRenderer<VER>::draw(
-  int width, int height, std::initializer_list<const DrawLayer*> dl)
+void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
 {
   unsigned int vsize = 0; // vertices needed for all layers
   for (const DrawLayer* lPtr : dl) { vsize += calcVSize(lPtr->entries); }
@@ -612,8 +622,6 @@ void OpenGLRenderer<VER>::draw(
 
   _opData.clear();
   _lastOp = OP_null;
-  _width = width;
-  _height = height;
 
   if (vsize == 0) {
     _vbo = {};
@@ -661,7 +669,7 @@ void OpenGLRenderer<VER>::draw(
     } else if (firstLayer) {
       // default 2D projection
       addOp(OP_viewT, Mat4{INIT_IDENTITY});
-      addOp(OP_projT, orthoProjection(float(_width), float(_height)));
+      addOp(OP_projT, orthoProjection(float(_fbWidth), float(_fbHeight)));
     }
 
     if (lPtr->useLight) {
@@ -996,7 +1004,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
 
-  GX_GLCALL(glViewport, 0, 0, _width, _height);
+  GX_GLCALL(glViewport, 0, 0, _fbWidth, _fbHeight);
   GX_GLCALL(glClearDepth, 1.0);
 
   // clear texture unit assignments
