@@ -117,6 +117,8 @@ namespace {
         case CMD_texture:      d += 2; break;
         case CMD_lineWidth:    d += 2; break;
         case CMD_normal:       d += 2; break;
+        case CMD_light:        d += 6; break;
+        case CMD_no_light:     d += 1; break;
         case CMD_line2:        d += 5;  vsize += 2; break;
         case CMD_line3:        d += 7;  vsize += 2; break;
         case CMD_line2C:       d += 7;  vsize += 2; break;
@@ -672,13 +674,6 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
       addOp(OP_projT, orthoProjection(float(_fbWidth), float(_fbHeight)));
     }
 
-    if (lPtr->useLight) {
-      addOp(OP_light, lPtr->lightPos.x, lPtr->lightPos.y, lPtr->lightPos.z,
-            lPtr->lightA, lPtr->lightD);
-    } else {
-      addOp(OP_no_light);
-    }
-
     if (lPtr->modColor != 0) {
       addOp(OP_modColor, lPtr->modColor);
     }
@@ -703,6 +698,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
     uint32_t color = 0;
     TextureID tid = 0;
     uint32_t normal = 0;
+    bool useLight = false;
 
     const DrawEntry* data     = lPtr->entries.data();
     const DrawEntry* data_end = data + lPtr->entries.size();
@@ -712,6 +708,18 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
         case CMD_color:   color  = uval(d); break;
         case CMD_texture: tid    = uval(d); break;
         case CMD_normal:  normal = uval(d); break;
+
+        case CMD_light: {
+          const Vec3 pos = fval3(d);
+          const uint32_t ambient = uval(d);
+          const uint32_t diffuse = uval(d);
+          addOp(OP_light, pos.x, pos.y, pos.z, ambient, diffuse);
+          useLight = true;
+          break;
+        }
+        case CMD_no_light:
+          if (useLight) { addOp(OP_no_light); useLight = false; }
+          break;
 
         case CMD_lineWidth:
           addOp(OP_lineWidth, fval(d));
@@ -985,6 +993,11 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           d = data_end; // stop processing at first invalid cmd
           break;
       }
+    }
+
+    if (useLight) {
+      // turn off light at end of each DrawLayer
+      addOp(OP_no_light);
     }
   }
 

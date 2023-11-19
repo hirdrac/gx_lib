@@ -75,6 +75,11 @@ class gx::DrawContext
   void normal(const Vec3& n) { normal(packNormal(n)); }
   void normal(uint32_t n) { add(CMD_normal, n); }
 
+  // lighting
+  void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
+    add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
+  void noLight() { add(CMD_no_light); }
+
   // line drawing
   void line(Vec2 a, Vec2 b);
   void line(const Vec3& a, const Vec3& b);

@@ -15,6 +15,10 @@ namespace gx {
     CMD_lineWidth,    // <cmd w> (2)
     CMD_normal,       // <cmd n> (2)
 
+    // lighting
+    CMD_light,        // <cmd x y z a d> (6)
+    CMD_no_light,     // <cmd> (1)
+
     // drawing commands
     CMD_line2,        // <cmd (x y)x2> (5)
     CMD_line3,        // <cmd (x y z)x2> (7)

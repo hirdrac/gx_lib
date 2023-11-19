@@ -1,6 +1,6 @@
 //
 // gx/DrawLayer.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #pragma once
@@ -26,15 +26,11 @@ struct gx::DrawLayer
 
   // layer specific attributes/flags
   Mat4 view{INIT_IDENTITY}, proj{INIT_IDENTITY};
-  Vec3 lightPos{0,0,0};
-  RGBA8 lightA = 0;  // ambient
-  RGBA8 lightD = 0;  // diffuse
   RGBA8 modColor = packRGBA8(WHITE);
   RGBA8 bgColor = 0;
   int32_t cap = -1;
   bool transformSet = false;
   bool clearDepth = false;
-  bool useLight = false;
 
   // helper methods
   void setBGColor(RGBA8 c) {
