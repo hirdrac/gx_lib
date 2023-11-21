@@ -201,16 +201,16 @@ namespace {
   // vertex output functions
   inline void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c) {
     *ptr++ = {pt.x,pt.y,0.0f, c, 0.0f,0.0f, 0, 0}; }
-  inline void vertex2d(Vertex*& ptr, Vec2 pt, Vec2 tx, uint32_t c) {
+  inline void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c, Vec2 tx) {
     *ptr++ = {pt.x,pt.y,0.0f, c, tx.x,tx.y, 0, 0}; }
 
   inline void vertex3d(Vertex*& ptr, const Vec3& pt, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, 0, 0}; }
   inline void vertex3d(
-    Vertex*& ptr, const Vec3& pt, uint32_t n, uint32_t c) {
+    Vertex*& ptr, const Vec3& pt, uint32_t c, uint32_t n) {
     *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, n, 0}; }
   inline void vertex3d(
-    Vertex*& ptr, const Vec3& pt, uint32_t n, Vec2 tx, uint32_t c) {
+    Vertex*& ptr, const Vec3& pt, uint32_t c, Vec2 tx, uint32_t n) {
     *ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, n, 0}; }
 
   [[nodiscard]] constexpr Mat4 orthoProjection(float width, float height)
@@ -761,9 +761,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           break;
         }
         case CMD_triangle3: {
-          vertex3d(ptr, fval3(d), normal, color);
-          vertex3d(ptr, fval3(d), normal, color);
-          vertex3d(ptr, fval3(d), normal, color);
+          vertex3d(ptr, fval3(d), color, normal);
+          vertex3d(ptr, fval3(d), color, normal);
+          vertex3d(ptr, fval3(d), color, normal);
           addDrawTriangles(first, 3, 0);
           break;
         }
@@ -771,9 +771,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const Vec2 p0 = fval2(d), t0 = fval2(d);
           const Vec2 p1 = fval2(d), t1 = fval2(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d);
-          vertex2d(ptr, p0, t0, color);
-          vertex2d(ptr, p1, t1, color);
-          vertex2d(ptr, p2, t2, color);
+          vertex2d(ptr, p0, color, t0);
+          vertex2d(ptr, p1, color, t1);
+          vertex2d(ptr, p2, color, t2);
           addDrawTriangles(first, 3, tid);
           break;
         }
@@ -781,9 +781,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
           const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
           const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
-          vertex3d(ptr, p0, normal, t0, color);
-          vertex3d(ptr, p1, normal, t1, color);
-          vertex3d(ptr, p2, normal, t2, color);
+          vertex3d(ptr, p0, color, t0, normal);
+          vertex3d(ptr, p1, color, t1, normal);
+          vertex3d(ptr, p2, color, t2, normal);
           addDrawTriangles(first, 3, tid);
           break;
         }
@@ -801,9 +801,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const Vec3 p0 = fval3(d); const uint32_t c0 = uval(d);
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
           const Vec3 p2 = fval3(d); const uint32_t c2 = uval(d);
-          vertex3d(ptr, p0, normal, c0);
-          vertex3d(ptr, p1, normal, c1);
-          vertex3d(ptr, p2, normal, c2);
+          vertex3d(ptr, p0, c0, normal);
+          vertex3d(ptr, p1, c1, normal);
+          vertex3d(ptr, p2, c2, normal);
           addDrawTriangles(first, 3, 0);
           break;
         }
@@ -811,9 +811,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const Vec2 p0 = fval2(d), t0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d), t1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d); const uint32_t c2 = uval(d);
-          vertex2d(ptr, p0, t0, c0);
-          vertex2d(ptr, p1, t1, c1);
-          vertex2d(ptr, p2, t2, c2);
+          vertex2d(ptr, p0, c0, t0);
+          vertex2d(ptr, p1, c1, t1);
+          vertex2d(ptr, p2, c2, t2);
           addDrawTriangles(first, 3, tid);
           break;
         }
@@ -824,9 +824,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const uint32_t c1 = uval(d);
           const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
           const uint32_t c2 = uval(d);
-          vertex3d(ptr, p0, normal, t0, c0);
-          vertex3d(ptr, p1, normal, t1, c1);
-          vertex3d(ptr, p2, normal, t2, c2);
+          vertex3d(ptr, p0, c0, t0, normal);
+          vertex3d(ptr, p1, c1, t1, normal);
+          vertex3d(ptr, p2, c2, t2, normal);
           addDrawTriangles(first, 3, tid);
           break;
         }
@@ -852,12 +852,12 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
         case CMD_quad3: {
           const Vec3 p0 = fval3(d), p1 = fval3(d);
           const Vec3 p2 = fval3(d), p3 = fval3(d);
-          vertex3d(ptr, p0, normal, color);
-          vertex3d(ptr, p1, normal, color);
-          vertex3d(ptr, p2, normal, color);
-          vertex3d(ptr, p1, normal, color);
-          vertex3d(ptr, p3, normal, color);
-          vertex3d(ptr, p2, normal, color);
+          vertex3d(ptr, p0, color, normal);
+          vertex3d(ptr, p1, color, normal);
+          vertex3d(ptr, p2, color, normal);
+          vertex3d(ptr, p1, color, normal);
+          vertex3d(ptr, p3, color, normal);
+          vertex3d(ptr, p2, color, normal);
           addDrawTriangles(first, 6, 0);
           break;
         }
@@ -866,12 +866,12 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const Vec2 p1 = fval2(d), t1 = fval2(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d);
           const Vec2 p3 = fval2(d), t3 = fval2(d);
-          vertex2d(ptr, p0, t0, color);
-          vertex2d(ptr, p1, t1, color);
-          vertex2d(ptr, p2, t2, color);
-          vertex2d(ptr, p1, t1, color);
-          vertex2d(ptr, p3, t3, color);
-          vertex2d(ptr, p2, t2, color);
+          vertex2d(ptr, p0, color, t0);
+          vertex2d(ptr, p1, color, t1);
+          vertex2d(ptr, p2, color, t2);
+          vertex2d(ptr, p1, color, t1);
+          vertex2d(ptr, p3, color, t3);
+          vertex2d(ptr, p2, color, t2);
           addDrawTriangles(first, 6, tid);
           break;
         }
@@ -880,12 +880,12 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
           const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
           const Vec3 p3 = fval3(d); const Vec2 t3 = fval2(d);
-          vertex3d(ptr, p0, normal, t0, color);
-          vertex3d(ptr, p1, normal, t1, color);
-          vertex3d(ptr, p2, normal, t2, color);
-          vertex3d(ptr, p1, normal, t1, color);
-          vertex3d(ptr, p3, normal, t3, color);
-          vertex3d(ptr, p2, normal, t2, color);
+          vertex3d(ptr, p0, color, t0, normal);
+          vertex3d(ptr, p1, color, t1, normal);
+          vertex3d(ptr, p2, color, t2, normal);
+          vertex3d(ptr, p1, color, t1, normal);
+          vertex3d(ptr, p3, color, t3, normal);
+          vertex3d(ptr, p2, color, t2, normal);
           addDrawTriangles(first, 6, tid);
           break;
         }
@@ -908,12 +908,12 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
           const Vec3 p2 = fval3(d); const uint32_t c2 = uval(d);
           const Vec3 p3 = fval3(d); const uint32_t c3 = uval(d);
-          vertex3d(ptr, p0, normal, c0);
-          vertex3d(ptr, p1, normal, c1);
-          vertex3d(ptr, p2, normal, c2);
-          vertex3d(ptr, p1, normal, c1);
-          vertex3d(ptr, p3, normal, c3);
-          vertex3d(ptr, p2, normal, c2);
+          vertex3d(ptr, p0, c0, normal);
+          vertex3d(ptr, p1, c1, normal);
+          vertex3d(ptr, p2, c2, normal);
+          vertex3d(ptr, p1, c1, normal);
+          vertex3d(ptr, p3, c3, normal);
+          vertex3d(ptr, p2, c2, normal);
           addDrawTriangles(first, 6, 0);
           break;
         }
@@ -922,12 +922,12 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const Vec2 p1 = fval2(d), t1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d); const uint32_t c2 = uval(d);
           const Vec2 p3 = fval2(d), t3 = fval2(d); const uint32_t c3 = uval(d);
-          vertex2d(ptr, p0, t0, c0);
-          vertex2d(ptr, p1, t1, c1);
-          vertex2d(ptr, p2, t2, c2);
-          vertex2d(ptr, p1, t1, c1);
-          vertex2d(ptr, p3, t3, c3);
-          vertex2d(ptr, p2, t2, c2);
+          vertex2d(ptr, p0, c0, t0);
+          vertex2d(ptr, p1, c1, t1);
+          vertex2d(ptr, p2, c2, t2);
+          vertex2d(ptr, p1, c1, t1);
+          vertex2d(ptr, p3, c3, t3);
+          vertex2d(ptr, p2, c2, t2);
           addDrawTriangles(first, 6, tid);
           break;
         }
@@ -940,12 +940,12 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const uint32_t c2 = uval(d);
           const Vec3 p3 = fval3(d); const Vec2 t3 = fval2(d);
           const uint32_t c3 = uval(d);
-          vertex3d(ptr, p0, normal, t0, c0);
-          vertex3d(ptr, p1, normal, t1, c1);
-          vertex3d(ptr, p2, normal, t2, c2);
-          vertex3d(ptr, p1, normal, t1, c1);
-          vertex3d(ptr, p3, normal, t3, c3);
-          vertex3d(ptr, p2, normal, t2, c2);
+          vertex3d(ptr, p0, c0, t0, normal);
+          vertex3d(ptr, p1, c1, t1, normal);
+          vertex3d(ptr, p2, c2, t2, normal);
+          vertex3d(ptr, p1, c1, t1, normal);
+          vertex3d(ptr, p3, c3, t3, normal);
+          vertex3d(ptr, p2, c2, t2, normal);
           addDrawTriangles(first, 6, tid);
           break;
         }
@@ -980,12 +980,12 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           const Vec2 p3 = fval2(d), t3 = fval2(d);
           const Vec2 p1{p3.x,p0.y}, t1{t3.x,t0.y};
           const Vec2 p2{p0.x,p3.y}, t2{t0.x,t3.y};
-          vertex2d(ptr, p0, t0, color);
-          vertex2d(ptr, p1, t1, color);
-          vertex2d(ptr, p2, t2, color);
-          vertex2d(ptr, p1, t1, color);
-          vertex2d(ptr, p3, t3, color);
-          vertex2d(ptr, p2, t2, color);
+          vertex2d(ptr, p0, color, t0);
+          vertex2d(ptr, p1, color, t1);
+          vertex2d(ptr, p2, color, t2);
+          vertex2d(ptr, p1, color, t1);
+          vertex2d(ptr, p3, color, t3);
+          vertex2d(ptr, p2, color, t2);
           addDrawTriangles(first, 6, tid);
           break;
         }
