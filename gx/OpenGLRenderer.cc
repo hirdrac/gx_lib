@@ -104,9 +104,9 @@ namespace {
     return prog;
   }
 
-  [[nodiscard]] uint32_t calcVSize(const DrawList& dl)
+  [[nodiscard]] std::size_t calcVSize(const DrawList& dl)
   {
-    unsigned int vsize = 0;
+    std::size_t vsize = 0;
     const DrawEntry* d    = dl.data();
     const DrawEntry* dEnd = d + dl.size();
 
@@ -185,6 +185,10 @@ namespace {
     float s, t;     // tex coords
     uint32_t n;     // normal (packed 10-bit XYZ)
     uint32_t m;     // mode (ignored for now)
+      // TODO: possible values
+      //  0-7   color
+      //  8-15  transform
+      // 16-31  z texture coord
   };
 
   inline Vertex vertex_val(const DrawEntry*& ptr) {
@@ -616,7 +620,7 @@ void OpenGLRenderer<VER>::freeTexture(TextureID id)
 template<int VER>
 void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
 {
-  unsigned int vsize = 0; // vertices needed for all layers
+  std::size_t vsize = 0; // vertices needed for all layers
   for (const DrawLayer* lPtr : dl) { vsize += calcVSize(lPtr->entries); }
 
   std::lock_guard lg{_glMutex};
@@ -625,32 +629,12 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
   _opData.clear();
   _lastOp = OP_null;
 
+  Vertex* ptr = nullptr;
   if (vsize == 0) {
     _vbo = {};
     _vao = {};
-  } else if (!_vbo) {
-    _vbo.init();
-    _vao.init();
-    static_assert(sizeof(Vertex) == 32);
-
-    _vao.enableAttrib(0); // vec3 (x,y,z)
-    _vao.setAttrib(0, _vbo, 0, sizeof(Vertex), 3, GL_FLOAT, GL_FALSE);
-
-    _vao.enableAttrib(1); // uint (r,g,b,a 8:8:8:8 packed int)
-    _vao.setAttribI(1, _vbo, 12, sizeof(Vertex), 1, GL_UNSIGNED_INT);
-
-    _vao.enableAttrib(2); // vec2 (s,t)
-    _vao.setAttrib(2, _vbo, 16, sizeof(Vertex), 2, GL_FLOAT, GL_FALSE);
-
-    _vao.enableAttrib(3); // uint (x,y,z 10:10:10 packed int)
-    _vao.setAttribI(3, _vbo, 24, sizeof(Vertex), 1, GL_UNSIGNED_INT);
-
-    _vao.enableAttrib(4); // uint
-    _vao.setAttribI(4, _vbo, 28, sizeof(Vertex), 1, GL_UNSIGNED_INT);
-  }
-
-  Vertex* ptr = nullptr;
-  if (_vbo) {
+  } else {
+    if (!_vbo) { _vbo.init(); }
     _vbo.setData(GLsizei(vsize * sizeof(Vertex)), nullptr, GL_STREAM_DRAW);
     ptr = static_cast<Vertex*>(_vbo.map(GL_WRITE_ONLY));
     GX_ASSERT(ptr != nullptr);
@@ -1001,7 +985,28 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
     }
   }
 
-  if (_vbo) { _vbo.unmap(); }
+  if (_vbo) {
+    _vbo.unmap();
+    if (!_vao) {
+      _vao.init();
+      static_assert(sizeof(Vertex) == 32);
+
+      _vao.enableAttrib(0); // vec3 (x,y,z)
+      _vao.setAttrib(0, _vbo, 0, sizeof(Vertex), 3, GL_FLOAT, GL_FALSE);
+
+      _vao.enableAttrib(1); // uint (r,g,b,a 8:8:8:8 packed int)
+      _vao.setAttribI(1, _vbo, 12, sizeof(Vertex), 1, GL_UNSIGNED_INT);
+
+      _vao.enableAttrib(2); // vec2 (s,t)
+      _vao.setAttrib(2, _vbo, 16, sizeof(Vertex), 2, GL_FLOAT, GL_FALSE);
+
+      _vao.enableAttrib(3); // uint (x,y,z 10:10:10 packed int)
+      _vao.setAttribI(3, _vbo, 24, sizeof(Vertex), 1, GL_UNSIGNED_INT);
+
+      _vao.enableAttrib(4); // uint
+      _vao.setAttribI(4, _vbo, 28, sizeof(Vertex), 1, GL_UNSIGNED_INT);
+    }
+  }
 
 #if 0
   std::size_t dsize = 0;
