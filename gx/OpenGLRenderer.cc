@@ -294,9 +294,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_bgColor,       // <OP rgba8> (2)
 
     // draw
-    OP_clear_color,    // <OP> (1)
-    OP_clear_depth,    // <OP> (1)
-    OP_clear_all,      // <OP> (1)
+    OP_clear,          // <OP mask> (2)
     OP_draw_lines,     // <OP first count> (3)
     OP_draw_triangles, // <OP first count texID> (4)
   };
@@ -662,14 +660,16 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
       addOp(OP_modColor, lPtr->modColor);
     }
 
-    if (lPtr->clearDepth && lPtr->bgColor != 0) {
+    uint32_t clearMask = 0;
+    if (lPtr->bgColor != 0) {
       addOp(OP_bgColor, lPtr->bgColor);
-      addOp(OP_clear_all);
-    } else if (lPtr->clearDepth) {
-      addOp(OP_clear_depth);
-    } else if (lPtr->bgColor != 0) {
-      addOp(OP_bgColor, lPtr->bgColor);
-      addOp(OP_clear_color);
+      clearMask |= GL_COLOR_BUFFER_BIT;
+    }
+    if (lPtr->clearDepth) {
+      clearMask |= GL_DEPTH_BUFFER_BIT;
+    }
+    if (clearMask != 0) {
+      addOp(OP_clear, clearMask);
     }
 
     if (lPtr->cap >= 0) {
@@ -1085,14 +1085,8 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         GX_GLCALL(glClearColor, c.r, c.g, c.b, c.a);
         break;
       }
-      case OP_clear_color:
-        GX_GLCALL(glClear, GL_COLOR_BUFFER_BIT);
-        break;
-      case OP_clear_depth:
-        GX_GLCALL(glClear, GL_DEPTH_BUFFER_BIT);
-        break;
-      case OP_clear_all:
-        GX_GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      case OP_clear:
+        GX_GLCALL(glClear, (d++)->uval);
         break;
       case OP_draw_lines: {
         const GLint first = (d++)->ival;
