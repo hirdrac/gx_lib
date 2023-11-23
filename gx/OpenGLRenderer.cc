@@ -113,6 +113,7 @@ namespace {
     while (d < dEnd) {
       const DrawCmd cmd = d->cmd;
       switch (cmd) {
+        case CMD_viewport:     d += 5; break;
         case CMD_color:        d += 2; break;
         case CMD_texture:      d += 2; break;
         case CMD_lineWidth:    d += 2; break;
@@ -170,6 +171,8 @@ namespace {
   }
 
   // DrawEntry iterator reading helper functions
+  inline uint32_t ival(const DrawEntry*& ptr) {
+    return (ptr++)->ival; }
   inline uint32_t uval(const DrawEntry*& ptr) {
     return (ptr++)->uval; }
   inline float fval(const DrawEntry*& ptr) {
@@ -282,16 +285,17 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_null,
 
     // set uniform data
-    OP_viewT,         // <OP val*16> (17)
-    OP_projT,         // <OP val*16> (17)
-    OP_modColor,      // <OP rgba8> (2)
-    OP_light,         // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
-    OP_no_light,      // <OP> (1)
+    OP_viewT,          // <OP val*16> (17)
+    OP_projT,          // <OP val*16> (17)
+    OP_modColor,       // <OP rgba8> (2)
+    OP_light,          // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
+    OP_no_light,       // <OP> (1)
 
     // set GL state
-    OP_capabilities,  // <OP cap> (2)
-    OP_lineWidth,     // <OP width> (2)
-    OP_bgColor,       // <OP rgba8> (2)
+    OP_viewport,       // <OP x y w h> (5)
+    OP_capabilities,   // <OP cap> (2)
+    OP_lineWidth,      // <OP width> (2)
+    OP_bgColor,        // <OP rgba8> (2)
 
     // draw
     OP_clear,          // <OP mask> (2)
@@ -689,6 +693,15 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
     for (const DrawEntry* d = data; d != data_end; ) {
       const DrawCmd cmd = (d++)->cmd;
       switch (cmd) {
+        case CMD_viewport: {
+          const int32_t x = ival(d);
+          const int32_t y = ival(d);
+          const int32_t w = ival(d);
+          const int32_t h = ival(d);
+          addOp(OP_viewport, x, y, w, h);
+          break;
+        }
+
         case CMD_color:   color  = uval(d); break;
         case CMD_texture: tid    = uval(d); break;
         case CMD_normal:  normal = uval(d); break;
@@ -1083,6 +1096,14 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
       case OP_bgColor: {
         const Color c = unpackRGBA8((d++)->uval);
         GX_GLCALL(glClearColor, c.r, c.g, c.b, c.a);
+        break;
+      }
+      case OP_viewport: {
+        const int32_t x = (d++)->ival;
+        const int32_t y = (d++)->ival;
+        const int32_t w = (d++)->ival;
+        const int32_t h = (d++)->ival;
+        GX_GLCALL(glViewport, x, y, w, h);
         break;
       }
       case OP_clear:
