@@ -1038,19 +1038,19 @@ template<int VER>
 void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
 {
   std::lock_guard lg{_glMutex};
-  setCurrentContext(_window);
-
-  GX_GLCALL(glViewport, 0, 0, _fbWidth, _fbHeight);
-  GX_GLCALL(glClearDepth, 1.0);
-
-  // clear texture unit assignments
-  for (auto& t : _textures) { t.second.unit = -1; }
-
   if (_opData.empty()) { return; }
 
+  setCurrentContext(_window);
+
+  // set default GL state
+  GX_GLCALL(glViewport, 0, 0, _fbWidth, _fbHeight);
+  GX_GLCALL(glClearDepth, 1.0);
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
   GX_GLCALL(glFrontFace, GL_CW);
+
+  // clear texture unit assignments
+  for (auto& t : _textures) { t.second.unit = -1; }
 
   _currentGLCap = -1; // force all capabilities to be set initially
   _uniformBuf.bindBase(GL_UNIFORM_BUFFER, 0);
@@ -1064,7 +1064,6 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   int nextTexUnit = 0;
   int texUnit = -1;
   bool useLight = false;
-  bool setUnit = false;
 
   const OpEntry* data     = _opData.data();
   const OpEntry* data_end = data + _opData.size();
@@ -1139,6 +1138,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
           udChanged = false;
         }
 
+        bool setUnit = false;
         int shader = useLight ? 3 : 0;
         if (tid != 0) {
           // shader uses texture - determine texture unit & bind if necessary
