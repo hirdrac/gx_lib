@@ -1,6 +1,6 @@
 //
 // gx/MathUtil.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // useful numeric constants and various numeric functions
 //
@@ -215,18 +215,18 @@ namespace gx {
   [[nodiscard]] constexpr int sgn(numType x)
   {
     if constexpr (std::is_signed_v<numType>) {
-      return int(x > 0) - int(x < 0);
+      return int{x > 0} - int{x < 0};
     } else {
-      return int(x > 0);
+      return int{x > 0};
     }
   }
 
   // constexpr version of std::abs
   //   return type promoted to int for small types
   [[nodiscard]] constexpr int abs(signed char x) {
-    return (x < 0) ? -int(x) : int(x); }
+    return (x < 0) ? -int{x} : int{x}; }
   [[nodiscard]] constexpr int abs(short x) {
-    return (x < 0) ? -int(x) : int(x); }
+    return (x < 0) ? -int{x} : int{x}; }
 
   //   template for all other types
   template<class numType>
