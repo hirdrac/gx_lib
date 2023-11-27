@@ -172,7 +172,7 @@ namespace {
   }
 
   // DrawEntry iterator reading helper functions
-  inline uint32_t ival(const DrawEntry*& ptr) {
+  inline int32_t ival(const DrawEntry*& ptr) {
     return (ptr++)->ival; }
   inline uint32_t uval(const DrawEntry*& ptr) {
     return (ptr++)->uval; }
