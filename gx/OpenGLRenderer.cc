@@ -286,22 +286,22 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_null,
 
     // set uniform data
-    OP_viewT,          // <OP val*16> (17)
-    OP_projT,          // <OP val*16> (17)
-    OP_modColor,       // <OP rgba8> (2)
-    OP_light,          // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
-    OP_no_light,       // <OP> (1)
+    OP_viewT,         // <OP val*16> (17)
+    OP_projT,         // <OP val*16> (17)
+    OP_modColor,      // <OP rgba8> (2)
+    OP_light,         // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
+    OP_disableLight,  // <OP> (1)
 
     // set GL state
-    OP_viewport,       // <OP x y w h> (5)
-    OP_capabilities,   // <OP cap> (2)
-    OP_lineWidth,      // <OP width> (2)
-    OP_bgColor,        // <OP rgba8> (2)
+    OP_viewport,      // <OP x y w h> (5)
+    OP_capabilities,  // <OP cap> (2)
+    OP_lineWidth,     // <OP width> (2)
+    OP_clearColor,    // <OP rgba8> (2)
 
     // draw
-    OP_clear,          // <OP mask> (2)
-    OP_draw_lines,     // <OP first count> (3)
-    OP_draw_triangles, // <OP first count texID> (4)
+    OP_clear,         // <OP mask> (2)
+    OP_drawLines,     // <OP first count> (3)
+    OP_drawTriangles, // <OP first count texID> (4)
   };
 
   struct OpEntry {
@@ -340,7 +340,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   }
 
   void addDrawLines(int32_t& first, int32_t count) {
-    if (_lastOp == OP_draw_lines) {
+    if (_lastOp == OP_drawLines) {
       const std::size_t s = _opData.size();
       const int32_t last_first = _opData[s - 2].ival;
       int32_t& last_count = _opData[s - 1].ival;
@@ -350,12 +350,12 @@ class gx::OpenGLRenderer final : public gx::Renderer
         return;
       }
     }
-    addOp(OP_draw_lines, first, count);
+    addOp(OP_drawLines, first, count);
     first += count;
   }
 
   void addDrawTriangles(int32_t& first, int32_t count, TextureID tid) {
-    if (_lastOp == OP_draw_triangles) {
+    if (_lastOp == OP_drawTriangles) {
       const std::size_t s = _opData.size();
       const int32_t last_first = _opData[s - 3].ival;
       int32_t& last_count = _opData[s - 2].ival;
@@ -366,7 +366,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
         return;
       }
     }
-    addOp(OP_draw_triangles, first, count, tid);
+    addOp(OP_drawTriangles, first, count, tid);
     first += count;
   }
 
@@ -667,7 +667,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
 
     uint32_t clearMask = 0;
     if (lPtr->bgColor != 0) {
-      addOp(OP_bgColor, lPtr->bgColor);
+      addOp(OP_clearColor, lPtr->bgColor);
       clearMask |= GL_COLOR_BUFFER_BIT;
     }
     if (lPtr->clearDepth) {
@@ -716,7 +716,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           break;
         }
         case CMD_no_light:
-          if (useLight) { addOp(OP_no_light); useLight = false; }
+          if (useLight) { addOp(OP_disableLight); useLight = false; }
           break;
 
         case CMD_lineWidth:
@@ -999,7 +999,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
 
     if (useLight) {
       // turn off light at end of each DrawLayer
-      addOp(OP_no_light);
+      addOp(OP_disableLight);
     }
   }
 
@@ -1088,7 +1088,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         ud.lightD = unpackRGBA8((d++)->uval).rgb();
         useLight = udChanged = true;
         break;
-      case OP_no_light:
+      case OP_disableLight:
         useLight = false;
         break;
       case OP_capabilities:
@@ -1097,7 +1097,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
       case OP_lineWidth:
         GX_GLCALL(glLineWidth, (d++)->fval);
         break;
-      case OP_bgColor: {
+      case OP_clearColor: {
         const Color c = unpackRGBA8((d++)->uval);
         GX_GLCALL(glClearColor, c.r, c.g, c.b, c.a);
         break;
@@ -1113,7 +1113,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
       case OP_clear:
         GX_GLCALL(glClear, (d++)->uval);
         break;
-      case OP_draw_lines: {
+      case OP_drawLines: {
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         if (udChanged) {
@@ -1129,7 +1129,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         GX_GLCALL(glDrawArrays, GL_LINES, first, count);
         break;
       }
-      case OP_draw_triangles: {
+      case OP_drawTriangles: {
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
