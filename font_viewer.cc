@@ -58,7 +58,7 @@ int main(int argc, char** argv)
   do {
     if (win.resized()) {
       // 'resized' always true once at start
-      dc.clear();
+      dc.clearList();
       dc.color(gx::WHITE);
       dc.texture(t);
       dc.rectangle({0, 0, float(win.width()), float(win.height())}, {0,0}, {1,1});

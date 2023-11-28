@@ -721,7 +721,7 @@ bool Gui::update(Window& win)
 
       if (!dc2.empty()) {
         dc.append(dc2);
-        dc2.clear();
+        dc2.clearList();
       }
     }
 
@@ -732,7 +732,7 @@ bool Gui::update(Window& win)
 
         if (!dc2.empty()) {
           dc.append(dc2);
-          dc2.clear();
+          dc2.clearList();
         }
       }
     }

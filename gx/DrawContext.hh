@@ -47,7 +47,7 @@ class gx::DrawContext
   DrawContext(DrawLayer& dl) : DrawContext{dl.entries} { }
 
   // Low-level data entry
-  void clear() { init(); _data->clear(); _dataColor = 0; }
+  void clearList() { init(); _data->clear(); _dataColor = 0; }
   void reserve(std::size_t n) { _data->reserve(n); }
   [[nodiscard]] std::size_t size() const { return _data->size(); }
   [[nodiscard]] bool empty() const { return _data->empty(); }

@@ -3,6 +3,8 @@
 // Copyright (C) 2023 Richard Bradley
 //
 
+// TODO: draw 3d cube w/ lighting
+
 #include "gx/Window.hh"
 #include "gx/Font.hh"
 #include "gx/DrawContext.hh"
@@ -270,7 +272,7 @@ int main(int argc, char** argv)
     if (redraw) {
       const int start_gfx = page * gfxPerPage;
       const int end_gfx = std::min(start_gfx + gfxPerPage, gfxCount);
-      dc.clear();
+      dc.clearList();
 
       // draw function & text split to reduce draw calls
       float x = 0, y = 0;

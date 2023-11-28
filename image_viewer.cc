@@ -163,7 +163,7 @@ int main(int argc, char* argv[])
       const auto [iw,ih] = calcSize(win, e.img, imgScale);
       const float ix = std::floor((float(win.width()) - iw) * .5f);
       const float iy = std::floor((float(win.height()) - ih) * .5f);
-      dc.clear();
+      dc.clearList();
       dc.color(gx::WHITE);
       dc.texture(e.tex);
       dc.rectangle({ix + imgOffset.x, iy + imgOffset.y, iw, ih}, {0,0}, {1,1});

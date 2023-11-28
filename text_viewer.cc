@@ -208,7 +208,7 @@ int main(int argc, char** argv)
 
     // draw frame
     if (win.resized() || redraw) {
-      dc.clear();
+      dc.clearList();
       const float win_width = float(win.width());
       const float win_height = float(win.height());
 
