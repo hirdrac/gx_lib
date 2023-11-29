@@ -120,7 +120,7 @@ class gx::GLTexture1D
   void generateMipmap() { _tex.generateMipmap(); }
   inline void clear(GLint level);
 
-  // set texture parameters
+  // texture parameters
   void setParameter(GLenum pname, GLfloat param) {
     _tex.setParameterf(pname, param); }
   void setParameter(GLenum pname, GLint param) {
@@ -133,6 +133,15 @@ class gx::GLTexture1D
     _tex.setParameterIiv(pname, params); }
   void setParameterIv(GLenum pname, const GLuint* params) {
     _tex.setParameterIiuv(pname, params); }
+
+  void getParameterv(GLenum pname, GLfloat* params) {
+    _tex.getParameterfv(pname, params); }
+  void getParameterv(GLenum pname, GLint* params) {
+    _tex.getParameteriv(pname, params); }
+  void getParameterIv(GLenum pname, GLint* params) {
+    _tex.getParameterIiv(pname, params); }
+  void getParameterIv(GLenum pname, GLuint* params) {
+    _tex.getParameterIuiv(pname, params); }
 
   [[nodiscard]] static GLint maxSize() {
     GLint s = 0;
@@ -194,7 +203,7 @@ class gx::GLTexture2DT
 
   inline void clear(GLint level);
 
-  // set texture parameters
+  // texture parameters
   void setParameter(GLenum pname, GLfloat param) {
     _tex.setParameterf(pname, param); }
   void setParameter(GLenum pname, GLint param) {
@@ -207,6 +216,15 @@ class gx::GLTexture2DT
     _tex.setParameterIiv(pname, params); }
   void setParameterIv(GLenum pname, const GLuint* params) {
     _tex.setParameterIiuv(pname, params); }
+
+  void getParameterv(GLenum pname, GLfloat* params) {
+    _tex.getParameterfv(pname, params); }
+  void getParameterv(GLenum pname, GLint* params) {
+    _tex.getParameteriv(pname, params); }
+  void getParameterIv(GLenum pname, GLint* params) {
+    _tex.getParameterIiv(pname, params); }
+  void getParameterIv(GLenum pname, GLuint* params) {
+    _tex.getParameterIuiv(pname, params); }
 
   [[nodiscard]] static GLint maxSize() {
     GLint s = 0;
@@ -272,7 +290,7 @@ class gx::GLTexture3DT
 
   inline void clear(GLint level);
 
-  // set texture parameters
+  // texture parameters
   void setParameter(GLenum pname, GLfloat param) {
     _tex.setParameterf(pname, param); }
   void setParameter(GLenum pname, GLint param) {
@@ -285,6 +303,15 @@ class gx::GLTexture3DT
     _tex.setParameterIiv(pname, params); }
   void setParameterIv(GLenum pname, const GLuint* params) {
     _tex.setParameterIiuv(pname, params); }
+
+  void getParameterv(GLenum pname, GLfloat* params) {
+    _tex.getParameterfv(pname, params); }
+  void getParameterv(GLenum pname, GLint* params) {
+    _tex.getParameteriv(pname, params); }
+  void getParameterIv(GLenum pname, GLint* params) {
+    _tex.getParameterIiv(pname, params); }
+  void getParameterIv(GLenum pname, GLuint* params) {
+    _tex.getParameterIuiv(pname, params); }
 
   [[nodiscard]] static GLint maxSize() {
     GLint s = 0;
@@ -346,7 +373,7 @@ class gx::GLTextureCubeMap
 
   inline void clear(GLint level);
 
-  // set texture parameters
+  // texture parameters
   void setParameter(GLenum pname, GLfloat param) {
     _tex.setParameterf(pname, param); }
   void setParameter(GLenum pname, GLint param) {
@@ -359,6 +386,15 @@ class gx::GLTextureCubeMap
     _tex.setParameterIiv(pname, params); }
   void setParameterIv(GLenum pname, const GLuint* params) {
     _tex.setParameterIiuv(pname, params); }
+
+  void getParameterv(GLenum pname, GLfloat* params) {
+    _tex.getParameterfv(pname, params); }
+  void getParameterv(GLenum pname, GLint* params) {
+    _tex.getParameteriv(pname, params); }
+  void getParameterIv(GLenum pname, GLint* params) {
+    _tex.getParameterIiv(pname, params); }
+  void getParameterIv(GLenum pname, GLuint* params) {
+    _tex.getParameterIuiv(pname, params); }
 
   [[nodiscard]] static GLint maxSize() {
     GLint s = 0;
@@ -880,6 +916,42 @@ struct gx::GLTextureHandle
       GX_GLCALL(glTexParameterIuiv, TARGET, pname, params);
     } else {
       GX_GLCALL(glTextureParameterIuiv, id, pname, params);
+    }
+  }
+
+  void getParameterfv(GLenum pname, GLfloat* params) {
+    if constexpr (VER < 45) {
+      bindCheck();
+      GX_GLCALL(glGetTexParameterfv, TARGET, pname, params);
+    } else {
+      GX_GLCALL(glGetTextureParameterfv, id, pname, params);
+    }
+  }
+
+  void getParameteriv(GLenum pname, GLint* params) {
+    if constexpr (VER < 45) {
+      bindCheck();
+      GX_GLCALL(glGetTexParameteriv, TARGET, pname, params);
+    } else {
+      GX_GLCALL(glGetTextureParameteriv, id, pname, params);
+    }
+  }
+
+  void getParameterIiv(GLenum pname, GLint* params) {
+    if constexpr (VER < 45) {
+      bindCheck();
+      GX_GLCALL(glGetTexParameterIiv, TARGET, pname, params);
+    } else {
+      GX_GLCALL(glGetTextureParameterIiv, id, pname, params);
+    }
+  }
+
+  void getParameterIuiv(GLenum pname, GLuint* params) {
+    if constexpr (VER < 45) {
+      bindCheck();
+      GX_GLCALL(glGetTexParameterIuiv, TARGET, pname, params);
+    } else {
+      GX_GLCALL(glGetTextureParameterIuiv, id, pname, params);
     }
   }
 };
