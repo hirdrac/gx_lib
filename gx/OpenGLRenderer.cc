@@ -7,6 +7,8 @@
 // TODO: render thread
 //   - thread for OpenGL, glfwMakeContextCurrent(), glfwGetProcAddress(),
 //     glfwSwapInterval(), glfwSwapBuffers() calls
+// TODO: init param to determine which shaders to create
+// TODO: SDF glyph shader
 
 #include "OpenGLRenderer.hh"
 #include "DrawLayer.hh"
@@ -254,7 +256,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   void renderFrame(int64_t usecTime) override;
 
  private:
-  static constexpr int SHADER_COUNT = 4;
+  static constexpr int SHADER_COUNT = 5;
   GLProgram _sp[SHADER_COUNT];
   GLUniform1i _sp_texUnit[SHADER_COUNT];
 
@@ -476,7 +478,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "out vec4 fragColor;"
     "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }"));
 
-  // 3d shading w/ lighting shader
+  // 3d shader w/ lighting
   _sp[3] = makeProgram<VER>(vshader2, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
@@ -489,6 +491,23 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  vec3 lightDir = normalize(v_lightPos - v_pos);"
     "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
     "  fragColor = v_color * vec4((v_lightD * lt) + v_lightA, 1.0);"
+    "}"));
+
+  // textured 3d shader w/ lighting
+  _sp[4] = makeProgram<VER>(vshader2, makeFragmentShader<VER>(
+    "in vec3 v_pos;"
+    "in vec3 v_norm;"
+    "in vec4 v_color;"
+    "in vec2 v_texCoord;"
+    "in vec3 v_lightPos;"
+    "in vec3 v_lightA;"
+    "in vec3 v_lightD;"
+    "uniform sampler2D texUnit;"
+    "out vec4 fragColor;"
+    "void main() {"
+    "  vec3 lightDir = normalize(v_lightPos - v_pos);"
+    "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
+    "  fragColor = texture(texUnit, v_texCoord) * v_color * vec4((v_lightD * lt) + v_lightA, 1.0);"
     "}"));
 
   #undef UNIFORM_BLOCK_SRC
@@ -1139,6 +1158,13 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         }
 
         bool setUnit = false;
+
+        // shader values
+        //  0 - flat shader
+        //  1 - mono texture shader
+        //  2 - color texture shader
+        //  3 - lit flat shader
+        //  4 - lit texture shader
         int shader = useLight ? 3 : 0;
         if (tid != 0) {
           // shader uses texture - determine texture unit & bind if necessary
@@ -1152,8 +1178,11 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
             }
             setUnit = (entry.unit != texUnit);
             texUnit = entry.unit;
-            // set mono or color texture shader
-            shader = (entry.channels == 1) ? 1 : 2;
+            if (useLight) {
+              shader = 4;
+            } else {
+              shader = (entry.channels == 1) ? 1 : 2;
+            }
           }
         }
 
