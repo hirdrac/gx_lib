@@ -122,7 +122,7 @@ namespace {
         case CMD_normal:       d += 2; break;
         case CMD_light:        d += 6; break;
         case CMD_no_light:     d += 1; break;
-        case CMD_clear:        d += 1; break;
+        case CMD_clear:        d += 2; break;
         case CMD_line2:        d += 5;  vsize += 2; break;
         case CMD_line3:        d += 7;  vsize += 2; break;
         case CMD_line2C:       d += 7;  vsize += 2; break;
@@ -684,18 +684,6 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
       addOp(OP_modColor, lPtr->modColor);
     }
 
-    uint32_t clearMask = 0;
-    if (lPtr->bgColor != 0) {
-      addOp(OP_clearColor, lPtr->bgColor);
-      clearMask |= GL_COLOR_BUFFER_BIT;
-    }
-    if (lPtr->clearDepth) {
-      clearMask |= GL_DEPTH_BUFFER_BIT;
-    }
-    if (clearMask != 0) {
-      addOp(OP_clear, clearMask);
-    }
-
     if (lPtr->cap >= 0) {
       addOp(OP_capabilities, lPtr->cap);
     } else if (firstLayer) {
@@ -743,6 +731,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           break;
 
         case CMD_clear:
+          addOp(OP_clearColor, uval(d));
           addOp(OP_clear, uint32_t(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
           break;
 

@@ -194,8 +194,6 @@ int main(int argc, char** argv)
   int topLine = 0;
 
   gx::DrawLayer dl;
-  dl.setBGColor(.2f,.2f,.2f);
-
   gx::DrawContext dc{dl};
   gx::TextFormatting tf{&fnt};
   tf.glyphSpacing = float(glyphSpacing);
@@ -209,6 +207,8 @@ int main(int argc, char** argv)
     // draw frame
     if (win.resized() || redraw) {
       dc.clearList();
+      dc.clearScreen(.2f,.2f,.2f);
+
       const float win_width = float(win.width());
       const float win_height = float(win.height());
 

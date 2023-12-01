@@ -75,6 +75,14 @@ class gx::DrawContext
   void normal(const Vec3& n) { normal(packNormal(n)); }
   void normal(uint32_t n) { add(CMD_normal, n); }
 
+  // screen
+  void clearScreen(float r, float g, float b) {
+    clearScreen(packRGBA8(r,g,b,1.0f)); }
+  void clearScreen(const Color& c) {
+    clearScreen(packRGBA8(c)); }
+  void clearScreen(RGBA8 c) {
+    add(CMD_clear, c); }
+  
   // lighting
   void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
     add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }

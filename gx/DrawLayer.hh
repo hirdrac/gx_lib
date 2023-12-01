@@ -3,6 +3,9 @@
 // Copyright (C) 2023 Richard Bradley
 //
 
+// TODO: move attributes to DrawEntry commands
+// TODO: add flag for 'reset state' (default true)
+
 #pragma once
 #include "DrawList.hh"
 #include "Color.hh"
@@ -27,18 +30,9 @@ struct gx::DrawLayer
   // layer specific attributes/flags
   Mat4 view{INIT_IDENTITY}, proj{INIT_IDENTITY};
   RGBA8 modColor = packRGBA8(WHITE);
-  RGBA8 bgColor = 0;
   int32_t cap = -1;
   bool transformSet = false;
-  bool clearDepth = false;
 
   // helper methods
-  void setBGColor(RGBA8 c) {
-    bgColor = c; clearDepth = true; }
-  void setBGColor(float r, float g, float b) {
-    setBGColor(packRGBA8(r,g,b,1.0f)); }
-  void setBGColor(const Color& c) {
-    setBGColor(packRGBA8(c)); }
-
   void clear() { entries.clear(); }
 };

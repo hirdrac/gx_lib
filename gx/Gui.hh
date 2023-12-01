@@ -72,8 +72,12 @@ class gx::Gui
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // render data & flag if data was changed last update
 
-  template<class... Args>
-  void setBGColor(const Args&... args) { _layer.setBGColor(args...); }
+  void setBGColor(float r, float g, float b) {
+    _bgColor = packRGBA8(r,g,b,1.0f); }
+  void setBGColor(const Color& c) {
+    _bgColor = packRGBA8(c); }
+  void setBGColor(RGBA8 c) {
+    _bgColor = c; }
 
   void setElemState(PanelID pid, EventID eid, bool enable);
   void enableElem(PanelID pid, EventID eid) { setElemState(pid, eid, true); }
@@ -143,6 +147,7 @@ class gx::Gui
 
   // current state
   DrawLayer _layer;
+  RGBA8 _bgColor = 0;
   ElemID _hoverID = 0;
   ElemID _focusID = 0;
 

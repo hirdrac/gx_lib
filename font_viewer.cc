@@ -50,7 +50,6 @@ int main(int argc, char** argv)
   win.setSize(t.width(), t.height(), false);
 
   gx::DrawLayer dl;
-  dl.setBGColor(.3f,.1f,.1f);
   gx::DrawContext dc{dl};
   int lastCode = 0;
 
@@ -59,6 +58,7 @@ int main(int argc, char** argv)
     if (win.resized()) {
       // 'resized' always true once at start
       dc.clearList();
+      dc.clearScreen(.3f,.1f,.1f);
       dc.color(gx::WHITE);
       dc.texture(t);
       dc.rectangle({0, 0, float(win.width()), float(win.height())}, {0,0}, {1,1});
