@@ -223,14 +223,14 @@ namespace {
     Vertex*& ptr, const Vec3& pt, uint32_t c, Vec2 tx, uint32_t n) {
     *ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, n, 0}; }
 
-  [[nodiscard]] constexpr Mat4 orthoProjection(float width, float height)
+  [[nodiscard]] constexpr Mat4 orthoProjection(int width, int height)
   {
     // simple orthogonal projection to OpenGL screen coordinates
     //  x:[0 width] => x:[-1  1]
     //  y:[0 height]   y:[ 1 -1]
     return {
-      2.0f / width, 0, 0, 0,
-      0, -2.0f / height, 0, 0,
+      2.0f / float(width), 0, 0, 0,
+      0, -2.0f / float(height), 0, 0,
         // negative value flips vertical direction for OpenGL
       0, 0, 1, 0,
       -1, 1, 0, 1};
@@ -321,6 +321,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   };
   static_assert(sizeof(OpEntry) == 4);
 
+  Mat4 _orthoT{INIT_ZERO};
   std::vector<OpEntry> _opData;
   GLOperation _lastOp = OP_null;
   int _currentGLCap = -1; // current GL capability state
@@ -385,6 +386,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   _window = win;
 
   glfwGetFramebufferSize(win, &_fbWidth, &_fbHeight);
+  _orthoT = orthoProjection(_fbWidth, _fbHeight);
   //println("new window size: ", _fbWidth, " x ", _fbHeight);
 
   _maxTextureSize = GLTexture2D<VER>::maxSize();
@@ -552,6 +554,7 @@ bool OpenGLRenderer<VER>::setFramebufferSize(int width, int height)
   std::lock_guard lg{_glMutex};
   _fbWidth = width;
   _fbHeight = height;
+  _orthoT = orthoProjection(_fbWidth, _fbHeight);
   return true;
 }
 
@@ -677,7 +680,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
     } else if (firstLayer) {
       // default 2D projection
       addOp(OP_viewT, Mat4{INIT_IDENTITY});
-      addOp(OP_projT, orthoProjection(float(_fbWidth), float(_fbHeight)));
+      addOp(OP_projT, _orthoT);
     }
 
     if (lPtr->modColor != 0) {
