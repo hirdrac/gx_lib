@@ -263,8 +263,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
   GLBuffer<VER> _uniformBuf;
   struct UniformData {
     // NOTE: for std140 layout, alignment of array types must be 16 bytes
-    Mat4 viewT{INIT_ZERO};
-    Mat4 projT{INIT_ZERO};
+    Mat4 viewT{INIT_IDENTITY};
+    Mat4 projT{INIT_IDENTITY};
     Color modColor{INIT_ZERO};
     Vec3 lightPos{INIT_ZERO};
     uint32_t pad0;
@@ -677,10 +677,6 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
     if (lPtr->transformSet) {
       addOp(OP_viewT, lPtr->view);
       addOp(OP_projT, lPtr->proj);
-    } else if (firstLayer) {
-      // default 2D projection
-      addOp(OP_viewT, Mat4{INIT_IDENTITY});
-      addOp(OP_projT, _orthoT);
     }
 
     if (lPtr->modColor != 0) {
@@ -1068,6 +1064,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
 
   bool udChanged = true;
   UniformData ud{};
+  ud.projT = _orthoT; // default 2D projection
 
   // draw
   _vao.bind();
