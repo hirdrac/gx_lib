@@ -120,6 +120,8 @@ namespace {
         case CMD_texture:      d += 2; break;
         case CMD_lineWidth:    d += 2; break;
         case CMD_normal:       d += 2; break;
+        case CMD_camera:       d += 33; break;
+        case CMD_cameraReset:  d += 1; break;
         case CMD_light:        d += 6; break;
         case CMD_no_light:     d += 1; break;
         case CMD_clear:        d += 2; break;
@@ -184,6 +186,13 @@ namespace {
     return {fval(ptr), fval(ptr)}; }
   inline Vec3 fval3(const DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
+  inline Mat4 mval(const DrawEntry*& ptr) {
+    return {
+      fval(ptr), fval(ptr), fval(ptr), fval(ptr),
+      fval(ptr), fval(ptr), fval(ptr), fval(ptr),
+      fval(ptr), fval(ptr), fval(ptr), fval(ptr),
+      fval(ptr), fval(ptr), fval(ptr), fval(ptr)};
+  }
 
   struct Vertex {
     float x, y, z;  // pos
@@ -288,8 +297,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_null,
 
     // set uniform data
-    OP_viewT,         // <OP val*16> (17)
-    OP_projT,         // <OP val*16> (17)
+    OP_camera,        // <OP val*32> (33)
+    OP_cameraReset,   // <OP> (1)
     OP_modColor,      // <OP rgba8> (2)
     OP_light,         // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
     OP_disableLight,  // <OP> (1)
@@ -331,6 +340,14 @@ class gx::OpenGLRenderer final : public gx::Renderer
     _opData.reserve(_opData.size() + 17);
     _opData.push_back(op);
     for (float v : m) { _opData.push_back(v); }
+    _lastOp = op;
+  }
+
+  void addOp(GLOperation op, const Mat4& m1, const Mat4& m2) {
+    _opData.reserve(_opData.size() + 33);
+    _opData.push_back(op);
+    for (float v : m1) { _opData.push_back(v); }
+    for (float v : m2) { _opData.push_back(v); }
     _lastOp = op;
   }
 
@@ -674,11 +691,6 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
   int32_t first = 0;
   for (const DrawLayer* lPtr : dl) {
     const bool firstLayer = (lPtr == *dl.begin());
-    if (lPtr->transformSet) {
-      addOp(OP_viewT, lPtr->view);
-      addOp(OP_projT, lPtr->proj);
-    }
-
     if (lPtr->modColor != 0) {
       addOp(OP_modColor, lPtr->modColor);
     }
@@ -712,6 +724,15 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
         case CMD_color:   color  = uval(d); break;
         case CMD_texture: tid    = uval(d); break;
         case CMD_normal:  normal = uval(d); break;
+
+        case CMD_camera: {
+          const Mat4 viewT = mval(d);
+          const Mat4 projT = mval(d);
+          addOp(OP_camera, viewT, projT);
+          break;
+        }
+        case CMD_cameraReset:
+          addOp(OP_cameraReset); break;
 
         case CMD_light: {
           const Vec3 pos = fval3(d);
@@ -1078,12 +1099,14 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   for (const OpEntry* d = data; d < data_end; ) {
     const GLOperation op = (d++)->op;
     switch (op) {
-      case OP_viewT:
+      case OP_camera:
         std::memcpy(ud.viewT.data(), d, sizeof(float)*16); d += 16;
+        std::memcpy(ud.projT.data(), d, sizeof(float)*16); d += 16;
         udChanged = true;
         break;
-      case OP_projT:
-        std::memcpy(ud.projT.data(), d, sizeof(float)*16); d += 16;
+      case OP_cameraReset:
+        ud.viewT = Mat4{INIT_IDENTITY};
+        ud.projT = _orthoT;
         udChanged = true;
         break;
       case OP_modColor:

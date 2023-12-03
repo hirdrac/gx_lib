@@ -75,6 +75,16 @@ class gx::DrawContext
   void normal(const Vec3& n) { normal(packNormal(n)); }
   void normal(uint32_t n) { add(CMD_normal, n); }
 
+  // camera
+  void camera(const Mat4& viewT, const Mat4& projT) {
+    add(CMD_camera, viewT, projT); }
+  void cameraReset() { add(CMD_cameraReset); }
+
+  // lighting
+  void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
+    add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
+  void noLight() { add(CMD_no_light); }
+
   // screen
   void clearScreen(float r, float g, float b) {
     clearScreen(packRGBA8(r,g,b,1.0f)); }
@@ -82,11 +92,6 @@ class gx::DrawContext
     clearScreen(packRGBA8(c)); }
   void clearScreen(RGBA8 c) {
     add(CMD_clear, c); }
-  
-  // lighting
-  void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
-    add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
-  void noLight() { add(CMD_no_light); }
 
   // line drawing
   void line(Vec2 a, Vec2 b);
@@ -210,6 +215,13 @@ class gx::DrawContext
     _color0 = 0;
     _color1 = 0;
     _colorMode = CM_SOLID;
+  }
+
+  void add(DrawCmd cmd, const Mat4& m1, const Mat4& m2) {
+    _data->reserve(_data->size() + 33);
+    _data->push_back(cmd);
+    _data->insert(_data->end(), m1.begin(), m1.end());
+    _data->insert(_data->end(), m2.begin(), m2.end());
   }
 
   template<typename... Args>

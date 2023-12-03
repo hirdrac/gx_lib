@@ -16,6 +16,10 @@ namespace gx {
     CMD_lineWidth,    // <cmd w> (2)
     CMD_normal,       // <cmd n> (2)
 
+    // camera
+    CMD_camera,       // <cmd val*32> <33>
+    CMD_cameraReset,  // <cmd> (1)
+
     // lighting
     CMD_light,        // <cmd x y z a d> (6)
     CMD_no_light,     // <cmd> (1)

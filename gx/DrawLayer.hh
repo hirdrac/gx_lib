@@ -28,10 +28,8 @@ struct gx::DrawLayer
   DrawList entries;
 
   // layer specific attributes/flags
-  Mat4 view{INIT_IDENTITY}, proj{INIT_IDENTITY};
   RGBA8 modColor = packRGBA8(WHITE);
   int32_t cap = -1;
-  bool transformSet = false;
 
   // helper methods
   void clear() { entries.clear(); }
