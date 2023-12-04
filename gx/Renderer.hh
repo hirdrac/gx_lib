@@ -8,6 +8,7 @@
 // TODO: additional mem stats (textures, combined texture size)
 
 #pragma once
+#include "DrawList.hh"
 #include "Types.hh"
 #include <initializer_list>
 
@@ -16,7 +17,6 @@ struct GLFWwindow;
 namespace gx {
   class Image;
   class Renderer;
-  struct DrawLayer;
 }
 
 class gx::Renderer
@@ -40,7 +40,7 @@ class gx::Renderer
   virtual void freeTexture(TextureID id) = 0;
 
   // draw methods
-  virtual void draw(std::initializer_list<const DrawLayer*> dl) = 0;
+  virtual void draw(std::initializer_list<const DrawList*> dl) = 0;
   virtual void renderFrame(int64_t usecTime) = 0;
 
   // general accessors

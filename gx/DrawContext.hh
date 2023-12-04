@@ -11,7 +11,6 @@
 // TODO: gradient function instead of set gradient/color points
 
 #pragma once
-#include "DrawLayer.hh"
 #include "DrawList.hh"
 #include "Texture.hh"
 #include "Color.hh"
@@ -44,7 +43,6 @@ class gx::DrawContext
 {
  public:
   DrawContext(DrawList& dl) : _data{&dl} { init(); }
-  DrawContext(DrawLayer& dl) : DrawContext{dl.entries} { }
 
   // Low-level data entry
   void clearList() { init(); _data->clear(); _dataColor = 0; }
@@ -56,7 +54,7 @@ class gx::DrawContext
     init(); _data->insert(_data->end(), dl.begin(), dl.end()); }
   void append(DrawContext& dc) { append(dc.drawList()); }
 
-  // control/state change
+  // context state change (reset for every DrawList)
   inline void color(float r, float g, float b, float a = 1.0f);
   inline void color(const Color& c);
   inline void color(RGBA8 c);
@@ -66,14 +64,15 @@ class gx::DrawContext
   inline void vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1);
   inline void vgradient(float y0, const Color& c0, float y1, const Color& c1);
 
-  inline void texture(TextureID tid);
-  void texture(const Texture& t) { texture(t.id()); }
-
-  inline void lineWidth(float w);
-
   void normal(float x, float y, float z) { normal(packNormal(x,y,z)); }
   void normal(const Vec3& n) { normal(packNormal(n)); }
   void normal(uint32_t n) { add(CMD_normal, n); }
+
+  inline void texture(TextureID tid);
+  void texture(const Texture& t) { texture(t.id()); }
+
+  // render state change (persists across different DrawLists)
+  inline void lineWidth(float w);
 
   void modColor(float r, float g, float b, float a = 1.0f) {
     add(CMD_modColor, packRGBA8(r, g, b, a)); }

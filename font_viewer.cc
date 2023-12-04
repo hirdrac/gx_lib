@@ -8,7 +8,6 @@
 #include "gx/Window.hh"
 #include "gx/Font.hh"
 #include "gx/Texture.hh"
-#include "gx/DrawLayer.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
@@ -49,7 +48,7 @@ int main(int argc, char** argv)
 
   win.setSize(t.width(), t.height(), false);
 
-  gx::DrawLayer dl;
+  gx::DrawList dl;
   gx::DrawContext dc{dl};
   int lastCode = 0;
 

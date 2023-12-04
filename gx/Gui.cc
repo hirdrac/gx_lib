@@ -710,9 +710,9 @@ bool Gui::update(Window& win)
 
   // redraw GUI if needed
   if (_needRender) {
-    _layer.clear();
+    _data.clear();
     DrawList tmp;
-    DrawContext dc{_layer}, dc2{tmp};
+    DrawContext dc{_data}, dc2{tmp};
     if (_bgColor != 0) { dc.clearScreen(_bgColor); }
     _needRender = false;
 

@@ -11,7 +11,7 @@
 // TODO: SDF glyph shader
 
 #include "OpenGLRenderer.hh"
-#include "DrawLayer.hh"
+#include "DrawList.hh"
 #include "DrawEntry.hh"
 #include "Image.hh"
 #include "Color.hh"
@@ -263,7 +263,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   TextureID setTexture(TextureID id, const Image& img, int levels,
                        FilterType minFilter, FilterType magFilter) override;
   void freeTexture(TextureID id) override;
-  void draw(std::initializer_list<const DrawLayer*> dl) override;
+  void draw(std::initializer_list<const DrawList*> dl) override;
   void renderFrame(int64_t usecTime) override;
 
  private:
@@ -662,10 +662,10 @@ void OpenGLRenderer<VER>::freeTexture(TextureID id)
 }
 
 template<int VER>
-void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
+void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
 {
   std::size_t vsize = 0; // vertices needed for all layers
-  for (const DrawLayer* lPtr : dl) { vsize += calcVSize(lPtr->entries); }
+  for (const DrawList* dlPtr : dl) { vsize += calcVSize(*dlPtr); }
 
   std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
@@ -690,15 +690,15 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
   //  |/ |
   //  2--3
 
+  bool useLight = false;
   int32_t first = 0;
-  for (const DrawLayer* lPtr : dl) {
+  for (const DrawList* dlPtr : dl) {
     uint32_t color = 0;
     TextureID tid = 0;
     uint32_t normal = 0;
-    bool useLight = false;
 
-    const DrawEntry* data     = lPtr->entries.data();
-    const DrawEntry* data_end = data + lPtr->entries.size();
+    const DrawEntry* data     = dlPtr->data();
+    const DrawEntry* data_end = data + dlPtr->size();
     for (const DrawEntry* d = data; d != data_end; ) {
       const DrawCmd cmd = (d++)->cmd;
       switch (cmd) {
@@ -1020,11 +1020,6 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
           break;
       }
     }
-
-    if (useLight) {
-      // turn off light at end of each DrawLayer
-      addOp(OP_disableLight);
-    }
   }
 
   if (_vbo) {
@@ -1052,7 +1047,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
 
 #if 0
   std::size_t dsize = 0;
-  for (const DrawLayer* lPtr : dl) { dsize += lPtr->entries.size(); }
+  for (const DrawList* dlPtr : dl) { dsize += dlPtr->size(); }
   println_err("entries:", dsize, "  vertices:", vsize,
               "  opData:", _opData.size());
 #endif

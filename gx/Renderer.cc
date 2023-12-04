@@ -4,7 +4,6 @@
 //
 
 #include "Renderer.hh"
-#include "DrawLayer.hh"
 #include "System.hh"
 #include <GLFW/glfw3.h>
 #include <mutex>

@@ -193,7 +193,7 @@ int main(int argc, char** argv)
   const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
   int topLine = 0;
 
-  gx::DrawLayer dl;
+  gx::DrawList dl;
   gx::DrawContext dc{dl};
   gx::TextFormatting tf{&fnt};
   tf.glyphSpacing = float(glyphSpacing);

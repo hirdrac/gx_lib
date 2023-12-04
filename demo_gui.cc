@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
     // draw frame
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
-      win.draw(&gui.drawLayer());
+      win.draw(&gui.drawList());
       needRedraw = false;
     }
     win.renderFrame();

@@ -12,7 +12,6 @@
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
 #include "gx/Window.hh"
-#include "gx/DrawLayer.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Texture.hh"
 #include "gx/Print.hh"
@@ -142,7 +141,7 @@ int main(int argc, char* argv[])
     e.tex.init(win, e.img, 6, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
   }
 
-  gx::DrawLayer dl;
+  gx::DrawList dl;
   gx::DrawContext dc{dl};
   bool refresh = true;
   constexpr float border = 8.0f;
