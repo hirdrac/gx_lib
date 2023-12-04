@@ -8,6 +8,14 @@
 
 
 namespace gx {
+  enum CapabilityEnum : int32_t {
+    // values for bitfield
+    BLEND = 1,
+    DEPTH_TEST = 2,
+    CULL_CW = 4,
+    CULL_CCW = 8,
+  };
+
   enum DrawCmd : uint32_t {
     // state / control commands
     CMD_viewport,     // <cmd x y w h> (5)
@@ -16,6 +24,7 @@ namespace gx {
     CMD_lineWidth,    // <cmd w> (2)
     CMD_normal,       // <cmd n> (2)
     CMD_modColor,     // <cmd c> (2)
+    CMD_capabilities, // <cmd c> (2)
 
     // camera
     CMD_camera,       // <cmd val*32> <33>

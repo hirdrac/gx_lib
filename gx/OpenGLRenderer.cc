@@ -121,6 +121,7 @@ namespace {
         case CMD_lineWidth:    d += 2; break;
         case CMD_normal:       d += 2; break;
         case CMD_modColor:     d += 2; break;
+        case CMD_capabilities: d += 2; break;
         case CMD_camera:       d += 33; break;
         case CMD_cameraReset:  d += 1; break;
         case CMD_light:        d += 6; break;
@@ -391,7 +392,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     first += count;
   }
 
-  void setGLCapabilities(int cap);
+  void setGLCapabilities(int32_t cap);
 
   int64_t _lastFrameTime = 0;
   int32_t _frames = 0;
@@ -691,14 +692,6 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
 
   int32_t first = 0;
   for (const DrawLayer* lPtr : dl) {
-    const bool firstLayer = (lPtr == *dl.begin());
-    if (lPtr->cap >= 0) {
-      addOp(OP_capabilities, lPtr->cap);
-    } else if (firstLayer) {
-      // set default initial capabilities
-      addOp(OP_capabilities, BLEND);
-    }
-
     uint32_t color = 0;
     TextureID tid = 0;
     uint32_t normal = 0;
@@ -724,6 +717,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
 
         case CMD_modColor:
           addOp(OP_modColor, ival(d)); break;
+
+        case CMD_capabilities:
+          addOp(OP_capabilities, ival(d)); break;
 
         case CMD_camera: {
           const Mat4 viewT = mval(d);
@@ -1092,6 +1088,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   int lastShader = -1;
   int nextTexUnit = 0;
   int texUnit = -1;
+  int32_t newCap = BLEND;
   bool useLight = false;
 
   const OpEntry* data     = _opData.data();
@@ -1122,9 +1119,6 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
       case OP_disableLight:
         useLight = false;
         break;
-      case OP_capabilities:
-        setGLCapabilities((d++)->ival);
-        break;
       case OP_lineWidth:
         GX_GLCALL(glLineWidth, (d++)->fval);
         break;
@@ -1141,12 +1135,16 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         GX_GLCALL(glViewport, x, y, w, h);
         break;
       }
+      case OP_capabilities:
+        newCap = (d++)->ival;
+        break;
       case OP_clear:
         GX_GLCALL(glClear, (d++)->uval);
         break;
       case OP_drawLines: {
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
+        if (_currentGLCap != newCap) { setGLCapabilities(newCap); }
         if (udChanged) {
           _uniformBuf.setSubData(0, sizeof(ud), &ud);
           udChanged = false;
@@ -1164,6 +1162,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
+        if (_currentGLCap != newCap) { setGLCapabilities(newCap); }
         if (udChanged) {
           _uniformBuf.setSubData(0, sizeof(ud), &ud);
           udChanged = false;
@@ -1233,7 +1232,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
 }
 
 template<int VER>
-void OpenGLRenderer<VER>::setGLCapabilities(int cap)
+void OpenGLRenderer<VER>::setGLCapabilities(int32_t cap)
 {
   constexpr int CULL = CULL_CW | CULL_CCW;
   GX_ASSERT(cap >= 0);

@@ -80,6 +80,8 @@ class gx::DrawContext
   void modColor(const Color& c) { add(CMD_modColor, packRGBA8(c)); }
   void modColor(RGBA8 c) { add(CMD_modColor, c); }
 
+  void capabilities(int32_t c) { add(CMD_capabilities, c); }
+
   // camera
   void camera(const Mat4& viewT, const Mat4& projT) {
     add(CMD_camera, viewT, projT); }
