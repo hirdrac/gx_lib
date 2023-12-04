@@ -75,6 +75,11 @@ class gx::DrawContext
   void normal(const Vec3& n) { normal(packNormal(n)); }
   void normal(uint32_t n) { add(CMD_normal, n); }
 
+  void modColor(float r, float g, float b, float a = 1.0f) {
+    add(CMD_modColor, packRGBA8(r, g, b, a)); }
+  void modColor(const Color& c) { add(CMD_modColor, packRGBA8(c)); }
+  void modColor(RGBA8 c) { add(CMD_modColor, c); }
+
   // camera
   void camera(const Mat4& viewT, const Mat4& projT) {
     add(CMD_camera, viewT, projT); }

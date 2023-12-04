@@ -28,7 +28,6 @@ struct gx::DrawLayer
   DrawList entries;
 
   // layer specific attributes/flags
-  RGBA8 modColor = packRGBA8(WHITE);
   int32_t cap = -1;
 
   // helper methods

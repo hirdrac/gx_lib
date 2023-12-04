@@ -15,6 +15,7 @@ namespace gx {
     CMD_texture,      // <cmd id> (2)
     CMD_lineWidth,    // <cmd w> (2)
     CMD_normal,       // <cmd n> (2)
+    CMD_modColor,     // <cmd c> (2)
 
     // camera
     CMD_camera,       // <cmd val*32> <33>

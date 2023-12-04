@@ -120,6 +120,7 @@ namespace {
         case CMD_texture:      d += 2; break;
         case CMD_lineWidth:    d += 2; break;
         case CMD_normal:       d += 2; break;
+        case CMD_modColor:     d += 2; break;
         case CMD_camera:       d += 33; break;
         case CMD_cameraReset:  d += 1; break;
         case CMD_light:        d += 6; break;
@@ -274,7 +275,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     // NOTE: for std140 layout, alignment of array types must be 16 bytes
     Mat4 viewT{INIT_IDENTITY};
     Mat4 projT{INIT_IDENTITY};
-    Color modColor{INIT_ZERO};
+    Color modColor = WHITE;
     Vec3 lightPos{INIT_ZERO};
     uint32_t pad0;
     Vec3 lightA{INIT_ZERO};
@@ -691,10 +692,6 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
   int32_t first = 0;
   for (const DrawLayer* lPtr : dl) {
     const bool firstLayer = (lPtr == *dl.begin());
-    if (lPtr->modColor != 0) {
-      addOp(OP_modColor, lPtr->modColor);
-    }
-
     if (lPtr->cap >= 0) {
       addOp(OP_capabilities, lPtr->cap);
     } else if (firstLayer) {
@@ -724,6 +721,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawLayer*> dl)
         case CMD_color:   color  = uval(d); break;
         case CMD_texture: tid    = uval(d); break;
         case CMD_normal:  normal = uval(d); break;
+
+        case CMD_modColor:
+          addOp(OP_modColor, ival(d)); break;
 
         case CMD_camera: {
           const Mat4 viewT = mval(d);
