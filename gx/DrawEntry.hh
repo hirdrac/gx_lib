@@ -14,6 +14,7 @@ namespace gx {
     DEPTH_TEST = 2,
     CULL_CW = 4,
     CULL_CCW = 8,
+    LIGHTING = 16,
   };
 
   enum DrawCmd : uint32_t {
@@ -32,7 +33,6 @@ namespace gx {
 
     // lighting
     CMD_light,        // <cmd x y z a d> (6)
-    CMD_no_light,     // <cmd> (1)
 
     // drawing commands
     CMD_clear,        // <cmd c> (2)

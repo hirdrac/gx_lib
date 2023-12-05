@@ -89,7 +89,6 @@ class gx::DrawContext
   // lighting
   void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
     add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
-  void noLight() { add(CMD_no_light); }
 
   // screen
   void clearScreen(float r, float g, float b) {

@@ -125,7 +125,6 @@ namespace {
         case CMD_camera:       d += 33; break;
         case CMD_cameraReset:  d += 1; break;
         case CMD_light:        d += 6; break;
-        case CMD_no_light:     d += 1; break;
         case CMD_clear:        d += 2; break;
         case CMD_line2:        d += 5;  vsize += 2; break;
         case CMD_line3:        d += 7;  vsize += 2; break;
@@ -303,7 +302,6 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_cameraReset,   // <OP> (1)
     OP_modColor,      // <OP rgba8> (2)
     OP_light,         // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
-    OP_disableLight,  // <OP> (1)
 
     // set GL state
     OP_viewport,      // <OP x y w h> (5)
@@ -690,7 +688,6 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
   //  |/ |
   //  2--3
 
-  bool useLight = false;
   int32_t first = 0;
   for (const DrawList* dlPtr : dl) {
     uint32_t color = 0;
@@ -735,12 +732,8 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           const uint32_t ambient = uval(d);
           const uint32_t diffuse = uval(d);
           addOp(OP_light, pos.x, pos.y, pos.z, ambient, diffuse);
-          useLight = true;
           break;
         }
-        case CMD_no_light:
-          if (useLight) { addOp(OP_disableLight); useLight = false; }
-          break;
 
         case CMD_lineWidth:
           addOp(OP_lineWidth, fval(d));
@@ -1109,10 +1102,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         std::memcpy(ud.lightPos.data(), d, sizeof(float)*3); d += 3;
         ud.lightA = unpackRGBA8((d++)->uval).rgb();
         ud.lightD = unpackRGBA8((d++)->uval).rgb();
-        useLight = udChanged = true;
-        break;
-      case OP_disableLight:
-        useLight = false;
+        udChanged = true;
         break;
       case OP_lineWidth:
         GX_GLCALL(glLineWidth, (d++)->fval);
@@ -1132,6 +1122,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
       }
       case OP_capabilities:
         newCap = (d++)->ival;
+        useLight = newCap & LIGHTING;
         break;
       case OP_clear:
         GX_GLCALL(glClear, (d++)->uval);
