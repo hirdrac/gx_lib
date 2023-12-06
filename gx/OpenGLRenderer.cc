@@ -138,7 +138,7 @@ namespace {
         case CMD_triangle3C:   d += 13; vsize += 3; break;
         case CMD_triangle2TC:  d += 16; vsize += 3; break;
         case CMD_triangle3TC:  d += 19; vsize += 3; break;
-        case CMD_triangle3NTC: d += 22; vsize += 3; break;
+        case CMD_triangle3TCN: d += 22; vsize += 3; break;
         case CMD_quad2:        d += 9;  vsize += 6; break;
         case CMD_quad3:        d += 13; vsize += 6; break;
         case CMD_quad2T:       d += 17; vsize += 6; break;
@@ -147,7 +147,7 @@ namespace {
         case CMD_quad3C:       d += 17; vsize += 6; break;
         case CMD_quad2TC:      d += 21; vsize += 6; break;
         case CMD_quad3TC:      d += 25; vsize += 6; break;
-        case CMD_quad3NTC:     d += 29; vsize += 6; break;
+        case CMD_quad3TCN:     d += 29; vsize += 6; break;
         case CMD_rectangle:    d += 5;  vsize += 6; break;
         case CMD_rectangleT:   d += 9;  vsize += 6; break;
 
@@ -211,10 +211,10 @@ namespace {
     const float x = fval(ptr);
     const float y = fval(ptr);
     const float z = fval(ptr);
-    const uint32_t n = uval(ptr);
     const float s = fval(ptr);
     const float t = fval(ptr);
     const uint32_t c = uval(ptr);
+    const uint32_t n = uval(ptr);
     return {x,y,z,c,s,t,n,0};
   }
 
@@ -849,7 +849,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           addDrawTriangles(first, 3, tid);
           break;
         }
-        case CMD_triangle3NTC: {
+        case CMD_triangle3TCN: {
           *ptr++ = vertex_val(d);
           *ptr++ = vertex_val(d);
           *ptr++ = vertex_val(d);
@@ -968,7 +968,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           addDrawTriangles(first, 6, tid);
           break;
         }
-        case CMD_quad3NTC: {
+        case CMD_quad3TCN: {
           const Vertex v0 = vertex_val(d);
           const Vertex v1 = vertex_val(d);
           const Vertex v2 = vertex_val(d);

@@ -125,11 +125,11 @@ class gx::DrawContext
   void triangle(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c) {
     add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
         b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
-  void triangle(const Vertex3NTC& a, const Vertex3NTC& b, const Vertex3NTC& c) {
-    add(CMD_triangle3NTC,
-        a.x, a.y, a.z, packNormal(a.nx, a.ny, a.nz), a.s, a.t, a.c,
-        b.x, b.y, b.z, packNormal(b.nx, b.ny, b.nz), b.s, b.t, b.c,
-        c.x, c.y, c.z, packNormal(c.nx, c.ny, c.nz), c.s, c.t, c.c); }
+  void triangle(const Vertex3TCN& a, const Vertex3TCN& b, const Vertex3TCN& c) {
+    add(CMD_triangle3TCN,
+        a.x, a.y, a.z, a.s, a.t, a.c, a.n,
+        b.x, b.y, b.z, b.s, b.t, b.c, b.n,
+        c.x, c.y, c.z, c.s, c.t, c.c, c.n); }
 
   void quad(const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d);
   void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d);
@@ -149,13 +149,13 @@ class gx::DrawContext
             const Vertex3TC& c, const Vertex3TC& d) {
     add(CMD_quad3TC, a.x, a.y, a.z, a.s, a.t, a.c, b.x, b.y, b.z, b.s, b.t, b.c,
         c.x, c.y, c.z, c.s, c.t, c.c, d.x, d.y, d.z, d.s, d.t, d.c); }
-  void quad(const Vertex3NTC& a, const Vertex3NTC& b,
-            const Vertex3NTC& c, const Vertex3NTC& d) {
-    add(CMD_quad3NTC,
-        a.x, a.y, a.z, packNormal(a.nx, a.ny, a.nz), a.s, a.t, a.c,
-        b.x, b.y, b.z, packNormal(b.nx, b.ny, b.nz), b.s, b.t, b.c,
-        c.x, c.y, c.z, packNormal(c.nx, c.ny, c.nz), c.s, c.t, c.c,
-        d.x, d.y, d.z, packNormal(d.nx, d.ny, d.nz), d.s, d.t, d.c); }
+  void quad(const Vertex3TCN& a, const Vertex3TCN& b,
+            const Vertex3TCN& c, const Vertex3TCN& d) {
+    add(CMD_quad3TCN,
+        a.x, a.y, a.z, a.s, a.t, a.c, a.n,
+        b.x, b.y, b.z, b.s, b.t, b.c, b.n,
+        c.x, c.y, c.z, c.s, c.t, c.c, c.n,
+        d.x, d.y, d.z, d.s, d.t, d.c); }
 
   void rectangle(const Rect& r);
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1);
