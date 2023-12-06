@@ -26,6 +26,25 @@ namespace gx {
   struct Glyph;
   class DrawContext;
   struct TextFormatting;
+
+  struct Vertex2C {
+    float x, y; uint32_t c;
+
+    Vertex2C() = default;
+    constexpr Vertex2C(Vec2 pos, uint32_t col)
+      : x{pos.x}, y{pos.y}, c{col} { }
+    constexpr Vertex2C(float px, float py, uint32_t col)
+      : x{px}, y{py}, c{col} { }
+  };
+
+  struct Vertex2T { float x, y, s, t; };
+  struct Vertex2TC { float x, y, s, t; uint32_t c; };
+
+  struct Vertex3C { float x, y, z; uint32_t c; };
+  struct Vertex3T { float x, y, z, s, t; };
+  struct Vertex3TC { float x, y, z, s, t; uint32_t c; };
+
+  struct Vertex3TCN { float x,y,z,s,t; uint32_t c, n; };
 }
 
 struct gx::TextFormatting

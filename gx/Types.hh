@@ -36,23 +36,4 @@ namespace gx {
     constexpr Rect(float rx, float ry, float rw, float rh)
       : x{rx}, y{ry}, w{rw}, h{rh} { }
   };
-
-  struct Vertex2C {
-    float x, y; uint32_t c;  // 12 bytes
-
-    Vertex2C() = default;
-    constexpr Vertex2C(Vec2 pos, uint32_t col)
-      : x{pos.x}, y{pos.y}, c{col} { }
-    constexpr Vertex2C(float px, float py, uint32_t col)
-      : x{px}, y{py}, c{col} { }
-  };
-
-  struct Vertex2T { float x, y, s, t; };              // 16
-  struct Vertex2TC { float x, y, s, t; uint32_t c; }; // 20
-
-  struct Vertex3C { float x, y, z; uint32_t c; };        // 16
-  struct Vertex3T { float x, y, z, s, t; };              // 20
-  struct Vertex3TC { float x, y, z, s, t; uint32_t c; }; // 24
-
-  struct Vertex3TCN { float x,y,z,s,t; uint32_t c, n; }; // 28
 }
