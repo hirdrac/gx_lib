@@ -410,8 +410,8 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   glfwSwapInterval(_swapInterval); // enable V-SYNC
 
   // NOTES:
-  // - matrices in GLSL are column major: M*V*P*v
-  // - gx_lib uses row major matrices:    v*P*V*M
+  // - matrices in GLSL are column major: P*V*M*v
+  // - gx_lib uses row major matrices:    v*M*V*P
 
   _uniformBuf.init(sizeof(UniformData), nullptr);
   #define UNIFORM_BLOCK_SRC\
