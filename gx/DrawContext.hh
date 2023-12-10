@@ -110,6 +110,8 @@ class gx::DrawContext
     add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
 
   // view
+  void viewport(int x, int y, int w, int h) {
+    add(CMD_viewport, x, y, w, h); }
   void clearView(float r, float g, float b) {
     clearView(packRGBA8(r,g,b,1.0f)); }
   void clearView(const Color& c) {
