@@ -109,12 +109,12 @@ class gx::DrawContext
   void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
     add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
 
-  // screen
-  void clearScreen(float r, float g, float b) {
-    clearScreen(packRGBA8(r,g,b,1.0f)); }
-  void clearScreen(const Color& c) {
-    clearScreen(packRGBA8(c)); }
-  void clearScreen(RGBA8 c) {
+  // view
+  void clearView(float r, float g, float b) {
+    clearView(packRGBA8(r,g,b,1.0f)); }
+  void clearView(const Color& c) {
+    clearView(packRGBA8(c)); }
+  void clearView(RGBA8 c) {
     add(CMD_clear, c); }
 
   // line drawing

@@ -57,7 +57,7 @@ int main(int argc, char** argv)
     if (win.resized()) {
       // 'resized' always true once at start
       dc.clearList();
-      dc.clearScreen(.3f,.1f,.1f);
+      dc.clearView(.3f,.1f,.1f);
       dc.color(gx::WHITE);
       dc.texture(t);
       dc.rectangle({0, 0, float(win.width()), float(win.height())}, {0,0}, {1,1});

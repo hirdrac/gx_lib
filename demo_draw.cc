@@ -271,7 +271,7 @@ int main(int argc, char** argv)
       const int start_gfx = page * gfxPerPage;
       const int end_gfx = std::min(start_gfx + gfxPerPage, gfxCount);
       dc.clearList();
-      dc.clearScreen(.2f,.2f,.5f);
+      dc.clearView(.2f,.2f,.5f);
 
       // draw function & text split to reduce draw calls
       float x = 0, y = 0;

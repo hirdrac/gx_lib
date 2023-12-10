@@ -713,7 +713,7 @@ bool Gui::update(Window& win)
     _data.clear();
     DrawList tmp;
     DrawContext dc{_data}, dc2{tmp};
-    if (_bgColor != 0) { dc.clearScreen(_bgColor); }
+    if (_bgColor != 0) { dc.clearView(_bgColor); }
     _needRender = false;
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
