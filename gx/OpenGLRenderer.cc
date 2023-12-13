@@ -1057,6 +1057,8 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   // set default GL state
   GX_GLCALL(glViewport, 0, 0, _fbWidth, _fbHeight);
   GX_GLCALL(glClearDepth, 1.0);
+  GX_GLCALL(glDepthMask, GL_TRUE);
+  GX_GLCALL(glDepthFunc, GL_LESS);
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
   GX_GLCALL(glFrontFace, GL_CW);
