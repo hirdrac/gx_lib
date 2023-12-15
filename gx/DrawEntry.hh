@@ -9,12 +9,12 @@
 
 namespace gx {
   enum CapabilityEnum : int32_t {
-    // values for bitfield
-    BLEND = 1,
-    DEPTH_TEST = 2,
-    CULL_CW = 4,
-    CULL_CCW = 8,
-    LIGHTING = 16,
+    // values for capabilities bitfield
+    BLEND = 1,        // use alpha channel for blending
+    DEPTH_TEST = 2,   // do depth buffer check for rendering
+    CULL_CW = 4,      // cull front face (clockwise)
+    CULL_CCW = 8,     // cull back back (counter-clockwise)
+    LIGHTING = 16,    // use light for shading
   };
 
   enum DrawCmd : uint32_t {
