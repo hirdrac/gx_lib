@@ -116,6 +116,7 @@ namespace {
       const DrawCmd cmd = d->cmd;
       switch (cmd) {
         case CMD_viewport:     d += 5; break;
+        case CMD_viewportFull: d += 1; break;
         case CMD_color:        d += 2; break;
         case CMD_texture:      d += 2; break;
         case CMD_lineWidth:    d += 2; break;
@@ -305,6 +306,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
     // set GL state
     OP_viewport,      // <OP x y w h> (5)
+    OP_viewportFull,  // <OP> (1)
     OP_capabilities,  // <OP cap> (2)
     OP_lineWidth,     // <OP width> (2)
     OP_clearColor,    // <OP rgba8> (2)
@@ -707,6 +709,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           addOp(OP_viewport, x, y, w, h);
           break;
         }
+        case CMD_viewportFull:
+          addOp(OP_viewportFull);
+          break;
 
         case CMD_color:   color  = uval(d); break;
         case CMD_texture: tid    = uval(d); break;
@@ -1122,6 +1127,9 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         GX_GLCALL(glViewport, x, y, w, h);
         break;
       }
+      case OP_viewportFull:
+        GX_GLCALL(glViewport, 0, 0, _fbWidth, _fbHeight);
+        break;
       case OP_capabilities:
         newCap = (d++)->ival;
         useLight = newCap & LIGHTING;
