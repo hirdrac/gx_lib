@@ -61,7 +61,7 @@ struct gx::TextFormatting
 class gx::DrawContext
 {
  public:
-  DrawContext(nullptr_t) = delete;
+  DrawContext(std::nullptr_t) = delete;
   DrawContext(DrawList* dl) : _data{dl} { init(); }
   DrawContext(DrawList& dl) : DrawContext{&dl} { }
 
