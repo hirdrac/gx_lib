@@ -93,7 +93,7 @@ class gx::DrawContext
   void texture(const Texture& t) { texture(t.id()); }
 
   // render state change (persists across different DrawLists)
-  inline void lineWidth(float w);
+  void lineWidth(float w) { add(CMD_lineWidth, w); }
 
   void modColor(float r, float g, float b, float a = 1.0f) {
     add(CMD_modColor, packRGBA8(r, g, b, a)); }
@@ -228,7 +228,6 @@ class gx::DrawContext
 
   // general properties
   TextureID _lastTexID;
-  float _lastLineWidth;
 
   // color/gradient properties
   float _g0, _g1;                 // x or y gradient coords
@@ -241,7 +240,6 @@ class gx::DrawContext
 
   void init() {
     _lastTexID = 0;
-    _lastLineWidth = 1.0f;
     _color0 = 0;
     _color1 = 0;
     _colorMode = CM_SOLID;
@@ -346,14 +344,6 @@ void gx::DrawContext::vgradient(
   _g1 = y1;
   _color1 = packRGBA8(c1);
   _fullcolor1 = c1;
-}
-
-void gx::DrawContext::lineWidth(float w)
-{
-  if (w != _lastLineWidth) {
-    _lastLineWidth = w;
-    add(CMD_lineWidth, w);
-  }
 }
 
 void gx::DrawContext::texture(TextureID tid)

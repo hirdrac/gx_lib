@@ -25,11 +25,11 @@
 #include "Assert.hh"
 #include "Print.hh"
 #include <GLFW/glfw3.h>
-#include <cstring>
 #include <vector>
 #include <unordered_map>
 #include <mutex>
 #include <chrono>
+#include <cstring>
 using namespace gx;
 
 
@@ -1065,6 +1065,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   GX_GLCALL(glDepthMask, GL_TRUE);
   GX_GLCALL(glDepthFunc, GL_LESS);
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GX_GLCALL(glLineWidth, 1.0f);
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
   GX_GLCALL(glFrontFace, GL_CW);
 
