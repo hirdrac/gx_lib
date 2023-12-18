@@ -61,7 +61,9 @@ struct gx::TextFormatting
 class gx::DrawContext
 {
  public:
-  DrawContext(DrawList& dl) : _data{&dl} { init(); }
+  DrawContext(nullptr_t) = delete;
+  DrawContext(DrawList* dl) : _data{dl} { init(); }
+  DrawContext(DrawList& dl) : DrawContext{&dl} { }
 
   // Low-level data entry
   void clearList() { init(); _data->clear(); _dataColor = 0; }
