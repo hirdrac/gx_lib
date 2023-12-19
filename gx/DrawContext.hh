@@ -56,6 +56,18 @@ struct gx::TextFormatting
   Vec2 advY{0,1};         // dir of next line
   Vec2 glyphX{1,0};       // glyph quad sides
   Vec2 glyphY{0,1};
+
+  // transforms
+  void scaleX(float s) { advX *= s; glyphX *= s; }
+  void scaleY(float s) { advY *= s; glyphY *= s; }
+  void scale(float s) { scaleX(s); scaleY(s); }
+
+  void rotate(float rad) {
+    advX = gx::rotate(advX, rad);
+    advY = gx::rotate(advY, rad);
+    glyphX = gx::rotate(glyphX, rad);
+    glyphY = gx::rotate(glyphY, rad);
+  }
 };
 
 class gx::DrawContext

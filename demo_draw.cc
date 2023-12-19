@@ -27,6 +27,10 @@ constexpr auto BLACK = gx::packRGBA8(gx::BLACK);
 constexpr auto RED = gx::packRGBA8(1.0f, 0, 0, 1.0f);
 
 
+// **** Globals ****
+gx::Font TheFont{FONT_SIZE};
+
+
 // **** Draw Functions ****
 void draw_circle1(gx::DrawContext& dc, float x, float y)
 {
@@ -197,6 +201,17 @@ void draw_lines2(gx::DrawContext& dc, float x, float y)
   dc.line(origin, gx::Vertex2C{x+20,y+329,WHITE});
 }
 
+void draw_text1(gx::DrawContext& dc, float x, float y)
+{
+  gx::TextFormatting tf{&TheFont};
+  tf.scale(2.0f);
+
+  for (int i = 0; i < 5; ++i) {
+    dc.text(tf, {x+60, y+55}, gx::ALIGN_CENTER_LEFT, "  abc ABC 123");
+    tf.rotate(gx::degToRad(22.5f));
+  }
+}
+
 
 struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   gfxData[] = {
@@ -227,14 +242,14 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"Shaded Rounded Border Filled", draw_rborder5},
   {"Lines", draw_lines1},
   {"Colored Lines", draw_lines2},
+  {"Scaled/Rotated Text", draw_text1},
 };
 
 
 // **** main ****
 int main(int argc, char** argv)
 {
-  gx::Font fnt{FONT_SIZE};
-  if (!fnt.load("data/FreeSans.ttf")) {
+  if (!TheFont.load("data/FreeSans.ttf")) {
     println_err("failed to load font");
     return -1;
   }
@@ -247,9 +262,9 @@ int main(int argc, char** argv)
     return -1;
   }
 
-  fnt.makeAtlas(win);
+  TheFont.makeAtlas(win);
 
-  gx::TextFormatting tf{&fnt};
+  gx::TextFormatting tf{&TheFont};
   const int gfxCount = std::size(gfxData);
   int page = 0, gfxPerPage = 0, maxPage = 0;
   bool redraw = false;
