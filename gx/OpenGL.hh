@@ -20,6 +20,7 @@ inline GLuint GLLastArrayBufferBind = 0;
 inline GLuint GLLastCopyWriteBufferBind = 0;
 inline GLuint GLLastVertexArrayBind = 0;
 inline GLuint GLLastTextureBind = 0;
+inline GLuint GLLastFramebufferBind = 0;
   // cache bind values for auto-binding in OpenGL versions without
   // direct state access methods (GL < 4.5)
 
