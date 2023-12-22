@@ -53,6 +53,8 @@ class gx::GLFramebuffer
 
   [[nodiscard]] inline GLenum status() const;
 
+  void attachTexture(GLenum attachment, GLuint texture, GLint level);
+
  private:
   GLuint _fbuffer = 0;
 
@@ -136,6 +138,24 @@ GLenum gx::GLFramebuffer<VER>::status() const
   // GL_FRAMEBUFFER_UNSUPPORTED
   // GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE
   // GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS
+}
+
+template<int VER>
+void gx::GLFramebuffer<VER>::attachTexture(
+  GLenum attachment, GLuint texture, GLint level)
+{
+  // attachment values:
+  // GL_COLOR_ATTACHMENTi (where i is 0 to GL_MAX_COLOR_ATTACHMENTS-1)
+  // GL_DEPTH_ATTACHMENT
+  // GL_STENCIL_ATTACHMENT
+  // GL_DEPTH_STENCIL_ATTACHMENT
+
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glFramebufferTexture, GL_FRAMEBUFFER, attachment, texture, level);
+  } else {
+    GX_GLCALL(glNamedFramebufferTexture, _fbuffer, attachment, texture, level);
+  }
 }
 
 template<int VER>
