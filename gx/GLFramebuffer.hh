@@ -54,6 +54,7 @@ class gx::GLFramebuffer
   [[nodiscard]] inline GLenum status() const;
 
   void attachTexture(GLenum attachment, GLuint texture, GLint level);
+  void attachRenderbuffer(GLenum attachment, GLuint renderbuffer);
 
  private:
   GLuint _fbuffer = 0;
@@ -155,6 +156,18 @@ void gx::GLFramebuffer<VER>::attachTexture(
     GX_GLCALL(glFramebufferTexture, GL_FRAMEBUFFER, attachment, texture, level);
   } else {
     GX_GLCALL(glNamedFramebufferTexture, _fbuffer, attachment, texture, level);
+  }
+}
+
+template<int VER>
+void gx::GLFramebuffer<VER>::attachRenderbuffer(
+  GLenum attachment, GLuint renderbuffer)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
+    GX_GLCALL(glFramebufferRenderbuffer, GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, renderbuffer);
+  } else {
+    GX_GLCALL(glNamedFramebufferRenderbuffer, _fbuffer, attachment, GL_RENDERBUFFER, renderbuffer);
   }
 }
 
