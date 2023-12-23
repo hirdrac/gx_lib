@@ -115,11 +115,13 @@ void gx::GLClearState()
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindTexture(GL_TEXTURE_2D, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
   GLLastArrayBufferBind = 0;
   GLLastCopyWriteBufferBind = 0;
   GLLastVertexArrayBind = 0;
   GLLastTextureBind = 0;
+  GLLastFramebufferBind = 0;
 }
 
 std::string gx::GLErrorStr(GLenum error)
