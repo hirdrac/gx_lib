@@ -20,7 +20,7 @@ static void GLCleanUp()
 static constexpr const char* GLSourceStr(GLenum source)
 {
   const char* sourceStr = "unknown";
-  #define DEBUG_SOURCE_CASE(x) case GL_DEBUG_SOURCE_##x: sourceStr = #x; break
+#define DEBUG_SOURCE_CASE(x) case GL_DEBUG_SOURCE_##x: sourceStr = #x; break
   switch (source) {
     DEBUG_SOURCE_CASE(API);
     DEBUG_SOURCE_CASE(WINDOW_SYSTEM);
@@ -29,14 +29,14 @@ static constexpr const char* GLSourceStr(GLenum source)
     DEBUG_SOURCE_CASE(APPLICATION);
     DEBUG_SOURCE_CASE(OTHER);
   }
-  #undef DEBUG_SOURCE_CASE
+#undef DEBUG_SOURCE_CASE
   return sourceStr;
 }
 
 static constexpr const char* GLTypeStr(GLenum type)
 {
   const char* typeStr = "unknown";
-  #define DEBUG_TYPE_CASE(x) case GL_DEBUG_TYPE_##x: typeStr = #x; break
+#define DEBUG_TYPE_CASE(x) case GL_DEBUG_TYPE_##x: typeStr = #x; break
   switch (type) {
     DEBUG_TYPE_CASE(ERROR);
     DEBUG_TYPE_CASE(DEPRECATED_BEHAVIOR);
@@ -45,7 +45,7 @@ static constexpr const char* GLTypeStr(GLenum type)
     DEBUG_TYPE_CASE(PERFORMANCE);
     DEBUG_TYPE_CASE(OTHER);
   }
-  #undef DEBUG_TYPE_CASE
+#undef DEBUG_TYPE_CASE
   return typeStr;
 }
 
