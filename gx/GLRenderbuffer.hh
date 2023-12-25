@@ -36,9 +36,13 @@ class gx::GLRenderbuffer
   [[nodiscard]] GLuint id() const { return _rbuffer; }
 
   // methods
-  inline GLuint init(GLenum internalformat, GLsizei width, GLsizei height);
+  inline GLuint init();
+  GLuint init(GLenum internalformat, GLsizei width, GLsizei height) {
+    init(); storage(internalformat, width, height); return _rbuffer; }
   GLuint release() noexcept { return std::exchange(_rbuffer, 0); }
 
+  void storage(GLenum internalformat, GLsizei width, GLsizei height);
+  
   inline void bind();
   inline static void unbind();
 
@@ -70,21 +74,29 @@ gx::GLRenderbuffer<VER>& gx::GLRenderbuffer<VER>::operator=(
 }
 
 template<int VER>
-GLuint gx::GLRenderbuffer<VER>::init(
-  GLenum internalformat, GLsizei width, GLsizei height)
+GLuint gx::GLRenderbuffer<VER>::init()
 {
   cleanup();
   if constexpr (VER < 45) {
     GX_GLCALL(glGenRenderbuffers, 1, &_rbuffer);
-    bind();
+  } else {
+    GX_GLCALL(glCreateRenderbuffers, 1, &_rbuffer);
+  }
+  return _rbuffer;
+}
+
+template<int VER>
+void gx::GLRenderbuffer<VER>::storage(
+  GLenum internalformat, GLsizei width, GLsizei height)
+{
+  if constexpr (VER < 45) {
+    bindCheck();
     GX_GLCALL(glRenderbufferStorage, GL_RENDERBUFFER, internalformat, width, height);
     //glRenderbufferStorageMultisample
   } else {
-    GX_GLCALL(glCreateRenderbuffers, 1, &_rbuffer);
     GX_GLCALL(glNamedRenderbufferStorage, _rbuffer, internalformat, width, height);
     //glNamedRenderbufferStorageMultisample
   }
-  return _rbuffer;
 }
 
 template<int VER>
