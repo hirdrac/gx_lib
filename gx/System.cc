@@ -1,11 +1,12 @@
 //
 // gx/System.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 
 #include "System.hh"
 #include "Logger.hh"
 #include "Assert.hh"
+#include "StringUtil.hh"
 #include <GLFW/glfw3.h>
 #include <thread>
 #include <string_view>
@@ -27,6 +28,13 @@ namespace {
     glfwTerminate();
     lib_init = false;
   }
+
+  std::string libVersionStr()
+  {
+    int major = 0, minor = 0, revision = 0;
+    glfwGetVersion(&major, &minor, &revision);
+    return gx::concat(major, '.', minor, '.', revision);
+  }
 }
 
 bool gx::isMainThread()
@@ -37,6 +45,10 @@ bool gx::isMainThread()
 bool gx::initGLFW()
 {
   if (lib_init) { return true; }
+
+  GX_LOG_INFO("GLFW compiled version: ", GLFW_VERSION_MAJOR,
+              ".", GLFW_VERSION_MINOR, ".", GLFW_VERSION_REVISION);
+  GX_LOG_INFO("GLFW library version: ", libVersionStr());
 
   lib_init = true;
   glfwSetErrorCallback(errorCB);
