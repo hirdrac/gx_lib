@@ -21,6 +21,8 @@
 #include "GLVertexArray.hh"
 #include "GLUniform.hh"
 #include "GLTexture.hh"
+#include "GLFramebuffer.hh"
+#include "GLRenderbuffer.hh"
 #include "OpenGL.hh"
 #include "Assert.hh"
 #include "Print.hh"
@@ -361,28 +363,22 @@ class gx::OpenGLRenderer final : public gx::Renderer
     _lastOp = op;
   }
 
-  void addDrawLines(int32_t& first, int32_t count) {
+  void addLine(int32_t& first) {
     if (_lastOp == OP_drawLines) {
-      const std::size_t s = _opData.size();
-      const int32_t last_first = _opData[s - 2].ival;
-      int32_t& last_count = _opData[s - 1].ival;
-      if (first == (last_first + last_count)) {
-        last_count += count;
-        first += count;
-        return;
-      }
+      int32_t& last_count = _opData[_opData.size() - 1].ival;
+      last_count += 2;
+    } else {
+      addOp(OP_drawLines, first, 2);
     }
-    addOp(OP_drawLines, first, count);
-    first += count;
+    first += 2;
   }
 
-  void addDrawTriangles(int32_t& first, int32_t count, TextureID tid) {
+  void addTriangles(int32_t& first, int32_t count, TextureID tid) {
     if (_lastOp == OP_drawTriangles) {
       const std::size_t s = _opData.size();
-      const int32_t last_first = _opData[s - 3].ival;
-      int32_t& last_count = _opData[s - 2].ival;
       const TextureID last_tid = _opData[s - 1].uval;
-      if (first == (last_first + last_count) && last_tid == tid) {
+      if (last_tid == tid) {
+        int32_t& last_count = _opData[s - 2].ival;
         last_count += count;
         first += count;
         return;
@@ -752,13 +748,13 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
         case CMD_line2: {
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
-          addDrawLines(first, 2);
+          addLine(first);
           break;
         }
         case CMD_line3: {
           vertex3d(ptr, fval3(d), color);
           vertex3d(ptr, fval3(d), color);
-          addDrawLines(first, 2);
+          addLine(first);
           break;
         }
         case CMD_line2C: {
@@ -766,7 +762,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
           vertex2d(ptr, p0, c0);
           vertex2d(ptr, p1, c1);
-          addDrawLines(first, 2);
+          addLine(first);
           break;
         }
         case CMD_line3C: {
@@ -774,21 +770,21 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
           vertex3d(ptr, p0, c0);
           vertex3d(ptr, p1, c1);
-          addDrawLines(first, 2);
+          addLine(first);
           break;
         }
         case CMD_triangle2: {
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
-          addDrawTriangles(first, 3, 0);
+          addTriangles(first, 3, 0);
           break;
         }
         case CMD_triangle3: {
           vertex3d(ptr, fval3(d), color, normal);
           vertex3d(ptr, fval3(d), color, normal);
           vertex3d(ptr, fval3(d), color, normal);
-          addDrawTriangles(first, 3, 0);
+          addTriangles(first, 3, 0);
           break;
         }
         case CMD_triangle2T: {
@@ -798,7 +794,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex2d(ptr, p0, color, t0);
           vertex2d(ptr, p1, color, t1);
           vertex2d(ptr, p2, color, t2);
-          addDrawTriangles(first, 3, tid);
+          addTriangles(first, 3, tid);
           break;
         }
         case CMD_triangle3T: {
@@ -808,7 +804,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex3d(ptr, p0, color, t0, normal);
           vertex3d(ptr, p1, color, t1, normal);
           vertex3d(ptr, p2, color, t2, normal);
-          addDrawTriangles(first, 3, tid);
+          addTriangles(first, 3, tid);
           break;
         }
         case CMD_triangle2C: {
@@ -818,7 +814,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex2d(ptr, p0, c0);
           vertex2d(ptr, p1, c1);
           vertex2d(ptr, p2, c2);
-          addDrawTriangles(first, 3, 0);
+          addTriangles(first, 3, 0);
           break;
         }
         case CMD_triangle3C: {
@@ -828,7 +824,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex3d(ptr, p0, c0, normal);
           vertex3d(ptr, p1, c1, normal);
           vertex3d(ptr, p2, c2, normal);
-          addDrawTriangles(first, 3, 0);
+          addTriangles(first, 3, 0);
           break;
         }
         case CMD_triangle2TC: {
@@ -838,7 +834,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex2d(ptr, p0, c0, t0);
           vertex2d(ptr, p1, c1, t1);
           vertex2d(ptr, p2, c2, t2);
-          addDrawTriangles(first, 3, tid);
+          addTriangles(first, 3, tid);
           break;
         }
         case CMD_triangle3TC: {
@@ -851,14 +847,14 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex3d(ptr, p0, c0, t0, normal);
           vertex3d(ptr, p1, c1, t1, normal);
           vertex3d(ptr, p2, c2, t2, normal);
-          addDrawTriangles(first, 3, tid);
+          addTriangles(first, 3, tid);
           break;
         }
         case CMD_triangle3TCN: {
           *ptr++ = vertex_val(d);
           *ptr++ = vertex_val(d);
           *ptr++ = vertex_val(d);
-          addDrawTriangles(first, 3, tid);
+          addTriangles(first, 3, tid);
           break;
         }
         case CMD_quad2: {
@@ -870,7 +866,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex2d(ptr, p1, color);
           vertex2d(ptr, p3, color);
           vertex2d(ptr, p2, color);
-          addDrawTriangles(first, 6, 0);
+          addTriangles(first, 6, 0);
           break;
         }
         case CMD_quad3: {
@@ -882,7 +878,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex3d(ptr, p1, color, normal);
           vertex3d(ptr, p3, color, normal);
           vertex3d(ptr, p2, color, normal);
-          addDrawTriangles(first, 6, 0);
+          addTriangles(first, 6, 0);
           break;
         }
         case CMD_quad2T: {
@@ -896,7 +892,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex2d(ptr, p1, color, t1);
           vertex2d(ptr, p3, color, t3);
           vertex2d(ptr, p2, color, t2);
-          addDrawTriangles(first, 6, tid);
+          addTriangles(first, 6, tid);
           break;
         }
         case CMD_quad3T: {
@@ -910,7 +906,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex3d(ptr, p1, color, t1, normal);
           vertex3d(ptr, p3, color, t3, normal);
           vertex3d(ptr, p2, color, t2, normal);
-          addDrawTriangles(first, 6, tid);
+          addTriangles(first, 6, tid);
           break;
         }
         case CMD_quad2C: {
@@ -924,7 +920,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex2d(ptr, p1, c1);
           vertex2d(ptr, p3, c3);
           vertex2d(ptr, p2, c2);
-          addDrawTriangles(first, 6, 0);
+          addTriangles(first, 6, 0);
           break;
         }
         case CMD_quad3C: {
@@ -938,7 +934,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex3d(ptr, p1, c1, normal);
           vertex3d(ptr, p3, c3, normal);
           vertex3d(ptr, p2, c2, normal);
-          addDrawTriangles(first, 6, 0);
+          addTriangles(first, 6, 0);
           break;
         }
         case CMD_quad2TC: {
@@ -952,7 +948,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex2d(ptr, p1, c1, t1);
           vertex2d(ptr, p3, c3, t3);
           vertex2d(ptr, p2, c2, t2);
-          addDrawTriangles(first, 6, tid);
+          addTriangles(first, 6, tid);
           break;
         }
         case CMD_quad3TC: {
@@ -970,7 +966,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex3d(ptr, p1, c1, t1, normal);
           vertex3d(ptr, p3, c3, t3, normal);
           vertex3d(ptr, p2, c2, t2, normal);
-          addDrawTriangles(first, 6, tid);
+          addTriangles(first, 6, tid);
           break;
         }
         case CMD_quad3TCN: {
@@ -984,7 +980,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           *ptr++ = v1;
           *ptr++ = v3;
           *ptr++ = v2;
-          addDrawTriangles(first, 6, tid);
+          addTriangles(first, 6, tid);
           break;
         }
         case CMD_rectangle: {
@@ -996,7 +992,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex2d(ptr, p1, color);
           vertex2d(ptr, p3, color);
           vertex2d(ptr, p2, color);
-          addDrawTriangles(first, 6, 0);
+          addTriangles(first, 6, 0);
           break;
         }
         case CMD_rectangleT: {
@@ -1010,7 +1006,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           vertex2d(ptr, p1, color, t1);
           vertex2d(ptr, p3, color, t3);
           vertex2d(ptr, p2, color, t2);
-          addDrawTriangles(first, 6, tid);
+          addTriangles(first, 6, tid);
           break;
         }
         default:
@@ -1131,10 +1127,12 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
       case OP_viewportFull:
         GX_GLCALL(glViewport, 0, 0, _fbWidth, _fbHeight);
         break;
-      case OP_capabilities:
-        newCap = (d++)->ival;
-        useLight = newCap & LIGHTING;
+      case OP_capabilities: {
+        const int32_t cap = (d++)->ival;
+        newCap = cap & ~LIGHTING;
+        useLight = cap & LIGHTING;
         break;
+      }
       case OP_clear:
         GX_GLCALL(glClear, (d++)->uval);
         break;

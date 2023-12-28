@@ -303,7 +303,7 @@ bool Window::open(int flags)
   // OpenGL specified window hints
   glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
   //glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
-  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, debug ? GLFW_TRUE : GLFW_FALSE);
+  glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, glfwBool(debug));
 
   // use to force specific GL version for context
   //glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, GL_VERSION_MAJOR);
