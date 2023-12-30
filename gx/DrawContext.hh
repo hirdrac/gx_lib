@@ -143,6 +143,11 @@ class gx::DrawContext
   void line(const Vertex3C& a, const Vertex3C& b) {
     add(CMD_line3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c); }
 
+  void lineStart(Vec2 a) { add(CMD_lineStart2, a.x, a.y); }
+  void lineTo(Vec2 a) { add(CMD_lineTo2, a.x, a.y); }
+  void lineStart(const Vec3& a) { add(CMD_lineStart3, a.x, a.y, a.z); }
+  void lineTo(const Vec3& a) { add(CMD_lineTo3, a.x, a.y, a.z); }
+
   // poly drawing
   // Triangle  Quad  Rectangle
   //   A--B    A--B    XY--+

@@ -133,6 +133,10 @@ namespace {
         case CMD_line3:        d += 7;  vsize += 2; break;
         case CMD_line2C:       d += 7;  vsize += 2; break;
         case CMD_line3C:       d += 9;  vsize += 2; break;
+        case CMD_lineStart2:   d += 3;  break;
+        case CMD_lineTo2:      d += 3;  vsize += 2; break;
+        case CMD_lineStart3:   d += 4;  break;
+        case CMD_lineTo3:      d += 4;  vsize += 2; break;
         case CMD_triangle2:    d += 7;  vsize += 3; break;
         case CMD_triangle3:    d += 10; vsize += 3; break;
         case CMD_triangle2T:   d += 13; vsize += 3; break;
@@ -691,6 +695,8 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
     uint32_t color = 0;
     TextureID tid = 0;
     uint32_t normal = 0;
+    Vec2 linePt2{INIT_ZERO};
+    Vec3 linePt3{INIT_ZERO};
 
     const DrawEntry* data     = dlPtr->data();
     const DrawEntry* data_end = data + dlPtr->size();
@@ -770,6 +776,20 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
           vertex3d(ptr, p0, c0);
           vertex3d(ptr, p1, c1);
+          addLine(first);
+          break;
+        }
+        case CMD_lineStart2: linePt2 = fval2(d); break;
+        case CMD_lineTo2: {
+          vertex2d(ptr, linePt2, color);
+          vertex2d(ptr, (linePt2 = fval2(d)), color);
+          addLine(first);
+          break;
+        }
+        case CMD_lineStart3: linePt3 = fval3(d); break;
+        case CMD_lineTo3: {
+          vertex3d(ptr, linePt3, color);
+          vertex3d(ptr, (linePt3 = fval3(d)), color);
           addLine(first);
           break;
         }
