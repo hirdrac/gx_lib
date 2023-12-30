@@ -1,6 +1,6 @@
 //
 // gx/Vector3D.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2023 Richard Bradley
 //
 // vector template types/functions for 3D calculations
 //
@@ -153,6 +153,7 @@ class gx::Vector3
 
   constexpr void set(T vx, T vy, T vz) { x = vx; y = vy; z = vz; }
   constexpr void set(const T* v) { set(v[0], v[1], v[2]); }
+  constexpr void set(Vector2<T> v, T vz) { set(v.x, v.y, vz); }
 
   // Vector2 swizzle
   [[nodiscard]] constexpr Vector2<T>& xy() {
