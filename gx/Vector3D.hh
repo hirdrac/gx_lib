@@ -231,7 +231,6 @@ class gx::Vector4
 
   constexpr void set(T vx, T vy, T vz, T vw) { x = vx; y = vy; z = vz; w = vw; }
   constexpr void set(const T* v) { set(v[0], v[1], v[2], v[3]); }
-  constexpr void set(const T* v, T vw) { set(v[0], v[1], v[2], vw); }
   constexpr void set(const Vector3<T>& v, T vw) { set(v.x, v.y, v.z, vw); }
 
   // Vector2 swizzle
