@@ -695,8 +695,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
     uint32_t color = 0;
     TextureID tid = 0;
     uint32_t normal = 0;
-    Vec2 linePt2{INIT_ZERO};
-    Vec3 linePt3{INIT_ZERO};
+    Vec3 linePt{INIT_ZERO};
 
     const DrawEntry* data     = dlPtr->data();
     const DrawEntry* data_end = data + dlPtr->size();
@@ -779,17 +778,18 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           addLine(first);
           break;
         }
-        case CMD_lineStart2: linePt2 = fval2(d); break;
+        case CMD_lineStart2: linePt.set(fval2(d), 0); break;
         case CMD_lineTo2: {
-          vertex2d(ptr, linePt2, color);
-          vertex2d(ptr, (linePt2 = fval2(d)), color);
+          vertex3d(ptr, linePt, color);
+          linePt.set(fval2(d), 0);
+          vertex3d(ptr, linePt, color);
           addLine(first);
           break;
         }
-        case CMD_lineStart3: linePt3 = fval3(d); break;
+        case CMD_lineStart3: linePt = fval3(d); break;
         case CMD_lineTo3: {
-          vertex3d(ptr, linePt3, color);
-          vertex3d(ptr, (linePt3 = fval3(d)), color);
+          vertex3d(ptr, linePt, color);
+          vertex3d(ptr, (linePt = fval3(d)), color);
           addLine(first);
           break;
         }
