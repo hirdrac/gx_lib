@@ -1,6 +1,6 @@
 //
 // MathUtilTest.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "gx/MathUtil.hh"
@@ -18,8 +18,8 @@ void test_sgn()
 void test_abs()
 {
   // static tests
-  static_assert(gx::abs((signed char)-128) == 128);
-  static_assert(gx::abs((short)-32768) == 32768);
+  static_assert(gx::abs(static_cast<signed char>(-128)) == 128);
+  static_assert(gx::abs(static_cast<short>(-32768)) == 32768);
 }
 
 
