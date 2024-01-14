@@ -1,6 +1,6 @@
 //
 // gx/Gui.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "Gui.hh"
@@ -1142,7 +1142,7 @@ void Gui::addEntryChar(GuiElem& e, int32_t code)
     _needRender = _textChanged = true;
   }
 
-  if (entry.maxLength != 0 && lengthUTF8(txt) >= entry.maxLength) {
+  if (entry.maxChars != 0 && lengthUTF8(txt) >= entry.maxChars) {
     return; // no space for character
   }
 

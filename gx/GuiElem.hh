@@ -1,6 +1,6 @@
 //
 // gx/GuiElem.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #pragma once
@@ -100,7 +100,7 @@ class gx::GuiElem
   struct EntryProps {
     std::string text;
     float size; // width in characters
-    uint32_t maxLength;
+    uint32_t maxChars;
     EntryType type;
     AlignEnum align; // alignment of entry text
     float tx = 0; // cache last text x pos for mouse click cursor pos calc
@@ -122,8 +122,8 @@ class gx::GuiElem
     > props;
 
 #define GETTER(name,type)\
-  type& name() { return std::get<type>(props); }\
-  const type& name() const { return std::get<type>(props); }
+  [[nodiscard]] type& name() { return std::get<type>(props); }\
+  [[nodiscard]] const type& name() const { return std::get<type>(props); }
 
   GETTER(label,LabelProps)
   GETTER(button,ButtonProps)

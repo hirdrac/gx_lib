@@ -1,6 +1,6 @@
 //
 // gx/GuiBuilder.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // Functions for creating GuiElem objects for use with Gui class
 //
@@ -321,14 +321,14 @@ namespace gx {
   // Entry
   [[nodiscard]] inline GuiElem guiEntry(
     EventID id, AlignEnum align, EntryType type, float size,
-    uint32_t maxLen, AlignEnum textAlign)
+    uint32_t maxChars, AlignEnum textAlign)
   {
     GuiElem e{GUI_ENTRY, align, id};
     GuiElem::EntryProps entry;
     if (type == ENTRY_CARDINAL || type == ENTRY_INTEGER
         || type == ENTRY_FLOAT) { entry.text = "0"; }
     entry.size = size;
-    entry.maxLength = maxLen;
+    entry.maxChars = maxChars;
     entry.type = type;
     entry.align = textAlign;
     e.props = entry;
@@ -336,58 +336,66 @@ namespace gx {
   }
 
   [[nodiscard]] inline GuiElem guiTextEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_TEXT, size, maxLen, textAlign);
+    EventID id, float size, uint32_t maxChars,
+    AlignEnum textAlign = ALIGN_LEFT) {
+    return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_TEXT, size, maxChars, textAlign);
   }
 
   [[nodiscard]] inline GuiElem guiTextEntry(
-    EventID id, AlignEnum align, float size, uint32_t maxLen,
+    EventID id, AlignEnum align, float size, uint32_t maxChars,
     AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, align, ENTRY_TEXT, size, maxLen, textAlign);
+    return guiEntry(id, align, ENTRY_TEXT, size, maxChars, textAlign);
   }
 
   [[nodiscard]] inline GuiElem guiCardinalEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_CARDINAL, size, maxLen, textAlign);
+    EventID id, float size, uint32_t maxChars,
+    AlignEnum textAlign = ALIGN_LEFT) {
+    return guiEntry(
+      id, ALIGN_TOP_LEFT, ENTRY_CARDINAL, size, maxChars, textAlign);
   }
 
   [[nodiscard]] inline GuiElem guiCardinalEntry(
-    EventID id, AlignEnum align, float size, uint32_t maxLen,
+    EventID id, AlignEnum align, float size, uint32_t maxChars,
     AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, align, ENTRY_CARDINAL, size, maxLen, textAlign);
+    return guiEntry(id, align, ENTRY_CARDINAL, size, maxChars, textAlign);
   }
 
   [[nodiscard]] inline GuiElem guiIntegerEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_INTEGER, size, maxLen, textAlign);
+    EventID id, float size, uint32_t maxChars,
+    AlignEnum textAlign = ALIGN_LEFT) {
+    return guiEntry(
+      id, ALIGN_TOP_LEFT, ENTRY_INTEGER, size, maxChars, textAlign);
   }
 
   [[nodiscard]] inline GuiElem guiIntegerEntry(
-    EventID id, AlignEnum align, float size, uint32_t maxLen,
+    EventID id, AlignEnum align, float size, uint32_t maxChars,
     AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, align, ENTRY_INTEGER, size, maxLen, textAlign);
+    return guiEntry(id, align, ENTRY_INTEGER, size, maxChars, textAlign);
   }
 
   [[nodiscard]] inline GuiElem guiFloatEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_FLOAT, size, maxLen, textAlign);
+    EventID id, float size, uint32_t maxChars,
+    AlignEnum textAlign = ALIGN_LEFT) {
+    return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_FLOAT, size, maxChars, textAlign);
   }
 
   [[nodiscard]] inline GuiElem guiFloatEntry(
-    EventID id, AlignEnum align, float size, uint32_t maxLen,
+    EventID id, AlignEnum align, float size, uint32_t maxChars,
     AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, align, ENTRY_FLOAT, size, maxLen, textAlign);
+    return guiEntry(id, align, ENTRY_FLOAT, size, maxChars, textAlign);
   }
 
   [[nodiscard]] inline GuiElem guiPasswordEntry(
-    EventID id, float size, uint32_t maxLen, AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, ALIGN_TOP_LEFT, ENTRY_PASSWORD, size, maxLen, textAlign);
+    EventID id, float size, uint32_t maxChars,
+    AlignEnum textAlign = ALIGN_LEFT) {
+    return guiEntry(
+      id, ALIGN_TOP_LEFT, ENTRY_PASSWORD, size, maxChars, textAlign);
   }
 
   [[nodiscard]] inline GuiElem guiPasswordEntry(
-    EventID id, AlignEnum align, float size, uint32_t maxLen,
+    EventID id, AlignEnum align, float size, uint32_t maxChars,
     AlignEnum textAlign = ALIGN_LEFT) {
-    return guiEntry(id, align, ENTRY_PASSWORD, size, maxLen, textAlign);
+    return guiEntry(id, align, ENTRY_PASSWORD, size, maxChars, textAlign);
   }
 
   // Image
