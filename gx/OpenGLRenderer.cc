@@ -1,6 +1,6 @@
 //
 // gx/OpenGLRenderer.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 // TODO: add blur transparency shader
@@ -184,17 +184,17 @@ namespace {
   }
 
   // DrawEntry iterator reading helper functions
-  inline int32_t ival(const DrawEntry*& ptr) {
+  [[nodiscard]] inline int32_t ival(const DrawEntry*& ptr) {
     return (ptr++)->ival; }
-  inline uint32_t uval(const DrawEntry*& ptr) {
+  [[nodiscard]] inline uint32_t uval(const DrawEntry*& ptr) {
     return (ptr++)->uval; }
-  inline float fval(const DrawEntry*& ptr) {
+  [[nodiscard]] inline float fval(const DrawEntry*& ptr) {
     return (ptr++)->fval; }
-  inline Vec2 fval2(const DrawEntry*& ptr) {
+  [[nodiscard]] inline Vec2 fval2(const DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr)}; }
-  inline Vec3 fval3(const DrawEntry*& ptr) {
+  [[nodiscard]] inline Vec3 fval3(const DrawEntry*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
-  inline Mat4 mval(const DrawEntry*& ptr) {
+  [[nodiscard]] inline Mat4 mval(const DrawEntry*& ptr) {
     return {
       fval(ptr), fval(ptr), fval(ptr), fval(ptr),
       fval(ptr), fval(ptr), fval(ptr), fval(ptr),
