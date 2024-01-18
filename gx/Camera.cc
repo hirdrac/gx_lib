@@ -1,6 +1,6 @@
 //
 // gx/Camera.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "Camera.hh"
@@ -58,22 +58,22 @@ bool Camera::calcProjection(
     return false;
   }
 
-  if (!isPos(_fov) || isGTE(_fov, 180.0f)) {
-    GX_LOG_ERROR("bad fov value: ", _fov);
-    return false;
-  }
-
-  const float vlen = std::tan(degToRad(_fov * .5f)) / _zoom;
-    // fov:90 == 1.0
-
-  float vsideL = vlen, vtopL = vlen;
-  if (screenWidth >= screenHeight) {
-    vsideL *= float(screenWidth) / float(screenHeight);
-  } else {
-    vtopL *= float(screenHeight) / float(screenWidth);
-  }
-
   if (_projection == PERSPECTIVE) {
+    if (!isPos(_fov) || isGTE(_fov, 180.0f)) {
+      GX_LOG_ERROR("bad fov value: ", _fov);
+      return false;
+    }
+
+    const float vlen = std::tan(degToRad(_fov * .5f)) / _zoom;
+      // fov:90 == 1.0
+
+    float vsideL = vlen, vtopL = vlen;
+    if (screenWidth >= screenHeight) {
+      vsideL *= float(screenWidth) / float(screenHeight);
+    } else {
+      vtopL *= float(screenHeight) / float(screenWidth);
+    }
+
     const float clipLen = _farClip - _nearClip;
     result = {
       1.0f / vsideL, 0, 0, 0,
@@ -83,6 +83,15 @@ bool Camera::calcProjection(
     };
   } else {
     // FIXME: verify camera orthogonal projection
+
+    const float vlen = 1.0f / _zoom;
+    float vsideL = vlen, vtopL = vlen;
+    if (screenWidth >= screenHeight) {
+      vsideL *= float(screenWidth) / float(screenHeight);
+    } else {
+      vtopL *= float(screenHeight) / float(screenWidth);
+    }
+
     result = {
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,
