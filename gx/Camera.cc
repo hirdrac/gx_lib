@@ -4,7 +4,6 @@
 //
 
 #include "Camera.hh"
-#include "Logger.hh"
 using namespace gx;
 
 
@@ -22,19 +21,46 @@ using namespace gx;
 
 
 // Camera class
-bool Camera::updateView()
+bool Camera::setView(const Vec3& p, const Vec3& vn, const Vec3& vu)
 {
-  const float dot = dotProduct(_vnormal, _vup);
-  if (dot >= .99999) {
-    GX_LOG_ERROR("bad vup: ", _vup);
-    return false;
-  }
+  const float dot = dotProduct(vn, vu);
+  if (dot >= .99999) { return false; }
+
+  _pos = p;
+  _vnormal = vn;
+  _vup = vu;
 
   _vtop = unitVec(_vup - (_vnormal * dot));
   _vside = unitVec(
     (_coordSystem == LEFT_HANDED)
     ? crossProduct(_vtop, _vnormal) : crossProduct(_vnormal, _vtop));
+  return true;
+}
 
+bool Camera::setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup)
+{
+  return setView(pos, unitVec(coi - pos), unitVec(vup));
+}
+
+bool Camera::setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup)
+{
+  return setView(pos, unitVec(dir), unitVec(vup));
+}
+
+bool Camera::setFOV(float angle)
+{
+  if (!isPos(angle) || isGTE(angle, 180.0f)) { return false; }
+
+  _fov = angle;
+  _vlen = std::tan(degToRad(angle * .5f));  // fov:90 == 1.0
+  return true;
+}
+
+bool Camera::setZoom(float zoom)
+{
+  if (!isPos(zoom)) { return false; }
+
+  _zoom = zoom;
   return true;
 }
 
@@ -53,20 +79,8 @@ bool Camera::calcView(Mat4& result) const
 bool Camera::calcProjection(
   int screenWidth, int screenHeight, Mat4& result) const
 {
-  if (!isPos(_zoom)) {
-    GX_LOG_ERROR("bad zoom value: ", _zoom);
-    return false;
-  }
-
   if (_projection == PERSPECTIVE) {
-    if (!isPos(_fov) || isGTE(_fov, 180.0f)) {
-      GX_LOG_ERROR("bad fov value: ", _fov);
-      return false;
-    }
-
-    const float vlen = std::tan(degToRad(_fov * .5f)) / _zoom;
-      // fov:90 == 1.0
-
+    const float vlen = _vlen / _zoom;
     float vsideL = vlen, vtopL = vlen;
     if (screenWidth >= screenHeight) {
       vsideL *= float(screenWidth) / float(screenHeight);
@@ -83,6 +97,7 @@ bool Camera::calcProjection(
     };
   } else {
     // FIXME: verify camera orthogonal projection
+    // FIXME: use near/far clip settings
 
     const float vlen = 1.0f / _zoom;
     float vsideL = vlen, vtopL = vlen;
@@ -105,7 +120,7 @@ bool Camera::calcDirToScreenPt(
   int screenWidth, int screenHeight, Vec2 mousePt, Vec3& result) const
 {
   const float sw = float(screenWidth), sh = float(screenHeight);
-  const float vlen = std::tan(degToRad(_fov * .5f)) / _zoom;
+  const float vlen = _vlen / _zoom;
   Vec3 vx = _vside * vlen;
   Vec3 vy = _vtop * vlen;
   if (screenWidth >= screenHeight) {

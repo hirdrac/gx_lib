@@ -1,6 +1,6 @@
 //
 // gx/Camera.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #pragma once
@@ -35,12 +35,12 @@ class gx::Camera
   [[nodiscard]] CoordSystemType coordSystem() const { return _coordSystem; }
   [[nodiscard]] ProjectionType projection() const { return _projection; }
 
-  inline bool setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup);
-  inline bool setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup);
+  bool setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup);
+  bool setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup);
+  bool setFOV(float angle);
+  bool setZoom(float zoom);
 
   void setClip(float near, float far) { _nearClip = near; _farClip = far; }
-  void setZoom(float zoom) { _zoom = zoom; }
-  void setFOV(float angle) { _fov = angle; }
   void setCoordSystem(CoordSystemType cs) { _coordSystem = cs; }
   void setProjection(ProjectionType pt) { _projection = pt; }
 
@@ -63,26 +63,8 @@ class gx::Camera
 
   // projection config
   ProjectionType _projection = PERSPECTIVE;
-  float _zoom = 1.0f, _fov = 90.0f;
+  float _zoom = 1.0f, _fov = 90.0f, _vlen = 1.0f;
   float _nearClip = 1.0f, _farClip = 1000.0f;
 
-  bool updateView();
+  bool setView(const Vec3& p, const Vec3& vn, const Vec3& vu);
 };
-
-
-// **** Inline Implementations ****
-bool gx::Camera::setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup)
-{
-  _pos = pos;
-  _vnormal = unitVec(coi - pos);
-  _vup = unitVec(vup);
-  return updateView();
-}
-
-bool gx::Camera::setViewByDir(const Vec3& pos, const Vec3& dir, const Vec3& vup)
-{
-  _pos = pos;
-  _vnormal = unitVec(dir);
-  _vup = unitVec(vup);
-  return updateView();
-}
