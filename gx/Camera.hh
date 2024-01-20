@@ -67,4 +67,8 @@ class gx::Camera
   float _nearClip = 1.0f, _farClip = 1000.0f;
 
   bool setView(const Vec3& p, const Vec3& vn, const Vec3& vu);
+
+  [[nodiscard]] float vlen() const {
+    return ((_projection == PERSPECTIVE) ? _vlen : 1.0f) / _zoom;
+  }
 };

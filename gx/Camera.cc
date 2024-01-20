@@ -79,16 +79,17 @@ bool Camera::calcView(Mat4& result) const
 bool Camera::calcProjection(
   int screenWidth, int screenHeight, Mat4& result) const
 {
-  if (_projection == PERSPECTIVE) {
-    const float vlen = _vlen / _zoom;
-    float vsideL = vlen, vtopL = vlen;
-    if (screenWidth >= screenHeight) {
-      vsideL *= float(screenWidth) / float(screenHeight);
-    } else {
-      vtopL *= float(screenHeight) / float(screenWidth);
-    }
+  const float sw = float(screenWidth), sh = float(screenHeight);
+  const float len = vlen();
+  float vsideL = len, vtopL = len;
+  if (screenWidth >= screenHeight) {
+    vsideL *= sw / sh;
+  } else {
+    vtopL *= sh / sw;
+  }
 
-    const float clipLen = _farClip - _nearClip;
+  const float clipLen = _farClip - _nearClip;
+  if (_projection == PERSPECTIVE) {
     result = {
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,
@@ -96,22 +97,12 @@ bool Camera::calcProjection(
       0, 0, -(2.0f * _farClip * _nearClip) / clipLen, 0
     };
   } else {
-    // FIXME: verify camera orthogonal projection
-    // FIXME: use near/far clip settings
-
-    const float vlen = 1.0f / _zoom;
-    float vsideL = vlen, vtopL = vlen;
-    if (screenWidth >= screenHeight) {
-      vsideL *= float(screenWidth) / float(screenHeight);
-    } else {
-      vtopL *= float(screenHeight) / float(screenWidth);
-    }
-
     result = {
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,
-      0, 0, 1.0f, 0,
-      0, 0, 0, 1};
+      0, 0, -(_farClip + _nearClip) / clipLen, 0,
+      0, 0, -(2.0f * _farClip * _nearClip) / clipLen, 1.0f
+    };
   }
   return true;
 }
@@ -120,15 +111,16 @@ bool Camera::calcDirToScreenPt(
   int screenWidth, int screenHeight, Vec2 mousePt, Vec3& result) const
 {
   const float sw = float(screenWidth), sh = float(screenHeight);
-  const float vlen = _vlen / _zoom;
-  Vec3 vx = _vside * vlen;
-  Vec3 vy = _vtop * vlen;
+  const float len = vlen();
+  float vsideL = len, vtopL = len;
   if (screenWidth >= screenHeight) {
-    vx *= sw / sh;
+    vsideL *= sw / sh;
   } else {
-    vy *= sh / sw;
+    vtopL *= sh / sw;
   }
 
+  const Vec3 vx = _vside * vsideL;
+  const Vec3 vy = _vtop * vtopL;
   const float cx = sw * .5f;
   const float cy = sh * .5f;
 
