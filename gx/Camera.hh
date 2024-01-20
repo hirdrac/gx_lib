@@ -47,8 +47,8 @@ class gx::Camera
   bool calcView(Mat4& result) const;
   bool calcProjection(int screenWidth, int screenHeight, Mat4& result) const;
 
-  bool calcDirToScreenPt(
-    int screenWidth, int screenHeight, Vec2 mousePt, Vec3& result) const;
+  [[nodiscard]] Vec3 dirToScreenPt(
+    int screenWidth, int screenHeight, Vec2 mousePt) const;
     // eye to screen point direction calc
     // use {eye, result} ray intersection for mouse selection calcs
 
