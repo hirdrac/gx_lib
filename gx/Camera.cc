@@ -76,16 +76,14 @@ bool Camera::calcView(Mat4& result) const
   return true;
 }
 
-bool Camera::calcProjection(
-  int screenWidth, int screenHeight, Mat4& result) const
+bool Camera::calcProjection(Mat4& result) const
 {
-  const float sw = float(screenWidth), sh = float(screenHeight);
   const float len = vlen();
   float vsideL = len, vtopL = len;
-  if (screenWidth >= screenHeight) {
-    vsideL *= sw / sh;
+  if (_screenWidth >= _screenHeight) {
+    vsideL *= _screenWidth / _screenHeight;
   } else {
-    vtopL *= sh / sw;
+    vtopL *= _screenHeight / _screenWidth;
   }
 
   const float clipLen = _farClip - _nearClip;
@@ -107,22 +105,20 @@ bool Camera::calcProjection(
   return true;
 }
 
-Vec3 Camera::dirToScreenPt(
-  int screenWidth, int screenHeight, Vec2 mousePt) const
+Vec3 Camera::dirToScreenPt(Vec2 mousePt) const
 {
-  const float sw = float(screenWidth), sh = float(screenHeight);
   const float len = vlen();
   float vsideL = len, vtopL = len;
-  if (screenWidth >= screenHeight) {
-    vsideL *= sw / sh;
+  if (_screenWidth >= _screenHeight) {
+    vsideL *= _screenWidth / _screenHeight;
   } else {
-    vtopL *= sh / sw;
+    vtopL *= _screenHeight / _screenWidth;
   }
 
   const Vec3 vx = _vside * vsideL;
   const Vec3 vy = _vtop * vtopL;
-  const float cx = sw * .5f;
-  const float cy = sh * .5f;
+  const float cx = _screenWidth * .5f;
+  const float cy = _screenHeight * .5f;
 
   // since we are calculating a direction, just assume eye is at origin
   // and view plane center is just 1 away from eye (in direction of vnormal)
