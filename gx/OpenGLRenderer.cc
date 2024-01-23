@@ -1141,7 +1141,8 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         const int32_t y = (d++)->ival;
         const int32_t w = (d++)->ival;
         const int32_t h = (d++)->ival;
-        GX_GLCALL(glViewport, x, y, w, h);
+        GX_GLCALL(glViewport, x, _fbHeight - y - h, w, h);
+          // change upperLeft origin to lowerLeft for OpenGL
         break;
       }
       case OP_viewportFull:
