@@ -401,7 +401,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
 template<int VER>
 bool OpenGLRenderer<VER>::init(GLFWwindow* win)
 {
-  std::lock_guard lg{_glMutex};
+  const std::lock_guard lg{_glMutex};
   _window = win;
 
   glfwGetFramebufferSize(win, &_fbWidth, &_fbHeight);
@@ -427,7 +427,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "};"
 
   // basic vertex shader
-  GLShader vshader = makeVertexShader<VER>(
+  const GLShader vshader = makeVertexShader<VER>(
     "layout(location = 0) in vec3 in_pos;" // x,y,z
     "layout(location = 1) in uint in_color;"
     "layout(location = 2) in vec2 in_tc;"  // s,t
@@ -441,7 +441,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "}");
 
   // vertex shader w/ lighting support
-  GLShader vshader2 = makeVertexShader<VER>(
+  const GLShader vshader2 = makeVertexShader<VER>(
     "layout(location = 0) in vec3 in_pos;"   // x,y,z
     "layout(location = 1) in uint in_color;"
     "layout(location = 2) in vec2 in_tc;"    // s,t
@@ -561,7 +561,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
 template<int VER>
 bool OpenGLRenderer<VER>::setSwapInterval(int interval)
 {
-  std::lock_guard lg{_glMutex};
+  const std::lock_guard lg{_glMutex};
   _swapInterval = std::clamp(interval, 0, 60);
   glfwSwapInterval(_swapInterval);
   return true;
@@ -570,7 +570,7 @@ bool OpenGLRenderer<VER>::setSwapInterval(int interval)
 template<int VER>
 bool OpenGLRenderer<VER>::setFramebufferSize(int width, int height)
 {
-  std::lock_guard lg{_glMutex};
+  const std::lock_guard lg{_glMutex};
   _fbWidth = width;
   _fbHeight = height;
   _orthoT = orthoProjection(_fbWidth, _fbHeight);
@@ -597,7 +597,7 @@ TextureID OpenGLRenderer<VER>::setTexture(
     newTexture = true;
   }
 
-  std::lock_guard lg{_glMutex};
+  const std::lock_guard lg{_glMutex};
   TextureEntry* ePtr;
   if (newTexture) {
     ePtr = &_textures[id];
@@ -656,7 +656,7 @@ TextureID OpenGLRenderer<VER>::setTexture(
 template<int VER>
 void OpenGLRenderer<VER>::freeTexture(TextureID id)
 {
-  std::lock_guard lg{_glMutex};
+  const std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
   _textures.erase(id);
 }
@@ -667,7 +667,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
   std::size_t vsize = 0; // vertices needed for all layers
   for (const DrawList* dlPtr : dl) { vsize += calcVSize(*dlPtr); }
 
-  std::lock_guard lg{_glMutex};
+  const std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
 
   _opData.clear();
@@ -1070,7 +1070,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
 template<int VER>
 void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
 {
-  std::lock_guard lg{_glMutex};
+  const std::lock_guard lg{_glMutex};
   if (_opData.empty()) { return; }
 
   setCurrentContext(_window);
