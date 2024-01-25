@@ -1,6 +1,6 @@
 //
 // gx/Window.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "Window.hh"
@@ -100,14 +100,14 @@ int64_t Window::_lastPollTime = 0;
 
 Window::Window()
 {
-  std::lock_guard lg{allWindowsMutex};
+  const std::lock_guard lg{allWindowsMutex};
   allWindows.push_back(this);
 }
 
 Window::~Window()
 {
   {
-    std::lock_guard lg{allWindowsMutex};
+    const std::lock_guard lg{allWindowsMutex};
     //std::erase(allWindows, this);  // C++20
     for (auto it = allWindows.begin(); it != allWindows.end(); ) {
       if (*it == this) {
@@ -437,7 +437,7 @@ int Window::pollEvents()
   int e = 0;
 
   {
-    std::lock_guard lg{allWindowsMutex};
+    const std::lock_guard lg{allWindowsMutex};
     for (auto w : allWindows) {
       w->resetEventState();
     }
