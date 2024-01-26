@@ -1,6 +1,6 @@
 //
 // gx/Window.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // encapsulation of OS specific window handling & user input
 //
@@ -173,6 +173,8 @@ class gx::Window
 
   [[nodiscard]] int width() const { return _width; }
   [[nodiscard]] int height() const { return _height; }
+  [[nodiscard]] std::pair<int,int> dimensions() const {
+    return {_width, _height}; }
   [[nodiscard]] const std::string& title() const { return _title; }
   [[nodiscard]] bool fullScreen() const { return _fullScreen; }
 

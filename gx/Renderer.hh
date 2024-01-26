@@ -1,6 +1,6 @@
 //
 // gx/Renderer.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 // TODO: texture wrap settings
@@ -47,6 +47,8 @@ class gx::Renderer
   [[nodiscard]] GLFWwindow* window() { return _window; }
   [[nodiscard]] int framebufferWidth() const { return _fbWidth; }
   [[nodiscard]] int framebufferHeight() const { return _fbHeight; }
+  [[nodiscard]] std::pair<int,int> framebufferDimensions() const {
+    return {_fbWidth, _fbHeight}; }
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
   [[nodiscard]] int swapInterval() const { return _swapInterval; }
   [[nodiscard]] int frameRate() const { return _frameRate; }
