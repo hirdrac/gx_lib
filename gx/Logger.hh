@@ -1,6 +1,6 @@
 //
 // gx/Logger.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #pragma once
@@ -41,6 +41,7 @@ class gx::Logger
   void setLevel(LogLevel lvl) { _level = lvl; }
   void disable() { _level = LVL_DISABLED; }
   void showMS(bool enable) { _showMS = enable; }
+  void separateDate(bool enable) { _separateDate = enable; }
 
   // log method
   template<typename... Args>
@@ -53,8 +54,10 @@ class gx::Logger
 
  private:
   std::unique_ptr<LoggerImpl> _impl;
+  int _lastDate = 0;
   LogLevel _level = LVL_INFO;
   bool _showMS = true;
+  bool _separateDate = true;
 
   // methods
   void header(std::ostringstream& os, LogLevel lvl);

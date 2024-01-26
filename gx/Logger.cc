@@ -1,6 +1,6 @@
 //
 // gx/Logger.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 // TODO: threaded support
@@ -41,28 +41,6 @@ namespace
 {
   const pid_t mainThreadID = get_threadid();
 
-  void logTime(std::ostream& os, bool show_ms)
-  {
-    timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    const std::tm td = *std::localtime(&ts.tv_sec);
-    char str[32];
-    int len = snprintf(
-      str, sizeof(str), "%d-%02d-%02d %02d:%02d:%02d ",
-      td.tm_year + 1900, td.tm_mon + 1, td.tm_mday,
-      td.tm_hour, td.tm_min, td.tm_sec);
-    if (show_ms) {
-      const int size = int(sizeof(str)) - len + 1;
-      if (size > 0) {
-        len += snprintf(&str[len-1], std::size_t(size),
-                        ".%03ld ", ts.tv_nsec / 1000000) - 1;
-      }
-    }
-
-    os.write(str, std::streamsize(len));
-  }
-
   [[nodiscard]] std::string fileTime()
   {
     const std::time_t t = std::time(nullptr);
@@ -78,12 +56,12 @@ namespace
   [[nodiscard]] constexpr std::string_view levelStr(LogLevel l)
   {
     switch (l) {
-      case LVL_TRACE: return "[TRACE] ";
-      case LVL_INFO:  return "[INFO] ";
-      case LVL_WARN:  return "[WARN] ";
-      case LVL_ERROR: return "[ERROR] ";
-      case LVL_FATAL: return "[FATAL] ";
-      default:        return "[UNKNOWN] ";
+      case LVL_TRACE: return " [TRACE] ";
+      case LVL_INFO:  return " [INFO] ";
+      case LVL_WARN:  return " [WARN] ";
+      case LVL_ERROR: return " [ERROR] ";
+      case LVL_FATAL: return " [FATAL] ";
+      default:        return " [UNKNOWN] ";
     }
   }
 }
@@ -167,7 +145,37 @@ void Logger::rotate()
 
 void Logger::header(std::ostringstream& os, LogLevel lvl)
 {
-  logTime(os, _showMS);
+  timespec ts;
+  clock_gettime(CLOCK_REALTIME, &ts);
+
+  const std::tm td = *std::localtime(&ts.tv_sec);
+  char str[32];
+  int len;
+
+  if (_separateDate) {
+    const int date = ((td.tm_year + 1900) * 10000)
+      + ((td.tm_mon + 1) * 100) + td.tm_mday;
+    if (_lastDate != date) {
+      _lastDate = date;
+      len = snprintf(str, sizeof(str), "-- %d-%02d-%02d --\n",
+                     td.tm_year + 1900, td.tm_mon + 1, td.tm_mday);
+      os.write(str, std::streamsize(len));
+    }
+  } else {
+    len = snprintf(str, sizeof(str), "%d-%02d-%02d ",
+                   td.tm_year + 1900, td.tm_mon + 1, td.tm_mday);
+    os.write(str, std::streamsize(len));
+  }
+
+  len = snprintf(str, sizeof(str), "%02d:%02d:%02d",
+                 td.tm_hour, td.tm_min, td.tm_sec);
+  os.write(str, std::streamsize(len));
+
+  if (_showMS) {
+    len = snprintf(str, sizeof(str), ".%03ld", ts.tv_nsec / 1000000);
+    os.write(str, std::streamsize(len));
+  }
+
   os << levelStr(lvl);
 }
 
