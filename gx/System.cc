@@ -1,21 +1,18 @@
 //
 // gx/System.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "System.hh"
 #include "Logger.hh"
 #include "Assert.hh"
 #include "StringUtil.hh"
+#include "ThreadID.hh"
 #include <GLFW/glfw3.h>
-#include <thread>
 #include <string_view>
 #include <cstdlib>
 
 namespace {
-  const std::thread::id mainThreadID = std::this_thread::get_id();
-    // limitation of GLFW, most API calls must be from main thread
-
   void errorCB(int error, const char* txt)
   {
     GX_LOG_ERROR("GLFW ERROR(", error, "): ", txt);
@@ -35,11 +32,6 @@ namespace {
     glfwGetVersion(&major, &minor, &revision);
     return gx::concat(major, '.', minor, '.', revision);
   }
-}
-
-bool gx::isMainThread()
-{
-  return std::this_thread::get_id() == mainThreadID;
 }
 
 bool gx::initGLFW()

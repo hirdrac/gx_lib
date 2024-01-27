@@ -1,6 +1,6 @@
 //
 // gx/System.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // GLFW init & other misc GLFW/OS function wrappers
 //
@@ -10,8 +10,6 @@
 
 
 namespace gx {
-  [[nodiscard]] bool isMainThread();
-
   bool initGLFW();
     // initialized library & setup error logging
 

@@ -8,6 +8,7 @@
 #include "Logger.hh"
 #include "System.hh"
 #include "Assert.hh"
+#include "ThreadID.hh"
 #include <algorithm>
 #include <chrono>
 #include <mutex>

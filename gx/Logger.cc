@@ -11,58 +11,38 @@
 //     used for logging instead of ID (main, render, log)
 
 #include "Logger.hh"
+#include "ThreadID.hh"
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <mutex>
 #include <cstdio>
 #include <ctime>
-#include <unistd.h>
-#include <sys/types.h>
-#if __has_include(<sys/syscall.h>)
-#include <sys/syscall.h>
-#endif
 using namespace gx;
 
 
 // **** Helper Functions ****
-#ifdef SYS_gettid
-// Linux specific thread id
-// NOTE: 'gettid()' is available in glibc 2.30
-//   for earlier versions, this function is needed
-[[nodiscard]] static inline pid_t get_threadid() {
-  return pid_t(syscall(SYS_gettid)); }
-#else
-// thread ID logging disabled
-[[nodiscard]] static inline pid_t get_threadid() { return 0; }
-#endif
-
-namespace
+[[nodiscard]] static std::string fileTime()
 {
-  const pid_t mainThreadID = get_threadid();
+  const std::time_t t = std::time(nullptr);
+  const std::tm* td = std::localtime(&t);
+  char str[32];
+  const int len = snprintf(
+    str, sizeof(str), "-%d%02d%02d_%02d%02d%02d",
+    td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
+    td->tm_hour, td->tm_min, td->tm_sec);
+  return {str, std::size_t(len)};
+}
 
-  [[nodiscard]] std::string fileTime()
-  {
-    const std::time_t t = std::time(nullptr);
-    const std::tm* td = std::localtime(&t);
-    char str[32];
-    const int len = snprintf(
-      str, sizeof(str), "-%d%02d%02d_%02d%02d%02d",
-      td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
-      td->tm_hour, td->tm_min, td->tm_sec);
-    return {str, std::size_t(len)};
-  }
-
-  [[nodiscard]] constexpr std::string_view levelStr(LogLevel l)
-  {
-    switch (l) {
-      case LVL_TRACE: return " [TRACE] ";
-      case LVL_INFO:  return " [INFO] ";
-      case LVL_WARN:  return " [WARN] ";
-      case LVL_ERROR: return " [ERROR] ";
-      case LVL_FATAL: return " [FATAL] ";
-      default:        return " [UNKNOWN] ";
-    }
+[[nodiscard]] static constexpr std::string_view levelStr(LogLevel l)
+{
+  switch (l) {
+    case LVL_TRACE: return " [TRACE] ";
+    case LVL_INFO:  return " [INFO] ";
+    case LVL_WARN:  return " [WARN] ";
+    case LVL_ERROR: return " [ERROR] ";
+    case LVL_FATAL: return " [FATAL] ";
+    default:        return " [UNKNOWN] ";
   }
 }
 
@@ -183,7 +163,7 @@ void Logger::logMsg(std::ostringstream& os, const char* file, int line)
 {
   // footer
   os << " (";
-  const pid_t tid = get_threadid();
+  const auto tid = getThreadID();
   if (tid != mainThreadID) { os << "t=" << tid << ' '; }
   os << file << ':' << line << ")\n";
 
