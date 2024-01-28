@@ -8,14 +8,11 @@
 #pragma once
 #include "Renderer.hh"
 #include "Types.hh"
-#include "Assert.hh"
 #include <string_view>
 #include <string>
 #include <vector>
 #include <memory>
 
-
-struct GLFWwindow;
 
 namespace gx {
   // event mask
@@ -148,6 +145,7 @@ namespace gx {
 
   class Window;
   class Renderer;
+  struct WindowImpl;
 }
 
 class gx::Window
@@ -156,9 +154,13 @@ class gx::Window
   Window();
   ~Window();
 
-  // prevent copy/assignment/move
+  // prevent copy/assignment
   Window(const Window&) = delete;
   Window& operator=(const Window&) = delete;
+
+  // allow move/move-assign
+  Window(Window&&) = default;
+  Window& operator=(Window&&) = default;
 
 
   //// Display Management ////
@@ -171,12 +173,11 @@ class gx::Window
   void setSamples(int samples);
   bool open(int flags = WINDOW_RESIZABLE);
 
-  [[nodiscard]] int width() const { return _width; }
-  [[nodiscard]] int height() const { return _height; }
-  [[nodiscard]] std::pair<int,int> dimensions() const {
-    return {_width, _height}; }
-  [[nodiscard]] const std::string& title() const { return _title; }
-  [[nodiscard]] bool fullScreen() const { return _fullScreen; }
+  [[nodiscard]] int width() const;
+  [[nodiscard]] int height() const;
+  [[nodiscard]] std::pair<int,int> dimensions() const;
+  [[nodiscard]] const std::string& title() const;
+  [[nodiscard]] bool fullScreen() const;
 
 
   //// Event Handling ////
@@ -188,98 +189,51 @@ class gx::Window
     // time of last pollEvents()
     // (in microseconds since first window open)
 
-  [[nodiscard]] int events() const { return _events; }
-  [[nodiscard]] int allEvents() const { return _events | _removedEvents; }
+  [[nodiscard]] int events() const;
+  [[nodiscard]] int allEvents() const;
     // current event mask
 
-  void removeEvent(int event_mask) {
-    int e = _events & event_mask; _removedEvents |= e; _events &= ~e; }
+  void removeEvent(int event_mask);
     // remove event(s) from current event mask
 
   // window state
-  [[nodiscard]] bool resized() const { return _events & EVENT_SIZE; }
-  [[nodiscard]] bool closed() const { return _events & EVENT_CLOSE; }
-  [[nodiscard]] bool iconified() const { return _iconified; }
-  [[nodiscard]] bool focused() const { return _focused; }
+  [[nodiscard]] bool resized() const { return events() & EVENT_SIZE; }
+  [[nodiscard]] bool closed() const { return events() & EVENT_CLOSE; }
+  [[nodiscard]] bool iconified() const;
+  [[nodiscard]] bool focused() const;
 
   // mouse state
-  [[nodiscard]] MouseModeEnum mouseMode() const { return _mouseMode; }
-  [[nodiscard]] MouseShapeEnum mouseShape() const { return _mouseShape; }
-  [[nodiscard]] Vec2 mousePt() const { return _mousePt; }
-  [[nodiscard]] Vec2 scrollPt() const { return _scrollPt; }
-  [[nodiscard]] int buttons() const { return _buttons; }
-  [[nodiscard]] bool mouseIn() const { return _mouseIn; }
+  [[nodiscard]] MouseModeEnum mouseMode() const;
+  [[nodiscard]] MouseShapeEnum mouseShape() const;
+  [[nodiscard]] Vec2 mousePt() const;
+  [[nodiscard]] Vec2 scrollPt() const;
+  [[nodiscard]] int buttons() const;
+  [[nodiscard]] bool mouseIn() const;
 
-  [[nodiscard]] bool buttonPress(ButtonEnum button) const {
-    return (_events & (button<<11)) && (_buttons & button); }
-  [[nodiscard]] bool buttonRelease(ButtonEnum button) const {
-    return (_events & (button<<11)) && !(_buttons & button); }
-  [[nodiscard]] bool buttonDrag(int button_mask) const {
-    return (_events & EVENT_MOUSE_MOVE)
-      && ((_buttons & button_mask) == button_mask); }
+  [[nodiscard]] bool buttonPress(ButtonEnum button) const;
+  [[nodiscard]] bool buttonRelease(ButtonEnum button) const;
+  [[nodiscard]] bool buttonDrag(int button_mask) const;
 
   // key state
   [[nodiscard]] bool keyHeld(int key) const;
   [[nodiscard]] int keyPressCount(int key, bool includeRepeat) const;
-  [[nodiscard]] const std::vector<KeyState>& keyStates() const {
-    return _keyStates; }
-  [[nodiscard]] int keyMods() const { return _mods; }
+  [[nodiscard]] const std::vector<KeyState>& keyStates() const;
+  [[nodiscard]] int keyMods() const;
 
   // text entry state
-  [[nodiscard]] const std::vector<CharInfo>& charData() const {
-    return _chars; }
+  [[nodiscard]] const std::vector<CharInfo>& charData() const;
 
   // renderer access methods
-  [[nodiscard]] Renderer& renderer() {
-    GX_ASSERT(_renderer != nullptr); return *_renderer; }
+  [[nodiscard]] Renderer& renderer();
     // NOTE: Renderer is available once open() is called and will be available
     //   until the Window is destroyed.
 
   template<typename... Args>
-  void draw(Args&&... args) { _renderer->draw({args...}); }
+  void draw(Args&&... args) { renderer().draw({args...}); }
 
-  void renderFrame() { _renderer->renderFrame(_lastPollTime); }
+  void renderFrame() { renderer().renderFrame(_lastPollTime); }
 
  private:
-  std::unique_ptr<Renderer> _renderer;
-  int _width = 0, _height = 0;
-  int _fsWidth = 0, _fsHeight = 0;
-  int _minWidth = -1, _minHeight = -1;
-  int _maxWidth = -1, _maxHeight = -1;
-  int _samples = 4; // for MSAA, 0 disables multi-sampling
-  std::string _title;
-  MouseModeEnum _mouseMode = MOUSEMODE_NORMAL;
-  MouseShapeEnum _mouseShape = MOUSESHAPE_ARROW;
-  bool _sizeSet = false;
-  bool _fullScreen = false;
-  bool _fixedAspectRatio = false;
-
-  // event state
-  int _events = 0, _removedEvents = 0;
-  std::vector<KeyState> _keyStates;
-  std::vector<CharInfo> _chars;
-  Vec2 _mousePt{0,0}, _scrollPt{0,0};
-  int _buttons = 0, _mods = 0;
-  int _buttonsPress = 0, _buttonsRelease = 0;
-  bool _mouseIn = false, _iconified = false, _focused = true;
-
-  void showWindow(GLFWwindow*);
-  void updateMouseState(GLFWwindow*);
-
-  void resetEventState();
-  void finalizeEventState();
-
+  std::unique_ptr<WindowImpl> _impl;
   static int64_t _lastPollTime;
-
-  // GLFW event callbacks
-  static void closeCB(GLFWwindow*);
-  static void sizeCB(GLFWwindow*, int width, int height);
-  static void keyCB(GLFWwindow*, int key, int scancode, int action, int mods);
-  static void charCB(GLFWwindow*, unsigned int codepoint);
-  static void cursorEnterCB(GLFWwindow*, int entered);
-  static void cursorPosCB(GLFWwindow*, double xpos, double ypos);
-  static void mouseButtonCB(GLFWwindow*, int button, int action, int mods);
-  static void scrollCB(GLFWwindow*, double xoffset, double yoffset);
-  static void iconifyCB(GLFWwindow*, int iconified);
-  static void focusCB(GLFWwindow*, int focused);
 };
