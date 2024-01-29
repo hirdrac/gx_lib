@@ -1,6 +1,6 @@
 //
 // demo_draw.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 // TODO: draw 3d cube w/ lighting
@@ -274,10 +274,11 @@ int main(int argc, char** argv)
 
   for (;;) {
     // draw frame
+    const auto [width,height] = win.dimensions();
     if (win.resized()) {
       page = 0;
-      gfxPerPage = std::max((win.width() / ITEM_WIDTH), 1) *
-        std::max((win.height() / ITEM_HEIGHT), 1);
+      gfxPerPage = std::max(width / ITEM_WIDTH, 1) *
+        std::max(height / ITEM_HEIGHT, 1);
       maxPage = (gfxCount - 1) / gfxPerPage;
       redraw = true;
     }
@@ -293,7 +294,7 @@ int main(int argc, char** argv)
       for (int i = start_gfx; i < end_gfx; ++i) {
         gfxData[i].fn(dc, x, y);
         x += ITEM_WIDTH;
-        if (x > float(win.width() - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
+        if (x > float(width - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }
 
       dc.color(WHITE);
@@ -302,11 +303,11 @@ int main(int argc, char** argv)
         dc.text(tf, {x+(ITEM_WIDTH/2), y+6}, gx::ALIGN_TOP_CENTER,
                 gfxData[i].desc);
         x += ITEM_WIDTH;
-        if (x > float(win.width() - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
+        if (x > float(width - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }
 
       if (maxPage > 0) {
-        dc.text(tf, {float(win.width()-10), float(win.height()-1)},
+        dc.text(tf, {float(width-10), float(height-1)},
                 gx::ALIGN_BOTTOM_RIGHT,
                 gx::concat("Page ", page+1, " of ", maxPage+1));
       }

@@ -1,6 +1,6 @@
 //
 // image_viewer.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 // TODO: background loading of images after 1st image loaded
@@ -44,11 +44,12 @@ struct ImgSize { float width, height; };
 
 ImgSize calcSize(const gx::Window& win, const gx::Image& img, float scale)
 {
-  float iw = float(win.width());
-  float ih = float(win.height());
+  const auto [width,height] = win.dimensions();
+  float iw = float(width);
+  float ih = float(height);
   if (win.fullScreen()) {
-    const float w_ratio = float(win.width()) / float(img.width());
-    const float h_ratio = float(win.height()) / float(img.height());
+    const float w_ratio = float(width) / float(img.width());
+    const float h_ratio = float(height) / float(img.height());
     if (w_ratio > h_ratio) {
       iw = float(img.width()) * h_ratio;
     } else {
@@ -148,6 +149,7 @@ int main(int argc, char* argv[])
 
   // main loop
   for (;;) {
+    const auto [width,height] = win.dimensions();
     const Entry& e = entries[std::size_t(entryNo)];
     if (win.resized() || refresh) {
       if (refresh) {
@@ -158,8 +160,8 @@ int main(int argc, char* argv[])
       }
 
       const auto [iw,ih] = calcSize(win, e.img, imgScale);
-      const float ix = std::floor((float(win.width()) - iw) * .5f);
-      const float iy = std::floor((float(win.height()) - ih) * .5f);
+      const float ix = std::floor((float(width) - iw) * .5f);
+      const float iy = std::floor((float(height) - ih) * .5f);
       dc.clearList();
       dc.clearView(gx::BLACK);
       dc.color(gx::WHITE);
@@ -167,7 +169,7 @@ int main(int argc, char* argv[])
       dc.rectangle({ix + imgOffset.x, iy + imgOffset.y, iw, ih}, {0,0}, {1,1});
 
       // multi-image horizontal display in fullscreen
-      if (win.fullScreen() && iw < (float(win.width()) - border)) {
+      if (win.fullScreen() && iw < (float(width) - border)) {
         dc.color(gx::GRAY50);
 
         // display previous image(s)
@@ -189,7 +191,7 @@ int main(int argc, char* argv[])
           const Entry& e1 = entries[std::size_t(x)];
           const auto [iw1,ih1] = calcSize(win, e1.img, imgScale);
           const float ix1 = prev_x; prev_x += std::floor(iw1 + border);
-          //if (ix1 > float(win.width())) { break; }
+          //if (ix1 > float(width)) { break; }
           const float iy1 = std::floor((float(win.height()) - ih1) * .5f);
           dc.texture(e1.tex);
           dc.rectangle({ix1 + imgOffset.x, iy1 + imgOffset.y, iw1, ih1},

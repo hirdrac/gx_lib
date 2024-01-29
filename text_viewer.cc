@@ -1,6 +1,6 @@
 //
 // text_viewer.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // gx_lib example program for text rendering & basic event handling
 //
@@ -201,7 +201,8 @@ int main(int argc, char** argv)
   // main loop
   bool redraw = true;
   for (;;) {
-    const int maxLines = win.height() / lineHeight;
+    const auto [width,height] = win.dimensions();
+    const int maxLines = height / lineHeight;
     const int endLine = std::max(int(buffer.lines()) - maxLines, 0);
 
     // draw frame
@@ -209,12 +210,12 @@ int main(int argc, char** argv)
       dc.clearList();
       dc.clearView(.2f,.2f,.2f);
 
-      const float win_width = float(win.width());
-      const float win_height = float(win.height());
+      const float win_w = float(width);
+      const float win_h = float(height);
 
       float ty = 0;
       int lineNo = topLine;
-      while (lineNo < int(buffer.lines()) && ty < win_height) {
+      while (lineNo < int(buffer.lines()) && ty < win_h) {
         if (lineNo >= 0) {
           const std::string_view line = buffer[std::size_t(lineNo)];
           float tx = 0;
@@ -228,7 +229,7 @@ int main(int argc, char** argv)
             dc.color(gx::WHITE);
             dc.text(tf, {tx, ty}, gx::ALIGN_TOP_LEFT, segment);
             const float segLen = fnt.calcLength(segment, tf.glyphSpacing);
-            tooLong |= ((tx+segLen) > win_width);
+            tooLong |= ((tx+segLen) > win_w);
             i += segment.size() + 1;
             if (tabPos != std::string_view::npos) {
               const float tx2 = tx + segLen;
@@ -238,7 +239,7 @@ int main(int argc, char** argv)
 
           if (tooLong) {
             dc.color(1.0f,0,0);
-            dc.text(tf, {win_width+1, ty}, gx::ALIGN_TOP_RIGHT, "*");
+            dc.text(tf, {win_w+1, ty}, gx::ALIGN_TOP_RIGHT, "*");
           }
         }
 

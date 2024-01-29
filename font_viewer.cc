@@ -1,6 +1,6 @@
 //
 // font_viewer.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // displays font atlas texture
 //
@@ -54,13 +54,14 @@ int main(int argc, char** argv)
 
   // main loop
   do {
+    const auto [width,height] = win.dimensions();
     if (win.resized()) {
       // 'resized' always true once at start
       dc.clearList();
       dc.clearView(.3f,.1f,.1f);
       dc.color(gx::WHITE);
       dc.texture(t);
-      dc.rectangle({0, 0, float(win.width()), float(win.height())}, {0,0}, {1,1});
+      dc.rectangle({0, 0, float(width), float(height)}, {0,0}, {1,1});
 
       win.draw(&dl);
     }
@@ -69,8 +70,8 @@ int main(int argc, char** argv)
     gx::Window::pollEvents();
     if (win.mouseIn() && (win.events() & gx::EVENT_MOUSE_MOVE)) {
       const auto pt = win.mousePt();
-      const float tx = pt.x / float(win.width());
-      const float ty = pt.y / float(win.height());
+      const float tx = pt.x / float(width);
+      const float ty = pt.y / float(height);
       for (auto& [c,g] : fnt.glyphs()) {
         if (tx >= g.t0.x && tx <= g.t1.x && ty >= g.t0.y && ty <= g.t1.y) {
           if (lastCode != c) {
