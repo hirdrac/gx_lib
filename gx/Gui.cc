@@ -829,8 +829,9 @@ void Gui::processMouseEvent(Window& win)
         type = _heldType;
       }
 
-      const float mx = std::clamp(mousePt.x, 0.0f, float(win.width()));
-      const float my = std::clamp(mousePt.y, 0.0f, float(win.height()));
+      const auto [width,height] = win.dimensions();
+      const float mx = std::clamp(mousePt.x, 0.0f, float(width));
+      const float my = std::clamp(mousePt.y, 0.0f, float(height));
       pPtr->layout.x += mx - _heldPt.x;
       pPtr->layout.y += my - _heldPt.y;
       _heldPt.set(mx, my);
