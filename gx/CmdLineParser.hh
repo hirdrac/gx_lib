@@ -1,6 +1,6 @@
 //
 // gx/CmdLineParser.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // Helper class for parsing command line arguments.
 //
@@ -47,59 +47,54 @@ class gx::CmdLineParser
   bool get(T& val) const { return convertVal(_arg, val); }
 
   [[nodiscard]] bool option() const {
-    return !_optionsDone && _arg.size() >= 2 && _arg[0] == '-';
+    return (_argType == OPTION_SHORT) || (_argType == OPTION_LONG);
   }
 
-  [[nodiscard]] bool option(char shortName, std::string_view longName) const {
-    if (!_optionsDone) {
+  [[nodiscard]] bool option(char shortName, std::string_view longName) const
+  {
+    if (_argType == OPTION_SHORT) {
       // short name option check (-x)
-      if (shortName != '\0' && _arg.size() == 2 && _arg[0] == '-'
-          && _arg[1] == shortName) { return true; }
-
+      return (shortName != '\0' && _arg.size() == 2 && _arg[1] == shortName);
+    } else if (_argType == OPTION_LONG) {
       // long name option check (--xxx)
-      const std::size_t len = longName.size() + 2;
-      if (!longName.empty() && _arg.size() == len && _arg.substr(0,2) == "--"
-          && _arg.substr(2) == longName) { return true; }
+      return (!longName.empty() && _arg.substr(2) == longName);
     }
     return false;
   }
 
   template<class T>
-  [[nodiscard]] bool option(
-    char shortName, std::string_view longName, T& value)
+  [[nodiscard]] bool option(char shortName, std::string_view longName, T& value)
   {
-    if (!option()) { return false; }
-
-    if (shortName != '\0' && _arg.size() > 2 && _arg[1] == shortName) {
-      if (_arg[2] == '=') {
+    if (_argType == OPTION_SHORT) {
+      if (shortName == '\0' || _arg.size() < 2 || _arg[1] != shortName) {
+        return false;
+      } else if (_arg.size() > 2 && _arg[2] == '=') {
         // short name option with value in same arg string (-x=<value>)
         return convertVal(_arg.substr(3), value);
-      } else {
+      } else if (_arg.size() > 2) {
         // short name option with integer (-x<int>)
         bool allDigit = true;
         const std::string_view numStr = _arg.substr(2);
         for (auto ch : numStr) { allDigit &= std::isdigit(ch); }
         return allDigit ? convertVal(numStr, value) : false;
       }
+    } else if (_argType == OPTION_LONG) {
+      const std::size_t len = longName.size();
+      if (len == 0 || _arg.size() < len+2 || _arg.substr(2,len) != longName) {
+        return false;
+      } else if (_arg.size() > len+2 && _arg[len+2] == '=') {
+        // long name option with value in same arg string (--xxx=<value>)
+        return convertVal(_arg.substr(len+3), value);
+      }
+    } else {
+      return false;
     }
-
-    const std::size_t len = longName.size() + 2;
-    if (!longName.empty() && _arg.size() > len && _arg[1] == '-'
-        && _arg.substr(2,len-2) == longName && _arg[len] == '=') {
-      // long name option with value in same arg string (--xxx=<value>)
-      return convertVal(_arg.substr(len+1), value);
-    }
-
-    if (!option(shortName, longName)) { return false; }
 
     // option value in next arg string
-    std::string_view opVal;
-    if (_current < (_argc-1)) {
-      opVal = _argv[_current+1];
-      if (!_optionsDone && opVal == "--") { opVal = {}; }
-    }
+    if (_current >= _argc-1) { return false; }
 
-    if (!convertVal(opVal, value)) { return false; }
+    const std::string_view opVal = _argv[_current+1];
+    if (opVal == "--" || !convertVal(opVal, value)) { return false; }
 
     next();
     return true;
@@ -111,14 +106,21 @@ class gx::CmdLineParser
 
   int _current = 0;
   std::string_view _arg;
+  enum { OPTION_SHORT, OPTION_LONG, VALUE, ARGS_DONE } _argType = ARGS_DONE;
   bool _optionsDone = false;
 
   void next() {
     if (++_current < _argc) {
       _arg = _argv[_current];
-      if (!_optionsDone && _arg == "--") { _optionsDone = true; next(); }
+      if (_optionsDone || _arg.size() < 2 || _arg[0] != '-') {
+        _argType = VALUE;
+      } else if (_arg == "--") {
+        _optionsDone = true; next();
+      } else {
+        _argType = (_arg[1] == '-') ? OPTION_LONG : OPTION_SHORT;
+      }
     } else {
-      _arg = {}; _optionsDone = true;
+      _arg = {}; _optionsDone = true; _argType = ARGS_DONE;
     }
   }
 
