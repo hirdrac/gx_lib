@@ -78,12 +78,27 @@ bool Camera::calcView(Mat4& result) const
 
 bool Camera::calcProjection(Mat4& result) const
 {
+  float width, height;
+  if (_vpSet) {
+    width = _vpWidth; height = _vpHeight;
+  } else {
+    width = _screenWidth; height = _screenHeight;
+  }
+
   const float len = vlen();
   float vsideL = len, vtopL = len;
-  if (_screenWidth >= _screenHeight) {
-    vsideL *= _screenWidth / _screenHeight;
+  if (width >= height) {
+    vsideL *= width / height;
   } else {
-    vtopL *= _screenHeight / _screenWidth;
+    vtopL *= height / width;
+  }
+
+  float offsetX = 0, offsetY = 0;
+  if (_vpSet) {
+    offsetX = (_vpX / _screenWidth) * 2.0f;
+    offsetY = (_vpY / _screenHeight) * 2.0f;
+    vsideL *= ((_screenWidth - _vpWidth) / _screenWidth);
+    vtopL *= ((_screenHeight - _vpHeight) / _screenHeight);
   }
 
   const float clipLen = _farClip - _nearClip;
@@ -91,7 +106,7 @@ bool Camera::calcProjection(Mat4& result) const
     result = {
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,
-      0, 0, -(_farClip + _nearClip) / clipLen, -1.0f,
+      -offsetX, -offsetY, -(_farClip + _nearClip) / clipLen, -1.0f,
       0, 0, -(2.0f * _farClip * _nearClip) / clipLen, 0
     };
   } else {
@@ -99,7 +114,7 @@ bool Camera::calcProjection(Mat4& result) const
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,
       0, 0, -(_farClip + _nearClip) / clipLen, 0,
-      0, 0, -(2.0f * _farClip * _nearClip) / clipLen, 1.0f
+      offsetX, offsetY, -(2.0f * _farClip * _nearClip) / clipLen, 1.0f
     };
   }
   return true;
@@ -107,18 +122,27 @@ bool Camera::calcProjection(Mat4& result) const
 
 Vec3 Camera::dirToScreenPt(Vec2 mousePt) const
 {
+  float width, height;
+  if (_vpSet) {
+    width = _vpWidth; height = _vpHeight;
+  } else {
+    width = _screenWidth; height = _screenHeight;
+  }
+
   const float len = vlen();
   float vsideL = len, vtopL = len;
-  if (_screenWidth >= _screenHeight) {
-    vsideL *= _screenWidth / _screenHeight;
+  if (width >= height) {
+    vsideL *= width / height;
   } else {
-    vtopL *= _screenHeight / _screenWidth;
+    vtopL *= height / width;
   }
 
   const Vec3 vx = _vside * vsideL;
   const Vec3 vy = _vtop * vtopL;
   const float cx = _screenWidth * .5f;
   const float cy = _screenHeight * .5f;
+
+  // FIXME: finish support for viewport
 
   // since we are calculating a direction, just assume eye is at origin
   // and view plane center is just 1 away from eye (in direction of vnormal)

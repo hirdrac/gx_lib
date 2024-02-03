@@ -51,6 +51,9 @@ class gx::Camera
   void setClip(float near, float far) { _nearClip = near; _farClip = far; }
   void setScreen(float width, float height) {
     _screenWidth = width; _screenHeight = height; }
+  void setViewport(float x, float y, float width, float height) {
+    _vpSet = true; _vpX = x; _vpY = y; _vpWidth = width; _vpHeight = height; }
+  void clearViewport() { _vpSet = false; }
 
   template<class T>
   void setScreen(const T& x) { setScreen(float(x.width()), float(x.height())); }
@@ -76,6 +79,8 @@ class gx::Camera
   float _zoom = 1.0f, _fov = 90.0f, _vlen = 1.0f;
   float _nearClip = 1.0f, _farClip = 1000.0f;
   float _screenWidth = 1.0f, _screenHeight = 1.0f;
+  float _vpX = 0.0f, _vpY = 0.0f, _vpWidth = 0.0f, _vpHeight = 0.0f;
+  bool _vpSet = false;
 
   bool setView(const Vec3& p, const Vec3& vn, const Vec3& vu);
 
