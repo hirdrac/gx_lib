@@ -761,14 +761,19 @@ void Gui::activatePopup(Panel& p, const GuiElem& def)
 
 void Gui::processMouseEvent(Window& win)
 {
-  const bool lbuttonDown = win.buttons() & BUTTON1;
-  const bool rbuttonDown = win.buttons() & BUTTON2;
-  const bool lbuttonEvent = win.events() & EVENT_MOUSE_BUTTON1;
-  const bool rbuttonEvent = win.events() & EVENT_MOUSE_BUTTON2;
+  const int buttons = win.buttons();
+  const int events = win.events();
+  const int allEvents = win.allEvents();
+  const int64_t now = win.lastPollTime();
+
+  const bool lbuttonDown = buttons & BUTTON1;
+  const bool rbuttonDown = buttons & BUTTON2;
+  const bool lbuttonEvent = events & EVENT_MOUSE_BUTTON1;
+  const bool rbuttonEvent = events & EVENT_MOUSE_BUTTON2;
   const bool lpressEvent = lbuttonDown & lbuttonEvent;
   const bool rpressEvent = rbuttonDown & rbuttonEvent;
-  const bool anyButtonEvent = win.allEvents() & EVENT_MOUSE_ANY_BUTTON;
-  const bool moveEvent = win.allEvents() & EVENT_MOUSE_MOVE;
+  const bool anyButtonEvent = allEvents & EVENT_MOUSE_ANY_BUTTON;
+  const bool moveEvent = allEvents & EVENT_MOUSE_MOVE;
   const Vec2 mousePt = win.mousePt();
 
   // get elem at mouse pointer
@@ -804,11 +809,10 @@ void Gui::processMouseEvent(Window& win)
   // double/tripple click check
   if (lpressEvent && pPtr) {
     if (pPtr->flags & PANEL_FLOATING) { raisePanel(pPtr->id); }
-    const int64_t t = win.lastPollTime();
     const GuiTheme& thm = *(pPtr->theme);
-    if ((t - _lastClickTime) > thm.multiClickTime
+    if ((now - _lastClickTime) > thm.multiClickTime
         || ++_clickCount > 3) { _clickCount = 1; }
-    _lastClickTime = t;
+    _lastClickTime = now;
   }
   if (moveEvent) { _clickCount = 0; }
 
@@ -819,7 +823,7 @@ void Gui::processMouseEvent(Window& win)
   // element specific behavior
   MouseShapeEnum shape = MOUSESHAPE_ARROW;
   if (_heldType == GUI_TITLEBAR) {
-    if (lbuttonDown && win.events() & EVENT_MOUSE_MOVE) {
+    if (lbuttonDown && (events & EVENT_MOUSE_MOVE)) {
       if (_heldID != id) {
         const auto [panelP,elemP] = findElem(_heldID);
         GX_ASSERT(panelP != nullptr);
@@ -884,7 +888,7 @@ void Gui::processMouseEvent(Window& win)
     if (lbuttonEvent || rbuttonEvent) {
       GuiElem* parent = findItemParent(pPtr->root, id);
       if (parent) {
-        addEvent(*pPtr, *parent, ePtr->item().no, win.lastPollTime());
+        addEvent(*pPtr, *parent, ePtr->item().no, now);
         deactivatePopups();
       }
     } else if (_popupID != id) {
@@ -907,24 +911,24 @@ void Gui::processMouseEvent(Window& win)
         const float b = thm.border;
         calcPos(e0, thm, ls._x + b, ls._y + b, ls._x + ls._w - b,
                 ls._y + ls._h - b);
-        addEvent(*pPtr, ls, item_no, win.lastPollTime());
+        addEvent(*pPtr, ls, item_no, now);
         deactivatePopups();
       }
     }
   } else if (type == GUI_BUTTON_PRESS) {
     if (lpressEvent) {
       _repeatDelay = ePtr->button().repeatDelay;
-      addEvent(*pPtr, *ePtr, 0, win.lastPollTime());
+      addEvent(*pPtr, *ePtr, 0, now);
     }
   } else if (type == GUI_BUTTON) {
     // activate if cursor is over element & button is released
     if (!lbuttonDown && lbuttonEvent && _heldID == id) {
-      addEvent(*pPtr, *ePtr, 0, win.lastPollTime());
+      addEvent(*pPtr, *ePtr, 0, now);
     }
   } else if (type == GUI_CHECKBOX) {
     // activate if cursor is over element & button is released
     if (!lbuttonDown && lbuttonEvent && _heldID == id) {
-      addEvent(*pPtr, *ePtr, 0, win.lastPollTime());
+      addEvent(*pPtr, *ePtr, 0, now);
       ePtr->checkbox().set = !ePtr->checkbox().set;
     }
   }
@@ -938,7 +942,7 @@ void Gui::processMouseEvent(Window& win)
   if (lpressEvent && id != 0) {
     _heldID = id;
     _heldType = type;
-    _heldTime = win.lastPollTime();
+    _heldTime = now;
     _heldPt = mousePt;
     _needRender = true;
   } else if ((_heldType == GUI_BUTTON_PRESS && _heldID != id)
@@ -963,7 +967,8 @@ void Gui::processCharEvent(Window& win)
   auto& entry = e.entry();
 
   bool usedEvent = false;
-  for (const CharInfo& c : win.charData()) {
+  const auto& data = win.charData();
+  for (const CharInfo& c : data) {
     if (c.codepoint) {
       usedEvent = true;
       addEntryChar(e, int32_t(c.codepoint));
@@ -1210,8 +1215,10 @@ void Gui::addEntryChar(GuiElem& e, int32_t code)
 
 void Gui::setFocus(Window& win, const GuiElem* e)
 {
+  const int64_t now = win.lastPollTime();
+
   // reset cursor blink
-  _lastCursorUpdate = win.lastPollTime();
+  _lastCursorUpdate = now;
   _cursorState = true;
 
   const ElemID id = e ? e->_id : 0;
@@ -1228,7 +1235,7 @@ void Gui::setFocus(Window& win, const GuiElem* e)
           entry.text = "0";
         }
       }
-      addEvent(*panelP, *elemP, 0, win.lastPollTime());
+      addEvent(*panelP, *elemP, 0, now);
     }
   }
 
