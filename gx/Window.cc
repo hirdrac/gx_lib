@@ -330,14 +330,15 @@ struct gx::WindowImpl
       return false;
     }
 
-    auto ren = makeOpenGLRenderer(win);
-    if (!ren || !ren->init(win)) { return false; }
+    {
+      auto ren = makeOpenGLRenderer(win);
+      if (!ren || !ren->init(win)) { return false; }
+      _renderer = std::move(ren);
+    }
 
-    _width = ren->framebufferWidth();
-    _height = ren->framebufferHeight();
-    _renderer = std::move(ren);
+    _width = _renderer->framebufferWidth();
+    _height = _renderer->framebufferHeight();
 
-    glfwSetWindowUserPointer(win, this);
     glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
     glfwSetCursor(win, getCursorInstance(_mouseShape));
     if (resizable) {
@@ -360,6 +361,7 @@ struct gx::WindowImpl
 
     _events = EVENT_SIZE; // always generate a resize event initially
     _removedEvents = 0;
+    glfwSetWindowUserPointer(win, this);
     glfwSetWindowCloseCallback(win, closeCB);
     glfwSetFramebufferSizeCallback(win, sizeCB);
     glfwSetKeyCallback(win, keyCB);
