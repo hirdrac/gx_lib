@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 59 (2024/2/5)
+# Makefile.mk - revision 59 (2024/2/6)
 # Copyright (C) 2024 Richard Bradley
 #
 # Additional contributions from:
@@ -498,7 +498,7 @@ override define _check_name  # <1:label>
     $$(error $$(_msgErr)$1: name conflicts with existing target$$(_end))
   endif
 endef
-$(foreach x,$(_lib_labels) $(_bin_labels),$(eval $(call _check_name,$x)))
+$(foreach x,$(_lib_labels) $(_bin_labels) $(_file_labels),$(eval $(call _check_name,$x)))
 
 # target setting patterns
 override _bin_ptrn := %.SRC %.SRC2 %.OBJS %.LIBS %.STANDARD %.OPT_LEVEL %.OPT_LEVEL_DEBUG %.DEFINE %.INCLUDE %.FLAGS %.RPATH %.LINKER %.LINK_FLAGS %.PACKAGES %.OPTIONS %.DEPS %.SUBSYSTEM %.SOURCE_DIR %.WARN %.WARN_C %.WARN_CXX
