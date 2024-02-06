@@ -1,6 +1,6 @@
 #
-# Makefile.mk - revision 58 (2023/12/6)
-# Copyright (C) 2023 Richard Bradley
+# Makefile.mk - revision 59 (2024/2/5)
+# Copyright (C) 2024 Richard Bradley
 #
 # Additional contributions from:
 #   Stafford Horne (github:stffrdhrn)
@@ -228,16 +228,20 @@ endif
 #### Basic Settings ####
 OPT_LEVEL ?= 3
 OPT_LEVEL_DEBUG ?= g
-ifndef WARN
-  override _common_warn := all extra missing-include-dirs no-unused-parameter
-  WARN_C ?= $(_common_warn) write-strings $(_$(_compiler)_warn) $(WARN_EXTRA)
-  WARN_CXX ?= $(_common_warn) non-virtual-dtor overloaded-virtual $(_$(_compiler)_warn) $(WARN_EXTRA)
-else
-  WARN_C ?= $(WARN) $(WARN_EXTRA)
-  WARN_CXX ?= $(WARN) $(WARN_EXTRA)
-endif
-
 BUILD_DIR ?= build
+
+ifneq ($(strip $(WARN)),-)
+  ifneq ($(strip $(WARN)),)
+    # override default warnings
+    WARN_C ?= $(WARN)
+    WARN_CXX ?= $(WARN)
+  else
+    # default warnings
+    override _common_warn := all extra missing-include-dirs no-unused-parameter
+    WARN_C ?= $(_common_warn) write-strings $(_$(_compiler)_warn)
+    WARN_CXX ?= $(_common_warn) non-virtual-dtor overloaded-virtual $(_$(_compiler)_warn)
+  endif
+endif
 
 # default values to be more obvious if used/handled improperly
 override ENV := ENV_NOT_SET
@@ -245,9 +249,10 @@ override SFX := SFX_NOT_SET
 override BUILD_TMP := BUILD_TMP_NOT_SET
 override LIBPREFIX := lib
 
-# apply *_EXTRA setting values (WARN_EXTRA handled above)
+# apply *_EXTRA setting values
+# (CLEAN_EXTRA/CLOBBER_EXTRA/WARN_EXTRA handled elsewhere)
 $(foreach x,WARN_C WARN_CXX PACKAGES PACKAGES_TEST INCLUDE INCLUDE_TEST LIBS LIBS_TEST DEFINE DEFINE_TEST OPTIONS OPTIONS_TEST FLAGS FLAGS_TEST FLAGS_RELEASE FLAGS_DEBUG FLAGS_PROFILE RPATH LINK_FLAGS EXCLUDE_TARGETS,\
-  $(if $($x_EXTRA),$(eval override $x += $($x_EXTRA))))
+  $(if $(strip $($x_EXTRA)),$(eval override $x += $($x_EXTRA))))
 
 # prevent duplicate options being applied to tests
 override OPTIONS_TEST := $(filter-out $(OPTIONS),$(OPTIONS_TEST))
@@ -730,8 +735,8 @@ else ifneq ($(_build_env),)
   override _define_test := $(call _format_define,$(DEFINE_TEST))
   override _include := $(call _format_include,$(INCLUDE))
   override _include_test := $(call _format_include,$(INCLUDE_TEST))
-  override _warn_cxx := $(call _format_warn,$(WARN_CXX))
-  override _warn_c := $(call _format_warn,$(WARN_C))
+  override _warn_cxx := $(call _format_warn,$(WARN_CXX) $(WARN_EXTRA))
+  override _warn_c := $(call _format_warn,$(WARN_C) $(WARN_EXTRA))
 
   # setup compile flags for each build path
   override _pkg_flags := $(call _get_pkg_flags,$(sort $(_pkgs)))
