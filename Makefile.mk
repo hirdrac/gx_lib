@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 59 (2024/2/6)
+# Makefile.mk - revision 59 (2024/2/7)
 # Copyright (C) 2024 Richard Bradley
 #
 # Additional contributions from:
@@ -164,7 +164,7 @@
 #    allow linking with static libraries.
 #    ex.: BIN1.LIBS = LIB1
 #
-#  <X>.DEPS can accept BIN labels of binary targets.  This can be used to make
+#  <X>.DEPS can accept BIN labels of binary targets. This can be used to make
 #    sure a binary is built before a file target command (that requires the
 #    binary) is executed.
 #    ex.: FILE1.DEPS = BIN1 data_file.txt
@@ -311,13 +311,14 @@ override _profile_opt = -pg $(if $(_opt_lvl),-O$(_opt_lvl))
 
 #### Compiler Details ####
 override _compiler_names := gcc clang
+override _modern_flags := -Wzero-as-null-pointer-constant -Wregister -Wold-style-cast
 
 override _gcc_cxx := g++
 override _gcc_cc := gcc
 override _gcc_as := gcc -x assembler-with-cpp
 override _gcc_ar := gcc-ar
 override _gcc_warn := shadow=local
-override _gcc_modern := -Wzero-as-null-pointer-constant -Wregister -Wsuggest-override
+override _gcc_modern := $(_modern_flags) -Wsuggest-override
 
 override _clang_cxx := clang++
 override _clang_cc := clang
@@ -325,7 +326,7 @@ override _clang_as := clang -x assembler-with-cpp
 override _clang_ar := llvm-ar
 override _clang_ld := lld
 override _clang_warn := shadow
-override _clang_modern := -Wzero-as-null-pointer-constant -Wregister -Winconsistent-missing-override
+override _clang_modern := $(_modern_flags) -Winconsistent-missing-override
 
 # compiler source file patterns
 override _cxx_ptrn := %.cc %.cp %.cxx %.cpp %.CPP %.c++ %.C
@@ -488,7 +489,7 @@ $(foreach x,$(_all_labels),$(if $($x),$(eval override $x = $(strip $(value $x)))
 
 # output name check
 override define _check_name  # <1:label>
-  ifeq ($$(strip $$($1)),)
+  ifeq ($$($1),)
     $$(error $$(_msgErr)$1 required$$(_end))
   else ifneq ($$(words $$($1)),1)
     $$(error $$(_msgErr)$1: spaces not allowed$$(_end))
