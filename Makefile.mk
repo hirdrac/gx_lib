@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 59 (2024/2/7)
+# Makefile.mk - revision 59 (2024/2/8)
 # Copyright (C) 2024 Richard Bradley
 #
 # Additional contributions from:
@@ -593,16 +593,38 @@ ifneq ($(words $(_symlinks)),$(words $(_symlinks_names)))
   $(error $(_msgErr)SYMLINKS: conflicting values$(_end))
 endif
 
+override _dir = $(filter-out ./,$(dir $1))
+
 # output target name generation macros - <1:build env> <2:label>
-override _gen_bin_name = $(_$1_bdir)$($2)$(_$1_bsfx)
-override _gen_bin_aliases = $(if $(_$1_bdir),$($2)$(_$1_sfx)) $(if $(_binext),$(_$1_bdir)$($2)$(_$1_bsfx)$(_binext))
-override _gen_static_lib_name = $(_$1_ldir)$($2)$(_$1_lsfx).a
-override _gen_static_lib_aliases = $($2)$(_$1_sfx) $(if $(_$1_ldir),$($2)$(_$1_sfx).a)
-override _gen_implib_name = $(_$1_ldir)$($2)$(_$1_lsfx).dll.a
-override _gen_shared_lib_name = $(if $(_windows),$(_$1_bdir)$($2)$(_$1_bsfx)$(if $(_$2_major_ver),-$(_$2_major_ver)).dll,$(_$1_ldir)$($2)$(_$1_lsfx).so$(if $($2.VERSION),.$($2.VERSION)))
-override _gen_shared_lib_linkname = $(if $(_windows),$(_$1_bdir)$($2)$(_$1_bsfx)$(if $(_$2_major_ver),-$(_$2_major_ver)).dll,$(_$1_ldir)$($2)$(_$1_lsfx).so$(if $(_$2_major_ver),.$(_$2_major_ver)))
-override _gen_shared_lib_aliases = $($2)$(_$1_sfx) $(if $(or $(if $(_windows),$(_$1_bdir),$(_$1_ldir)),$($2.VERSION)),$($2)$(_$1_sfx)$(_libext))
-override _gen_shared_lib_links = $(if $(_windows),,$(if $($2.VERSION),$(_$1_ldir)$($2)$(_$1_lsfx).so $(if $(_$2_minor_ver),$(_$1_ldir)$($2)$(_$1_lsfx).so.$(_$2_major_ver))))
+override _gen_bin_name =\
+$(if $(call _dir,$($2)),$($2)$(_$1_sfx),$(_$1_bdir)$($2)$(_$1_bsfx))
+override _gen_bin_aliases =\
+$(if $(or $(_$1_bdir),$(call _dir,$($2))),$(notdir $($2)$(_$1_sfx))) \
+$(if $(_binext),$(call _gen_bin_name,$1,$2)$(_binext))
+override _base_lib_name=\
+$(if $(call _dir,$($2)),$($2)$(_$1_sfx),$(_$1_ldir)$($2)$(_$1_lsfx))
+override _gen_static_lib_name =\
+$(call _base_lib_name,$1,$2).a
+override _gen_static_lib_aliases =\
+$(sort $(notdir $($2))$(_$1_sfx) $(call _base_lib_name,$1,$2)) \
+$(if $(or $(_$1_ldir),$(call _dir,$($2))),$(notdir $($2))$(_$1_sfx).a)
+override _gen_implib_name =\
+$(call _base_lib_name,$1,$2).dll.a
+override _gen_shared_lib_name =\
+$(if $(_windows),\
+$(call _gen_bin_name,$1,$2)$(if $(_$2_major_ver),-$(_$2_major_ver)).dll,\
+$(call _base_lib_name,$1,$2).so$(if $($2.VERSION),.$($2.VERSION)))
+override _gen_shared_lib_linkname =\
+$(if $(_windows),\
+$(call _gen_bin_name,$1,$2)$(if $(_$2_major_ver),-$(_$2_major_ver)).dll,\
+$(call _base_lib_name,$1,$2).so$(if $(_$2_major_ver),.$(_$2_major_ver)))
+override _gen_shared_lib_aliases =\
+$(sort $(notdir $($2))$(_$1_sfx) $(if $(_windows),$(call _gen_bin_name,$1,$2),$(call _base_lib_name,$1,$2))) \
+$(if $(or $(if $(_windows),$(_$1_bdir),$(_$1_ldir)),$(call _dir,$($2)),$($2.VERSION)),$(notdir $($2))$(_$1_sfx)$(_libext))
+override _gen_shared_lib_links =\
+$(if $(_windows),,\
+$(if $($2.VERSION),$(call _base_lib_name,$1,$2).so \
+$(if $(_$2_minor_ver),$(call _base_lib_name,$1,$2).so.$(_$2_major_ver))))
 
 # environment specific setup
 override define _setup_env0  # <1:build env>
@@ -693,7 +715,7 @@ $(call _format_lib_arg,$(if $(filter $x,$(_lib_labels)),$(or $(_$x_shared_linkna
 # _do_wildcard: <1:file> <2:basedir>
 override _do_wildcard =\
 $(if $(filter %/**/ **/,$(dir $1)),$(patsubst $(or $2,./)%,%,$(shell find $2$(patsubst %**/,%,$(dir $1)) -name '$(notdir $1)')),\
-$(if $(findstring **,$(notdir $1)),$(patsubst $(or $2,./)%,%,$(shell find $2$(filter-out ./,$(dir $1)) -name '$(notdir $1)')),\
+$(if $(findstring **,$(notdir $1)),$(patsubst $(or $2,./)%,%,$(shell find $2$(call _dir,$1) -name '$(notdir $1)')),\
 $(if $(findstring *,$1),$(patsubst $2%,%,$(wildcard $2$1)),$1)))
 
 # build environment detection
@@ -1118,7 +1140,7 @@ endif
 endef
 
 # make path of input file - <1:file w/ path>
-override _make_path = $(if $(strip $(filter-out ./,$(dir $1))),@mkdir -p "$(dir $1)")
+override _make_path = $(if $(call _dir,$1),@mkdir -p "$(dir $1)")
 
 # fix path to other objects when inside build dir
 override _fix_path = $(foreach x,$1,\
