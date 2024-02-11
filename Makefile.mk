@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 59 (2024/2/8)
+# Makefile.mk - revision 59 (2024/2/10)
 # Copyright (C) 2024 Richard Bradley
 #
 # Additional contributions from:
@@ -525,8 +525,12 @@ override define _check_lib_entry  # <1:lib label>
   else ifneq ($$(filter-out static shared,$$($1.TYPE)),)
     $$(error $$(_msgErr)$1.TYPE: only 'static' and/or 'shared' allowed$$(_end))
   endif
-  override _$1_major_ver := $$(word 1,$$(subst ., ,$$($1.VERSION)))
-  override _$1_minor_ver := $$(word 2,$$(subst ., ,$$($1.VERSION)))
+  override _$1_version := $$(strip $$($1.VERSION))
+  ifeq ($$(filter 0 1,$$(words $$(_$1_version))),)
+    $$(error $$(_msgErr)$1.VERSION: bad value$$(_end))
+  endif
+  override _$1_major_ver := $$(word 1,$$(subst ., ,$$(_$1_version)))
+  override _$1_minor_ver := $$(word 2,$$(subst ., ,$$(_$1_version)))
 endef
 $(foreach x,$(_lib_labels),$(eval $(call _check_lib_entry,$x)))
 
@@ -613,17 +617,17 @@ $(call _base_lib_name,$1,$2).dll.a
 override _gen_shared_lib_name =\
 $(if $(_windows),\
 $(call _gen_bin_name,$1,$2)$(if $(_$2_major_ver),-$(_$2_major_ver)).dll,\
-$(call _base_lib_name,$1,$2).so$(if $($2.VERSION),.$($2.VERSION)))
+$(call _base_lib_name,$1,$2).so$(if $(_$2_version),.$(_$2_version)))
 override _gen_shared_lib_linkname =\
 $(if $(_windows),\
 $(call _gen_bin_name,$1,$2)$(if $(_$2_major_ver),-$(_$2_major_ver)).dll,\
 $(call _base_lib_name,$1,$2).so$(if $(_$2_major_ver),.$(_$2_major_ver)))
 override _gen_shared_lib_aliases =\
 $(sort $(notdir $($2))$(_$1_sfx) $(if $(_windows),$(call _gen_bin_name,$1,$2),$(call _base_lib_name,$1,$2))) \
-$(if $(or $(if $(_windows),$(_$1_bdir),$(_$1_ldir)),$(call _dir,$($2)),$($2.VERSION)),$(notdir $($2))$(_$1_sfx)$(_libext))
+$(if $(or $(if $(_windows),$(_$1_bdir),$(_$1_ldir)),$(call _dir,$($2)),$(_$2_version)),$(notdir $($2))$(_$1_sfx)$(_libext))
 override _gen_shared_lib_links =\
 $(if $(_windows),,\
-$(if $($2.VERSION),$(call _base_lib_name,$1,$2).so \
+$(if $(_$2_version),$(call _base_lib_name,$1,$2).so \
 $(if $(_$2_minor_ver),$(call _base_lib_name,$1,$2).so.$(_$2_major_ver))))
 
 # environment specific setup
