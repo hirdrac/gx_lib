@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 59 (2024/2/10)
+# Makefile.mk - revision 59 (2024/2/11)
 # Copyright (C) 2024 Richard Bradley
 #
 # Additional contributions from:
@@ -83,7 +83,7 @@
 #  TEMPLATE<1-99>  file to generate (w/ template variables)
 #  TEMPLATE1.DEPS  used to create 'FILE1.DEPS'
 #  TEMPLATE1.CMD   used to create 'FILE1.CMD'
-#                  use of other vars (BUILD_TMP,DEP1,OUT,etc.) should be escaped
+#                  use of other vars (BUILD_TMP,DEP1,OUT,etc.) must be escaped
 #  TEMPLATE1.FILE1 values used for 'FILE1' creation
 #                  referenced by $(VALS) or $(VAL1),$(VAL2),etc. in template
 #
@@ -957,7 +957,7 @@ else ifneq ($(_build_env),)
 
     override _$1_xlibs := $$(call _format_libs,$$(_$1_libs) $$(_$1_req_libs))
 
-    # NOTE: LIBS before PACKAGES libs in case included static lib requires package
+    # NOTE: PACKAGES libs after LIBS in case included static lib requires package
     override _$1_xflags := $$(_$1_pkg_flags) $$(FLAGS_$$(_$$(ENV)_uc)) $$(_$1_flags)
     override _cxxflags_$$(ENV)-$1 := $$(strip $$(_$1_cxx_std) $$(call _$$(ENV)_opt,$1) $$(_$1_warn_cxx) $$(_$1_op_cxx_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_cxx_flags) $$(_$1_xflags))
     override _cflags_$$(ENV)-$1 := $$(strip $$(_$1_c_std) $$(call _$$(ENV)_opt,$1) $$(_$1_warn_c) $$(_$1_op_warn) $$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
