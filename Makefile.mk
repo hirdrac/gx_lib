@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 59 (2024/2/11)
+# Makefile.mk - revision 59 (2024/2/16)
 # Copyright (C) 2024 Richard Bradley
 #
 # Additional contributions from:
@@ -601,12 +601,12 @@ override _dir = $(filter-out ./,$(dir $1))
 
 # output target name generation macros - <1:build env> <2:label>
 override _gen_bin_name =\
-$(if $(call _dir,$($2)),$($2)$(_$1_sfx),$(_$1_bdir)$($2)$(_$1_bsfx))
+$(if $(call _dir,$($2)),$($2)$(_$1_sfx),$(_$1_bdir)$(notdir $($2))$(_$1_bsfx))
 override _gen_bin_aliases =\
-$(if $(or $(_$1_bdir),$(call _dir,$($2))),$(notdir $($2)$(_$1_sfx))) \
+$(if $(or $(_$1_bdir),$(call _dir,$($2))),$(notdir $($2))$(_$1_sfx)) \
 $(if $(_binext),$(call _gen_bin_name,$1,$2)$(_binext))
 override _base_lib_name=\
-$(if $(call _dir,$($2)),$($2)$(_$1_sfx),$(_$1_ldir)$($2)$(_$1_lsfx))
+$(if $(call _dir,$($2)),$($2)$(_$1_sfx),$(_$1_ldir)$(notdir $($2))$(_$1_lsfx))
 override _gen_static_lib_name =\
 $(call _base_lib_name,$1,$2).a
 override _gen_static_lib_aliases =\
