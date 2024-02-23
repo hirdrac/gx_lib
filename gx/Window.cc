@@ -44,22 +44,13 @@ namespace {
   static_assert(GLFW_MOUSE_BUTTON_7 == 6);
   static_assert(GLFW_MOUSE_BUTTON_8 == 7);
 
-  // **** Time global & support functions ****
-  using clock = std::chrono::steady_clock;
-  clock::time_point startTime;
-
-  inline void initStartTime() {
-    if (startTime.time_since_epoch().count() == 0) {
-      startTime = clock::now();
-    }
-  }
-
-  [[nodiscard]] inline int64_t usecSinceStart() {
-    return std::chrono::duration_cast<std::chrono::microseconds>(
-      clock::now() - startTime).count();
-  }
-
   // **** Helper Functions ****
+  [[nodiscard]] inline int64_t usecTime() {
+    const auto t = std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+      t.time_since_epoch()).count();
+  }
+
   [[nodiscard]] constexpr int glfwBool(bool val) {
     return val ? GLFW_TRUE : GLFW_FALSE; }
 
@@ -268,8 +259,6 @@ struct gx::WindowImpl
     if (!initGLFW()) {
       return false;
     }
-
-    initStartTime();
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
@@ -523,7 +512,7 @@ int Window::pollEvents()
     }
   }
 
-  _lastPollTime = usecSinceStart();
+  _lastPollTime = usecTime();
   return e;
 }
 
