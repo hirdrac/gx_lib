@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 59 (2024/2/16)
+# Makefile.mk - revision 60 (2024/2/25)
 # Copyright (C) 2024 Richard Bradley
 #
 # Additional contributions from:
@@ -947,6 +947,7 @@ else ifneq ($(_build_env),)
   override define _build_entry2  # <1:label>
     override _$1_req_pkgs := $$(foreach x,$$(_$1_libs) $$(_$1_objs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_pkgs)))
     override _$1_req_libs := $$(filter-out $1,$$(foreach x,$$(_$1_libs) $$(_$1_objs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_libs))))
+    override _$1_req_deps := $$(foreach x,$$(_$1_libs) $$(_$1_objs),$$(if $$(filter $$x,$$(_lib_labels)),$$(_$$x_deps)))
     override _$1_link_deps := $$(foreach x,$$(_$1_libs),$$(if $$(filter $$x,$$(_lib_labels)),$$(or $$(_$$x_shared_name),$$(_$$x_name))))
 
     override _$1_xpkgs := $$(sort $$(_$1_pkgs) $$(_$1_req_pkgs))
@@ -956,6 +957,7 @@ else ifneq ($(_build_env),)
     endif
 
     override _$1_xlibs := $$(call _format_libs,$$(_$1_libs) $$(_$1_req_libs))
+    override _$1_xdeps := $$(strip $$(_$1_deps) $$(_$1_req_deps))
 
     # NOTE: PACKAGES libs after LIBS in case included static lib requires package
     override _$1_xflags := $$(_$1_pkg_flags) $$(FLAGS_$$(_$$(ENV)_uc)) $$(_$1_flags)
@@ -966,7 +968,7 @@ else ifneq ($(_build_env),)
 
     override _$1_build := $$(ENV)-$1
     ifeq ($$(_src_path_$$(ENV)-$1),$$(_src_path_$$(ENV)))
-      ifeq ($$(_$1_deps),)
+      ifeq ($$(_$1_xdeps),)
         # if compile flags match then use a shared build path
         ifeq ($$(_cxxflags_$$(ENV)-$1),$$(_cxxflags_$$(ENV)-tests))
           ifeq ($$(_cflags_$$(ENV)-$1),$$(_cflags_$$(ENV)-tests))
@@ -1165,8 +1167,8 @@ override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(_ar) rcs '../../$$(_$1_name)
 override _$1_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1-static
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
-ifneq ($$(_$1_deps),)
-$$(_$1_all_objs): | $$(_$1_deps)
+ifneq ($$(_$1_xdeps),)
+$$(_$1_all_objs): | $$(_$1_xdeps)
 endif
 
 .PHONY: $$(_$1_aliases)
@@ -1186,8 +1188,8 @@ override _$1_shared_link_cmd := cd '$$(_$1_shared_build_dir)'; $$(call _do_link,
 override _$1_shared_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1-shared
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_shared_trigger),_$1_shared_link_cmd))
 
-ifneq ($$(_$1_deps),)
-$$(_$1_shared_objs): | $$(_$1_deps)
+ifneq ($$(_$1_xdeps),)
+$$(_$1_shared_objs): | $$(_$1_xdeps)
 endif
 
 .PHONY: $$(_$1_shared_aliases)
@@ -1206,8 +1208,8 @@ override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(call _do_link,$1,,../../$$(_
 override _$1_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
-ifneq ($$(_$1_deps),)
-$$(_$1_all_objs): | $$(_$1_deps)
+ifneq ($$(_$1_xdeps),)
+$$(_$1_all_objs): | $$(_$1_xdeps)
 endif
 
 .PHONY: $$(_$1_aliases)
@@ -1241,8 +1243,8 @@ override _$1_link_cmd := cd '$$(_$1_build_dir)'; $$(call _do_link,$1,,$$(_$1_nam
 override _$1_trigger := $$(_build_dir)/.$$(ENV)-cmd-$1
 $$(eval $$(call _rebuild_check_var,$$$$(_$1_trigger),_$1_link_cmd))
 
-ifneq ($$(_$1_deps),)
-$$(_$1_all_objs): | $$(_$1_deps)
+ifneq ($$(_$1_xdeps),)
+$$(_$1_all_objs): | $$(_$1_xdeps)
 endif
 
 $$(_$1_run): $$(_$1_all_objs) $$(_$1_other_objs) $$(_$1_link_deps) $$(_$1_trigger) $$(if $$(_$1_linker),$$(_build_dir)/.$$(_$1_linker)_ver) | $$(_build_goals)
