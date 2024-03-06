@@ -42,7 +42,8 @@ struct Entry {
 
 struct ImgSize { float width, height; };
 
-ImgSize calcSize(const gx::Window& win, const gx::Image& img, float scale)
+[[nodiscard]] ImgSize calcSize(
+  const gx::Window& win, const gx::Image& img, float scale)
 {
   const auto [width,height] = win.dimensions();
   float iw = float(width);
@@ -59,18 +60,19 @@ ImgSize calcSize(const gx::Window& win, const gx::Image& img, float scale)
   return {iw*scale, ih*scale};
 }
 
-int showUsage(char** argv)
+int showUsage(const char* const* argv)
 {
   println("Usage: ", argv[0], " [options] <image file(s)>");
   println("Options:");
-  println("  --width       Set window width");
-  println("  --height      Set window height");
-  println("  --fullscreen  Start in fullscreen mode");
-  println("  -h,--help     Show usage");
+  println("  --width=PIXELS             Set window width");
+  println("  --height=PIXELS            Set window height");
+  println("  --fullscreen               Start in fullscreen mode");
+  println("  --filter=(linear|nearest)  Image filter setting");
+  println("  -h,--help                  Show usage");
   return 0;
 }
 
-int errorUsage(char** argv)
+int errorUsage(const char* const* argv)
 {
   println_err("Try '", argv[0], " --help' for more information.");
   return -1;
@@ -87,15 +89,31 @@ int main(int argc, char* argv[])
 
   // command line processing
   bool startFullScreen = false;
+  gx::FilterType magFilter = gx::FILTER_NEAREST;
+  std::string val;
+
   std::vector<Entry> entries;
   for (gx::CmdLineParser p{argc, argv}; p; ++p) {
     if (p.option()) {
-      if (p.option(0,"width",winWidth)) {
-        // noop
-      } else if (p.option(0,"height",winHeight)) {
-        // noop
+      if (p.option(0,"width", winWidth)) {
+        if (winWidth <= 0) {
+          println_err("ERROR: invalid width");
+          return errorUsage(argv);
+        }
+      } else if (p.option(0,"height", winHeight)) {
+        if (winHeight <= 0) {
+          println_err("ERROR: invalid height");
+          return errorUsage(argv);
+        }
       } else if (p.option(0,"fullscreen")) {
         startFullScreen = true;
+      } else if (p.option(0,"filter", val)) {
+        if (val == "nearest") { magFilter = gx::FILTER_NEAREST; }
+        else if (val == "linear") { magFilter = gx::FILTER_LINEAR; }
+        else {
+          println_err("ERROR: unknown filter type '", val, "'");
+          return errorUsage(argv);
+        }
       } else if (p.option('h',"help")) {
         return showUsage(argv);
       } else {
@@ -139,7 +157,7 @@ int main(int argc, char* argv[])
 
   int entryNo = 0;
   for (Entry& e : entries) {
-    e.tex.init(win, e.img, 6, gx::FILTER_LINEAR, gx::FILTER_NEAREST);
+    e.tex.init(win, e.img, 6, gx::FILTER_LINEAR, magFilter);
   }
 
   gx::DrawList dl;
