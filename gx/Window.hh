@@ -171,7 +171,10 @@ class gx::Window
   void setMouseShape(MouseShapeEnum shape);
   void setMousePos(Vec2 pos);
   void setSamples(int samples);
+
   bool open(int flags = WINDOW_RESIZABLE);
+  [[nodiscard]] bool isOpen() const;
+  [[nodiscard]] explicit operator bool() const { return isOpen(); }
 
   [[nodiscard]] int width() const;
   [[nodiscard]] int height() const;

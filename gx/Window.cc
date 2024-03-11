@@ -481,6 +481,8 @@ void Window::setSamples(int samples) {
   _impl->setSamples(samples); }
 bool Window::open(int flags) {
   return _impl->open(flags); }
+bool Window::isOpen() const {
+  return _impl->_renderer != nullptr; }
 int Window::width() const {
   return _impl->_width; }
 int Window::height() const {
