@@ -1,6 +1,6 @@
 //
 // gx/Font.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // Create texture atlas for font glyph rendering
 //
@@ -69,6 +69,9 @@ class gx::Font
     // texture atlas created by engine
 
   [[nodiscard]] const auto& glyphs() const { return _glyphs; }
+
+  [[nodiscard]] bool empty() const { return _glyphs.empty(); }
+  [[nodiscard]] explicit operator bool() const { return !empty(); }
 
   [[nodiscard]] const Glyph* findGlyph(int code) const {
     auto i = _glyphs.find(code);
