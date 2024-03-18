@@ -129,7 +129,8 @@ class gx::CmdLineParser
     static_assert(!std::is_same_v<T,bool>);
     if constexpr (std::is_arithmetic_v<T>) {
       if (v.empty()) { return false; }
-      auto err = std::from_chars(&v[0], &v[v.size()], result);
+      const char* d = v.data();
+      const auto err = std::from_chars(d, d + v.size(), result);
       return err.ec == std::errc{};
     } else {
       result = v;
