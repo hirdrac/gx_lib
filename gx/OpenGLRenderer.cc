@@ -1299,16 +1299,19 @@ void OpenGLRenderer<VER>::setGLCapabilities(int32_t cap)
 std::unique_ptr<Renderer> gx::makeOpenGLRenderer(GLFWwindow* win)
 {
   setCurrentContext(win);
-  if (!GLSetupContext(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
+  if (!GLSetupContext(reinterpret_cast<GLADloadfunc>(glfwGetProcAddress))) {
     return {};
   }
 
+  GX_LOG_INFO("GLAD generator version: ", GLAD_GENERATOR_VERSION);
   GX_LOG_INFO("GL_VENDOR: ", getGLString(GL_VENDOR));
   GX_LOG_INFO("GL_RENDERER: ", getGLString(GL_RENDERER));
   GX_LOG_INFO("GL_VERSION: ", getGLString(GL_VERSION));
   GX_LOG_INFO("GL_SHADING_LANGUAGE_VERSION: ", getGLString(GL_SHADING_LANGUAGE_VERSION));
 
-  const int ver = (GLVersion.major * 10) + GLVersion.minor;
+  const int major_ver = GLAD_VERSION_MAJOR(GLVersion);
+  const int minor_ver = GLAD_VERSION_MINOR(GLVersion);
+  const int ver = (major_ver * 10) + minor_ver;
   if (ver < 33) {
     GX_LOG_ERROR("OpenGL 3.3 or higher is required");
     return {};

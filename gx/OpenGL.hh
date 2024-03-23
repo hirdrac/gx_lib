@@ -1,18 +1,21 @@
 //
 // gx/OpenGL.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // OpenGL API include & utility functions
 //
 
 #pragma once
-#include "3rd/glad.h"
+#include "3rd/glad_gl.h"
 #include <string>
 #include <string_view>
 
 namespace gx {
 
 // **** Globals ****
+inline int GLVersion = 0;
+  // version of initialized GL library (0 if uninitialized)
+
 inline bool GLInitialized = false;
   // check if GL calls are safe (mainly for destructors)
 
@@ -27,7 +30,7 @@ inline GLuint GLLastRenderbufferBind = 0;
 
 
 // **** Functions ****
-bool GLSetupContext(GLADloadproc loadProc);
+bool GLSetupContext(GLADloadfunc loadProc);
   // call after GL context creation to setup context
   // returns true on success
 

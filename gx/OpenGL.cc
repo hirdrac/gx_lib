@@ -1,6 +1,6 @@
 //
 // gx/OpenGL.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "OpenGL.hh"
@@ -15,6 +15,7 @@ static void GLCleanUp()
   // flag is checked by GL class destructors to prevent the calling of OpenGL
   // functions at process shutdown when a context no long exists
   GLInitialized = false;
+  GLVersion = 0;
 }
 
 static constexpr const char* GLSourceStr(GLenum source)
@@ -69,7 +70,7 @@ static constexpr LogLevel GLSeverityLogLevel(GLenum severity)
   }
 }
 
-static void APIENTRY GLDebugCB(
+static void GLDebugCB(
   GLenum source, GLenum type, GLuint id, GLenum severity,
   GLsizei length, const GLchar* message, const void* userParam)
 {
@@ -81,10 +82,11 @@ static void APIENTRY GLDebugCB(
 
 
 // **** Functions ****
-bool gx::GLSetupContext(GLADloadproc loadProc)
+bool gx::GLSetupContext(GLADloadfunc loadProc)
 {
   if (!GLInitialized) {
-    if (gladLoadGLLoader(loadProc) == 0) {
+    GLVersion = gladLoadGL(loadProc);
+    if (GLVersion == 0) {
       GX_LOG_ERROR("failed to setup GL context");
       return false;
     }
