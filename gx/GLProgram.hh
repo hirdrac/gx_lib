@@ -1,6 +1,6 @@
 //
 // gx/GLProgram.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // wrapper for OpenGL program object
 //
@@ -19,7 +19,7 @@ class gx::GLProgram
 {
  public:
   GLProgram() = default;
-  ~GLProgram() { if (GLInitialized) cleanup(); }
+  ~GLProgram() { if (GLVersion != 0) cleanup(); }
 
   // prevent copy/assignment
   GLProgram(const GLProgram&) = delete;

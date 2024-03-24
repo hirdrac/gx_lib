@@ -1,6 +1,6 @@
 //
 // gx/GLVertexArray.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // wrapper for OpenGL vertex array object
 //
@@ -21,7 +21,7 @@ class gx::GLVertexArray
   using type = GLVertexArray<VER>;
 
   GLVertexArray() = default;
-  ~GLVertexArray() { if (GLInitialized) cleanup(); }
+  ~GLVertexArray() { if (GLVersion != 0) cleanup(); }
 
   // prevent copy/assignment
   GLVertexArray(const type&) = delete;

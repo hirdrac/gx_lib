@@ -1,6 +1,6 @@
 //
 // gx/GLBuffer.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // wrapper for OpenGL buffer object
 //
@@ -20,7 +20,7 @@ class gx::GLBuffer
   using type = GLBuffer<VER>;
 
   GLBuffer() = default;
-  ~GLBuffer() { if (GLInitialized) cleanup(); }
+  ~GLBuffer() { if (GLVersion != 0) cleanup(); }
 
   // prevent copy/assignment
   GLBuffer(const type&) = delete;

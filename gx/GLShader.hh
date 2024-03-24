@@ -1,6 +1,6 @@
 //
 // gx/GLShader.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // wrapper for OpenGL shader object
 //
@@ -18,7 +18,7 @@ class gx::GLShader
 {
  public:
   GLShader() = default;
-  ~GLShader() { if (GLInitialized) cleanup(); }
+  ~GLShader() { if (GLVersion != 0) cleanup(); }
 
   // prevent copy/assignment
   GLShader(const GLShader&) = delete;

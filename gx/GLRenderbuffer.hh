@@ -1,6 +1,6 @@
 //
 // gx/GLRenderbuffer.hh
-// Copyright (C) 2023 by Richard Bradley
+// Copyright (C) 2024 by Richard Bradley
 //
 // wrapper for OpenGL renderbuffer object
 //
@@ -19,7 +19,7 @@ class gx::GLRenderbuffer
   using type = GLRenderbuffer<VER>;
 
   GLRenderbuffer() = default;
-  ~GLRenderbuffer() { if (GLInitialized) cleanup(); }
+  ~GLRenderbuffer() { if (GLVersion != 0) cleanup(); }
 
   // prevent copy/assignment
   GLRenderbuffer(const type&) = delete;

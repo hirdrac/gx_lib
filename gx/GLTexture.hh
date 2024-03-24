@@ -1,6 +1,6 @@
 //
 // gx/GLTexture.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // wrappers for OpenGL texture objects
 //
@@ -792,7 +792,7 @@ struct gx::GLTextureHandle
   GLuint id = 0;
 
   GLTextureHandle() = default;
-  ~GLTextureHandle() { if (GLInitialized) cleanup(); }
+  ~GLTextureHandle() { if (GLVersion != 0) cleanup(); }
 
   // prevent copy/assignment
   GLTextureHandle(const type&) = delete;

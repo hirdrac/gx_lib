@@ -14,7 +14,6 @@ static void GLCleanUp()
 {
   // flag is checked by GL class destructors to prevent the calling of OpenGL
   // functions at process shutdown when a context no long exists
-  GLInitialized = false;
   GLVersion = 0;
 }
 
@@ -84,7 +83,7 @@ static void GLDebugCB(
 // **** Functions ****
 bool gx::GLSetupContext(GLADloadfunc loadProc)
 {
-  if (!GLInitialized) {
+  if (GLVersion == 0) {
     GLVersion = gladLoadGL(loadProc);
     if (GLVersion == 0) {
       GX_LOG_ERROR("failed to setup GL context");
@@ -92,7 +91,6 @@ bool gx::GLSetupContext(GLADloadfunc loadProc)
     }
 
     std::atexit(GLCleanUp);
-    GLInitialized = true;
   }
 
   GLint flags = 0;

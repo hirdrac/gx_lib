@@ -1,6 +1,6 @@
 //
 // gx/GLFramebuffer.hh
-// Copyright(C) 2023 by Richard Bradley
+// Copyright(C) 2024 by Richard Bradley
 //
 // wrapper for OpenGL framebuffer object
 //
@@ -28,7 +28,7 @@ class gx::GLFramebuffer
   using type = GLFramebuffer<VER>;
 
   GLFramebuffer() = default;
-  ~GLFramebuffer() { if (GLInitialized) cleanup(); }
+  ~GLFramebuffer() { if (GLVersion != 0) cleanup(); }
 
   // prevent copy/assignment
   GLFramebuffer(const type&) = delete;

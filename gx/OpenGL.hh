@@ -16,9 +16,6 @@ namespace gx {
 inline int GLVersion = 0;
   // version of initialized GL library (0 if uninitialized)
 
-inline bool GLInitialized = false;
-  // check if GL calls are safe (mainly for destructors)
-
 inline GLuint GLLastArrayBufferBind = 0;
 inline GLuint GLLastCopyWriteBufferBind = 0;
 inline GLuint GLLastVertexArrayBind = 0;
