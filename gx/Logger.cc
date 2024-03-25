@@ -9,6 +9,8 @@
 // TODO: naming threads
 //   - at thread creation, thread ID given short name that is
 //     used for logging instead of ID (main, render, log)
+// TODO: remove source dir prefix ('src/') from logged filename
+// TODO: replace clock_gettime() with std::chrono code?
 
 #include "Logger.hh"
 #include "ThreadID.hh"
@@ -123,43 +125,42 @@ void Logger::rotate()
   _impl->rotate();
 }
 
-void Logger::header(std::ostringstream& os, LogLevel lvl)
+std::ostringstream Logger::logStream(LogLevel lvl)
 {
   timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
 
   const std::tm td = *std::localtime(&ts.tv_sec);
   char str[32];
-  int len;
+  int len = 0;
 
   if (_separateDate) {
     const int date = ((td.tm_year + 1900) * 10000)
       + ((td.tm_mon + 1) * 100) + td.tm_mday;
     if (_lastDate != date) {
       _lastDate = date;
-      len = snprintf(str, sizeof(str), "-- %d-%02d-%02d --\n",
+      len = snprintf(str, sizeof(str), "-- %d-%02d-%02d --\n", // 17
                      td.tm_year + 1900, td.tm_mon + 1, td.tm_mday);
-      os.write(str, std::streamsize(len));
     }
   } else {
-    len = snprintf(str, sizeof(str), "%d-%02d-%02d ",
+    len = snprintf(str, sizeof(str), "%d-%02d-%02d ", // 11
                    td.tm_year + 1900, td.tm_mon + 1, td.tm_mday);
-    os.write(str, std::streamsize(len));
   }
 
-  len = snprintf(str, sizeof(str), "%02d:%02d:%02d",
-                 td.tm_hour, td.tm_min, td.tm_sec);
-  os.write(str, std::streamsize(len));
-
+  len += snprintf(str + len, sizeof(str) - len, "%02d:%02d:%02d", // 8
+                  td.tm_hour, td.tm_min, td.tm_sec);
   if (_showMS) {
-    len = snprintf(str, sizeof(str), ".%03ld", ts.tv_nsec / 1000000);
-    os.write(str, std::streamsize(len));
+    len += snprintf(str + len, sizeof(str) - len, ".%03ld", // 4
+                    ts.tv_nsec / 1000000);
   }
 
+  std::ostringstream os;
+  os.write(str, std::streamsize(len));
   os << levelStr(lvl);
+  return os;
 }
 
-void Logger::logMsg(std::ostringstream& os, const char* file, int line)
+void Logger::logMsg(std::ostringstream& os, std::string_view file, int line)
 {
   // footer
   os << " (";

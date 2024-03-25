@@ -45,9 +45,8 @@ class gx::Logger
 
   // log method
   template<typename... Args>
-  void log(LogLevel lvl, const char* file, int line, const Args&... args) {
-    std::ostringstream os;
-    header(os, lvl);
+  void log(LogLevel lvl, std::string_view file, int line, const Args&... args) {
+    auto os = logStream(lvl);
     ((os << args),...);
     logMsg(os, file, line);
   }
@@ -60,10 +59,10 @@ class gx::Logger
   bool _separateDate = true;
 
   // methods
-  void header(std::ostringstream& os, LogLevel lvl);
-  void logMsg(std::ostringstream& os, const char* file, int line);
+  [[nodiscard]] std::ostringstream logStream(LogLevel lvl);
+  void logMsg(std::ostringstream& os, std::string_view file, int line);
 
-  // disable copy/assignment
+  // disable copy/assignment/move
   Logger(const Logger&) = delete;
   Logger& operator=(const Logger&) = delete;
 };
