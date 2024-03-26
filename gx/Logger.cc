@@ -147,10 +147,10 @@ std::ostringstream Logger::logStream(LogLevel lvl)
                    td.tm_year + 1900, td.tm_mon + 1, td.tm_mday);
   }
 
-  len += snprintf(str + len, sizeof(str) - len, "%02d:%02d:%02d", // 8
+  len += snprintf(str + len, sizeof(str) - size_t(len), "%02d:%02d:%02d", // 8
                   td.tm_hour, td.tm_min, td.tm_sec);
   if (_showMS) {
-    len += snprintf(str + len, sizeof(str) - len, ".%03ld", // 4
+    len += snprintf(str + len, sizeof(str) - size_t(len), ".%03ld", // 4
                     ts.tv_nsec / 1000000);
   }
 

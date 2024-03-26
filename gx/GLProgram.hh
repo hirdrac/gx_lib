@@ -132,12 +132,12 @@ std::string gx::GLProgram::infoLog() const
   if (logLen <= 0) { return {}; }
 
   GLsizei len = 0;
-  //auto tmp = std::make_unique<char[]>(logLen);
+  auto tmp = std::make_unique<char[]>(size_t(logLen));
   //char* tmp = (char*)__builtin_alloca(logLen);
-  char tmp[logLen];
-  GX_GLCALL(glGetProgramInfoLog, _prog, logLen, &len, tmp);
+  //char tmp[logLen];
+  GX_GLCALL(glGetProgramInfoLog, _prog, logLen, &len, tmp.get());
 
-  return {tmp, std::size_t(len)};
+  return {tmp.get(), std::size_t(len)};
 }
 
 GLint gx::GLProgram::getAttribLocation(const char* name) const
