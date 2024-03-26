@@ -141,7 +141,7 @@ std::string gx::GLErrorStr(GLenum error)
   }
 }
 
-int gx::GLCheckErrors(std::string_view msg, const char* file, int line)
+int gx::GLCheckErrors(std::string_view msg, std::string_view file, int line)
 {
   int count = 0;
   GLenum error;

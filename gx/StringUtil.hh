@@ -1,10 +1,11 @@
 //
 // gx/StringUtil.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #pragma once
 #include <string>
+#include <string_view>
 #include <sstream>
 #include <limits>
 #include <type_traits>
@@ -14,7 +15,7 @@
 namespace gx
 {
   template<typename... Args>
-  [[nodiscard]] inline std::string concat(const Args&... args)
+  [[nodiscard]] std::string concat(const Args&... args)
   {
     std::ostringstream os;
     ((os << args),...);
@@ -52,7 +53,7 @@ namespace gx
     return ptr;
   }
 
-  [[nodiscard]] inline std::string_view trimSpaces(std::string_view str)
+  [[nodiscard]] constexpr std::string_view trimSpaces(std::string_view str)
   {
     std::size_t n = 0, len = str.length();
     while (len > 0 && str[n] == ' ') { ++n; --len; }

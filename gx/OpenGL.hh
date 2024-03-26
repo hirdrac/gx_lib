@@ -34,8 +34,8 @@ bool GLSetupContext(GLADloadfunc loadProc);
 void GLClearState();
   // call after every frame to reset GL state
 
-int GLCheckErrors(std::string_view msg, const char* file = __FILE__,
-		  int line = __LINE__);
+int GLCheckErrors(std::string_view msg, std::string_view file = __FILE__,
+                  int line = __LINE__);
   // check for and log all OpenGL errors
   // returns number of errors found
 
