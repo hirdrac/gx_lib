@@ -83,12 +83,12 @@ std::string gx::GLShader::infoLog()
   if (logLen <= 0) { return {}; }
 
   GLsizei len = 0;
-  //auto tmp = std::make_unique<char[]>(logLen);
+  auto tmp = std::make_unique<char[]>(std::size_t(logLen));
   //char* tmp = (char*)__builtin_alloca(logLen);
-  char tmp[logLen];
-  GX_GLCALL(glGetShaderInfoLog, _shader, logLen, &len, tmp);
+  //char tmp[logLen];
+  GX_GLCALL(glGetShaderInfoLog, _shader, logLen, &len, tmp.get());
 
-  return {tmp, std::size_t(len)};
+  return {tmp.get(), std::size_t(len)};
 }
 
 bool gx::GLShader::compileStatus()
