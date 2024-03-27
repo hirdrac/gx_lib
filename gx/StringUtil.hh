@@ -26,7 +26,7 @@ namespace gx
   [[nodiscard]] std::string formatInt(IntType n, char separator = ',')
   {
     static_assert(std::is_integral_v<IntType>);
-    if (n == 0) { return "0"; }
+    if (n == 0) { return {"0", 1ul}; }
 
     uint64_t v;
     static_assert(sizeof(IntType) <= sizeof(v));
@@ -40,8 +40,8 @@ namespace gx
     }
 
     char tmp[32];
-    char* ptr = &tmp[sizeof(tmp) - 1];
-    *ptr = '\0';
+    char* end = tmp + sizeof(tmp);
+    char* ptr = end;
 
     int i = 0;
     for (; v > 0; v /= 10) {
@@ -50,7 +50,7 @@ namespace gx
     }
 
     if (n < 0) { *(--ptr) = '-'; }
-    return ptr;
+    return {ptr, end};
   }
 
   [[nodiscard]] constexpr std::string_view trimSpaces(std::string_view str)
