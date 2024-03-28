@@ -1,6 +1,6 @@
 //
 // gx/Image.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // 8-bits per channel variable channel image
 //
@@ -26,7 +26,7 @@ class gx::Image
   Image(Image&&) noexcept = default;
   Image& operator=(Image&&) noexcept = default;
 
-
+  // init methods
   bool init(int width, int height, int channels);
   bool init(int width, int height, int channels,
 	    const uint8_t* data, bool copy);
@@ -38,6 +38,8 @@ class gx::Image
 
   bool loadFromMemory(const void* mem, std::size_t memSize);
 
+  // accessors
+  [[nodiscard]] explicit operator bool() const { return _data != nullptr; }
   [[nodiscard]] int width() const { return _width; }
   [[nodiscard]] int height() const { return _height; }
   [[nodiscard]] int channels() const { return _channels; }
@@ -53,7 +55,7 @@ class gx::Image
   void stamp(int x, int y, const Glyph& g);
 
  private:
-  const uint8_t* _data;
+  const uint8_t* _data = nullptr;
   std::unique_ptr<uint8_t[]> _storage;
-  int _width, _height, _channels;
+  int _width = 0, _height = 0, _channels = 0;
 };
