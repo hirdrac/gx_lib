@@ -1,6 +1,6 @@
 //
 // gx/Matrix3D.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // 4x4 matrix template type/functions for 3D calculations
 //
@@ -34,7 +34,7 @@ class gx::Matrix4x4
   using size_type = unsigned int;
 
 
-  Matrix4x4(NoInit_t) { }
+  explicit Matrix4x4(NoInit_t) { }
 
   constexpr Matrix4x4(ZeroInit_t)
     : Matrix4x4{0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0} { }
@@ -44,8 +44,6 @@ class gx::Matrix4x4
   constexpr Matrix4x4(T a, T b, T c, T d, T e, T f, T g, T h,
 		      T i, T j, T k, T l, T m, T n, T o, T p)
     : _val{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p} { }
-
-  type& operator=(NoInit_t) = delete;
 
 
   // Operators
