@@ -20,12 +20,6 @@ class gx::Image
  public:
   Image() = default;
 
-  // prevent copy but allow move
-  Image(const Image&) = delete;
-  Image& operator=(const Image&) = delete;
-  Image(Image&&) noexcept = default;
-  Image& operator=(Image&&) noexcept = default;
-
   // init methods
   bool init(int width, int height, int channels);
   bool init(int width, int height, int channels,
