@@ -40,7 +40,8 @@ class gx::Vector2
 
   // Operators
   [[nodiscard]] constexpr T& operator[](size_type i) { return _val[i]; }
-  [[nodiscard]] constexpr T  operator[](size_type i) const { return _val[i]; }
+  [[nodiscard]] constexpr const T& operator[](size_type i) const {
+    return _val[i]; }
 
   constexpr type& operator+=(const type& v) {
     x += v.x; y += v.y; return *this; }
@@ -107,7 +108,8 @@ class gx::Vector3
 
   // Operators
   [[nodiscard]] constexpr T& operator[](size_type i) { return _val[i]; }
-  [[nodiscard]] constexpr T  operator[](size_type i) const { return _val[i]; }
+  [[nodiscard]] constexpr const T& operator[](size_type i) const {
+    return _val[i]; }
 
   constexpr type& operator+=(const type& v) {
     x += v.x; y += v.y; z += v.z; return *this; }
@@ -188,7 +190,8 @@ class gx::Vector4
 
   // Operators
   [[nodiscard]] constexpr T& operator[](size_type i) { return _val[i]; }
-  [[nodiscard]] constexpr T  operator[](size_type i) const { return _val[i]; }
+  [[nodiscard]] constexpr const T& operator[](size_type i) const {
+    return _val[i]; }
 
   constexpr type& operator+=(const type& v) {
     x += v.x; y += v.y; z += v.z; w += v.w; return *this; }
