@@ -312,7 +312,7 @@ int main(int argc, char** argv)
                 gx::concat("Page ", page+1, " of ", maxPage+1));
       }
 
-      win.draw(&dl);
+      win.draw(dl);
       redraw = false;
     }
 

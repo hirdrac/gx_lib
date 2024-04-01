@@ -247,7 +247,7 @@ int main(int argc, char** argv)
         ++lineNo;
       }
 
-      win.draw(&dl);
+      win.draw(dl);
       redraw = false;
     }
     win.renderFrame();

@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
         }
       }
 
-      win.draw(&dl);
+      win.draw(dl);
     }
 
     win.renderFrame();

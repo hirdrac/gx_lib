@@ -1,6 +1,6 @@
 //
 // demo_gui.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "gx/Window.hh"
@@ -147,7 +147,7 @@ int main(int argc, char* argv[])
     // draw frame
     if (win.resized() || needRedraw) {
       // something on screen changed - recreate GL buffers
-      win.draw(&gui.drawList());
+      win.draw(gui.drawList());
       needRedraw = false;
     }
     win.renderFrame();

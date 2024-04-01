@@ -63,7 +63,7 @@ int main(int argc, char** argv)
       dc.texture(t);
       dc.rectangle({0, 0, float(width), float(height)}, {0,0}, {1,1});
 
-      win.draw(&dl);
+      win.draw(dl);
     }
 
     win.renderFrame();

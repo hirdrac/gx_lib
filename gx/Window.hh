@@ -232,7 +232,7 @@ class gx::Window
     //   until the Window is destroyed.
 
   template<typename... Args>
-  void draw(Args&&... args) { renderer().draw({args...}); }
+  void draw(Args&&... args) { renderer().draw({&args...}); }
 
   void renderFrame() { renderer().renderFrame(_lastPollTime); }
 
