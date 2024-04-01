@@ -283,11 +283,11 @@ class gx::OpenGLRenderer final : public gx::Renderer
     Mat4 viewT{INIT_IDENTITY};
     Mat4 projT{INIT_IDENTITY};
     Color modColor = WHITE;
-    Vec3 lightPos{INIT_ZERO};
-    uint32_t pad0;
-    Vec3 lightA{INIT_ZERO};
-    uint32_t pad1;
-    Vec3 lightD{INIT_ZERO};
+    Vec3 lightPos;
+    uint32_t pad0 = 0;
+    Vec3 lightA;
+    uint32_t pad1 = 0;
+    Vec3 lightD;
   };
 
   GLVertexArray<VER> _vao;
@@ -338,7 +338,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   };
   static_assert(sizeof(OpEntry) == 4);
 
-  Mat4 _orthoT{INIT_ZERO};
+  Mat4 _orthoT;
   std::vector<OpEntry> _opData;
   GLOperation _lastOp = OP_null;
   int _currentGLCap = -1; // current GL capability state
@@ -695,7 +695,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
     uint32_t color = 0;
     TextureID tid = 0;
     uint32_t normal = 0;
-    Vec3 linePt{INIT_ZERO};
+    Vec3 linePt;
 
     const DrawEntry* data     = dlPtr->data();
     const DrawEntry* data_end = data + dlPtr->size();

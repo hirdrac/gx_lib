@@ -151,8 +151,8 @@ int main(int argc, char* argv[])
 
   int zoom = 100;
   float imgScale = 1.0f;
-  gx::Vec2 imgOffset{gx::INIT_ZERO};
-  gx::Vec2 pressPos{gx::INIT_ZERO};
+  gx::Vec2 imgOffset;
+  gx::Vec2 pressPos;
   const int lastNo = int(entries.size()) - 1;
 
   int entryNo = 0;

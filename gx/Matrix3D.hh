@@ -36,7 +36,7 @@ class gx::Matrix4x4
 
   explicit Matrix4x4(NoInit_t) { }
 
-  constexpr Matrix4x4(ZeroInit_t)
+  constexpr Matrix4x4()
     : Matrix4x4{0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0} { }
   constexpr Matrix4x4(IdentityInit_t)
     : Matrix4x4{1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1} { }

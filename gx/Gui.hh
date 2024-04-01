@@ -1,6 +1,6 @@
 //
 // gx/Gui.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // Graphical user interface rendering & event handling
 //
@@ -161,7 +161,7 @@ class gx::Gui
 
   ElemID _heldID = 0;
   GuiElemType _heldType = GUI_NULL;
-  Vec2 _heldPt{INIT_ZERO};
+  Vec2 _heldPt;
   int64_t _heldTime = 0;
   int64_t _repeatDelay = -1;        // negative value disables repeat
   std::size_t _focusCursorPos = 0;  // character pos of cursor
