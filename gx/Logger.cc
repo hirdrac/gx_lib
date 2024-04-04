@@ -24,15 +24,19 @@ using namespace gx;
 
 
 // **** Helper Functions ****
+[[nodiscard]] static int dateNum(const std::tm& td)
+{
+  return ((td.tm_year + 1900) * 10000) + ((td.tm_mon + 1) * 100) + td.tm_mday;
+}
+
 [[nodiscard]] static std::string fileTime()
 {
   const std::time_t t = std::time(nullptr);
-  const std::tm* td = std::localtime(&t);
+  const std::tm td = *std::localtime(&t);
   char str[32];
   const int len = snprintf(
-    str, sizeof(str), "-%d%02d%02d_%02d%02d%02d",
-    td->tm_year + 1900, td->tm_mon + 1, td->tm_mday,
-    td->tm_hour, td->tm_min, td->tm_sec);
+    str, sizeof(str), "-%d_%02d%02d%02d",
+    dateNum(td), td.tm_hour, td.tm_min, td.tm_sec);
   return {str, std::size_t(len)};
 }
 
@@ -69,15 +73,12 @@ class gx::LoggerImpl
     _os = &_fileStream;
   }
 
-  void log(const char* str, std::streamsize len)
+  void log(std::string_view s)
   {
     const std::lock_guard lg{_mutex};
-    _os->write(str, len);
+    _os->write(s.data(), std::streamsize(s.size()));
     _os->flush();
   }
-
-  void log(std::string_view s) {
-    return log(s.data(), std::streamsize(s.size())); }
 
   void rotate()
   {
@@ -135,8 +136,7 @@ std::ostringstream Logger::logStream(LogLevel lvl)
   int len = 0;
 
   if (_separateDate) {
-    const int date = ((td.tm_year + 1900) * 10000)
-      + ((td.tm_mon + 1) * 100) + td.tm_mday;
+    const int date = dateNum(td);
     if (_lastDate != date) {
       _lastDate = date;
       len = snprintf(str, sizeof(str), "-- %d-%02d-%02d --\n", // 17
@@ -155,20 +155,19 @@ std::ostringstream Logger::logStream(LogLevel lvl)
                     ts.tv_nsec / 1000000);
   }
 
-  std::ostringstream os;
-  os.write(str, std::streamsize(len));
-  os << levelStr(lvl);
-  return os;
+  std::ostringstream ss;
+  ss.write(str, std::streamsize(len)) << levelStr(lvl);
+  return ss;
 }
 
-void Logger::logMsg(std::ostringstream& os, std::string_view file, int line)
+void Logger::logMsg(std::ostringstream& ss, std::string_view file, int line)
 {
   // footer
-  os << " (";
+  ss << " (";
   const auto tid = getThreadID();
-  if (tid != mainThreadID) { os << "t=" << tid << ' '; }
-  os << file << ':' << line << ")\n";
+  if (tid != mainThreadID) { ss << "t=" << tid << ' '; }
+  ss << file << ':' << line << ")\n";
 
   // output to stream
-  _impl->log(os.str());
+  _impl->log(ss.str());
 }
