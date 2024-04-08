@@ -35,7 +35,7 @@ class gx::GLShader
   [[nodiscard]] GLuint id() const { return _shader; }
 
   // methods
-  template<typename... SrcArgs>
+  template<class... SrcArgs>
   inline GLuint init(GLenum type, SrcArgs... src);
 
   GLuint release() noexcept { return std::exchange(_shader, 0); }
@@ -62,7 +62,7 @@ gx::GLShader& gx::GLShader::operator=(GLShader&& s) noexcept
   return *this;
 }
 
-template<typename... SrcArgs>
+template<class... SrcArgs>
 GLuint gx::GLShader::init(GLenum type, SrcArgs... src)
 {
   cleanup();

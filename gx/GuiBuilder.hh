@@ -16,24 +16,24 @@ namespace gx {
   // **** GuiElem functions ****
 
   // HFrame
-  template<typename... Elems>
+  template<class... Elems>
   [[nodiscard]] inline GuiElem guiHFrame(const Elems&... elems) {
     return {GUI_HFRAME, ALIGN_TOP_LEFT, 0, {elems...}};
   }
 
-  template<typename... Elems>
+  template<class... Elems>
   [[nodiscard]] inline GuiElem guiHFrame(
     AlignEnum align, const Elems&... elems) {
     return {GUI_HFRAME, align, 0, {elems...}};
   }
 
   // VFrame
-  template<typename... Elems>
+  template<class... Elems>
   [[nodiscard]] inline GuiElem guiVFrame(const Elems&... elems) {
     return {GUI_VFRAME, ALIGN_TOP_LEFT, 0, {elems...}};
   }
 
-  template<typename... Elems>
+  template<class... Elems>
   [[nodiscard]] inline GuiElem guiVFrame(
     AlignEnum align, const Elems&... elems) {
     return {GUI_VFRAME, align, 0, {elems...}};
@@ -262,7 +262,7 @@ namespace gx {
   }
 
   // Menu
-  template<typename... Elems>
+  template<class... Elems>
   [[nodiscard]] inline GuiElem guiMenu(
     EventID id, std::string_view text, const Elems&... items)
   {
@@ -279,7 +279,7 @@ namespace gx {
     return e;
   }
 
-  template<typename... Elems>
+  template<class... Elems>
   [[nodiscard]] inline GuiElem guiSubMenu(
     std::string_view text, const Elems&... items)
   {
@@ -289,7 +289,7 @@ namespace gx {
   }
 
   // List Select
-  template<typename... Elems>
+  template<class... Elems>
   [[nodiscard]] inline GuiElem guiListSelect(EventID id, const Elems&... items)
   {
     GuiElem e{GUI_LISTSELECT, ALIGN_TOP_LEFT, id,
@@ -299,7 +299,7 @@ namespace gx {
     return e;
   }
 
-  template<typename... Elems>
+  template<class... Elems>
   [[nodiscard]] inline GuiElem guiListSelect(
     EventID id, AlignEnum align, const Elems&... items)
   {

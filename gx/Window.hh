@@ -231,7 +231,7 @@ class gx::Window
     // NOTE: Renderer is available once open() is called and will be available
     //   until the Window is destroyed.
 
-  template<typename... Args>
+  template<class... Args>
   void draw(Args&&... args) { renderer().draw({&args...}); }
 
   void renderFrame() { renderer().renderFrame(_lastPollTime); }

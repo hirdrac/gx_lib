@@ -14,7 +14,7 @@
 
 namespace gx
 {
-  template<typename... Args>
+  template<class... Args>
   [[nodiscard]] std::string concat(const Args&... args)
   {
     std::ostringstream os;
@@ -22,7 +22,7 @@ namespace gx
     return os.str();
   }
 
-  template<typename IntType>
+  template<class IntType>
   [[nodiscard]] std::string formatInt(IntType n, char separator = ',')
   {
     static_assert(std::is_integral_v<IntType>);

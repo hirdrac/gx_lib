@@ -95,7 +95,7 @@ namespace {
     return fshader;
   }
 
-  template<int VER, typename... Shader>
+  template<int VER, class... Shader>
   [[nodiscard]] GLProgram makeProgram(const Shader&... shaders)
   {
     if (!(shaders && ...)) { return {}; }

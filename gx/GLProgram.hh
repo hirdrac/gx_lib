@@ -67,7 +67,7 @@ class gx::GLProgram
   void use() { GX_GLCALL(glUseProgram, _prog); }
 
   // variable arg overloads
-  template<typename... Args>
+  template<class... Args>
   bool link(const Args&... args) {
     (attach(args),...);
     const bool status = link();
@@ -75,7 +75,7 @@ class gx::GLProgram
     return status;
   }
 
-  template<typename... Args>
+  template<class... Args>
   GLuint init(const Args&... args) {
     return (init() && link(args...)) ? _prog : 0;
   }

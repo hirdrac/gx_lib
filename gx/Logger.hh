@@ -44,10 +44,10 @@ class gx::Logger
   void separateDate(bool enable) { _separateDate = enable; }
 
   // log method
-  template<typename... Args>
+  template<class... Args>
   void log(LogLevel lvl, std::string_view file, int line, const Args&... args) {
     auto os = logStream(lvl);
-    ((os << args),...);
+    ((os << args), ...);
     logMsg(os, file, line);
   }
 

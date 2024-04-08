@@ -108,7 +108,7 @@ class gx::GLTexture1D
     GLint level, GLint xoffset, GLsizei width,
     GLenum format, GLenum type, const void* pixels);
 
-  template<typename PixelT>
+  template<class PixelT>
   void setSubImage(GLint level, GLint xoffset, GLsizei width,
                    GLenum format, const PixelT* pixels) {
     setSubImage(level, xoffset, width, format, GLType_v<PixelT>, pixels); }
@@ -188,7 +188,7 @@ class gx::GLTexture2DT
     GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
     GLenum format, GLenum type, const void* pixels);
 
-  template<typename PixelT>
+  template<class PixelT>
   void setSubImage(GLint level, GLint xoffset, GLint yoffset, GLsizei width,
                    GLsizei height, GLenum format, const PixelT* pixels) {
     setSubImage(level, xoffset, yoffset, width, height, format,
@@ -274,7 +274,7 @@ class gx::GLTexture3DT
     GLsizei width, GLsizei height, GLsizei depth,
     GLenum format, GLenum type, const void* pixels);
 
-  template<typename PixelT>
+  template<class PixelT>
   void setSubImage(GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
                    GLsizei width, GLsizei height, GLsizei depth,
                    GLenum format, const PixelT* pixels) {
@@ -358,7 +358,7 @@ class gx::GLTextureCubeMap
     GLsizei width, GLsizei height,
     GLenum format, GLenum type, const void* pixels);
 
-  template<typename PixelT>
+  template<class PixelT>
   void setSubImage(
     GLint level, GLint xoffset, GLint yoffset, GLuint face,
     GLsizei width, GLsizei height, GLenum format, const PixelT* pixels) {

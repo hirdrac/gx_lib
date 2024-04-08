@@ -1,6 +1,6 @@
 //
 // gx/DrawContext.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 // TODO: textured roundedRectangle()
@@ -269,7 +269,7 @@ class gx::DrawContext
     _data->insert(_data->end(), m2.begin(), m2.end());
   }
 
-  template<typename... Args>
+  template<class... Args>
   void add(DrawCmd cmd, const Args&... args) {
     const std::initializer_list<DrawEntry> x {cmd, args...};
     _data->insert(_data->end(), x.begin(), x.end());
