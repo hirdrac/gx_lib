@@ -1,6 +1,6 @@
 //
 // gx/DrawContext.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "DrawContext.hh"
@@ -12,11 +12,13 @@ using namespace gx;
 
 
 namespace {
-  [[nodiscard]] constexpr float min4(float a, float b, float c, float d) {
+  template<class T>
+  [[nodiscard]] constexpr T min4(T a, T b, T c, T d) {
     return std::min(std::min(a,b),std::min(c,d));
   }
 
-  [[nodiscard]] constexpr float max4(float a, float b, float c, float d) {
+  template<class T>
+  [[nodiscard]] constexpr T max4(T a, T b, T c, T d) {
     return std::max(std::max(a,b),std::max(c,d));
   }
 

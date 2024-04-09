@@ -26,7 +26,7 @@ namespace {
     lib_init = false;
   }
 
-  std::string libVersionStr()
+  [[nodiscard]] std::string libVersionStr()
   {
     int major = 0, minor = 0, revision = 0;
     glfwGetVersion(&major, &minor, &revision);
@@ -38,8 +38,8 @@ bool gx::initGLFW()
 {
   if (lib_init) { return true; }
 
-  GX_LOG_INFO("GLFW compiled version: ", GLFW_VERSION_MAJOR,
-              ".", GLFW_VERSION_MINOR, ".", GLFW_VERSION_REVISION);
+  GX_LOG_INFO("GLFW compiled version: ", GLFW_VERSION_MAJOR, ".",
+              GLFW_VERSION_MINOR, ".", GLFW_VERSION_REVISION);
   GX_LOG_INFO("GLFW library version: ", libVersionStr());
 
   lib_init = true;

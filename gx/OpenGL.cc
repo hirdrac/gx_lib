@@ -17,7 +17,7 @@ static void GLCleanUp()
   GLVersion = 0;
 }
 
-static constexpr const char* GLSourceStr(GLenum source)
+[[nodiscard]] static constexpr const char* GLSourceStr(GLenum source)
 {
   const char* sourceStr = "unknown";
 #define DEBUG_SOURCE_CASE(x) case GL_DEBUG_SOURCE_##x: sourceStr = #x; break
@@ -33,7 +33,7 @@ static constexpr const char* GLSourceStr(GLenum source)
   return sourceStr;
 }
 
-static constexpr const char* GLTypeStr(GLenum type)
+[[nodiscard]] static constexpr const char* GLTypeStr(GLenum type)
 {
   const char* typeStr = "unknown";
 #define DEBUG_TYPE_CASE(x) case GL_DEBUG_TYPE_##x: typeStr = #x; break
@@ -49,7 +49,7 @@ static constexpr const char* GLTypeStr(GLenum type)
   return typeStr;
 }
 
-static constexpr const char* GLSeverityStr(GLenum severity)
+[[nodiscard]] static constexpr const char* GLSeverityStr(GLenum severity)
 {
   switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:   return " severity=HIGH";
@@ -59,7 +59,7 @@ static constexpr const char* GLSeverityStr(GLenum severity)
   }
 }
 
-static constexpr LogLevel GLSeverityLogLevel(GLenum severity)
+[[nodiscard]] static constexpr LogLevel GLSeverityLogLevel(GLenum severity)
 {
   switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:
