@@ -53,7 +53,7 @@ namespace gx {
     MOD_SHIFT = 1<<0, MOD_CONTROL = 1<<1, MOD_ALT = 1<<2, MOD_SUPER = 1<<3,
   };
 
-  enum {
+  enum KeyEnum {
     // special key values (adapted from glfw3.h)
     KEY_UNKNOWN = -1,
     KEY_SPACE = 32, KEY_APOSTROPHE = 39, KEY_COMMA = 44,
