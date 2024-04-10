@@ -111,7 +111,7 @@ namespace gx {
   static_assert(sizeof(CharInfo) == 8);
 
   // Setting values
-  enum {
+  enum WindowFlagEnum {
     WINDOW_DECORATED = 1,
       // use decorations when not fullscreen
 
