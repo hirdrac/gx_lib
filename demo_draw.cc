@@ -205,6 +205,7 @@ void draw_text1(gx::DrawContext& dc, float x, float y)
 {
   gx::TextFormatting tf{&TheFont};
   tf.scale(2.0f);
+  dc.color(WHITE);
 
   for (int i = 0; i < 5; ++i) {
     dc.text(tf, {x+60, y+55}, gx::ALIGN_CENTER_LEFT, "  abc ABC 123");
@@ -267,15 +268,19 @@ int main(int argc, char** argv)
   gx::TextFormatting tf{&TheFont};
   const int gfxCount = std::size(gfxData);
   int page = 0, gfxPerPage = 0, maxPage = 0;
-  bool redraw = false;
+  bool redraw = true, running = true;
 
   gx::DrawList dl;
   gx::DrawContext dc{dl};
 
-  for (;;) {
-    // draw frame
+  while (running) {
+    // handle events
+    const int events = gx::Window::pollEvents();
     const auto [width,height] = win.dimensions();
-    if (win.resized()) {
+
+    if (events & gx::EVENT_CLOSE) { running = false; }
+
+    if (events & gx::EVENT_SIZE || gfxPerPage == 0) {
       page = 0;
       gfxPerPage = std::max(width / ITEM_WIDTH, 1) *
         std::max(height / ITEM_HEIGHT, 1);
@@ -283,6 +288,37 @@ int main(int argc, char** argv)
       redraw = true;
     }
 
+    if (events & gx::EVENT_KEY) {
+      int newPage = page;
+      for (const auto& k : win.keyStates()) {
+        if (!k.pressCount && !k.repeatCount) { continue; }
+
+        switch (k.key) {
+          case gx::KEY_ESCAPE:
+            running = false; break;
+          case gx::KEY_LEFT: case gx::KEY_UP: case gx::KEY_PAGE_UP:
+            --newPage; break;
+          case gx::KEY_RIGHT: case gx::KEY_DOWN: case gx::KEY_PAGE_DOWN:
+            ++newPage; break;
+          case gx::KEY_F11:
+            if (k.pressCount) {
+              if (win.fullScreen()) {
+                win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
+              } else {
+                win.setSize(0, 0, true);
+              }
+            }
+            break;
+        }
+      }
+
+      if (newPage != page && newPage >= 0 && newPage <= maxPage) {
+        page = newPage;
+        redraw = true;
+      }
+    }
+
+    // draw frame
     if (redraw) {
       const int start_gfx = page * gfxPerPage;
       const int end_gfx = std::min(start_gfx + gfxPerPage, gfxCount);
@@ -317,29 +353,6 @@ int main(int argc, char** argv)
     }
 
     win.renderFrame();
-
-    // handle events
-    gx::Window::pollEvents();
-    if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }
-    if (win.keyPressCount(gx::KEY_F11, false)) {
-      if (win.fullScreen()) {
-        win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
-      } else {
-        win.setSize(0, 0, true);
-      }
-    }
-
-    int newPage = page;
-    if (win.keyPressCount(gx::KEY_LEFT, true)
-        || win.keyPressCount(gx::KEY_UP, true)
-        || win.keyPressCount(gx::KEY_PAGE_UP, true)) { --newPage; }
-    if (win.keyPressCount(gx::KEY_RIGHT, true)
-        || win.keyPressCount(gx::KEY_DOWN, true)
-        || win.keyPressCount(gx::KEY_PAGE_DOWN, true)) { ++newPage; }
-    if (newPage != page && newPage >= 0 && newPage <= maxPage) {
-      page = newPage;
-      redraw = true;
-    }
   }
 
   return 0;
