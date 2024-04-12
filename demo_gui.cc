@@ -138,33 +138,29 @@ int main(int argc, char* argv[])
 
   fnt.makeAtlas(win);
   bool running = true;
-  bool needRedraw = true;
+  bool redraw = true;
 
   gui.setBGColor(.1f,.3f,.1f);
 
   // **** MAIN LOOP ****
   while (running) {
-    // draw frame
-    if (win.resized() || needRedraw) {
-      // something on screen changed - recreate GL buffers
-      win.draw(gui.drawList());
-      needRedraw = false;
-    }
-    win.renderFrame();
-
     // handle events
-    gx::Window::pollEvents();
-    if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }
-    if (win.keyPressCount(gx::KEY_F11, false)) {
-      if (win.fullScreen()) {
-        win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
-      } else {
-        win.setSize(0, 0, true);
+    const int events = gx::Window::pollEvents();
+    if (events & gx::EVENT_CLOSE) { running = false; }
+    if (events & gx::EVENT_SIZE) { redraw = true; }
+    if (events & gx::EVENT_KEY) {
+      if (win.keyPressCount(gx::KEY_ESCAPE, true)) { running = false; }
+      if (win.keyPressCount(gx::KEY_F11, false)) {
+        if (win.fullScreen()) {
+          win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
+        } else {
+          win.setSize(0, 0, true);
+        }
       }
     }
 
     // update gui
-    needRedraw |= gui.update(win);
+    redraw |= gui.update(win);
     if (gui.event()) {
       print_err("GUI event:", gui.event().eid);
       switch (gui.event().type) {
@@ -190,6 +186,14 @@ int main(int argc, char* argv[])
       if (gui.event().eid == 99) { running = false; }
     }
 
+    // draw frame
+    if (redraw) {
+      // something on screen changed - recreate GL buffers
+      win.draw(gui.drawList());
+      redraw = false;
+    }
+
+    win.renderFrame();
     //println_err("time ", gx::Window::lastPollTime());
   }
 
