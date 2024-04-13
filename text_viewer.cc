@@ -57,7 +57,7 @@ class TextBuffer
   using char_type = string_type::value_type;
   using view_type = std::basic_string_view<char_type>;
 
-  TextBuffer() { }
+  TextBuffer() = default;
   TextBuffer(std::istream& in) { load(in); }
 
   [[nodiscard]] bool empty() const { return _text.empty(); }
@@ -199,14 +199,53 @@ int main(int argc, char** argv)
   tf.glyphSpacing = float(glyphSpacing);
 
   // main loop
-  bool redraw = true;
-  for (;;) {
+  bool redraw = true, running = true;
+  while (running) {
+    // handle events
+    const int events = gx::Window::pollEvents();
+    if (events & gx::EVENT_SIZE) { redraw = true; }
+    if (events & gx::EVENT_CLOSE) { running = false; }
+
     const auto [width,height] = win.dimensions();
     const int maxLines = height / lineHeight;
     const int endLine = std::max(int(buffer.lines()) - maxLines, 0);
+    const int lastTop = topLine;
+
+    if (events & gx::EVENT_KEY) {
+      for (const auto& k : win.keyStates()) {
+        if (!k.pressCount && !k.repeatCount) { continue; }
+
+        switch (k.key) {
+          case gx::KEY_ESCAPE:    running = false; break;
+          case gx::KEY_UP:        --topLine; break;
+          case gx::KEY_DOWN:      ++topLine; break;
+          case gx::KEY_PAGE_UP:   topLine -= maxLines; break;
+          case gx::KEY_PAGE_DOWN: topLine += maxLines; break;
+          case gx::KEY_HOME:      topLine = 0; break;
+          case gx::KEY_END:       topLine = endLine; break;
+
+          case gx::KEY_F11:
+            if (k.pressCount) {
+              if (win.fullScreen()) {
+                win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
+              } else {
+                win.setSize(0, 0, true);
+              }
+            }
+            break;
+        }
+      }
+    }
+
+    if (events & gx::EVENT_MOUSE_SCROLL) {
+      topLine -= int(win.scrollPt().y) * SCROLL_STEP;
+    }
+
+    topLine = std::clamp(topLine, 0, endLine);
+    redraw |= (lastTop != topLine);
 
     // draw frame
-    if (win.resized() || redraw) {
+    if (redraw) {
       dc.clearList();
       dc.clearView(.2f,.2f,.2f);
 
@@ -220,12 +259,11 @@ int main(int argc, char** argv)
           const std::string_view line = buffer[std::size_t(lineNo)];
           float tx = 0;
           bool tooLong = false;
-          std::size_t i = 0;
-          while (i < line.size()) {
+          for (std::size_t i = 0; i < line.size(); ) {
             const std::size_t tabPos = line.find('\t',i);
             const std::size_t count =
-              (tabPos == std::string_view::npos) ? tabPos : tabPos - i;
-            const std::string_view segment = line.substr(i,count);
+              (tabPos == std::string_view::npos) ? tabPos : (tabPos - i);
+            const std::string_view segment = line.substr(i, count);
             dc.color(gx::WHITE);
             dc.text(tf, {tx, ty}, gx::ALIGN_TOP_LEFT, segment);
             const float segLen = fnt.calcLength(segment, tf.glyphSpacing);
@@ -250,32 +288,8 @@ int main(int argc, char** argv)
       win.draw(dl);
       redraw = false;
     }
+
     win.renderFrame();
-
-    // handle events
-    gx::Window::pollEvents();
-    if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }
-    if (win.keyPressCount(gx::KEY_F11, false)) {
-      if (win.fullScreen()) {
-        win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
-      } else {
-        win.setSize(0, 0, true);
-      }
-    }
-
-    int lastTop = topLine;
-    if (win.keyPressCount(gx::KEY_UP, true)) { --topLine; }
-    if (win.keyPressCount(gx::KEY_DOWN, true)) { ++topLine; }
-    if (win.keyPressCount(gx::KEY_PAGE_UP, true)) { topLine -= maxLines; }
-    if (win.keyPressCount(gx::KEY_PAGE_DOWN, true)) { topLine += maxLines; }
-    if (win.keyPressCount(gx::KEY_HOME, false)) { topLine = 0; }
-    if (win.keyPressCount(gx::KEY_END, false)) { topLine = endLine; }
-
-    const float scrollY = win.scrollPt().y;
-    if (scrollY != 0.0f) { topLine -= int(scrollY) * SCROLL_STEP; }
-
-    topLine = std::clamp(topLine, 0, endLine);
-    if (lastTop != topLine) { redraw = true; }
   }
 
   return 0;
