@@ -162,21 +162,90 @@ int main(int argc, char* argv[])
 
   gx::DrawList dl;
   gx::DrawContext dc{dl};
-  bool refresh = true;
+  bool redraw = true, running = true;
   constexpr float border = 8.0f;
 
   // main loop
-  for (;;) {
-    const auto [width,height] = win.dimensions();
-    const Entry& e = entries[std::size_t(entryNo)];
-    if (win.resized() || refresh) {
-      if (refresh) {
+  while (running) {
+    // handle events
+    const int events = gx::Window::pollEvents();
+    if (events & gx::EVENT_SIZE) { redraw = true; }
+    if (events & gx::EVENT_CLOSE) { running = false; }
+
+    if (events & gx::EVENT_KEY) {
+      int no = entryNo;
+      const bool last_entry = (no == lastNo);
+      const bool first_entry = (no == 0);
+
+      for (const auto& k : win.keyStates()) {
+        if (!k.pressCount && !k.repeatCount) { continue; }
+
+        switch (k.key) {
+          case gx::KEY_LEFT: case gx::KEY_BACKSPACE:
+            if ((k.pressCount || !first_entry) && --no < 0) { no = lastNo; }
+            break;
+          case gx::KEY_RIGHT: case gx::KEY_SPACE:
+            if ((k.pressCount || !last_entry) && ++no > lastNo) { no = 0; }
+            break;
+          case gx::KEY_HOME: no = 0; break;
+          case gx::KEY_END: no = lastNo; break;
+
+          case gx::KEY_ESCAPE: running = false; break;
+          case gx::KEY_F11:
+            if (k.pressCount) {
+              zoom = 100;
+              imgScale = 1.0f;
+              imgOffset = {0,0};
+              if (win.fullScreen()) {
+                setWinSize(win, entries[std::size_t(entryNo)].img);
+              } else {
+                win.setSize(0, 0, true);
+              }
+            }
+            break;
+        }
+      }
+
+      if (no != entryNo) {
+        imgOffset = {0,0};
+        entryNo = no;
+
+        const Entry& e = entries[std::size_t(entryNo)];
+        if (!win.fullScreen()) { setWinSize(win, e.img); }
         win.setTitle(
           gx::concat(e.file, " - ", e.img.width(), 'x', e.img.height(),
                      'x', e.img.channels()));
-        refresh = false;
+        redraw = true;
+      }
+    }
+
+    if (win.fullScreen()) {
+      if (events & gx::EVENT_MOUSE_SCROLL) {
+        const bool shiftHeld = win.keyMods() & gx::MOD_SHIFT;
+        const int scroll = static_cast<int>(win.scrollPt().y * (shiftHeld ? 8.0f : 1.0f));
+        const int zoom2 = std::clamp(zoom + scroll, 20, 400);
+        if (zoom != zoom2) {
+          zoom = zoom2;
+          imgScale = gx::sqr(float(std::max(zoom, 1)) / 100.f);
+          // TODO: adjust imgOffset to zoom in at mouse point/screen center
+          redraw = true;
+        }
       }
 
+      if (win.buttonPress(gx::BUTTON1)) {
+        pressPos = win.mousePt();
+      } else if (win.buttonDrag(gx::BUTTON1)) {
+        const auto pt = win.mousePt();
+        imgOffset += (pt - pressPos);
+        pressPos = pt;
+        redraw = true;
+      }
+    }
+
+    // draw frame
+    const auto [width,height] = win.dimensions();
+    const Entry& e = entries[std::size_t(entryNo)];
+    if (redraw) {
       const auto [iw,ih] = calcSize(win, e.img, imgScale);
       const float ix = std::floor((float(width) - iw) * .5f);
       const float iy = std::floor((float(height) - ih) * .5f);
@@ -218,69 +287,10 @@ int main(int argc, char* argv[])
       }
 
       win.draw(dl);
+      redraw = false;
     }
 
     win.renderFrame();
-
-    gx::Window::pollEvents();
-    if (win.closed() || win.keyPressCount(gx::KEY_ESCAPE, true)) { break; }
-    if (win.keyPressCount(gx::KEY_F11, false)) {
-      zoom = 100;
-      imgScale = 1.0f;
-      imgOffset = {0,0};
-      if (win.fullScreen()) {
-        setWinSize(win, e.img);
-      } else {
-        win.setSize(0, 0, true);
-      }
-    }
-
-    int no = entryNo;
-    const bool last_entry = (no == lastNo);
-    const bool first_entry = (no == 0);
-    if (win.keyPressCount(gx::KEY_LEFT, !first_entry)
-        || win.keyPressCount(gx::KEY_BACKSPACE, !first_entry)) {
-      if (--no < 0) { no = lastNo; }
-    }
-    if (win.keyPressCount(gx::KEY_RIGHT, !last_entry)
-        || win.keyPressCount(gx::KEY_SPACE, !last_entry)) {
-      if (++no > lastNo) { no = 0; }
-    }
-    if (win.keyPressCount(gx::KEY_HOME, false)) { no = 0; }
-    if (win.keyPressCount(gx::KEY_END, false)) { no = lastNo; }
-
-    if (win.fullScreen()) {
-      if (win.events() & gx::EVENT_MOUSE_SCROLL) {
-        const bool shiftHeld = win.keyMods() & gx::MOD_SHIFT;
-        const int scroll = static_cast<int>(win.scrollPt().y * (shiftHeld ? 8.0f : 1.0f));
-        const int zoom2 = std::clamp(zoom + scroll, 20, 400);
-        if (zoom != zoom2) {
-          zoom = zoom2;
-          imgScale = gx::sqr(float(std::max(zoom, 1)) / 100.f);
-          // TODO: adjust imgOffset to zoom in at mouse point/screen center
-          refresh = true;
-        }
-      }
-
-      if (win.buttonPress(gx::BUTTON1)) {
-        pressPos = win.mousePt();
-      } else if (win.buttonDrag(gx::BUTTON1)) {
-        const auto pt = win.mousePt();
-        imgOffset += (pt - pressPos);
-        pressPos = pt;
-        refresh = true;
-      }
-    }
-
-    if (no != entryNo) {
-      imgOffset = {0,0};
-      entryNo = no;
-      if (!win.fullScreen()) {
-        const Entry& e2 = entries[std::size_t(entryNo)];
-        setWinSize(win, e2.img);
-      }
-      refresh = true;
-    }
   }
 
   return 0;
