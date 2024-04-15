@@ -53,9 +53,10 @@ int main(int argc, char** argv)
   int lastCode = 0;
 
   // main loop
+  const gx::EventState& es = win.eventState();
   do {
     const auto [width,height] = win.dimensions();
-    if (win.resized()) {
+    if (es.resized()) {
       // 'resized' always true once at start
       dc.clearList();
       dc.clearView(.3f,.1f,.1f);
@@ -68,10 +69,9 @@ int main(int argc, char** argv)
 
     win.renderFrame();
     gx::Window::pollEvents();
-    if (win.mouseIn() && (win.events() & gx::EVENT_MOUSE_MOVE)) {
-      const auto pt = win.mousePt();
-      const float tx = pt.x / float(width);
-      const float ty = pt.y / float(height);
+    if (es.mouseIn && (es.events & gx::EVENT_MOUSE_MOVE)) {
+      const float tx = es.mousePt.x / float(width);
+      const float ty = es.mousePt.y / float(height);
       for (auto& [c,g] : fnt.glyphs()) {
         if (tx >= g.t0.x && tx <= g.t1.x && ty >= g.t0.y && ty <= g.t1.y) {
           if (lastCode != c) {
@@ -82,6 +82,6 @@ int main(int argc, char** argv)
         }
       }
     }
-  } while (!win.closed() && !win.keyPressCount(gx::KEY_ESCAPE, false));
+  } while (!es.closed() && !es.keyPressCount(gx::KEY_ESCAPE, false));
   return 0;
 }

@@ -168,16 +168,18 @@ int main(int argc, char* argv[])
   // main loop
   while (running) {
     // handle events
-    const int events = gx::Window::pollEvents();
-    if (events & gx::EVENT_SIZE) { redraw = true; }
-    if (events & gx::EVENT_CLOSE) { running = false; }
+    gx::Window::pollEvents();
+    const gx::EventState& es = win.eventState();
 
-    if (events & gx::EVENT_KEY) {
+    if (es.events & gx::EVENT_SIZE) { redraw = true; }
+    if (es.events & gx::EVENT_CLOSE) { running = false; }
+
+    if (es.events & gx::EVENT_KEY) {
       int no = entryNo;
       const bool last_entry = (no == lastNo);
       const bool first_entry = (no == 0);
 
-      for (const auto& k : win.keyStates()) {
+      for (const auto& k : es.keyStates) {
         if (!k.pressCount && !k.repeatCount) { continue; }
 
         switch (k.key) {
@@ -220,9 +222,9 @@ int main(int argc, char* argv[])
     }
 
     if (win.fullScreen()) {
-      if (events & gx::EVENT_MOUSE_SCROLL) {
-        const bool shiftHeld = win.keyMods() & gx::MOD_SHIFT;
-        const int scroll = static_cast<int>(win.scrollPt().y * (shiftHeld ? 8.0f : 1.0f));
+      if (es.events & gx::EVENT_MOUSE_SCROLL) {
+        const bool shiftHeld = es.mods & gx::MOD_SHIFT;
+        const int scroll = static_cast<int>(es.scrollPt.y * (shiftHeld ? 8.0f : 1.0f));
         const int zoom2 = std::clamp(zoom + scroll, 20, 400);
         if (zoom != zoom2) {
           zoom = zoom2;
@@ -232,10 +234,10 @@ int main(int argc, char* argv[])
         }
       }
 
-      if (win.buttonPress(gx::BUTTON1)) {
-        pressPos = win.mousePt();
-      } else if (win.buttonDrag(gx::BUTTON1)) {
-        const auto pt = win.mousePt();
+      if (es.buttonPress(gx::BUTTON1)) {
+        pressPos = es.mousePt;
+      } else if (es.buttonDrag(gx::BUTTON1)) {
+        const auto pt = es.mousePt;
         imgOffset += (pt - pressPos);
         pressPos = pt;
         redraw = true;

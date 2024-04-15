@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <algorithm>
 
 
 namespace gx {
@@ -144,6 +145,42 @@ namespace gx {
   };
   static_assert(sizeof(CharInfo) == 8);
 
+  struct EventState {
+    int events, removedEvents;
+    std::vector<KeyState> keyStates;
+    std::vector<CharInfo> chars;
+    Vec2 mousePt, scrollPt;
+    int buttons, mods;
+    int buttonsPress, buttonsRelease;
+    bool mouseIn, iconified, focused;
+
+    // helper functions
+    [[nodiscard]] int allEvents() const { return events | removedEvents; }
+    [[nodiscard]] bool resized() const { return events & EVENT_SIZE; }
+    [[nodiscard]] bool closed() const { return events & EVENT_CLOSE; }
+    [[nodiscard]] bool buttonPress(ButtonEnum b) const {
+      return (events & (b<<11)) && (buttons & b); }
+    [[nodiscard]] bool buttonRelease(ButtonEnum b) const {
+      return (events & (b<<11)) && !(buttons & b); }
+    [[nodiscard]] bool buttonDrag(int button_mask) const {
+      return (events & EVENT_MOUSE_MOVE)
+        && ((buttons & button_mask) == button_mask); }
+
+    [[nodiscard]] bool keyHeld(int key) const {
+      auto it = std::find_if(keyStates.begin(), keyStates.end(),
+                             [key](auto& ks){ return ks.key == key; });
+      return (it == keyStates.end())
+        ? false : (it->held || (it->pressCount > 0));
+    }
+
+    [[nodiscard]] int keyPressCount(int key, bool includeRepeat) const {
+      auto it = std::find_if(keyStates.begin(), keyStates.end(),
+                             [key](auto& ks){ return ks.key == key; });
+      return (it == keyStates.end())
+        ? 0 : (it->pressCount + (includeRepeat ? it->repeatCount : 0));
+    }
+  };
+
 
   class Window;
   class Renderer;
@@ -183,6 +220,8 @@ class gx::Window
   [[nodiscard]] std::pair<int,int> dimensions() const;
   [[nodiscard]] const std::string& title() const;
   [[nodiscard]] bool fullScreen() const;
+  [[nodiscard]] MouseModeEnum mouseMode() const;
+  [[nodiscard]] MouseShapeEnum mouseShape() const;
 
 
   //// Event Handling ////
@@ -194,39 +233,11 @@ class gx::Window
     // time of last pollEvents()
     // (in microseconds since first window open)
 
-  [[nodiscard]] int events() const;
-  [[nodiscard]] int allEvents() const;
-    // current event mask
+  [[nodiscard]] const EventState& eventState() const;
+    // current event state for window
 
   void removeEvent(int event_mask);
     // remove event(s) from current event mask
-
-  // window state
-  [[nodiscard]] bool resized() const { return events() & EVENT_SIZE; }
-  [[nodiscard]] bool closed() const { return events() & EVENT_CLOSE; }
-  [[nodiscard]] bool iconified() const;
-  [[nodiscard]] bool focused() const;
-
-  // mouse state
-  [[nodiscard]] MouseModeEnum mouseMode() const;
-  [[nodiscard]] MouseShapeEnum mouseShape() const;
-  [[nodiscard]] Vec2 mousePt() const;
-  [[nodiscard]] Vec2 scrollPt() const;
-  [[nodiscard]] int buttons() const;
-  [[nodiscard]] bool mouseIn() const;
-
-  [[nodiscard]] bool buttonPress(ButtonEnum button) const;
-  [[nodiscard]] bool buttonRelease(ButtonEnum button) const;
-  [[nodiscard]] bool buttonDrag(int button_mask) const;
-
-  // key state
-  [[nodiscard]] bool keyHeld(int key) const;
-  [[nodiscard]] int keyPressCount(int key, bool includeRepeat) const;
-  [[nodiscard]] const std::vector<KeyState>& keyStates() const;
-  [[nodiscard]] int keyMods() const;
-
-  // text entry state
-  [[nodiscard]] const std::vector<CharInfo>& charData() const;
 
   // renderer access methods
   [[nodiscard]] Renderer& renderer();

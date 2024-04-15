@@ -145,12 +145,14 @@ int main(int argc, char* argv[])
   // **** MAIN LOOP ****
   while (running) {
     // handle events
-    const int events = gx::Window::pollEvents();
-    if (events & gx::EVENT_CLOSE) { running = false; }
-    if (events & gx::EVENT_SIZE) { redraw = true; }
-    if (events & gx::EVENT_KEY) {
-      if (win.keyPressCount(gx::KEY_ESCAPE, true)) { running = false; }
-      if (win.keyPressCount(gx::KEY_F11, false)) {
+    gx::Window::pollEvents();
+    const gx::EventState& es = win.eventState();
+
+    if (es.events & gx::EVENT_CLOSE) { running = false; }
+    if (es.events & gx::EVENT_SIZE) { redraw = true; }
+    if (es.events & gx::EVENT_KEY) {
+      if (es.keyPressCount(gx::KEY_ESCAPE, true)) { running = false; }
+      if (es.keyPressCount(gx::KEY_F11, false)) {
         if (win.fullScreen()) {
           win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
         } else {

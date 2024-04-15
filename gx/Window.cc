@@ -9,7 +9,6 @@
 #include "System.hh"
 #include "Assert.hh"
 #include "ThreadID.hh"
-#include <algorithm>
 #include <chrono>
 #include <mutex>
 #include <vector>
@@ -105,6 +104,10 @@ struct gx::WindowImpl
   {
     const std::lock_guard lg{allImplsMutex};
     allImpls.push_back(this);
+
+    // initial event state
+    _eventState.events = EVENT_SIZE;
+    _eventState.focused = true;
   }
 
   ~WindowImpl()
@@ -240,7 +243,7 @@ struct gx::WindowImpl
 
   void setMousePos(Vec2 pos)
   {
-    _mousePt = pos;
+    _eventState.mousePt = pos;
     if (_renderer) {
       GX_ASSERT(isMainThread());
       glfwSetCursorPos(_renderer->window(), double(pos.x), double(pos.y));
@@ -348,8 +351,6 @@ struct gx::WindowImpl
       }
     }
 
-    _events = EVENT_SIZE; // always generate a resize event initially
-    _removedEvents = 0;
     glfwSetWindowUserPointer(win, this);
     glfwSetWindowCloseCallback(win, closeCB);
     glfwSetFramebufferSizeCallback(win, sizeCB);
@@ -389,23 +390,24 @@ struct gx::WindowImpl
   {
     double mx = 0, my = 0;
     glfwGetCursorPos(w, &mx, &my);
-    _mousePt.set(float(mx), float(my));
-    _mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
+    _eventState.mousePt.set(float(mx), float(my));
+    _eventState.mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
   }
 
   void resetEventState()
   {
-    _events = 0;
-    _removedEvents = 0;
-    _scrollPt.set(0,0);
-    _chars.clear();
-    for (auto i = _keyStates.begin(); i != _keyStates.end(); ) {
+    _eventState.events = 0;
+    _eventState.removedEvents = 0;
+    _eventState.scrollPt.set(0,0);
+    _eventState.chars.clear();
+    for (auto i = _eventState.keyStates.begin();
+         i != _eventState.keyStates.end(); ) {
       if (i->held) {
         i->pressCount = 0;
         i->repeatCount = 0;
         ++i;
       } else {
-        i = _keyStates.erase(i);
+        i = _eventState.keyStates.erase(i);
       }
     }
   }
@@ -413,28 +415,30 @@ struct gx::WindowImpl
   void finalizeEventState()
   {
     // button event pressing
-    if (_buttonsPress != 0 || _buttonsRelease != 0) {
+    if (_eventState.buttonsPress != 0 || _eventState.buttonsRelease != 0) {
       for (int b = 0; b < 8; ++b) {
         const int bVal = BUTTON1<<b;
         const int bEvent = EVENT_MOUSE_BUTTON1<<b;
 
-        if (_buttonsPress & bVal) {
-          _events |= bEvent;
-        } else if (_buttonsRelease & bVal) {
+        if (_eventState.buttonsPress & bVal) {
+          _eventState.events |= bEvent;
+        } else if (_eventState.buttonsRelease & bVal) {
           // button release event is delayed to next update if it happened in the
           // same event poll as the press event
-          _events |= bEvent;
-          _buttonsRelease &= ~bVal;
-          _buttons &= ~bVal;
+          _eventState.events |= bEvent;
+          _eventState.buttonsRelease &= ~bVal;
+          _eventState.buttons &= ~bVal;
         }
       }
 
-      _buttons |= _buttonsPress;
-      _buttonsPress = 0;
+      _eventState.buttons |= _eventState.buttonsPress;
+      _eventState.buttonsPress = 0;
     }
   }
 
   std::unique_ptr<Renderer> _renderer;
+
+  // window states settings
   int _width = 0, _height = 0;
   int _fsWidth = 0, _fsHeight = 0;
   int _minWidth = -1, _minHeight = -1;
@@ -448,13 +452,7 @@ struct gx::WindowImpl
   bool _fixedAspectRatio = false;
 
   // event state
-  int _events = 0, _removedEvents = 0;
-  std::vector<KeyState> _keyStates;
-  std::vector<CharInfo> _chars;
-  Vec2 _mousePt{0,0}, _scrollPt{0,0};
-  int _buttons = 0, _mods = 0;
-  int _buttonsPress = 0, _buttonsRelease = 0;
-  bool _mouseIn = false, _iconified = false, _focused = true;
+  EventState _eventState{};
 };
 
 
@@ -493,6 +491,10 @@ const std::string& Window::title() const {
   return _impl->_title; }
 bool Window::fullScreen() const {
   return _impl->_fullScreen; }
+MouseModeEnum Window::mouseMode() const {
+  return _impl->_mouseMode; }
+MouseShapeEnum Window::mouseShape() const {
+  return _impl->_mouseShape; }
 
 int Window::pollEvents()
 {
@@ -510,7 +512,7 @@ int Window::pollEvents()
 
     for (auto w : allImpls) {
       w->finalizeEventState();
-      e |= w->_events;
+      e |= w->_eventState.events;
     }
   }
 
@@ -518,66 +520,16 @@ int Window::pollEvents()
   return e;
 }
 
-int Window::events() const {
-  return _impl->_events; }
-int Window::allEvents() const {
-  return _impl->_events | _impl->_removedEvents; }
+const gx::EventState& Window::eventState() const {
+  return _impl->_eventState; }
 
 void Window::removeEvent(int event_mask)
 {
-  int e = _impl->_events & event_mask;
-  _impl->_removedEvents |= e;
-  _impl->_events &= ~e;
+  EventState& es = _impl->_eventState;
+  int e = es.events & event_mask;
+  es.removedEvents |= e;
+  es.events &= ~e;
 }
-
-bool Window::iconified() const {
-  return _impl->_iconified; }
-bool Window::focused() const {
-  return _impl->_focused; }
-MouseModeEnum Window::mouseMode() const {
-  return _impl->_mouseMode; }
-MouseShapeEnum Window::mouseShape() const {
-  return _impl->_mouseShape; }
-Vec2 Window::mousePt() const {
-  return _impl->_mousePt; }
-Vec2 Window::scrollPt() const {
-  return _impl->_scrollPt; }
-int Window::buttons() const {
-  return _impl->_buttons; }
-bool Window::mouseIn() const {
-  return _impl->_mouseIn; }
-bool Window::buttonPress(ButtonEnum button) const {
-  return (_impl->_events & (button<<11)) && (_impl->_buttons & button); }
-bool Window::buttonRelease(ButtonEnum button) const {
-  return (_impl->_events & (button<<11)) && !(_impl->_buttons & button); }
-bool Window::buttonDrag(int button_mask) const {
-  return (_impl->_events & EVENT_MOUSE_MOVE)
-    && ((_impl->_buttons & button_mask) == button_mask); }
-
-bool Window::keyHeld(int key) const
-{
-  const auto& states = _impl->_keyStates;
-  auto itr = std::find_if(states.begin(), states.end(),
-                          [key](const auto& ks){ return ks.key == key; });
-  if (itr == states.end()) { return false; }
-  return itr->held || (itr->pressCount > 0);
-}
-
-int Window::keyPressCount(int key, bool includeRepeat) const
-{
-  const auto& states = _impl->_keyStates;
-  auto itr = std::find_if(states.begin(), states.end(),
-                          [key](const auto& ks){ return ks.key == key; });
-  if (itr == states.end()) { return 0; }
-  return itr->pressCount + (includeRepeat ? itr->repeatCount : 0);
-}
-
-const std::vector<KeyState>& Window::keyStates() const {
-  return _impl->_keyStates; }
-int Window::keyMods() const {
-  return _impl->_mods; }
-const std::vector<CharInfo>& Window::charData() const {
-  return _impl->_chars; }
 
 Renderer& Window::renderer()
 {
@@ -588,15 +540,14 @@ Renderer& Window::renderer()
 // GLFW event callbacks
 static void closeCB(GLFWwindow* win)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown close event");
     return;
   }
 
   //println("close event");
-  auto& e = *static_cast<WindowImpl*>(ePtr);
-  e._events |= EVENT_CLOSE;
+  static_cast<WindowImpl*>(uPtr)->_eventState.events |= EVENT_CLOSE;
 
   // tell GLFW not to close window
   glfwSetWindowShouldClose(win, GLFW_FALSE);
@@ -604,37 +555,37 @@ static void closeCB(GLFWwindow* win)
 
 static void sizeCB(GLFWwindow* win, int width, int height)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown size event");
     return;
   }
 
   //println("size event: ", width, ' ', height);
-  auto& e = *static_cast<WindowImpl*>(ePtr);
-  e._events |= EVENT_SIZE;
-  e._width = width;
-  e._height = height;
-  if (e._renderer) { e._renderer->setFramebufferSize(width, height); }
-  e.updateMouseState(win);
+  auto impl = static_cast<WindowImpl*>(uPtr);
+  impl->_eventState.events |= EVENT_SIZE;
+  impl->_width = width;
+  impl->_height = height;
+  if (impl->_renderer) { impl->_renderer->setFramebufferSize(width, height); }
+  impl->updateMouseState(win);
 }
 
 static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown key event");
     return;
   }
 
   //println("key event: ", key, ' ', scancode, ' ', action, ' ', mods);
-  auto& e = *static_cast<WindowImpl*>(ePtr);
-  e._events |= EVENT_KEY;
-  e._mods = mods;
+  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
+  es.events |= EVENT_KEY;
+  es.mods = mods;
 
-  auto& states = e._keyStates;
+  auto& states = es.keyStates;
   auto itr = std::find_if(states.begin(), states.end(),
-			  [key](const auto& ks){ return ks.key == key; });
+			  [key](auto& ks){ return ks.key == key; });
   if (itr == states.end()) {
     itr = states.insert(states.end(), {int16_t(key),0,0,false});
   }
@@ -644,18 +595,18 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
     ++ks.pressCount;
     ks.held = true;
     switch (key) {
-      case KEY_LSHIFT:   case KEY_RSHIFT:   e._mods |= MOD_SHIFT; break;
-      case KEY_LCONTROL: case KEY_RCONTROL: e._mods |= MOD_CONTROL; break;
-      case KEY_LALT:     case KEY_RALT:     e._mods |= MOD_ALT; break;
-      case KEY_LSUPER:   case KEY_RSUPER:   e._mods |= MOD_SUPER; break;
+      case KEY_LSHIFT:   case KEY_RSHIFT:   es.mods |= MOD_SHIFT; break;
+      case KEY_LCONTROL: case KEY_RCONTROL: es.mods |= MOD_CONTROL; break;
+      case KEY_LALT:     case KEY_RALT:     es.mods |= MOD_ALT; break;
+      case KEY_LSUPER:   case KEY_RSUPER:   es.mods |= MOD_SUPER; break;
     }
   } else if (action == GLFW_RELEASE) {
     ks.held = false;
     switch (key) {
-      case KEY_LSHIFT:   case KEY_RSHIFT:   e._mods &= ~MOD_SHIFT; break;
-      case KEY_LCONTROL: case KEY_RCONTROL: e._mods &= ~MOD_CONTROL; break;
-      case KEY_LALT:     case KEY_RALT:     e._mods &= ~MOD_ALT; break;
-      case KEY_LSUPER:   case KEY_RSUPER:   e._mods &= ~MOD_SUPER; break;
+      case KEY_LSHIFT:   case KEY_RSHIFT:   es.mods &= ~MOD_SHIFT; break;
+      case KEY_LCONTROL: case KEY_RCONTROL: es.mods &= ~MOD_CONTROL; break;
+      case KEY_LALT:     case KEY_RALT:     es.mods &= ~MOD_ALT; break;
+      case KEY_LSUPER:   case KEY_RSUPER:   es.mods &= ~MOD_SUPER; break;
     }
   } else if (action == GLFW_REPEAT) {
     ++ks.repeatCount;
@@ -671,62 +622,61 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
     // - MOD_SUPER+key produces real char event so it's excluded here
 
     //println("gen char event: ", key, ' ', mods);
-    e._events |= EVENT_CHAR;
-    e._chars.push_back({0, int16_t(key), uint8_t(mods), action == GLFW_REPEAT});
+    es.events |= EVENT_CHAR;
+    es.chars.push_back({0, int16_t(key), uint8_t(mods), action == GLFW_REPEAT});
   }
 }
 
 static void charCB(GLFWwindow* win, unsigned int codepoint)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown char event");
     return;
   }
 
   //println("char event: ", codepoint);
-  auto& e = *static_cast<WindowImpl*>(ePtr);
-  e._events |= EVENT_CHAR;
-  e._chars.push_back({codepoint, 0, 0, false});
+  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
+  es.events |= EVENT_CHAR;
+  es.chars.push_back({codepoint, 0, 0, false});
 }
 
 static void cursorEnterCB(GLFWwindow* win, int entered)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown cursor enter event");
     return;
   }
 
   //println("cursor enter event: ", entered);
-  auto& e = *static_cast<WindowImpl*>(ePtr);
-  e._events |= EVENT_MOUSE_ENTER;
-  e._mouseIn = (entered != 0);
+  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
+  es.events |= EVENT_MOUSE_ENTER;
+  es.mouseIn = (entered != 0);
 }
 
 static void cursorPosCB(GLFWwindow* win, double xpos, double ypos)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown cursor pos event");
     return;
   }
 
   //println("cursor pos event: ", xpos, ' ', ypos);
-  auto& e = *static_cast<WindowImpl*>(ePtr);
-  e._events |= EVENT_MOUSE_MOVE;
-  e._mousePt.set(float(xpos), float(ypos));
+  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
+  es.events |= EVENT_MOUSE_MOVE;
+  es.mousePt.set(float(xpos), float(ypos));
 }
 
 static void mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown mouse button even");
     return;
   }
 
-  auto& e = *static_cast<WindowImpl*>(ePtr);
   //println("mouse button event: ", button, ' ', action, ' ', mods);
   if (button < GLFW_MOUSE_BUTTON_1 || button > GLFW_MOUSE_BUTTON_8) {
     GX_LOG_ERROR("unknown mouse button ", button);
@@ -736,55 +686,56 @@ static void mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
   // bitfield value for button
   const int bVal = BUTTON1<<button;
 
-  e._mods = mods;
+  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;;
+  es.mods = mods;
   if (action == GLFW_PRESS) {
-    e._buttonsPress |= bVal;
+    es.buttonsPress |= bVal;
     //println("button press:", int(b));
   } else if (action == GLFW_RELEASE) {
-    e._buttonsRelease |= bVal;
+    es.buttonsRelease |= bVal;
     //println("button release:", int(b));
   }
 }
 
 static void scrollCB(GLFWwindow* win, double xoffset, double yoffset)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown scroll event");
     return;
   }
 
   //println("scroll event: ", xoffset, ' ', yoffset);
-  auto& e = *static_cast<WindowImpl*>(ePtr);
-  e._events |= EVENT_MOUSE_SCROLL;
-  e._scrollPt.x += float(xoffset);
-  e._scrollPt.y += float(yoffset);
+  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
+  es.events |= EVENT_MOUSE_SCROLL;
+  es.scrollPt.x += float(xoffset);
+  es.scrollPt.y += float(yoffset);
 }
 
 static void iconifyCB(GLFWwindow* win, int iconified)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown iconify event");
     return;
   }
 
   //println("iconify event: ", iconified);
-  auto& e = *static_cast<WindowImpl*>(ePtr);
-  e._events |= EVENT_ICONIFY;
-  e._iconified = iconified;
+  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
+  es.events |= EVENT_ICONIFY;
+  es.iconified = iconified;
 }
 
 static void focusCB(GLFWwindow* win, int focused)
 {
-  void* ePtr = glfwGetWindowUserPointer(win);
-  if (!ePtr) {
+  void* uPtr = glfwGetWindowUserPointer(win);
+  if (!uPtr) {
     GX_LOG_ERROR("unknown focus event");
     return;
   }
 
   //println("focus event: ", focused);
-  auto& e = *static_cast<WindowImpl*>(ePtr);
-  e._events |= EVENT_FOCUS;
-  e._focused = focused;
+  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
+  es.events |= EVENT_FOCUS;
+  es.focused = focused;
 }

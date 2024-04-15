@@ -275,12 +275,13 @@ int main(int argc, char** argv)
 
   while (running) {
     // handle events
-    const int events = gx::Window::pollEvents();
+    gx::Window::pollEvents();
+    const gx::EventState& es = win.eventState();
     const auto [width,height] = win.dimensions();
 
-    if (events & gx::EVENT_CLOSE) { running = false; }
+    if (es.events & gx::EVENT_CLOSE) { running = false; }
 
-    if (events & gx::EVENT_SIZE || gfxPerPage == 0) {
+    if (es.events & gx::EVENT_SIZE || gfxPerPage == 0) {
       page = 0;
       gfxPerPage = std::max(width / ITEM_WIDTH, 1) *
         std::max(height / ITEM_HEIGHT, 1);
@@ -288,9 +289,9 @@ int main(int argc, char** argv)
       redraw = true;
     }
 
-    if (events & gx::EVENT_KEY) {
+    if (es.events & gx::EVENT_KEY) {
       int newPage = page;
-      for (const auto& k : win.keyStates()) {
+      for (const auto& k : es.keyStates) {
         if (!k.pressCount && !k.repeatCount) { continue; }
 
         switch (k.key) {

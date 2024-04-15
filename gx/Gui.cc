@@ -672,9 +672,11 @@ bool Gui::update(Window& win)
     }
   }
 
+  const EventState& es = win.eventState();
+
   // mouse movement/button handling
-  if (win.focused()) {
-    if (win.allEvents() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_ANY_BUTTON)) {
+  if (es.focused) {
+    if (es.allEvents() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_ANY_BUTTON)) {
       processMouseEvent(win);
     }
 
@@ -693,7 +695,7 @@ bool Gui::update(Window& win)
 
   // entry input handling & cursor update
   if (_focusID != 0) {
-    if (win.events() & EVENT_CHAR) { processCharEvent(win); }
+    if (es.events & EVENT_CHAR) { processCharEvent(win); }
 
     if (_focusCursorPos == _focusRangeStart && _cursorBlinkTime > 0) {
       // check for cursor blink
@@ -761,29 +763,27 @@ void Gui::activatePopup(Panel& p, const GuiElem& def)
 
 void Gui::processMouseEvent(Window& win)
 {
-  const int buttons = win.buttons();
-  const int events = win.events();
-  const int allEvents = win.allEvents();
+  const EventState& es = win.eventState();
+  const int allEvents = es.allEvents();
   const int64_t now = win.lastPollTime();
 
-  const bool lbuttonDown = buttons & BUTTON1;
-  const bool rbuttonDown = buttons & BUTTON2;
-  const bool lbuttonEvent = events & EVENT_MOUSE_BUTTON1;
-  const bool rbuttonEvent = events & EVENT_MOUSE_BUTTON2;
+  const bool lbuttonDown = es.buttons & BUTTON1;
+  const bool rbuttonDown = es.buttons & BUTTON2;
+  const bool lbuttonEvent = es.events & EVENT_MOUSE_BUTTON1;
+  const bool rbuttonEvent = es.events & EVENT_MOUSE_BUTTON2;
   const bool lpressEvent = lbuttonDown & lbuttonEvent;
   const bool rpressEvent = rbuttonDown & rbuttonEvent;
   const bool anyButtonEvent = allEvents & EVENT_MOUSE_ANY_BUTTON;
   const bool moveEvent = allEvents & EVENT_MOUSE_MOVE;
-  const Vec2 mousePt = win.mousePt();
 
   // get elem at mouse pointer
   Panel* pPtr = nullptr;
   GuiElem* ePtr = nullptr;
   ElemID id = 0;
   GuiElemType type = GUI_NULL;
-  if (win.mouseIn()) {
+  if (es.mouseIn) {
     for (auto& p : _panels) {
-      const Vec2 pt = mousePt - Vec2{p->layout.x, p->layout.y};
+      const Vec2 pt = es.mousePt - Vec2{p->layout.x, p->layout.y};
       if (!(ePtr = findElemByXY(p->root, pt.x, pt.y, _popupType))) { continue; }
 
       win.removeEvent(EVENT_MOUSE_ANY_BUTTON);
@@ -823,7 +823,7 @@ void Gui::processMouseEvent(Window& win)
   // element specific behavior
   MouseShapeEnum shape = MOUSESHAPE_ARROW;
   if (_heldType == GUI_TITLEBAR) {
-    if (lbuttonDown && (events & EVENT_MOUSE_MOVE)) {
+    if (lbuttonDown && (es.events & EVENT_MOUSE_MOVE)) {
       if (_heldID != id) {
         const auto [panelP,elemP] = findElem(_heldID);
         GX_ASSERT(panelP != nullptr);
@@ -834,8 +834,8 @@ void Gui::processMouseEvent(Window& win)
       }
 
       const auto [width,height] = win.dimensions();
-      const float mx = std::clamp(mousePt.x, 0.0f, float(width));
-      const float my = std::clamp(mousePt.y, 0.0f, float(height));
+      const float mx = std::clamp(es.mousePt.x, 0.0f, float(width));
+      const float my = std::clamp(es.mousePt.y, 0.0f, float(height));
       pPtr->layout.x += mx - _heldPt.x;
       pPtr->layout.y += my - _heldPt.y;
       _heldPt.set(mx, my);
@@ -855,7 +855,7 @@ void Gui::processMouseEvent(Window& win)
         _focusCursorPos = lengthUTF8(entry.text);
       } else {
         _focusCursorPos = _focusRangeStart = lengthUTF8(
-          thm.font->fitText(entry.text, mousePt.x - entry.tx + 1));
+          thm.font->fitText(entry.text, es.mousePt.x - entry.tx + 1));
         if (_clickCount == 2) {
           // double click - select word
           while (_focusRangeStart > 0 && entry.text[_focusRangeStart-1] != ' ')
@@ -869,7 +869,7 @@ void Gui::processMouseEvent(Window& win)
       // select text in entry w/ mouse
       const auto& entry = ePtr->entry();
       const std::size_t newPos = lengthUTF8(
-        thm.font->fitText(entry.text, mousePt.x - entry.tx + 1));
+        thm.font->fitText(entry.text, es.mousePt.x - entry.tx + 1));
       if (newPos != _focusCursorPos) {
         _focusCursorPos = newPos;
         _needRender = true;
@@ -943,7 +943,7 @@ void Gui::processMouseEvent(Window& win)
     _heldID = id;
     _heldType = type;
     _heldTime = now;
-    _heldPt = mousePt;
+    _heldPt = es.mousePt;
     _needRender = true;
   } else if ((_heldType == GUI_BUTTON_PRESS && _heldID != id)
              || (!lbuttonDown && _heldID != 0)) {
@@ -967,7 +967,7 @@ void Gui::processCharEvent(Window& win)
   auto& entry = e.entry();
 
   bool usedEvent = false;
-  const auto& data = win.charData();
+  const auto& data = win.eventState().chars;
   for (const CharInfo& c : data) {
     if (c.codepoint) {
       usedEvent = true;

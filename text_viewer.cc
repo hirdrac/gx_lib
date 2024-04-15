@@ -202,17 +202,19 @@ int main(int argc, char** argv)
   bool redraw = true, running = true;
   while (running) {
     // handle events
-    const int events = gx::Window::pollEvents();
-    if (events & gx::EVENT_SIZE) { redraw = true; }
-    if (events & gx::EVENT_CLOSE) { running = false; }
+    gx::Window::pollEvents();
+    const gx::EventState& es = win.eventState();
+
+    if (es.events & gx::EVENT_SIZE) { redraw = true; }
+    if (es.events & gx::EVENT_CLOSE) { running = false; }
 
     const auto [width,height] = win.dimensions();
     const int maxLines = height / lineHeight;
     const int endLine = std::max(int(buffer.lines()) - maxLines, 0);
     const int lastTop = topLine;
 
-    if (events & gx::EVENT_KEY) {
-      for (const auto& k : win.keyStates()) {
+    if (es.events & gx::EVENT_KEY) {
+      for (const auto& k : es.keyStates) {
         if (!k.pressCount && !k.repeatCount) { continue; }
 
         switch (k.key) {
@@ -237,8 +239,8 @@ int main(int argc, char** argv)
       }
     }
 
-    if (events & gx::EVENT_MOUSE_SCROLL) {
-      topLine -= int(win.scrollPt().y) * SCROLL_STEP;
+    if (es.events & gx::EVENT_MOUSE_SCROLL) {
+      topLine -= int(es.scrollPt.y) * SCROLL_STEP;
     }
 
     topLine = std::clamp(topLine, 0, endLine);
