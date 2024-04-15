@@ -15,6 +15,40 @@
 
 
 namespace gx {
+  // Window Setting values
+  enum WindowFlagEnum {
+    WINDOW_DECORATED = 1,
+      // use decorations when not fullscreen
+
+    // resizing flags
+    WINDOW_RESIZABLE = 2,
+      // can be resized when not fullscreen (decorated implied)
+    WINDOW_FIXED_ASPECT_RATIO = 4,
+      // set resize aspect ratio based on initial size
+    WINDOW_LIMIT_MIN_SIZE = 8,
+      // use initial size as min resize limit
+    WINDOW_LIMIT_MAX_SIZE = 16,
+      // use initial size as max resize limit
+
+    // context flags
+    WINDOW_DEBUG = 32,
+      // enable OpenGL debug context
+  };
+
+  enum MouseModeEnum {
+    MOUSEMODE_NORMAL,  // mouse cursor visible and behaves normally
+    MOUSEMODE_HIDE,    // hides mouse cursor when it is over display window
+    MOUSEMODE_DISABLE, // hides & grabs mouse cursor and all movement events
+                       //   are relative position changes
+  };
+
+  enum MouseShapeEnum {
+    MOUSESHAPE_ARROW,
+    MOUSESHAPE_IBEAM,
+    MOUSESHAPE_CROSSHAIR,
+  };
+
+
   // event mask
   enum EventEnum {
     // window events
@@ -110,38 +144,6 @@ namespace gx {
   };
   static_assert(sizeof(CharInfo) == 8);
 
-  // Setting values
-  enum WindowFlagEnum {
-    WINDOW_DECORATED = 1,
-      // use decorations when not fullscreen
-
-    // resizing flags
-    WINDOW_RESIZABLE = 2,
-      // can be resized when not fullscreen (decorated implied)
-    WINDOW_FIXED_ASPECT_RATIO = 4,
-      // set resize aspect ratio based on initial size
-    WINDOW_LIMIT_MIN_SIZE = 8,
-      // use initial size as min resize limit
-    WINDOW_LIMIT_MAX_SIZE = 16,
-      // use initial size as max resize limit
-
-    // context flags
-    WINDOW_DEBUG = 32,
-      // enable OpenGL debug context
-  };
-
-  enum MouseModeEnum {
-    MOUSEMODE_NORMAL,  // mouse cursor visible and behaves normally
-    MOUSEMODE_HIDE,    // hides mouse cursor when it is over display window
-    MOUSEMODE_DISABLE, // hides & grabs mouse cursor and all movement events
-                       //   are relative position changes
-  };
-
-  enum MouseShapeEnum {
-    MOUSESHAPE_ARROW,
-    MOUSESHAPE_IBEAM,
-    MOUSESHAPE_CROSSHAIR,
-  };
 
   class Window;
   class Renderer;
