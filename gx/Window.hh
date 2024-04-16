@@ -12,11 +12,10 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <algorithm>
 
 
 namespace gx {
-  // Window Setting values
+  // Window Setting Values
   enum WindowFlagEnum {
     WINDOW_DECORATED = 1,
       // use decorations when not fullscreen
@@ -50,7 +49,7 @@ namespace gx {
   };
 
 
-  // event mask
+  // Event Types
   enum EventEnum {
     // window events
     EVENT_CLOSE        = 1<<0,
@@ -78,7 +77,6 @@ namespace gx {
     EVENT_MOUSE_ANY_BUTTON = (0b11111111<<11),
   };
 
-  // event values
   enum ButtonEnum {
     BUTTON1 = 1<<0, BUTTON2 = 1<<1, BUTTON3 = 1<<2, BUTTON4 = 1<<3,
     BUTTON5 = 1<<4, BUTTON6 = 1<<5, BUTTON7 = 1<<6, BUTTON8 = 1<<7,
@@ -167,17 +165,17 @@ namespace gx {
         && ((buttons & button_mask) == button_mask); }
 
     [[nodiscard]] bool keyHeld(int key) const {
-      auto it = std::find_if(keyStates.begin(), keyStates.end(),
-                             [key](auto& ks){ return ks.key == key; });
-      return (it == keyStates.end())
-        ? false : (it->held || (it->pressCount > 0));
+      for (const KeyState& k : keyStates)
+        if (k.key == key)
+          return k.held || (k.pressCount > 0);
+      return false;
     }
 
     [[nodiscard]] int keyPressCount(int key, bool includeRepeat) const {
-      auto it = std::find_if(keyStates.begin(), keyStates.end(),
-                             [key](auto& ks){ return ks.key == key; });
-      return (it == keyStates.end())
-        ? 0 : (it->pressCount + (includeRepeat ? it->repeatCount : 0));
+      for (const KeyState& k : keyStates)
+        if (k.key == key)
+          return k.pressCount + (int(includeRepeat) * k.repeatCount);
+      return 0;
     }
   };
 

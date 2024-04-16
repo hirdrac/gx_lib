@@ -12,6 +12,7 @@
 #include <chrono>
 #include <mutex>
 #include <vector>
+#include <algorithm>
 #include <GLFW/glfw3.h>
 using namespace gx;
 
