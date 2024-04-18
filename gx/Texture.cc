@@ -1,6 +1,6 @@
 //
 // gx/Texture.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "Texture.hh"
@@ -12,7 +12,12 @@ using namespace gx;
 bool Texture::init(Renderer& ren, const Image& img, int levels,
                    FilterType minFilter, FilterType magFilter)
 {
-  _texID = ren.setTexture(0, img, levels, minFilter, magFilter);
+  TextureParams params;
+  params.minFilter = minFilter;
+  params.magFilter = magFilter;
+  params.mipFilter = FILTER_NEAREST;
+
+  _texID = ren.setTexture(0, img, levels, params);
   _width = img.width();
   _height = img.height();
   _levels = levels;
@@ -23,7 +28,12 @@ bool Texture::init(Renderer& ren, const Image& img, int levels,
 
 bool Texture::update(const Image& img)
 {
-  return updateTexture(_texID, img, _levels, _minFilter, _magFilter);
+  TextureParams params;
+  params.minFilter = _minFilter;
+  params.magFilter = _magFilter;
+  params.mipFilter = FILTER_NEAREST;
+
+  return updateTexture(_texID, img, _levels, params);
 }
 
 void Texture::cleanup()

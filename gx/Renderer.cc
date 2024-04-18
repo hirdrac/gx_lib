@@ -1,6 +1,6 @@
 //
 // gx/Renderer.cc
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "Renderer.hh"
@@ -34,13 +34,13 @@ namespace {
 }
 
 bool gx::updateTexture(TextureID tid, const Image& img, int levels,
-                       FilterType minFilter, FilterType magFilter)
+                       const TextureParams& params)
 {
   const std::lock_guard lg{_textureMutex};
   const auto itr = _textureOwners.find(tid);
   if (itr == _textureOwners.end()) { return false; }
 
-  itr->second->setTexture(tid, img, levels, minFilter, magFilter);
+  itr->second->setTexture(tid, img, levels, params);
   return true;
 }
 

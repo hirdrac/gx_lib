@@ -267,7 +267,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool setSwapInterval(int interval) override;
   bool setFramebufferSize(int width, int height) override;
   TextureID setTexture(TextureID id, const Image& img, int levels,
-                       FilterType minFilter, FilterType magFilter) override;
+                       const TextureParams& params) override;
   void freeTexture(TextureID id) override;
   void draw(std::initializer_list<const DrawList*> dl) override;
   void renderFrame(int64_t usecTime) override;
@@ -579,8 +579,7 @@ bool OpenGLRenderer<VER>::setFramebufferSize(int width, int height)
 
 template<int VER>
 TextureID OpenGLRenderer<VER>::setTexture(
-  TextureID id, const Image& img, int levels,
-  FilterType minFilter, FilterType magFilter)
+  TextureID id, const Image& img, int levels, const TextureParams& params)
 {
   GLenum texformat, imgformat;
   switch (img.channels()) {
@@ -630,24 +629,25 @@ TextureID OpenGLRenderer<VER>::setTexture(
     // GL_REPEAT
     // GL_MIRROR_CLAMP_TO_EDGE
 
-  if (minFilter != FILTER_UNSPECIFIED) {
+  if (params.minFilter != FILTER_UNSPECIFIED) {
     GLint val;
-    if (levels <= 1) {
-      val = (minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST;
-    } else {
-      val = (minFilter == FILTER_LINEAR)
+    if (params.mipFilter == FILTER_UNSPECIFIED) {
+      val = (params.minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST;
+    } else if (params.mipFilter == FILTER_LINEAR) {
+      val = (params.minFilter == FILTER_LINEAR)
         ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR;
-      // other values:
-      // GL_NEAREST_MIPMAP_NEAREST
-      // GL_LINEAR_MIPMAP_NEAREST
+    } else {
+      val = (params.minFilter == FILTER_LINEAR)
+        ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST;
     }
 
     t.setParameter(GL_TEXTURE_MIN_FILTER, val);
   }
 
-  if (magFilter != FILTER_UNSPECIFIED) {
-    t.setParameter(GL_TEXTURE_MAG_FILTER,
-                   (magFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
+  if (params.magFilter != FILTER_UNSPECIFIED) {
+    t.setParameter(
+      GL_TEXTURE_MAG_FILTER,
+      (params.magFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
   }
 
   return id;

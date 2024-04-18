@@ -15,6 +15,12 @@
 
 struct GLFWwindow;
 namespace gx {
+  struct TextureParams {
+    FilterType minFilter = FILTER_UNSPECIFIED;
+    FilterType magFilter = FILTER_UNSPECIFIED;
+    FilterType mipFilter = FILTER_UNSPECIFIED;
+  };
+
   class Image;
   class Renderer;
 }
@@ -36,7 +42,7 @@ class gx::Renderer
 
   // texture methods
   virtual TextureID setTexture(TextureID id, const Image& img, int levels,
-                               FilterType minFilter, FilterType magFilter) = 0;
+                               const TextureParams& params) = 0;
   virtual void freeTexture(TextureID id) = 0;
 
   // draw methods
@@ -67,6 +73,6 @@ class gx::Renderer
 
 namespace gx {
   bool updateTexture(TextureID tid, const Image& img, int levels,
-                     FilterType minFilter, FilterType magFilter);
+                     const TextureParams& params);
   void freeTexture(TextureID tid);
 }
