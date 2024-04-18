@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
   // main loop
   const gx::EventState& es = win.eventState();
-  do {
+  for (;;) {
     const auto [width,height] = win.dimensions();
     if (es.resized()) {
       // 'resized' always true once at start
@@ -68,7 +68,10 @@ int main(int argc, char** argv)
     }
 
     win.renderFrame();
+
     gx::Window::pollEvents();
+    if (es.closed() || es.keyPressCount(gx::KEY_ESCAPE, false)) { break; }
+
     if (es.mouseIn && (es.events & gx::EVENT_MOUSE_MOVE)) {
       const float tx = es.mousePt.x / float(width);
       const float ty = es.mousePt.y / float(height);
@@ -82,6 +85,14 @@ int main(int argc, char** argv)
         }
       }
     }
-  } while (!es.closed() && !es.keyPressCount(gx::KEY_ESCAPE, false));
+
+    if (es.keyPressCount(gx::KEY_F11, false)) {
+      if (win.fullScreen()) {
+        win.setSize(t.width(), t.height(), false);
+      } else {
+        win.setSize(0, 0, true);
+      }
+    }
+  }
   return 0;
 }
