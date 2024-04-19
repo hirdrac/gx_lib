@@ -21,19 +21,12 @@ bool Texture::init(Renderer& ren, const Image& img, int levels,
   _width = img.width();
   _height = img.height();
   _levels = levels;
-  _minFilter = minFilter;
-  _magFilter = magFilter;
   return (_texID != 0);
 }
 
 bool Texture::update(const Image& img)
 {
-  TextureParams params;
-  params.minFilter = _minFilter;
-  params.magFilter = _magFilter;
-  params.mipFilter = FILTER_NEAREST;
-
-  return updateTexture(_texID, img, _levels, params);
+  return updateTexture(_texID, img, _levels, {});
 }
 
 void Texture::cleanup()

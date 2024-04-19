@@ -252,6 +252,33 @@ namespace {
       0, 0, 1, 0,
       -1, 1, 0, 1};
   }
+
+  [[nodiscard]] static GLint calcMinFilter(const TextureParams& p)
+  {
+    // GL_TEXTURE_MIN_FILTER
+    if (p.minFilter == FILTER_UNSPECIFIED) { return 0; }
+
+    switch (p.mipFilter) {
+      case FILTER_LINEAR:
+        return (p.minFilter == FILTER_LINEAR)
+          ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST;
+      case FILTER_NEAREST:
+        return (p.minFilter == FILTER_LINEAR)
+          ? GL_NEAREST_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST;
+      default:
+        return (p.minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST;
+    }
+  }
+
+  [[nodiscard]] static GLint calcMagFilter(const TextureParams& p)
+  {
+    // GL_TEXTURE_MAG_FILTER
+    switch (p.magFilter) {
+      case FILTER_LINEAR:  return GL_LINEAR;
+      case FILTER_NEAREST: return GL_NEAREST;
+      default:             return 0;
+    }
+  }
 }
 
 
@@ -295,9 +322,9 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   struct TextureEntry {
     GLTexture2D<VER> tex;
-    int flags = 0;
-    int unit = -1;
+    TextureParams params;
     int channels = 0;
+    int unit = -1;
   };
   std::unordered_map<TextureID,TextureEntry> _textures;
 
@@ -629,25 +656,23 @@ TextureID OpenGLRenderer<VER>::setTexture(
     // GL_REPEAT
     // GL_MIRROR_CLAMP_TO_EDGE
 
-  if (params.minFilter != FILTER_UNSPECIFIED) {
-    GLint val;
-    if (params.mipFilter == FILTER_UNSPECIFIED) {
-      val = (params.minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST;
-    } else if (params.mipFilter == FILTER_LINEAR) {
-      val = (params.minFilter == FILTER_LINEAR)
-        ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR;
-    } else {
-      val = (params.minFilter == FILTER_LINEAR)
-        ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST;
-    }
+  {
+    const GLint oldVal = calcMinFilter(ePtr->params);
+    if (params.minFilter != FILTER_UNSPECIFIED) {
+      ePtr->params.minFilter = params.minFilter; }
+    if (params.mipFilter != FILTER_UNSPECIFIED) {
+      ePtr->params.mipFilter = params.mipFilter; }
+    const GLint newVal = calcMinFilter(ePtr->params);
 
-    t.setParameter(GL_TEXTURE_MIN_FILTER, val);
+    if (newVal != oldVal && newVal != 0) {
+      t.setParameter(GL_TEXTURE_MIN_FILTER, newVal);
+    }
   }
 
-  if (params.magFilter != FILTER_UNSPECIFIED) {
-    t.setParameter(
-      GL_TEXTURE_MAG_FILTER,
-      (params.magFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST);
+  if (params.magFilter != FILTER_UNSPECIFIED
+      && params.magFilter != ePtr->params.magFilter) {
+    ePtr->params.magFilter = params.magFilter;
+    t.setParameter(GL_TEXTURE_MAG_FILTER, calcMagFilter(ePtr->params));
   }
 
   return id;

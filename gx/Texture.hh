@@ -1,6 +1,8 @@
 //
 // gx/Texture.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
+//
+// Handle for Texture created in Renderer
 //
 
 #pragma once
@@ -49,15 +51,11 @@ class gx::Texture
   [[nodiscard]] int width() const { return _width; }
   [[nodiscard]] int height() const { return _height; }
   [[nodiscard]] int levels() const { return _levels; }
-  [[nodiscard]] FilterType minFilter() const { return _minFilter; }
-  [[nodiscard]] FilterType magFilter() const { return _magFilter; }
 
  private:
   TextureID _texID = 0;
   int _width = 0, _height = 0;
   int _levels = 1; // mipmap levels
-  FilterType _minFilter = FILTER_NEAREST;
-  FilterType _magFilter = FILTER_NEAREST;
 
   void cleanup();
 };
@@ -66,8 +64,7 @@ class gx::Texture
 // **** Inline Implementations ****
 gx::Texture::Texture(Texture&& t) noexcept
   : _texID{std::exchange(t._texID,0)},
-    _width{t._width}, _height{t._height}, _levels{t._levels},
-    _minFilter{t._minFilter}, _magFilter{t._magFilter}
+    _width{t._width}, _height{t._height}, _levels{t._levels}
 { }
 
 gx::Texture& gx::Texture::operator=(Texture&& t) noexcept
@@ -77,7 +74,5 @@ gx::Texture& gx::Texture::operator=(Texture&& t) noexcept
   _width = t._width;
   _height = t._height;
   _levels = t._levels;
-  _minFilter = t._minFilter;
-  _magFilter = t._magFilter;
   return *this;
 }
