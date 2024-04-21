@@ -26,7 +26,10 @@ bool Texture::init(Renderer& ren, const Image& img, int levels,
 
 bool Texture::update(const Image& img)
 {
-  return updateTexture(_texID, img, _levels, {});
+  if (!updateTexture(_texID, img, _levels, {})) { return false; }
+  _width = img.width();
+  _height = img.height();
+  return true;
 }
 
 void Texture::cleanup()
