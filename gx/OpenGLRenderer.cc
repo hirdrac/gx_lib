@@ -253,7 +253,7 @@ namespace {
       -1, 1, 0, 1};
   }
 
-  [[nodiscard]] static GLint calcMinFilter(const TextureParams& p)
+  [[nodiscard]] GLint calcMinFilter(const TextureParams& p)
   {
     // GL_TEXTURE_MIN_FILTER
     if (p.minFilter == FILTER_UNSPECIFIED) { return 0; }
@@ -270,7 +270,7 @@ namespace {
     }
   }
 
-  [[nodiscard]] static GLint calcMagFilter(const TextureParams& p)
+  [[nodiscard]] GLint calcMagFilter(const TextureParams& p)
   {
     // GL_TEXTURE_MAG_FILTER
     switch (p.magFilter) {
