@@ -279,6 +279,18 @@ namespace {
       default:             return 0;
     }
   }
+
+  [[nodiscard]] GLint glWrapType(WrapType wt)
+  {
+    switch (wt) {
+      case WRAP_CLAMP_TO_EDGE:        return GL_CLAMP_TO_EDGE;
+      case WRAP_CLAMP_TO_BORDER:      return GL_CLAMP_TO_BORDER;
+      case WRAP_MIRRORED_REPEAT:      return GL_MIRRORED_REPEAT;
+      case WRAP_REPEAT:               return GL_REPEAT;
+      case WRAP_MIRROR_CLAMP_TO_EDGE: return GL_MIRROR_CLAMP_TO_EDGE;
+      default:                        return 0;
+    }
+  }
 }
 
 
@@ -647,15 +659,6 @@ TextureID OpenGLRenderer<VER>::setTexture(
     0, 0, 0, img.width(), img.height(), imgformat, img.data());
   if (levels > 1) { t.generateMipmap(); }
 
-  // TODO: make texture wrap params configurable
-  t.setParameter(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  t.setParameter(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    // GL_CLAMP_TO_EDGE
-    // GL_CLAMP_TO_BORDER
-    // GL_MIRRORED_REPEAT
-    // GL_REPEAT
-    // GL_MIRROR_CLAMP_TO_EDGE
-
   {
     const GLint oldVal = calcMinFilter(ePtr->params);
     if (params.minFilter != FILTER_UNSPECIFIED) {
@@ -673,6 +676,16 @@ TextureID OpenGLRenderer<VER>::setTexture(
       && params.magFilter != ePtr->params.magFilter) {
     ePtr->params.magFilter = params.magFilter;
     t.setParameter(GL_TEXTURE_MAG_FILTER, calcMagFilter(ePtr->params));
+  }
+
+  if (params.wrapS != WRAP_UNSPECIFIED && params.wrapS != ePtr->params.wrapS) {
+    ePtr->params.wrapS = params.wrapS;
+    t.setParameter(GL_TEXTURE_WRAP_S, glWrapType(params.wrapS));
+  }
+
+  if (params.wrapT != WRAP_UNSPECIFIED && params.wrapT != ePtr->params.wrapT) {
+    ePtr->params.wrapT = params.wrapT;
+    t.setParameter(GL_TEXTURE_WRAP_T, glWrapType(params.wrapT));
   }
 
   return id;

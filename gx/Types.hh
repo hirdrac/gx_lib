@@ -1,6 +1,6 @@
 //
 // gx/Types.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #pragma once
@@ -23,6 +23,15 @@ namespace gx {
     FILTER_UNSPECIFIED = 0,
     FILTER_LINEAR,
     FILTER_NEAREST
+  };
+
+  enum WrapType {
+    WRAP_UNSPECIFIED = 0,
+    WRAP_CLAMP_TO_EDGE,
+    WRAP_CLAMP_TO_BORDER,
+    WRAP_MIRRORED_REPEAT,
+    WRAP_REPEAT,
+    WRAP_MIRROR_CLAMP_TO_EDGE,
   };
 
 

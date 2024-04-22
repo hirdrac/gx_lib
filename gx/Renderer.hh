@@ -19,6 +19,8 @@ namespace gx {
     FilterType minFilter = FILTER_UNSPECIFIED;
     FilterType magFilter = FILTER_UNSPECIFIED;
     FilterType mipFilter = FILTER_UNSPECIFIED;
+    WrapType wrapS = WRAP_UNSPECIFIED;
+    WrapType wrapT = WRAP_UNSPECIFIED;
   };
 
   class Image;
