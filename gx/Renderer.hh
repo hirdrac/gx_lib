@@ -3,18 +3,41 @@
 // Copyright (C) 2024 Richard Bradley
 //
 
-// TODO: texture wrap settings
 // TODO: frame stats (draw calls, buffer size)
 // TODO: additional mem stats (textures, combined texture size)
 
 #pragma once
 #include "DrawList.hh"
-#include "Types.hh"
 #include <initializer_list>
+#include <utility>
+#include <cstdint>
 
 
 struct GLFWwindow;
+
 namespace gx {
+  class Image;
+  class Renderer;
+
+
+  // Texture Types
+  using TextureID = uint32_t;
+
+  enum FilterType {
+    FILTER_UNSPECIFIED = 0,
+    FILTER_LINEAR,
+    FILTER_NEAREST
+  };
+
+  enum WrapType {
+    WRAP_UNSPECIFIED = 0,
+    WRAP_CLAMP_TO_EDGE,
+    WRAP_CLAMP_TO_BORDER,
+    WRAP_MIRRORED_REPEAT,
+    WRAP_REPEAT,
+    WRAP_MIRROR_CLAMP_TO_EDGE,
+  };
+
   struct TextureParams {
     FilterType minFilter = FILTER_UNSPECIFIED;
     FilterType magFilter = FILTER_UNSPECIFIED;
@@ -23,9 +46,13 @@ namespace gx {
     WrapType wrapT = WRAP_UNSPECIFIED;
   };
 
-  class Image;
-  class Renderer;
+
+  // Functions
+  bool updateTexture(TextureID tid, const Image& img, int levels,
+                     const TextureParams& params);
+  void freeTexture(TextureID tid);
 }
+
 
 class gx::Renderer
 {
@@ -71,10 +98,3 @@ class gx::Renderer
 
   [[nodiscard]] TextureID newTextureID();
 };
-
-
-namespace gx {
-  bool updateTexture(TextureID tid, const Image& img, int levels,
-                     const TextureParams& params);
-  void freeTexture(TextureID tid);
-}

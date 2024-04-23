@@ -15,26 +15,6 @@ namespace gx {
   using Vec4 = Vector4<float>;
   using Mat4 = Matrix4x4<float,ROW_MAJOR>;
 
-  using TextureID = uint32_t;
-
-
-  // enumerations
-  enum FilterType {
-    FILTER_UNSPECIFIED = 0,
-    FILTER_LINEAR,
-    FILTER_NEAREST
-  };
-
-  enum WrapType {
-    WRAP_UNSPECIFIED = 0,
-    WRAP_CLAMP_TO_EDGE,
-    WRAP_CLAMP_TO_BORDER,
-    WRAP_MIRRORED_REPEAT,
-    WRAP_REPEAT,
-    WRAP_MIRROR_CLAMP_TO_EDGE,
-  };
-
-
   // basic types
   struct Rect {
     float x, y, w, h;

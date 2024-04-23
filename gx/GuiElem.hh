@@ -4,6 +4,7 @@
 //
 
 #pragma once
+#include "Renderer.hh"
 #include "Align.hh"
 #include "Types.hh"
 #include <vector>

@@ -6,12 +6,11 @@
 //
 
 #pragma once
-#include "Types.hh"
+#include "Renderer.hh"
 #include <utility>
 
 namespace gx {
   class Texture;
-  class Renderer;
   class Image;
 }
 

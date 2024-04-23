@@ -5,7 +5,6 @@
 
 #include "Texture.hh"
 #include "Image.hh"
-#include "Renderer.hh"
 using namespace gx;
 
 
