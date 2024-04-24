@@ -11,6 +11,8 @@ using namespace gx;
 bool Texture::init(Renderer& ren, const Image& img, int levels,
                    FilterType minFilter, FilterType magFilter)
 {
+  cleanup();
+
   TextureParams params;
   params.minFilter = minFilter;
   params.magFilter = magFilter;
