@@ -620,6 +620,8 @@ template<int VER>
 TextureID OpenGLRenderer<VER>::setTexture(
   TextureID id, const Image& img, int levels, const TextureParams& params)
 {
+  levels = std::max(1, levels);
+
   GLenum texformat, imgformat;
   switch (img.channels()) {
     case 1: texformat = GL_R8;    imgformat = GL_RED;  break;
@@ -650,8 +652,8 @@ TextureID OpenGLRenderer<VER>::setTexture(
 
   auto& t = ePtr->tex;
   if (!t || t.width() != img.width() || t.height() != img.height()
-      || t.internalFormat() != texformat) {
-    t.init(std::max(1, levels), texformat, img.width(), img.height());
+      || t.levels() != levels || t.internalFormat() != texformat) {
+    t.init(levels, texformat, img.width(), img.height());
     ePtr->channels = img.channels();
   }
 
