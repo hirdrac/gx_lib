@@ -196,12 +196,7 @@ bool Font::makeAtlas(Renderer& ren)
     x += g.width + 1;
   }
 
-  if (_tex) {
-    _tex.update(atlas);
-  } else {
-    _tex.init(ren, atlas);
-  }
-
+  _tex.init(ren, atlas);
   _changed = false;
   return true;
 }
