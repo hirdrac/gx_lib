@@ -305,7 +305,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool init(GLFWwindow* win) override;
   bool setSwapInterval(int interval) override;
   bool setFramebufferSize(int width, int height) override;
-  TextureID setTexture(TextureID id, const Image& img, int levels,
+  TextureID newTexture(const Image& img, int levels,
                        const TextureParams& params) override;
   void freeTexture(TextureID id) override;
   void draw(std::initializer_list<const DrawList*> dl) override;
@@ -334,7 +334,6 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   struct TextureEntry {
     GLTexture2D<VER> tex;
-    TextureParams params;
     int channels = 0;
     int unit = -1;
   };
@@ -617,8 +616,8 @@ bool OpenGLRenderer<VER>::setFramebufferSize(int width, int height)
 }
 
 template<int VER>
-TextureID OpenGLRenderer<VER>::setTexture(
-  TextureID id, const Image& img, int levels, const TextureParams& params)
+TextureID OpenGLRenderer<VER>::newTexture(
+  const Image& img, int levels, const TextureParams& params)
 {
   levels = std::max(1, levels);
 
@@ -631,62 +630,37 @@ TextureID OpenGLRenderer<VER>::setTexture(
     default: return 0;
   }
 
-  bool newTexture = false;
-  if (id <= 0) {
-    id = newTextureID();
-    newTexture = true;
-  }
+  const TextureID id = newTextureID();
 
   const std::lock_guard lg{_glMutex};
-  TextureEntry* ePtr;
-  if (newTexture) {
-    ePtr = &_textures[id];
-  } else {
-    // update existing entry
-    const auto itr = _textures.find(id);
-    if (itr == _textures.end()) { return 0; }
-    ePtr = &(itr->second);
-  }
+  TextureEntry& te = _textures[id];
 
   setCurrentContext(_window);
 
-  auto& t = ePtr->tex;
-  if (!t || t.width() != img.width() || t.height() != img.height()
-      || t.levels() != levels || t.internalFormat() != texformat) {
-    t.init(levels, texformat, img.width(), img.height());
-    ePtr->channels = img.channels();
-  }
+  auto& t = te.tex;
+  t.init(levels, texformat, img.width(), img.height());
+  te.channels = img.channels();
 
   t.setSubImage(
     0, 0, 0, img.width(), img.height(), imgformat, img.data());
   if (levels > 1) { t.generateMipmap(); }
 
   {
-    const GLint oldVal = calcMinFilter(ePtr->params);
-    if (params.minFilter != FILTER_UNSPECIFIED) {
-      ePtr->params.minFilter = params.minFilter; }
-    if (params.mipFilter != FILTER_UNSPECIFIED) {
-      ePtr->params.mipFilter = params.mipFilter; }
-    const GLint newVal = calcMinFilter(ePtr->params);
-
-    if (newVal != oldVal && newVal != 0) {
-      t.setParameter(GL_TEXTURE_MIN_FILTER, newVal);
+    const GLint val = calcMinFilter(params);
+    if (val != 0) {
+      t.setParameter(GL_TEXTURE_MIN_FILTER, val);
     }
   }
 
-  if (params.magFilter != FILTER_UNSPECIFIED
-      && params.magFilter != ePtr->params.magFilter) {
-    ePtr->params.magFilter = params.magFilter;
-    t.setParameter(GL_TEXTURE_MAG_FILTER, calcMagFilter(ePtr->params));
+  if (params.magFilter != FILTER_UNSPECIFIED) {
+    t.setParameter(GL_TEXTURE_MAG_FILTER, calcMagFilter(params));
   }
 
-  if (params.wrapS != WRAP_UNSPECIFIED && params.wrapS != ePtr->params.wrapS) {
-    ePtr->params.wrapS = params.wrapS;
+  if (params.wrapS != WRAP_UNSPECIFIED) {
     t.setParameter(GL_TEXTURE_WRAP_S, glWrapType(params.wrapS));
   }
 
-  if (params.wrapT != WRAP_UNSPECIFIED && params.wrapT != ePtr->params.wrapT) {
-    ePtr->params.wrapT = params.wrapT;
+  if (params.wrapT != WRAP_UNSPECIFIED) {
     t.setParameter(GL_TEXTURE_WRAP_T, glWrapType(params.wrapT));
   }
 

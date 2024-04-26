@@ -33,17 +33,6 @@ namespace {
   }
 }
 
-bool gx::updateTexture(TextureID tid, const Image& img, int levels,
-                       const TextureParams& params)
-{
-  const std::lock_guard lg{_textureMutex};
-  const auto itr = _textureOwners.find(tid);
-  if (itr == _textureOwners.end()) { return false; }
-
-  itr->second->setTexture(tid, img, levels, params);
-  return true;
-}
-
 void gx::freeTexture(TextureID tid)
 {
   const std::lock_guard lg{_textureMutex};

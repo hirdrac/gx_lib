@@ -48,8 +48,6 @@ namespace gx {
 
 
   // Functions
-  bool updateTexture(TextureID tid, const Image& img, int levels,
-                     const TextureParams& params);
   void freeTexture(TextureID tid);
 }
 
@@ -70,8 +68,8 @@ class gx::Renderer
   virtual bool setFramebufferSize(int width, int height) = 0;
 
   // texture methods
-  virtual TextureID setTexture(TextureID id, const Image& img, int levels,
-                               const TextureParams& params) = 0;
+  virtual TextureID newTexture(
+    const Image& img, int levels, const TextureParams& params) = 0;
   virtual void freeTexture(TextureID id) = 0;
 
   // draw methods
