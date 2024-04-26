@@ -44,9 +44,9 @@ int main(int argc, char** argv)
   }
 
   fnt.makeAtlas(win);
-  const gx::Texture& t = fnt.tex();
+  const gx::Texture& t = fnt.atlas();
 
-  win.setSize(t.width(), t.height(), false);
+  win.setSize(fnt.atlasWidth(), fnt.atlasHeight(), false);
 
   gx::DrawList dl;
   gx::DrawContext dc{dl};
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 
     if (es.keyPressCount(gx::KEY_F11, false)) {
       if (win.fullScreen()) {
-        win.setSize(t.width(), t.height(), false);
+        win.setSize(fnt.atlasWidth(), fnt.atlasHeight(), false);
       } else {
         win.setSize(0, 0, true);
       }

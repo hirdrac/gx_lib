@@ -289,7 +289,7 @@ void DrawContext::glyph(
     pos -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
   }
 
-  texture(f.tex());
+  texture(f.atlas());
   _glyph(*g, tf, pos, nullptr);
 }
 
@@ -317,7 +317,7 @@ void DrawContext::_text(
     }
   }
 
-  texture(f.tex());
+  texture(f.atlas());
   std::size_t lineStart = 0;
   Vec2 startPos = pos;
 

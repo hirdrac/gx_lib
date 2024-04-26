@@ -144,7 +144,7 @@ bool Font::loadFromData(const GlyphStaticData* data, int glyphs)
 
 bool Font::makeAtlas(Renderer& ren)
 {
-  if (_tex && !_changed) {
+  if (_atlas && !_changed) {
     return true; // atlas already set
   }
 
@@ -171,8 +171,8 @@ bool Font::makeAtlas(Renderer& ren)
   if (texW & 15) { texW = (texW & ~15) + 16; }
   if (texH & 15) { texH = (texH & ~15) + 16; }
 
-  Image atlas;
-  atlas.init(texW, texH, 1);
+  Image atlas_img;
+  atlas_img.init(texW, texH, 1);
 
   int x = 1, y = 1;
   for (auto& itr : _glyphs) {
@@ -192,11 +192,13 @@ bool Font::makeAtlas(Renderer& ren)
     g.t1.x = float(x + g.width) / float(texW);
     g.t1.y = float(y + g.height) / float(texH);
 
-    atlas.stamp(x, y, g);
+    atlas_img.stamp(x, y, g);
     x += g.width + 1;
   }
 
-  _tex.init(ren, atlas);
+  _atlas.init(ren, atlas_img);
+  _atlasWidth = atlas_img.width();
+  _atlasHeight = atlas_img.height();
   _changed = false;
   return true;
 }

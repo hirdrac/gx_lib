@@ -65,7 +65,9 @@ class gx::Font
   [[nodiscard]] float digitWidth() const { return _digitWidth; }
     // max width of 0123456789-. characters
 
-  [[nodiscard]] const Texture& tex() const { return _tex; }
+  [[nodiscard]] const Texture& atlas() const { return _atlas; }
+  [[nodiscard]] int atlasWidth() const { return _atlasWidth; }
+  [[nodiscard]] int atlasHeight() const { return _atlasHeight; }
     // texture atlas created by engine
 
   [[nodiscard]] const auto& glyphs() const { return _glyphs; }
@@ -104,7 +106,9 @@ class gx::Font
 
  private:
   std::map<int,Glyph> _glyphs;
-  Texture _tex;
+  Texture _atlas;
+  int _atlasWidth;
+  int _atlasHeight;
   int _size = 0;
   float _ymin = 0, _ymax = 0;
   float _digitWidth = 0;
