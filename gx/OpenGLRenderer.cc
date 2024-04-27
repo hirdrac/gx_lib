@@ -305,8 +305,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool init(GLFWwindow* win) override;
   bool setSwapInterval(int interval) override;
   bool setFramebufferSize(int width, int height) override;
-  TextureID newTexture(const Image& img, int levels,
-                       const TextureParams& params) override;
+  TextureID newTexture(const Image& img, const TextureParams& params) override;
   void freeTexture(TextureID id) override;
   void draw(std::initializer_list<const DrawList*> dl) override;
   void renderFrame(int64_t usecTime) override;
@@ -617,10 +616,8 @@ bool OpenGLRenderer<VER>::setFramebufferSize(int width, int height)
 
 template<int VER>
 TextureID OpenGLRenderer<VER>::newTexture(
-  const Image& img, int levels, const TextureParams& params)
+  const Image& img, const TextureParams& params)
 {
-  levels = std::max(1, levels);
-
   GLenum texformat, imgformat;
   switch (img.channels()) {
     case 1: texformat = GL_R8;    imgformat = GL_RED;  break;
@@ -638,12 +635,12 @@ TextureID OpenGLRenderer<VER>::newTexture(
   setCurrentContext(_window);
 
   auto& t = te.tex;
-  t.init(levels, texformat, img.width(), img.height());
+  t.init(std::max(1, params.levels), texformat, img.width(), img.height());
   te.channels = img.channels();
 
   t.setSubImage(
     0, 0, 0, img.width(), img.height(), imgformat, img.data());
-  if (levels > 1) { t.generateMipmap(); }
+  if (params.levels > 1) { t.generateMipmap(); }
 
   {
     const GLint val = calcMinFilter(params);

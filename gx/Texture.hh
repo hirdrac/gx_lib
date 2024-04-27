@@ -45,12 +45,9 @@ class gx::Texture
     return init(win.renderer(), img, levels, minFilter, magFilter); }
 
   [[nodiscard]] TextureID id() const { return _texID; }
-  [[nodiscard]] int width() const { return _width; }
-  [[nodiscard]] int height() const { return _height; }
 
  private:
   TextureID _texID = 0;
-  int _width = 0, _height = 0;
 
   void cleanup();
 };
@@ -58,14 +55,12 @@ class gx::Texture
 
 // **** Inline Implementations ****
 gx::Texture::Texture(Texture&& t) noexcept
-  : _texID{std::exchange(t._texID,0)}, _width{t._width}, _height{t._height}
+  : _texID{std::exchange(t._texID,0)}
 { }
 
 gx::Texture& gx::Texture::operator=(Texture&& t) noexcept
 {
   cleanup();
   _texID = std::exchange(t._texID,0);
-  _width = t._width;
-  _height = t._height;
   return *this;
 }

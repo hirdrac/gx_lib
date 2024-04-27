@@ -39,6 +39,7 @@ namespace gx {
   };
 
   struct TextureParams {
+    int levels = 1;
     FilterType minFilter = FILTER_UNSPECIFIED;
     FilterType magFilter = FILTER_UNSPECIFIED;
     FilterType mipFilter = FILTER_UNSPECIFIED;
@@ -69,7 +70,7 @@ class gx::Renderer
 
   // texture methods
   virtual TextureID newTexture(
-    const Image& img, int levels, const TextureParams& params) = 0;
+    const Image& img, const TextureParams& params) = 0;
   virtual void freeTexture(TextureID id) = 0;
 
   // draw methods

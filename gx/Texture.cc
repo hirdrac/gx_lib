@@ -14,15 +14,14 @@ bool Texture::init(Renderer& ren, const Image& img, int levels,
   cleanup();
 
   TextureParams params;
+  params.levels = levels;
   params.minFilter = minFilter;
   params.magFilter = magFilter;
   params.mipFilter = FILTER_NEAREST;
   params.wrapS = WRAP_CLAMP_TO_EDGE;
   params.wrapT = WRAP_CLAMP_TO_EDGE;
 
-  _texID = ren.newTexture(img, levels, params);
-  _width = img.width();
-  _height = img.height();
+  _texID = ren.newTexture(img, params);
   return (_texID != 0);
 }
 
