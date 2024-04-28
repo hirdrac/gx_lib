@@ -8,6 +8,7 @@
 // TODO: smooth scrolling when moving to next image
 // TODO: zoom in/out at mouse point
 // TODO: default starting zoom command line setting
+// TODO: add support for font files (like font_viewer)
 
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
@@ -195,6 +196,7 @@ int main(int argc, char* argv[])
           case gx::KEY_ESCAPE: running = false; break;
           case gx::KEY_F11:
             if (k.pressCount) {
+              redraw = true;
               zoom = 100;
               imgScale = 1.0f;
               imgOffset = {0,0};
@@ -245,9 +247,9 @@ int main(int argc, char* argv[])
     }
 
     // draw frame
-    const auto [width,height] = win.dimensions();
     const Entry& e = entries[std::size_t(entryNo)];
     if (redraw) {
+      const auto [width,height] = win.dimensions();
       const auto [iw,ih] = calcSize(win, e.img, imgScale);
       const float ix = std::floor((float(width) - iw) * .5f);
       const float iy = std::floor((float(height) - ih) * .5f);
