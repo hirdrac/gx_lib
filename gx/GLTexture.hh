@@ -800,7 +800,13 @@ struct gx::GLTextureHandle
 
   // allow move/move-assign
   GLTextureHandle(type&& t) noexcept : id{t.release()} { }
-  type& operator=(type&& t) noexcept { id = t.release(); return *this; }
+  type& operator=(type&& t) noexcept {
+    if (this != &t) {
+      cleanup();
+      id = t.release();
+    }
+    return *this;
+  }
 
   GLuint init() {
     cleanup();
