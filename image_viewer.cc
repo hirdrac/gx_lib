@@ -14,7 +14,6 @@
 #include "gx/Logger.hh"
 #include "gx/Window.hh"
 #include "gx/DrawContext.hh"
-#include "gx/Texture.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
 #include "gx/CmdLineParser.hh"
@@ -38,7 +37,7 @@ void setWinSize(gx::Window& win, const gx::Image& img)
 struct Entry {
   std::string file;
   gx::Image img;
-  gx::Texture tex;
+  gx::TextureHandle tex;
 };
 
 struct ImgSize { float width, height; };
@@ -156,9 +155,16 @@ int main(int argc, char* argv[])
   gx::Vec2 pressPos;
   const int lastNo = int(entries.size()) - 1;
 
+  gx::TextureParams params;
+  params.levels = 6;
+  params.minFilter = gx::FILTER_LINEAR;
+  params.magFilter = magFilter;
+  params.mipFilter = gx::FILTER_LINEAR;
+
+  gx::Renderer& ren = win.renderer();
   int entryNo = 0;
   for (Entry& e : entries) {
-    e.tex.init(win, e.img, 6, gx::FILTER_LINEAR, magFilter);
+    e.tex = ren.newTexture(e.img, params);
   }
 
   gx::DrawList dl;

@@ -33,12 +33,14 @@ namespace {
   }
 }
 
-void gx::freeTexture(TextureID tid)
+
+// **** TextureHandle class ****
+void gx::TextureHandle::cleanup() noexcept
 {
   const std::lock_guard lg{_textureMutex};
-  const auto itr = _textureOwners.find(tid);
+  const auto itr = _textureOwners.find(_id);
   if (itr != _textureOwners.end()) {
-    itr->second->freeTexture(tid);
+    itr->second->freeTexture(_id);
     _textureOwners.erase(itr);
   }
 }

@@ -6,8 +6,8 @@
 //
 
 #pragma once
+#include "Renderer.hh"
 #include "Glyph.hh"
-#include "Texture.hh"
 #include "Types.hh"
 #include <string_view>
 #include <map>
@@ -29,7 +29,7 @@ class gx::Font
 {
  public:
   Font() = default;
-  Font(int fontSize) : _size{fontSize} { }
+  explicit Font(int fontSize) : _size{fontSize} { }
 
   // prevent copy but allow move
   Font(const Font&) = delete;
@@ -65,7 +65,7 @@ class gx::Font
   [[nodiscard]] float digitWidth() const { return _digitWidth; }
     // max width of 0123456789-. characters
 
-  [[nodiscard]] const Texture& atlas() const { return _atlas; }
+  [[nodiscard]] const TextureHandle& atlas() const { return _atlas; }
   [[nodiscard]] int atlasWidth() const { return _atlasWidth; }
   [[nodiscard]] int atlasHeight() const { return _atlasHeight; }
     // texture atlas created by engine
@@ -106,7 +106,7 @@ class gx::Font
 
  private:
   std::map<int,Glyph> _glyphs;
-  Texture _atlas;
+  TextureHandle _atlas;
   int _atlasWidth;
   int _atlasHeight;
   int _size = 0;

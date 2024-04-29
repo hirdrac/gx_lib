@@ -47,9 +47,34 @@ namespace gx {
     WrapType wrapT = WRAP_UNSPECIFIED;
   };
 
+  class TextureHandle {
+   public:
+    TextureHandle() = default;
+    explicit TextureHandle(TextureID id) : _id{id} { }
+    ~TextureHandle() { if (_id) cleanup(); }
 
-  // Functions
-  void freeTexture(TextureID tid);
+    // disable copy/assign
+    TextureHandle(const TextureHandle&) = delete;
+    TextureHandle& operator=(const TextureHandle&) = delete;
+
+    // enable move
+    TextureHandle(TextureHandle&& h) noexcept : _id{std::exchange(h._id, 0)} { }
+    TextureHandle& operator=(TextureHandle&& h) noexcept {
+      if (this != &h) {
+        if (_id) cleanup();
+        _id = std::exchange(h._id, 0);
+      }
+      return *this;
+    }
+
+    [[nodiscard]] explicit operator bool() const { return _id != 0; }
+    [[nodiscard]] TextureID id() const { return _id; }
+
+   private:
+    TextureID _id = 0;
+
+    void cleanup() noexcept;
+  };
 }
 
 
@@ -69,9 +94,8 @@ class gx::Renderer
   virtual bool setFramebufferSize(int width, int height) = 0;
 
   // texture methods
-  virtual TextureID newTexture(
+  virtual TextureHandle newTexture(
     const Image& img, const TextureParams& params) = 0;
-  virtual void freeTexture(TextureID id) = 0;
 
   // draw methods
   virtual void draw(std::initializer_list<const DrawList*> dl) = 0;
@@ -95,5 +119,8 @@ class gx::Renderer
   int _swapInterval = 1;
   int _frameRate = 0;
 
+  friend class TextureHandle;
+
   [[nodiscard]] TextureID newTextureID();
+  virtual void freeTexture(TextureID id) = 0;
 };

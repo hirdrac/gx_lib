@@ -7,7 +7,6 @@
 
 #include "gx/Window.hh"
 #include "gx/Font.hh"
-#include "gx/Texture.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
@@ -44,7 +43,7 @@ int main(int argc, char** argv)
   }
 
   fnt.makeAtlas(win);
-  const gx::Texture& t = fnt.atlas();
+  const gx::TextureHandle& t = fnt.atlas();
 
   win.setSize(fnt.atlasWidth(), fnt.atlasHeight(), false);
 

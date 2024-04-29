@@ -305,7 +305,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool init(GLFWwindow* win) override;
   bool setSwapInterval(int interval) override;
   bool setFramebufferSize(int width, int height) override;
-  TextureID newTexture(const Image& img, const TextureParams& params) override;
+  TextureHandle newTexture(
+    const Image& img, const TextureParams& params) override;
   void freeTexture(TextureID id) override;
   void draw(std::initializer_list<const DrawList*> dl) override;
   void renderFrame(int64_t usecTime) override;
@@ -615,7 +616,7 @@ bool OpenGLRenderer<VER>::setFramebufferSize(int width, int height)
 }
 
 template<int VER>
-TextureID OpenGLRenderer<VER>::newTexture(
+TextureHandle OpenGLRenderer<VER>::newTexture(
   const Image& img, const TextureParams& params)
 {
   GLenum texformat, imgformat;
@@ -624,7 +625,7 @@ TextureID OpenGLRenderer<VER>::newTexture(
     case 2: texformat = GL_RG8;   imgformat = GL_RG;   break;
     case 3: texformat = GL_RGB8;  imgformat = GL_RGB;  break;
     case 4: texformat = GL_RGBA8; imgformat = GL_RGBA; break;
-    default: return 0;
+    default: return {};
   }
 
   const TextureID id = newTextureID();
@@ -661,7 +662,7 @@ TextureID OpenGLRenderer<VER>::newTexture(
     t.setParameter(GL_TEXTURE_WRAP_T, glWrapType(params.wrapT));
   }
 
-  return id;
+  return TextureHandle{id};
 }
 
 template<int VER>

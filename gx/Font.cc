@@ -10,7 +10,6 @@
 
 #include "Font.hh"
 #include "Image.hh"
-#include "Renderer.hh"
 #include "Unicode.hh"
 #include "Logger.hh"
 #include "Assert.hh"
@@ -171,8 +170,8 @@ bool Font::makeAtlas(Renderer& ren)
   if (texW & 15) { texW = (texW & ~15) + 16; }
   if (texH & 15) { texH = (texH & ~15) + 16; }
 
-  Image atlas_img;
-  atlas_img.init(texW, texH, 1);
+  Image img;
+  img.init(texW, texH, 1);
 
   int x = 1, y = 1;
   for (auto& itr : _glyphs) {
@@ -192,13 +191,19 @@ bool Font::makeAtlas(Renderer& ren)
     g.t1.x = float(x + g.width) / float(texW);
     g.t1.y = float(y + g.height) / float(texH);
 
-    atlas_img.stamp(x, y, g);
+    img.stamp(x, y, g);
     x += g.width + 1;
   }
 
-  _atlas.init(ren, atlas_img);
-  _atlasWidth = atlas_img.width();
-  _atlasHeight = atlas_img.height();
+  TextureParams params;
+  params.minFilter = FILTER_LINEAR;
+  params.magFilter = FILTER_LINEAR;
+  params.wrapS = WRAP_CLAMP_TO_EDGE;
+  params.wrapT = WRAP_CLAMP_TO_EDGE;
+
+  _atlas = ren.newTexture(img, params);
+  _atlasWidth = img.width();
+  _atlasHeight = img.height();
   _changed = false;
   return true;
 }

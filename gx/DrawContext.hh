@@ -12,7 +12,7 @@
 
 #pragma once
 #include "DrawList.hh"
-#include "Texture.hh"
+#include "Renderer.hh"
 #include "Color.hh"
 #include "Normal.hh"
 #include "Align.hh"
@@ -102,7 +102,7 @@ class gx::DrawContext
   void normal(uint32_t n) { add(CMD_normal, n); }
 
   inline void texture(TextureID tid);
-  void texture(const Texture& t) { texture(t.id()); }
+  void texture(const TextureHandle& h) { texture(h.id()); }
 
   // render state change (persists across different DrawLists)
   void lineWidth(float w) { add(CMD_lineWidth, w); }
