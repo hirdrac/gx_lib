@@ -50,28 +50,18 @@ int main(int argc, char** argv)
   gx::DrawList dl;
   gx::DrawContext dc{dl};
   int lastCode = 0;
+  bool redraw = true;
 
   // main loop
   const gx::EventState& es = win.eventState();
   for (;;) {
-    const auto [width,height] = win.dimensions();
-    if (es.resized()) {
-      // 'resized' always true once at start
-      dc.clearList();
-      dc.clearView(.3f,.1f,.1f);
-      dc.color(gx::WHITE);
-      dc.texture(t);
-      dc.rectangle({0, 0, float(width), float(height)}, {0,0}, {1,1});
-
-      win.draw(dl);
-    }
-
-    win.renderFrame();
-
+    // handle events
     gx::Window::pollEvents();
+    if (es.resized()) { redraw = true; }
     if (es.closed() || es.keyPressCount(gx::KEY_ESCAPE, false)) { break; }
 
     if (es.mouseIn && (es.events & gx::EVENT_MOUSE_MOVE)) {
+      const auto [width,height] = win.dimensions();
       const float tx = es.mousePt.x / float(width);
       const float ty = es.mousePt.y / float(height);
       for (auto& [c,g] : fnt.glyphs()) {
@@ -86,12 +76,27 @@ int main(int argc, char** argv)
     }
 
     if (es.keyPressCount(gx::KEY_F11, false)) {
+      redraw = true;
       if (win.fullScreen()) {
         win.setSize(fnt.atlasWidth(), fnt.atlasHeight(), false);
       } else {
         win.setSize(0, 0, true);
       }
     }
+
+    // draw frame
+    if (redraw) {
+      const auto [width,height] = win.dimensions();
+      dc.clearList();
+      dc.clearView(.3f,.1f,.1f);
+      dc.color(gx::WHITE);
+      dc.texture(t);
+      dc.rectangle({0, 0, float(width), float(height)}, {0,0}, {1,1});
+      win.draw(dl);
+    }
+
+    win.renderFrame();
   }
+
   return 0;
 }
