@@ -90,7 +90,7 @@ class gx::GLTexture1D
   [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
 
   // accessors
-  [[nodiscard]] static GLenum target() { return GL_TEXTURE_1D; }
+  [[nodiscard]] static constexpr GLenum target() { return GL_TEXTURE_1D; }
   [[nodiscard]] GLuint id() const { return _tex.id; }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
   [[nodiscard]] GLsizei levels() const { return _levels; }
@@ -167,7 +167,7 @@ class gx::GLTexture2DT
   [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
 
   // accessors
-  [[nodiscard]] static GLenum target() { return TARGET; }
+  [[nodiscard]] static constexpr GLenum target() { return TARGET; }
   [[nodiscard]] GLuint id() const { return _tex.id; }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
   [[nodiscard]] GLsizei levels() const { return _levels; }
@@ -251,7 +251,7 @@ class gx::GLTexture3DT
   [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
 
   // accessors
-  [[nodiscard]] static GLenum target() { return TARGET; }
+  [[nodiscard]] static constexpr GLenum target() { return TARGET; }
   [[nodiscard]] GLuint id() const { return _tex.id; }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
   [[nodiscard]] GLsizei levels() const { return _levels; }
@@ -339,7 +339,7 @@ class gx::GLTextureCubeMap
   [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
 
   // accessors
-  [[nodiscard]] static GLenum target() { return GL_TEXTURE_CUBE_MAP; }
+  [[nodiscard]] static constexpr GLenum target() { return GL_TEXTURE_CUBE_MAP; }
   [[nodiscard]] GLuint id() const { return _tex.id; }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
   [[nodiscard]] GLsizei levels() const { return _levels; }
@@ -420,7 +420,7 @@ class gx::GLTextureBuffer
   [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
 
   // accessors
-  [[nodiscard]] static GLenum target() { return GL_TEXTURE_BUFFER; }
+  [[nodiscard]] static constexpr GLenum target() { return GL_TEXTURE_BUFFER; }
   [[nodiscard]] GLuint id() const { return _tex.id; }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
 
