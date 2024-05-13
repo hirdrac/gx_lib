@@ -1,6 +1,6 @@
 //
 // gx/MathUtil.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // useful numeric constants and various numeric functions
 //
@@ -13,21 +13,6 @@
 static_assert(sizeof(char) == 1);
 static_assert(sizeof(short) == 2);
 static_assert(sizeof(int) == 4);
-
-
-#if defined(__GNUC__) && !defined(__clang__)
-#  ifndef __has_builtin
-#  define __has_builtin(x) 0
-#  endif
-
-#  if !__has_builtin(__builtin_sqrt)
-#  error "__builtin_sqrt() required"
-#  elif !__has_builtin(__builtin_cos)
-#  error "__builtin_cos() required"
-#  elif !__has_builtin(__builtin_sin)
-#  error "__builtin_sin() required"
-#  endif
-#endif
 
 
 namespace gx {
@@ -239,37 +224,4 @@ namespace gx {
       return x;
     }
   }
-
-
-#if defined(__GNUC__) && !defined(__clang__)
-  // constexpr versions of sqrt,cos,sin
-  [[nodiscard]] constexpr float sqrt(float x) {
-    return __builtin_sqrtf(x); }
-  [[nodiscard]] constexpr double sqrt(double x) {
-    return __builtin_sqrt(x); }
-  [[nodiscard]] constexpr long double sqrt(long double x) {
-    return __builtin_sqrtl(x); }
-
-  [[nodiscard]] constexpr float cos(float x) {
-    return __builtin_cosf(x); }
-  [[nodiscard]] constexpr double cos(double x) {
-    return __builtin_cos(x); }
-  [[nodiscard]] constexpr long double cos(long double x) {
-    return __builtin_cosl(x); }
-
-  [[nodiscard]] constexpr float sin(float x) {
-    return __builtin_sinf(x); }
-  [[nodiscard]] constexpr double sin(double x) {
-    return __builtin_sin(x); }
-  [[nodiscard]] constexpr long double sin(long double x) {
-    return __builtin_sinl(x); }
-#else
-  // __builtin functions aren't constexpr for clang
-  template<class T>
-  [[nodiscard]] T sqrt(T x) { return std::sqrt(x); }
-  template<class T>
-  [[nodiscard]] T cos(T x) { return std::cos(x); }
-  template<class T>
-  [[nodiscard]] T sin(T x) { return std::sin(x); }
-#endif
 }
