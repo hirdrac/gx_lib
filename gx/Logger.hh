@@ -32,6 +32,10 @@ class gx::Logger
   Logger();
   ~Logger();
 
+  // disable copy/assignment/move
+  Logger(const Logger&) = delete;
+  Logger& operator=(const Logger&) = delete;
+
   // members
   void setOStream(std::ostream& os);
   void setFile(std::string_view fileName);
@@ -61,10 +65,6 @@ class gx::Logger
   // methods
   [[nodiscard]] std::ostringstream logStream(LogLevel lvl);
   void logMsg(std::ostringstream& os, std::string_view file, int line);
-
-  // disable copy/assignment/move
-  Logger(const Logger&) = delete;
-  Logger& operator=(const Logger&) = delete;
 };
 
 
