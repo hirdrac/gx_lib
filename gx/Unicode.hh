@@ -1,6 +1,6 @@
 //
 // gx/Unicode.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // Unicode/UTF-8 utilities
 //
@@ -51,10 +51,12 @@ class gx::UTF8Iterator
     : _begin{s}, _itr{s}, _end{nullptr} { }
   UTF8Iterator(const char* s, const char* e) noexcept
     : _begin{s}, _itr{s}, _end{e} { }
+  UTF8Iterator(const char* data, std::size_t size) noexcept
+    : _begin{data}, _itr{data}, _end{data + size} { }
 
   template<class T>
   explicit UTF8Iterator(const T& s)
-    : _begin{std::data(s)}, _itr{_begin}, _end{_begin + std::size(s)} { }
+    : UTF8Iterator{std::data(s), std::size(s)} { }
 
 
   // member functions
