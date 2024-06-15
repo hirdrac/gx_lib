@@ -59,9 +59,8 @@ namespace gx
 
   [[nodiscard]] constexpr std::string_view trimSpaces(std::string_view str)
   {
-    std::size_t n = 0, len = str.length();
-    while (len > 0 && str[n] == ' ') { ++n; --len; }
-    while (len > 0 && str[len-1] == ' ') { --len; }
-    return str.substr(n, len);
+    while (!str.empty() && str.front() == ' ') { str.remove_prefix(1); }
+    while (!str.empty() && str.back() == ' ') { str.remove_suffix(1); }
+    return str;
   }
 }
