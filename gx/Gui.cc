@@ -1453,7 +1453,7 @@ bool Gui::drawElem(
     case GUI_VLABEL:
       dc2.color(style->textColor);
       dc2.text(
-        {thm.font, float(thm.textSpacing), 0, {0,-1}, {1,0}, {0,-1}, {1,0}},
+        {thm.font, float(thm.textSpacing), 0, 0, {0,-1}, {1,0}, {0,-1}, {1,0}},
         {ex, ey+eh}, ALIGN_TOP_LEFT, def.label().text);
       break;
     case GUI_HLINE: {

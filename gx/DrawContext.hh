@@ -52,6 +52,7 @@ struct gx::TextFormatting
   const Font* font = nullptr;
   float lineSpacing = 0;  // extra spacing between lines
   float glyphSpacing = 0; // extra spacing between glyphs
+  float tabWidth = 0;     // pixel width of tabs
   Vec2 advX{1,0};         // dir of next glyph
   Vec2 advY{0,1};         // dir of next line
   Vec2 glyphX{1,0};       // glyph quad sides

@@ -189,7 +189,6 @@ int main(int argc, char** argv)
 
   fnt.makeAtlas(win);
 
-  const float tabWidth = fnt.glyphWidth(' ') * float(tabSize);
   const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
   int topLine = 0;
 
@@ -197,6 +196,7 @@ int main(int argc, char** argv)
   gx::DrawContext dc{dl};
   gx::TextFormatting tf{&fnt};
   tf.glyphSpacing = float(glyphSpacing);
+  tf.tabWidth = fnt.glyphWidth(' ') * float(tabSize);
 
   // main loop
   bool redraw = true, running = true;
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
             i += segment.size() + 1;
             if (tabPos != std::string_view::npos) {
               const float tx2 = tx + segLen;
-              tx = (std::floor(tx2 / tabWidth) + 1.0f) * tabWidth;
+              tx = (std::floor(tx2 / tf.tabWidth) + 1.0f) * tf.tabWidth;
             }
           }
 
