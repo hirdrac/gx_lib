@@ -25,7 +25,7 @@ namespace gx {
   class Font;
   struct Glyph;
   class DrawContext;
-  struct TextFormatting;
+  struct TextFormat;
 
   struct Vertex2C {
     float x, y; uint32_t c;
@@ -47,7 +47,7 @@ namespace gx {
   struct Vertex3TCN { float x,y,z,s,t; uint32_t c, n; };
 }
 
-struct gx::TextFormatting
+struct gx::TextFormat
 {
   const Font* font = nullptr;
   float lineSpacing = 0;  // extra spacing between lines
@@ -205,13 +205,13 @@ class gx::DrawContext
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip);
 
   // High-level data entry
-  void text(const TextFormatting& tf, Vec2 pos, AlignEnum align,
+  void text(const TextFormat& tf, Vec2 pos, AlignEnum align,
             std::string_view text) {
     _text(tf, pos, align, text, nullptr); }
-  void text(const TextFormatting& tf, Vec2 pos, AlignEnum align,
+  void text(const TextFormat& tf, Vec2 pos, AlignEnum align,
             std::string_view text, const Rect& clip) {
     _text(tf, pos, align, text, &clip); }
-  void glyph(const TextFormatting& tf, Vec2 pos, AlignEnum align, int code);
+  void glyph(const TextFormat& tf, Vec2 pos, AlignEnum align, int code);
 
   void circleSector(
     Vec2 center, float radius, float startAngle, float endAngle, int segments);
@@ -277,9 +277,9 @@ class gx::DrawContext
   }
 
   void _rectangle(float x, float y, float w, float h);
-  void _text(const TextFormatting& tf, Vec2 pos, AlignEnum align,
+  void _text(const TextFormat& tf, Vec2 pos, AlignEnum align,
              std::string_view text, const Rect* clipPtr);
-  void _glyph(const Glyph& g, const TextFormatting& tf, Vec2 pos,
+  void _glyph(const Glyph& g, const TextFormat& tf, Vec2 pos,
               const Rect* clipPtr);
   void _circleSector(
     Vec2 center, float radius, float angle0, float angle1, int segments);

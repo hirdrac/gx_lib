@@ -194,7 +194,7 @@ int main(int argc, char** argv)
 
   gx::DrawList dl;
   gx::DrawContext dc{dl};
-  gx::TextFormatting tf{&fnt};
+  gx::TextFormat tf{&fnt};
   tf.glyphSpacing = float(glyphSpacing);
   tf.tabWidth = fnt.glyphWidth(' ') * float(tabSize);
 

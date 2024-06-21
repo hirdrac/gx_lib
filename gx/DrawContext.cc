@@ -257,7 +257,7 @@ void DrawContext::rectangle(
 }
 
 void DrawContext::glyph(
-  const TextFormatting& tf, Vec2 pos, AlignEnum align, int code)
+  const TextFormat& tf, Vec2 pos, AlignEnum align, int code)
 {
   if (!checkColor()) { return; }
 
@@ -294,7 +294,7 @@ void DrawContext::glyph(
 }
 
 void DrawContext::_text(
-  const TextFormatting& tf, Vec2 pos, AlignEnum align,
+  const TextFormat& tf, Vec2 pos, AlignEnum align,
   std::string_view text, const Rect* clipPtr)
 {
   if (text.empty() || !checkColor()) { return; }
@@ -356,7 +356,7 @@ void DrawContext::_text(
 }
 
 void DrawContext::_glyph(
-  const Glyph& g, const TextFormatting& tf, Vec2 pos, const Rect* clipPtr)
+  const Glyph& g, const TextFormat& tf, Vec2 pos, const Rect* clipPtr)
 {
   const Vec2 gx = tf.glyphX * float(g.width);
   const Vec2 gy = tf.glyphY * float(g.height);

@@ -203,7 +203,7 @@ void draw_lines2(gx::DrawContext& dc, float x, float y)
 
 void draw_text1(gx::DrawContext& dc, float x, float y)
 {
-  gx::TextFormatting tf{&TheFont};
+  gx::TextFormat tf{&TheFont};
   tf.scale(2.0f);
   dc.color(WHITE);
 
@@ -265,7 +265,7 @@ int main(int argc, char** argv)
 
   TheFont.makeAtlas(win);
 
-  gx::TextFormatting tf{&TheFont};
+  gx::TextFormat tf{&TheFont};
   const int gfxCount = std::size(gfxData);
   int page = 0, gfxPerPage = 0, maxPage = 0;
   bool redraw = true, running = true;
