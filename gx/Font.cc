@@ -267,7 +267,6 @@ void Font::calcAttributes()
 float Font::calcLength(std::string_view text, float glyphSpacing) const
 {
   float max_width = 0, width = -glyphSpacing;
-  const Glyph* g = nullptr;
   for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
     int32_t ch = itr.get();
     if (ch == '\t') {
@@ -277,7 +276,7 @@ float Font::calcLength(std::string_view text, float glyphSpacing) const
       width = -glyphSpacing;
     }
 
-    g = findGlyph(ch);
+    const Glyph* g = findGlyph(ch);
     if (!g) {
       g = findGlyph(_unknownCode);
       GX_ASSERT(g != nullptr);
@@ -294,7 +293,13 @@ std::string_view Font::fitText(std::string_view text, float maxWidth) const
   float w = 0;
   for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
     int32_t ch = itr.get();
-    if (ch == '\t') { ch = ' '; }
+    if (ch == '\t') {
+      ch = ' ';
+    } else if (ch == '\n') {
+      // stop at first linebreak
+      return text.substr(0, itr.pos());
+    }
+
     const Glyph* g = findGlyph(ch);
     if (!g) {
       g = findGlyph(_unknownCode);
