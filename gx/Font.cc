@@ -264,31 +264,7 @@ void Font::calcAttributes()
   }
 }
 
-float Font::calcLength(std::string_view line, float glyphSpacing) const
-{
-  float width = -glyphSpacing;
-  const Glyph* g = nullptr;
-  for (UTF8Iterator itr{line}; !itr.done(); itr.next()) {
-    int32_t ch = itr.get();
-    if (ch == '\t') {
-      ch = ' '; // tab logic should be handled outside of this function
-    } else if (ch == '\n') {
-      break;
-    }
-
-    g = findGlyph(ch);
-    if (!g) {
-      g = findGlyph(_unknownCode);
-      GX_ASSERT(g != nullptr);
-    }
-
-    width += g->advX + glyphSpacing;
-  }
-
-  return std::max(width, 0.0f);
-}
-
-float Font::calcMaxLength(std::string_view text, float glyphSpacing) const
+float Font::calcLength(std::string_view text, float glyphSpacing) const
 {
   float max_width = 0, width = -glyphSpacing;
   const Glyph* g = nullptr;
