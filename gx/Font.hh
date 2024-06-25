@@ -90,8 +90,8 @@ class gx::Font
     // returns pixel length of longest line in input text
 
   [[nodiscard]] std::string_view fitText(
-    std::string_view text, float maxWidth) const;
-    // returns sub-string that fits in specified width
+    std::string_view text, float glyphSpacing, float maxLength) const;
+    // returns sub-string that fits in specified length
 
   void addGlyph(int code, int width, int height, float left, float top,
 		float advX, float advY, const uint8_t* bitmap, bool copy);

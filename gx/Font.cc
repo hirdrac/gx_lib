@@ -266,14 +266,14 @@ void Font::calcAttributes()
 
 float Font::calcLength(std::string_view text, float glyphSpacing) const
 {
-  float max_width = 0, width = -glyphSpacing;
+  float max_len = 0, len = -glyphSpacing;
   for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
     int32_t ch = itr.get();
     if (ch == '\t') {
       ch = ' '; // tab logic should be handled outside of this function
     } else if (ch == '\n') {
-      max_width = std::max(max_width, width);
-      width = -glyphSpacing;
+      max_len = std::max(max_len, len);
+      len = -glyphSpacing;
     }
 
     const Glyph* g = findGlyph(ch);
@@ -282,15 +282,16 @@ float Font::calcLength(std::string_view text, float glyphSpacing) const
       GX_ASSERT(g != nullptr);
     }
 
-    width += g->advX + glyphSpacing;
+    len += g->advX + glyphSpacing;
   }
 
-  return std::max(max_width, width);
+  return std::max(max_len, len);
 }
 
-std::string_view Font::fitText(std::string_view text, float maxWidth) const
+std::string_view Font::fitText(
+  std::string_view text, float glyphSpacing, float maxLength) const
 {
-  float w = 0;
+  float len = -glyphSpacing;
   for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
     int32_t ch = itr.get();
     if (ch == '\t') {
@@ -306,8 +307,8 @@ std::string_view Font::fitText(std::string_view text, float maxWidth) const
       GX_ASSERT(g != nullptr);
     }
 
-    if ((w + g->advX) > maxWidth) { return text.substr(0, itr.pos()); }
-    w += g->advX;
+    if ((len + g->advX) > maxLength) { return text.substr(0, itr.pos()); }
+    len += g->advX + glyphSpacing;
   }
 
   return text;
