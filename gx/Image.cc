@@ -1,6 +1,6 @@
 //
 // gx/Image.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "Image.hh"
@@ -47,6 +47,8 @@ bool Image::init(int width, int height, int channels,
 
 bool Image::load(const char* filename)
 {
+  GX_ASSERT(filename != nullptr);
+
   int w = 0, h = 0, c = 0;
   uint8_t* data = stbi_load(filename, &w, &h, &c, 0);
   if (!data) {
@@ -62,7 +64,7 @@ bool Image::load(const char* filename)
 bool Image::loadFromMemory(const void* mem, std::size_t memSize)
 {
   GX_ASSERT(mem != nullptr);
-  GX_ASSERT(memSize <= std::numeric_limits<int>::max());
+  GX_ASSERT(memSize > 0 && memSize <= std::numeric_limits<int>::max());
 
   int w = 0, h = 0, c = 0;
   uint8_t* data = stbi_load_from_memory(

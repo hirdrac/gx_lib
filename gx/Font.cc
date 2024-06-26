@@ -82,7 +82,9 @@ static bool genGlyphs(Font& font, FT_Face face,
 // **** Font class ****
 bool Font::load(const char* fileName)
 {
+  GX_ASSERT(fileName != nullptr);
   GX_ASSERT(_size != 0);
+
   if (!initFreeType()) { return false; }
 
   FT_Face face;
