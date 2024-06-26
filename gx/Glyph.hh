@@ -1,6 +1,6 @@
 //
 // gx/Glyph.hh
-// Copyright (C) 2022 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #pragma once
@@ -22,5 +22,5 @@ struct gx::Glyph
   std::unique_ptr<uint8_t[]> bitmap_copy;
 
   // texture atlas coords
-  Vec2 t0{INIT_NONE}, t1{INIT_NONE};
+  Vec2 t0, t1;
 };

@@ -103,13 +103,12 @@ class gx::Font
  private:
   std::map<int,Glyph> _glyphs;
   TextureHandle _atlas;
-  int _atlasWidth;
-  int _atlasHeight;
+  int _atlasWidth = 0;
+  int _atlasHeight = 0;
   int _size = 0;
   float _ymin = 0, _ymax = 0;
   float _digitWidth = 0;
   int32_t _unknownCode = '*';
-  bool _changed = false; // change since last atlas creation
 
   Glyph& newGlyph(int code, int width, int height, float left, float top,
 		  float advX, float advY);

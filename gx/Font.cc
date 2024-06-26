@@ -143,10 +143,6 @@ bool Font::loadFromData(const GlyphStaticData* data, int glyphs)
 
 bool Font::makeAtlas(Renderer& ren)
 {
-  if (_atlas && !_changed) {
-    return true; // atlas already set
-  }
-
   // get font dimensions for texture creation
   int maxW = 0, maxH = 0, totalW = 0;
   for (const auto& itr : _glyphs) {
@@ -204,7 +200,6 @@ bool Font::makeAtlas(Renderer& ren)
   _atlas = ren.newTexture(img, params);
   _atlasWidth = img.width();
   _atlasHeight = img.height();
-  _changed = false;
   return true;
 }
 
@@ -212,7 +207,6 @@ void Font::addGlyph(
   int code, int width, int height, float left, float top,
   float advX, float advY, const uint8_t* bitmap, bool copy)
 {
-  _changed = true;
   Glyph& g = newGlyph(code, width, height, left, top, advX, advY);
   const std::size_t size = g.width * g.height;
   if (copy && bitmap && size > 0) {
