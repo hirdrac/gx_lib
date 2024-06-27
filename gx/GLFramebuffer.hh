@@ -7,7 +7,8 @@
 
 // NOTES:
 // - attaching textures:
-//   * 3.3: glFramebufferTexture2D
+//   * 3.0: glFramebufferTexture2D
+//   * 3.2: glFramebufferTexture
 //   * 4.5: glNamedFramebufferTexture
 // - renderbuffer (vs. textures)
 //   * use for depth/stencil attachment if reading isn't necessary

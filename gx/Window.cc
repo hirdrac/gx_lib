@@ -3,6 +3,8 @@
 // Copyright (C) 2024 Richard Bradley
 //
 
+// TODO: generate SIZE event for setSize() on Windows
+
 #include "Window.hh"
 #include "OpenGLRenderer.hh"
 #include "Logger.hh"
