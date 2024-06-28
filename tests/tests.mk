@@ -1,7 +1,9 @@
 FLAGS_TEST = -UNDEBUG
 INCLUDE_TEST = .
 
+TEST_CmdLineParser.SRC = tests/CmdLineParserTest.cc
+TEST_Color.SRC = tests/ColorTest.cc
 TEST_MathUtil.SRC = tests/MathUtilTest.cc
 TEST_StringUtil.SRC = tests/StringUtilTest.cc
-TEST_Color.SRC = tests/ColorTest.cc
-TEST_CmdLineParser.SRC = tests/CmdLineParserTest.cc
+TEST_Unicode.SRC = tests/UnicodeTest.cc
+TEST_Vector3D.SRC = tests/Vector3DTest.cc
