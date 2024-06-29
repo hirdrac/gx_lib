@@ -9,7 +9,6 @@
 // TODO: naming threads
 //   - at thread creation, thread ID given short name that is
 //     used for logging instead of ID (main, render, log)
-// TODO: remove source dir prefix ('src/') from logged filename
 // TODO: replace clock_gettime() with std::chrono code?
 
 #include "Logger.hh"
@@ -162,6 +161,11 @@ std::ostringstream Logger::logStream(LogLevel lvl)
 
 void Logger::logMsg(std::ostringstream& ss, std::string_view file, int line)
 {
+  const auto sz = _sourcePrefix.size();
+  if (sz > 0 && file.substr(0, sz) == _sourcePrefix) {
+    file.remove_prefix(sz);
+  }
+
   // footer
   ss << " (";
   const auto tid = getThreadID();

@@ -5,6 +5,7 @@
 
 #pragma once
 #include <string_view>
+#include <string>
 #include <memory>  // unique_ptr
 #include <sstream> // ostringstream
 #include <ostream>
@@ -46,6 +47,7 @@ class gx::Logger
   void disable() { _level = LVL_DISABLED; }
   void showMS(bool enable) { _showMS = enable; }
   void separateDate(bool enable) { _separateDate = enable; }
+  void setSourcePrefix(std::string_view prefix) { _sourcePrefix = prefix; }
 
   // log method
   template<class... Args>
@@ -57,6 +59,7 @@ class gx::Logger
 
  private:
   std::unique_ptr<LoggerImpl> _impl;
+  std::string _sourcePrefix = "src/";
   int _lastDate = 0;
   LogLevel _level = LVL_INFO;
   bool _showMS = true;
