@@ -54,7 +54,7 @@ class gx::DrawContext
   explicit DrawContext(DrawList& dl) : DrawContext{&dl} { }
 
   // Low-level data entry
-  void clearList() { init(); _data->clear(); _dataColor = 0; }
+  void clearList() { init(); _data->clear(); }
   void reserve(std::size_t n) { _data->reserve(n); }
   [[nodiscard]] std::size_t size() const { return _data->size(); }
   [[nodiscard]] bool empty() const { return _data->empty(); }
@@ -73,9 +73,9 @@ class gx::DrawContext
   inline void vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1);
   inline void vgradient(float y0, const Color& c0, float y1, const Color& c1);
 
-  void normal(float x, float y, float z) { normal(packNormal(x,y,z)); }
-  void normal(const Vec3& n) { normal(packNormal(n)); }
-  void normal(uint32_t n) { add(CMD_normal, n); }
+  inline void normal(float x, float y, float z);
+  inline void normal(const Vec3& n);
+  inline void normal(uint32_t n);
 
   inline void texture(TextureID tid);
   void texture(const TextureHandle& h) { texture(h.id()); }
@@ -221,20 +221,23 @@ class gx::DrawContext
 
   // general properties
   TextureID _lastTexID;
+  uint32_t _lastNormal;
 
   // color/gradient properties
   float _g0, _g1;                 // x or y gradient coords
   Color _fullcolor0{INIT_NONE};   // full float colors for gradient calc
   Color _fullcolor1{INIT_NONE};
   RGBA8 _color0, _color1;         // current colors
-  RGBA8 _dataColor = 0;           // last color set in data
+  RGBA8 _dataColor;               // last color set in data
   enum ColorMode { CM_SOLID, CM_HGRADIENT, CM_VGRADIENT };
   ColorMode _colorMode;
 
   void init() {
     _lastTexID = 0;
+    _lastNormal = 0;
     _color0 = 0;
     _color1 = 0;
+    _dataColor = 0;
     _colorMode = CM_SOLID;
   }
 
@@ -339,6 +342,24 @@ void gx::DrawContext::vgradient(
   _fullcolor1 = c1;
 }
 
+void gx::DrawContext::normal(float x, float y, float z)
+{
+  normal(packNormal(x,y,z));
+}
+
+void gx::DrawContext::normal(const Vec3& n)
+{
+  normal(packNormal(n));
+}
+
+void gx::DrawContext::normal(uint32_t n)
+{
+  if (n != _lastNormal) {
+    _lastNormal = n;
+    add(CMD_normal, n);
+  }
+}
+
 void gx::DrawContext::texture(TextureID tid)
 {
   if (tid != _lastTexID) {
@@ -377,8 +398,8 @@ gx::RGBA8 gx::DrawContext::pointColor(const Vec3& pt) const
 void gx::DrawContext::setColor()
 {
   if (_dataColor != _color0) {
-    add(CMD_color, _color0);
     _dataColor = _color0;
+    add(CMD_color, _color0);
   }
 }
 
