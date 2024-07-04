@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 60 (2024/2/25)
+# Makefile.mk - revision 60 (2024/7/3)
 # Copyright (C) 2024 Richard Bradley
 #
 # Additional contributions from:
@@ -339,7 +339,7 @@ override _src_filter := $(if $(_windows),,$(_rc_ptrn))\
   %.h %.hh %.H %.hp %.hxx %.hpp %.HPP %.h++ %.tcc
 
 # compiler allowed standards
-override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x c23 gnu23
+override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x c23 gnu23 c2y gnu2y
 override _cxx_stds := c++98 gnu++98 c++03 gnu++03 c++11 gnu++11 c++14 gnu++14 c++17 gnu++17 c++2a gnu++2a c++20 gnu++20 c++2b gnu++2b c++23 gnu++23 c++2c gnu++2c c++26 gnu++26
 
 # compiler functions
