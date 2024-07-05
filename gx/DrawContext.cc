@@ -328,7 +328,7 @@ void DrawContext::_text(
 
     if (!line.empty()) {
       if (h_align != ALIGN_LEFT) {
-        const float tw = f.calcLength(line, tf.glyphSpacing);
+        const float tw = tf.calcLength(line);
         pos -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
       }
 

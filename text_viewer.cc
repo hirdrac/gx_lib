@@ -268,7 +268,7 @@ int main(int argc, char** argv)
             const std::string_view segment = line.substr(i, count);
             dc.color(gx::WHITE);
             dc.text(tf, {tx, ty}, gx::ALIGN_TOP_LEFT, segment);
-            const float segLen = fnt.calcLength(segment, tf.glyphSpacing);
+            const float segLen = tf.calcLength(segment);
             tooLong |= ((tx+segLen) > win_w);
             i += segment.size() + 1;
             if (tabPos != std::string_view::npos) {

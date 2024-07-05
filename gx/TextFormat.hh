@@ -34,4 +34,6 @@ struct gx::TextFormat
     glyphX = gx::rotate(glyphX, rad);
     glyphY = gx::rotate(glyphY, rad);
   }
+
+  [[nodiscard]] float calcLength(std::string_view text) const;
 };
