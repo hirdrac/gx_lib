@@ -3,8 +3,6 @@
 // Copyright (C) 2024 Richard Bradley
 //
 
-// TODO: generate SIZE event for setSize() on Windows
-
 #include "Window.hh"
 #include "OpenGLRenderer.hh"
 #include "Logger.hh"
@@ -184,6 +182,7 @@ struct gx::WindowImpl
       _width = width;
       _height = height;
       _renderer->setFramebufferSize(width, height);
+      _genSizeEvent = true;
       if (!_sizeSet) {
         showWindow(win);
       } else {
@@ -413,6 +412,13 @@ struct gx::WindowImpl
         i = _eventState.keyStates.erase(i);
       }
     }
+
+    // work-around for Windows where glfwSetWindowMonitor() isn't
+    // triggering EVENT_SIZE
+    if (_genSizeEvent) {
+      _eventState.events |= EVENT_SIZE;
+      _genSizeEvent = false;
+    }
   }
 
   void finalizeEventState()
@@ -453,6 +459,7 @@ struct gx::WindowImpl
   bool _sizeSet = false;
   bool _fullScreen = false;
   bool _fixedAspectRatio = false;
+  bool _genSizeEvent = false;
 
   // event state
   EventState _eventState{};
@@ -566,11 +573,13 @@ static void sizeCB(GLFWwindow* win, int width, int height)
 
   //println("size event: ", width, ' ', height);
   auto impl = static_cast<WindowImpl*>(uPtr);
+  impl->updateMouseState(win);
+  if (width == impl->_width && height == impl->_height) { return; }
+
   impl->_eventState.events |= EVENT_SIZE;
   impl->_width = width;
   impl->_height = height;
   if (impl->_renderer) { impl->_renderer->setFramebufferSize(width, height); }
-  impl->updateMouseState(win);
 }
 
 static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
