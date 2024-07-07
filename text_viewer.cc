@@ -56,6 +56,7 @@ class TextBuffer
   using string_type = std::pmr::string;
   using char_type = string_type::value_type;
   using view_type = std::basic_string_view<char_type>;
+  using vector_type = std::pmr::vector<string_type>;
 
   TextBuffer() = default;
   TextBuffer(std::istream& in) { load(in); }
@@ -82,11 +83,11 @@ class TextBuffer
   void addLine(view_type line) { _text.emplace_back(line); }
 
  private:
-  std::vector<string_type> _text;
+  vector_type _text;
 };
 
 
-int showUsage(char** argv)
+int showUsage(const char* const* argv)
 {
   println("Usage: ", argv[0], " [options] <text file>");
   println("Options:");
@@ -100,7 +101,7 @@ int showUsage(char** argv)
   return 0;
 }
 
-int errorUsage(char** argv)
+int errorUsage(const char* const* argv)
 {
   println_err("Try '", argv[0], " --help' for more information.");
   return -1;
