@@ -16,6 +16,7 @@
 // TODO: allow drag (button2/3 down, mouse move) to scroll text
 // TODO: text selection and copy (button1 w/ mouse, control-C to copy)
 // TODO: find GUI (control-f)
+// TODO: change TextBuffer to file buffer & string_view for each line
 
 #include "gx/Window.hh"
 #include "gx/DrawContext.hh"
@@ -58,9 +59,6 @@ class TextBuffer
   using view_type = std::basic_string_view<char_type>;
   using vector_type = std::pmr::vector<string_type>;
 
-  TextBuffer() = default;
-  TextBuffer(std::istream& in) { load(in); }
-
   [[nodiscard]] bool empty() const { return _text.empty(); }
   [[nodiscard]] size_type lines() const { return _text.size(); }
   [[nodiscard]] view_type operator[](size_type lineNo) const {
@@ -70,14 +68,18 @@ class TextBuffer
 
   void clear() { _text.clear(); }
 
-  void load(std::istream& in) {
-    if (in.eof()) { return; }
+  bool load(const std::string& file) {
+    std::ifstream fs{file};
+    if (!fs) { return false; }
+
     for (;;) {
       string_type line;
-      std::getline(in, line);
-      if (in.eof()) { break; }
+      std::getline(fs, line);
+      if (fs.eof()) { break; }
       _text.push_back(line);
     }
+
+    return true;
   }
 
   void addLine(view_type line) { _text.emplace_back(line); }
@@ -159,14 +161,12 @@ int main(int argc, char** argv)
     return errorUsage(argv);
   }
 
-  std::ifstream fs{file};
-  if (!fs) {
+  TextBuffer buffer;
+  if (!buffer.load(file)) {
     println_err("ERROR: Can't read file '", file, "'");
     return -1;
   }
 
-  TextBuffer buffer{fs};
-  fs.close();
   if (buffer.empty()) { buffer.addLine("* FILE EMPTY *"); }
 
   gx::Font fnt{fontSize};
