@@ -109,14 +109,8 @@ int errorUsage(const char* const* argv)
   return -1;
 }
 
-int main(int argc, char** argv)
+struct ArgParser
 {
-  if (argc < 2) {
-    return showUsage(argv);
-  }
-
-  gx::defaultLogger().disable();
-
   std::string file;
   std::string fontName;
   int fontSize = DEFAULT_FONT_SIZE;
@@ -124,64 +118,82 @@ int main(int argc, char** argv)
   int glyphSpacing = DEFAULT_GLYPH_SPACING;
   int tabSize = DEFAULT_TAB_SIZE;
 
-  for (gx::CmdLineParser p{argc, argv}; p; ++p) {
-    if (p.option()) {
-      if (p.option('h',"help")) {
-        return showUsage(argv);
-      } else if (p.option('f',"font", fontName)) {
-        if (fontName.empty()) {
-          println_err("ERROR: Empty font name");
-          return errorUsage(argv);
-        }
-      } else if (p.option('s',"size", fontSize)) {
-        if (fontSize < 1) {
-          println_err("ERROR: Bad font size");
-          return errorUsage(argv);
-        }
-      } else if (p.option('l',"linespacing", lineSpacing)) {
-        // no lineSpacing value check currently
+  int parse(int argc, const char* const* argv)
+  {
+    if (argc < 2) {
+      return showUsage(argv);
+    }
+
+    for (gx::CmdLineParser p{argc, argv}; p; ++p) {
+      if (p.option()) {
+        if (p.option('h',"help")) {
+          return showUsage(argv);
+        } else if (p.option('f',"font", fontName)) {
+          if (fontName.empty()) {
+            println_err("ERROR: Empty font name");
+            return errorUsage(argv);
+          }
+        } else if (p.option('s',"size", fontSize)) {
+          if (fontSize < 1) {
+            println_err("ERROR: Bad font size");
+            return errorUsage(argv);
+          }
+        } else if (p.option('l',"linespacing", lineSpacing)) {
+          // no lineSpacing value check currently
       } else if (p.option('g',"glyphspacing", glyphSpacing)) {
-        // no glyphSpacing value check currently
-      } else if (p.option('t',"tab", tabSize)) {
-        // no tabSize value check currently
+          // no glyphSpacing value check currently
+        } else if (p.option('t',"tab", tabSize)) {
+          // no tabSize value check currently
+        } else {
+          println_err("ERROR: Bad option '", p.arg(), "'");
+          return errorUsage(argv);
+        }
+      } else if (file.empty()) {
+        p.get(file);
       } else {
-        println_err("ERROR: Bad option '", p.arg(), "'");
+        println_err("ERROR: Multiple files not supported");
         return errorUsage(argv);
       }
-    } else if (file.empty()) {
-      p.get(file);
-    } else {
-      println_err("ERROR: Multiple files not supported");
+    }
+
+    if (file.empty()) {
+      println_err("ERROR: File name required");
       return errorUsage(argv);
     }
-  }
 
-  if (file.empty()) {
-    println_err("ERROR: File name required");
-    return errorUsage(argv);
+    return false;
   }
+};
+
+
+int main(int argc, char** argv)
+{
+  ArgParser args;
+  const int error = args.parse(argc, argv);
+  if (error) { return error; }
 
   TextBuffer buffer;
-  if (!buffer.load(file)) {
-    println_err("ERROR: Can't read file '", file, "'");
+  if (!buffer.load(args.file)) {
+    println_err("ERROR: Can't read file '", args.file, "'");
     return -1;
   }
 
   if (buffer.empty()) { buffer.addLine("* FILE EMPTY *"); }
 
-  gx::Font fnt{fontSize};
-  if (fontName.empty()) {
+  gx::defaultLogger().disable();
+  gx::Font fnt{args.fontSize};
+  if (args.fontName.empty()) {
     if (!fnt.loadFromMemory(FixedWidthFontData, FixedWidthFontDataSize)) {
       println_err("ERROR: Failed to load embedded font");
       return -1;
     }
-  } else if (!fnt.load(fontName)) {
-    println_err("ERROR: Failed to load font '", fontName, "'");
+  } else if (!fnt.load(args.fontName)) {
+    println_err("ERROR: Failed to load font '", args.fontName, "'");
     return -1;
   }
 
   gx::Window win;
-  win.setTitle(file);
+  win.setTitle(args.file);
   win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
   if (!win.open()) {
     println_err("ERROR: Failed to open window");
@@ -190,14 +202,14 @@ int main(int argc, char** argv)
 
   fnt.makeAtlas(win);
 
-  const int lineHeight = std::max(fnt.size() + lineSpacing, 1);
+  const int lineHeight = std::max(fnt.size() + args.lineSpacing, 1);
   int topLine = 0;
 
   gx::DrawList dl;
   gx::DrawContext dc{dl};
   gx::TextFormat tf{&fnt};
-  tf.glyphSpacing = float(glyphSpacing);
-  tf.tabWidth = fnt.glyphWidth(' ') * float(tabSize);
+  tf.glyphSpacing = float(args.glyphSpacing);
+  tf.tabWidth = fnt.glyphWidth(' ') * float(args.tabSize);
 
   // main loop
   bool redraw = true, running = true;
