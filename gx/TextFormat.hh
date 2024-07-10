@@ -5,6 +5,7 @@
 
 #pragma once
 #include "Types.hh"
+#include <string_view>
 
 
 namespace gx {
@@ -36,4 +37,9 @@ struct gx::TextFormat
   }
 
   [[nodiscard]] float calcLength(std::string_view text) const;
+    // returns pixel length of longest line in input text
+
+  [[nodiscard]] std::string_view fitText(
+    std::string_view text, float maxLength) const;
+    // returns sub-string that fits in specified length
 };
