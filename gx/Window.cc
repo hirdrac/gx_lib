@@ -392,8 +392,17 @@ struct gx::WindowImpl
   {
     double mx = 0, my = 0;
     glfwGetCursorPos(w, &mx, &my);
-    _eventState.mousePt.set(float(mx), float(my));
-    _eventState.mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
+    const Vec2 mousePt{float(mx), float(my)};
+    if (mousePt != _eventState.mousePt) {
+      _eventState.events |= EVENT_MOUSE_MOVE;
+      _eventState.mousePt = mousePt;
+    }
+
+    const bool mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
+    if (mouseIn != _eventState.mouseIn) {
+      _eventState.events |= EVENT_MOUSE_ENTER;
+      _eventState.mouseIn = mouseIn;
+    }
   }
 
   void resetEventState()
@@ -417,6 +426,7 @@ struct gx::WindowImpl
     // triggering EVENT_SIZE
     if (_genSizeEvent) {
       _eventState.events |= EVENT_SIZE;
+      updateMouseState(_renderer->window());
       _genSizeEvent = false;
     }
   }
