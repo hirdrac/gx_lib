@@ -1329,22 +1329,30 @@ std::unique_ptr<Renderer> gx::makeOpenGLRenderer(GLFWwindow* win)
     return {};
   }
 
+  std::unique_ptr<Renderer> ren;
   if (ver >= 45) {
     GX_LOG_INFO("OpenGL 4.5 GX_LIB Renderer");
-    return std::make_unique<OpenGLRenderer<45>>();
+    ren = std::make_unique<OpenGLRenderer<45>>();
   } else if (ver >= 43) {
     GX_LOG_INFO("OpenGL 4.3 GX_LIB Renderer");
-    return std::make_unique<OpenGLRenderer<43>>();
+    ren = std::make_unique<OpenGLRenderer<43>>();
   } else if (ver >= 42) {
     GX_LOG_INFO("OpenGL 4.2 GX_LIB Renderer");
-    return std::make_unique<OpenGLRenderer<42>>();
+    ren = std::make_unique<OpenGLRenderer<42>>();
   } else {
+    GX_LOG_INFO("OpenGL 3.3 GX_LIB Renderer");
     if (GLAD_GL_ARB_shading_language_packing == 0) {
       GX_LOG_ERROR("GL_ARB_shading_language_packing required");
       return {};
     }
 
-    GX_LOG_INFO("OpenGL 3.3 GX_LIB Renderer");
-    return std::make_unique<OpenGLRenderer<33>>();
+    ren = std::make_unique<OpenGLRenderer<33>>();
   }
+
+  if (!ren->init(win)) {
+    GX_LOG_ERROR("OpenGLRenderer::init() failed");
+    return {};
+  }
+
+  return ren;
 }

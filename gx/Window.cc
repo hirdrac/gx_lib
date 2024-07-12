@@ -324,11 +324,8 @@ struct gx::WindowImpl
       return false;
     }
 
-    {
-      auto ren = makeOpenGLRenderer(win);
-      if (!ren || !ren->init(win)) { return false; }
-      _renderer = std::move(ren);
-    }
+    _renderer = makeOpenGLRenderer(win);
+    if (!_renderer) { return false; }
 
     _width = _renderer->framebufferWidth();
     _height = _renderer->framebufferHeight();
