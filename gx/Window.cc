@@ -46,9 +46,9 @@ namespace {
 
   // **** Helper Functions ****
   [[nodiscard]] inline int64_t usecTime() {
-    const auto t = std::chrono::steady_clock::now();
-    return std::chrono::duration_cast<std::chrono::microseconds>(
-      t.time_since_epoch()).count();
+    using namespace std::chrono;
+    return duration_cast<microseconds>(
+      steady_clock::now().time_since_epoch()).count();
   }
 
   [[nodiscard]] constexpr int glfwBool(bool val) {
