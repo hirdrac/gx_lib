@@ -1510,12 +1510,13 @@ bool Gui::drawElem(
       }
       break;
     case GUI_ENTRY: {
+      const TextFormat tf{thm.font, float(thm.textSpacing)};
       drawRec(dc, ex, ey, ew, eh, thm, style);
       auto& entry = def.entry();
       const std::string txt = (entry.type == ENTRY_PASSWORD)
         ? passwordStr(thm.passwordCode, lengthUTF8(entry.text)) : entry.text;
       const float cw = thm.cursorWidth;
-      const float tw = thm.font->calcLength(txt, 0);
+      const float tw = tf.calcLength(txt);
       const float maxWidth = ew - thm.entryLeftMargin
         - thm.entryRightMargin - cw;
       const float leftEdge = ex + thm.entryLeftMargin;
@@ -1531,8 +1532,8 @@ bool Gui::drawElem(
       float cx = 0;
       if (def._id == _focusID) {
         if (tw <= maxWidth) { _focusEntryOffset = 0; }
-        cx = tx + _focusEntryOffset + thm.font->calcLength(
-          substrUTF8(txt, 0, _focusCursorPos), 0);
+        cx = tx + _focusEntryOffset + tf.calcLength(
+          substrUTF8(txt, 0, _focusCursorPos));
         if (cx < leftEdge) {
           _focusEntryOffset += leftEdge - cx; cx = leftEdge;
         } else if (cx > rightEdge) {
@@ -1550,16 +1551,15 @@ bool Gui::drawElem(
       entry.tx = tx;
       dc2.color(style->textColor);
       // TODO: add gradient color if text is off left/right edges
-      dc2.text({thm.font, float(thm.textSpacing)},
-               {tx, ey + thm.entryTopMargin},
+      dc2.text(tf, {tx, ey + thm.entryTopMargin},
                ALIGN_TOP_LEFT, txt, {ex, ey, ew, eh});
       if (def._id == _focusID) {
         const float cy = ey + float(std::max(int(thm.entryTopMargin), 1) - 1);
         const float ch = float(thm.font->size());
         if (_focusCursorPos != _focusRangeStart) {
           // draw selected text background
-          const float cx2 = tx + thm.font->calcLength(
-            substrUTF8(txt, 0, _focusRangeStart), 0);
+          const float cx2 = tx + tf.calcLength(
+            substrUTF8(txt, 0, _focusRangeStart));
           const float x0 = std::max(std::min(cx,cx2)-1, ex);
           const float x1 = std::min(std::max(cx,cx2)+1, ex+ew);
           dc.color(thm.textSelectColor);
