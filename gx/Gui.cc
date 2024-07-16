@@ -846,6 +846,7 @@ void Gui::processMouseEvent(Window& win)
   } else if (type == GUI_ENTRY) {
     shape = MOUSESHAPE_IBEAM;
     const GuiTheme& thm = *(pPtr->theme);
+    const TextFormat tf{thm.font, float(thm.textSpacing)};
     if (lpressEvent) {
       // update focus
       setFocus(win, ePtr);
@@ -857,7 +858,7 @@ void Gui::processMouseEvent(Window& win)
         _focusCursorPos = lengthUTF8(entry.text);
       } else {
         _focusCursorPos = _focusRangeStart = lengthUTF8(
-          thm.font->fitText(entry.text, 0, es.mousePt.x - entry.tx + 1));
+          tf.fitText(entry.text, es.mousePt.x - entry.tx + 1));
         if (_clickCount == 2) {
           // double click - select word
           while (_focusRangeStart > 0 && entry.text[_focusRangeStart-1] != ' ')
@@ -871,7 +872,7 @@ void Gui::processMouseEvent(Window& win)
       // select text in entry w/ mouse
       const auto& entry = ePtr->entry();
       const std::size_t newPos = lengthUTF8(
-        thm.font->fitText(entry.text, 0, es.mousePt.x - entry.tx + 1));
+        tf.fitText(entry.text, es.mousePt.x - entry.tx + 1));
       if (newPos != _focusCursorPos) {
         _focusCursorPos = newPos;
         _needRender = true;
