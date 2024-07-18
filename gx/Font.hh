@@ -9,7 +9,6 @@
 #include "Renderer.hh"
 #include "Glyph.hh"
 #include "Types.hh"
-#include <string_view>
 #include <map>
 
 
@@ -22,7 +21,6 @@ namespace gx {
   };
 
   class Font;
-  class Renderer;
 }
 
 class gx::Font
