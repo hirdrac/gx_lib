@@ -319,17 +319,17 @@ void DrawContext::_text(
 
   texture(f.atlas());
   std::size_t lineStart = 0;
-  Vec2 startPos = pos;
 
   for (;;) {
     const std::size_t i = text.find('\n', lineStart);
     const std::string_view line = text.substr(
       lineStart, (i != std::string_view::npos) ? (i - lineStart) : i);
+    float len = 0.0f;
 
     if (!line.empty()) {
       if (h_align != ALIGN_LEFT) {
         const float tw = tf.calcLength(line);
-        pos -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
+        len -= (h_align == ALIGN_RIGHT) ? tw : (tw * .5f);
       }
 
       for (UTF8Iterator itr{line}; !itr.done(); itr.next()) {
@@ -341,8 +341,8 @@ void DrawContext::_text(
           GX_ASSERT(g != nullptr);
         }
 
-        if (g->bitmap) { _glyph(*g, tf, pos, clipPtr); }
-        pos += tf.advX * (g->advX + tf.glyphSpacing);
+        if (g->bitmap) { _glyph(*g, tf, pos + (tf.advX * len), clipPtr); }
+        len += g->advX + tf.glyphSpacing;
       }
     }
 
@@ -350,8 +350,7 @@ void DrawContext::_text(
 
     // move to start of next line
     lineStart = i + 1;
-    startPos += tf.advY * fs;
-    pos = startPos;
+    pos += tf.advY * fs;
   }
 }
 
