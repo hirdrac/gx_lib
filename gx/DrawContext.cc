@@ -324,24 +324,36 @@ void DrawContext::_text(
     const std::size_t i = text.find('\n', lineStart);
     const std::string_view line = text.substr(
       lineStart, (i != std::string_view::npos) ? (i - lineStart) : i);
-    float len = 0.0f;
 
     if (!line.empty()) {
+      float offset = 0;
       if (h_align != ALIGN_LEFT) {
         const float tw = tf.calcLength(line);
-        len -= (h_align == ALIGN_RIGHT) ? tw : (tw * .5f);
+        offset = (h_align == ALIGN_RIGHT) ? tw : (tw * .5f);
       }
 
+      float len = 0;
       for (UTF8Iterator itr{line}; !itr.done(); itr.next()) {
         int ch = itr.get();
-        if (ch == '\t') { ch = ' '; }
+        if (ch == '\t') {
+          if (tf.tabWidth <= 0) {
+            ch = ' ';
+          } else {
+            len = (std::floor(len / tf.tabWidth) + 1.0f) * tf.tabWidth;
+            continue;
+          }
+        }
+
         const Glyph* g = f.findGlyph(ch);
         if (!g) {
           g = f.findGlyph(f.unknownCode());
           GX_ASSERT(g != nullptr);
         }
 
-        if (g->bitmap) { _glyph(*g, tf, pos + (tf.advX * len), clipPtr); }
+        if (g->bitmap) {
+          _glyph(*g, tf, pos + (tf.advX * (len - offset)), clipPtr);
+        }
+
         len += g->advX + tf.glyphSpacing;
       }
     }

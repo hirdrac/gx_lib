@@ -3,6 +3,8 @@
 // Copyright (C) 2024 Richard Bradley
 //
 
+// TODO: add width/height calc for multi-line text
+
 #include "TextFormat.hh"
 #include "Font.hh"
 #include "Unicode.hh"
@@ -14,17 +16,19 @@ float TextFormat::calcLength(std::string_view text) const
 {
   GX_ASSERT(font != nullptr);
 
-  // TODO: use length of advX vector to adjust length calc
-  // TODO: add width/height calc for multi-line text
-
-  float max_len = 0, len = -glyphSpacing;
+  float max_len = 0, len = 0;
   for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
     int32_t ch = itr.get();
     if (ch == '\t') {
-      ch = ' '; // tab logic should be handled outside of this function
+      if (tabWidth <= 0) {
+        ch = ' ';
+      } else {
+        len = (std::floor(len / tabWidth) + 1.0f) * tabWidth;
+        continue;
+      }
     } else if (ch == '\n') {
       max_len = std::max(max_len, len);
-      len = -glyphSpacing;
+      len = 0;
     }
 
     const Glyph* g = font->findGlyph(ch);
@@ -36,19 +40,25 @@ float TextFormat::calcLength(std::string_view text) const
     len += g->advX + glyphSpacing;
   }
 
-  return std::max(max_len, len);
+  return std::max(max_len, len - glyphSpacing);
 }
 
 std::string_view TextFormat::fitText(
   std::string_view text, float maxLength) const
 {
   GX_ASSERT(font != nullptr);
+  maxLength += glyphSpacing;
 
-  float len = -glyphSpacing;
+  float len = 0;
   for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
     int32_t ch = itr.get();
     if (ch == '\t') {
-      ch = ' ';
+      if (tabWidth <= 0) {
+        ch = ' ';
+      } else {
+        len = (std::floor(len / tabWidth) + 1.0f) * tabWidth;
+        continue;
+      }
     } else if (ch == '\n') {
       // stop at first linebreak
       return text.substr(0, itr.pos());
