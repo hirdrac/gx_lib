@@ -272,25 +272,9 @@ int main(int argc, char** argv)
       while (lineNo < int(buffer.lines()) && ty < win_h) {
         if (lineNo >= 0) {
           const std::string_view line = buffer[std::size_t(lineNo)];
-          float tx = 0;
-          bool tooLong = false;
-          for (std::size_t i = 0; i < line.size(); ) {
-            const std::size_t tabPos = line.find('\t',i);
-            const std::size_t count =
-              (tabPos == std::string_view::npos) ? tabPos : (tabPos - i);
-            const std::string_view segment = line.substr(i, count);
-            dc.color(gx::WHITE);
-            dc.text(tf, {tx, ty}, gx::ALIGN_TOP_LEFT, segment);
-            const float segLen = tf.calcLength(segment);
-            tooLong |= ((tx+segLen) > win_w);
-            i += segment.size() + 1;
-            if (tabPos != std::string_view::npos) {
-              const float tx2 = tx + segLen;
-              tx = (std::floor(tx2 / tf.tabWidth) + 1.0f) * tf.tabWidth;
-            }
-          }
-
-          if (tooLong) {
+          dc.color(gx::WHITE);
+          dc.text(tf, {0, ty}, gx::ALIGN_TOP_LEFT, line);
+          if (tf.calcLength(line) > win_w) {
             dc.color(1.0f,0,0);
             dc.text(tf, {win_w+1, ty}, gx::ALIGN_TOP_RIGHT, "*");
           }
