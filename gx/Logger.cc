@@ -161,6 +161,10 @@ std::ostringstream Logger::logStream(LogLevel lvl)
 
 void Logger::logMsg(std::ostringstream& ss, std::string_view file, int line)
 {
+  while (file.substr(0, 3) == "../") {
+    file.remove_prefix(3);
+  }
+
   const auto sz = _sourcePrefix.size();
   if (sz > 0 && file.substr(0, sz) == _sourcePrefix) {
     file.remove_prefix(sz);
