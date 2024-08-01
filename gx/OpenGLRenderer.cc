@@ -1244,7 +1244,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
 
   // swap buffers & finish
   glfwSwapBuffers(_window);
-  GLCheckErrors("GL error");
+  GX_CHECK_GL_ERRORS("GL error");
   GLClearState();
 
   // frame rate calculation

@@ -267,12 +267,12 @@ void* gx::GLBuffer<VER>::map(GLenum access)
     bindCheck(GL_COPY_WRITE_BUFFER);
     result = glMapBuffer(GL_COPY_WRITE_BUFFER, access);
 #ifdef GX_DEBUG_GL
-    if (!result) { GLCheckErrors("glMapBuffer"); }
+    if (!result) { GX_CHECK_GL_ERRORS("glMapBuffer"); }
 #endif
   } else {
     result = glMapNamedBuffer(_buffer, access);
 #ifdef GX_DEBUG_GL
-    if (!result) { GLCheckErrors("glMapNamedBuffer"); }
+    if (!result) { GX_CHECK_GL_ERRORS("glMapNamedBuffer"); }
 #endif
   }
   return result;
@@ -286,12 +286,12 @@ bool gx::GLBuffer<VER>::unmap()
     bindCheck(GL_COPY_WRITE_BUFFER);
     result = glUnmapBuffer(GL_COPY_WRITE_BUFFER);
 #ifdef GX_DEBUG_GL
-    GLCheckErrors("glUnmapBuffer");
+    GX_CHECK_GL_ERRORS("glUnmapBuffer");
 #endif
   } else {
     result = glUnmapNamedBuffer(_buffer);
 #ifdef GX_DEBUG_GL
-    GLCheckErrors("glUnmapNamedBuffer");
+    GX_CHECK_GL_ERRORS("glUnmapNamedBuffer");
 #endif
   }
   return result;
@@ -306,12 +306,12 @@ void* gx::GLBuffer<VER>::mapRange(
     bindCheck(GL_COPY_WRITE_BUFFER);
     result = glMapBufferRange(GL_COPY_WRITE_BUFFER, offset, length, access);
 #ifdef GX_DEBUG_GL
-    if (!result) { GLCheckErrors("glMapBufferRange"); }
+    if (!result) { GX_CHECK_GL_ERRORS("glMapBufferRange"); }
 #endif
   } else {
     result = glMapNamedBufferRange(_buffer, offset, length, access);
 #ifdef GX_DEBUG_GL
-    if (!result) { GLCheckErrors("glMapNamedBufferRange"); }
+    if (!result) { GX_CHECK_GL_ERRORS("glMapNamedBufferRange"); }
 #endif
   }
   return result;

@@ -144,7 +144,7 @@ GLint gx::GLProgram::getAttribLocation(const char* name) const
 {
   const auto loc = glGetAttribLocation(_prog, name);
   #ifdef GX_DEBUG_GL
-  GLCheckErrors("glGetAttribLocation");
+  GX_CHECK_GL_ERRORS("glGetAttribLocation");
   #endif
   // NOTE: returns -1 if name is not an active attribute
   return loc;
@@ -154,7 +154,7 @@ GLint gx::GLProgram::getUniformLocation(const char* name) const
 {
   const auto loc = glGetUniformLocation(_prog, name);
   #ifdef GX_DEBUG_GL
-  GLCheckErrors("glGetUniformLocation");
+  GX_CHECK_GL_ERRORS("glGetUniformLocation");
   #endif
   // NOTE: returns -1 if name not found
   return loc;
@@ -164,7 +164,7 @@ GLuint gx::GLProgram::getUniformBlockIndex(const char* blockName) const
 {
   const auto index = glGetUniformBlockIndex(_prog, blockName);
   #ifdef GX_DEBUG_GL
-  GLCheckErrors("glGetUniformBlockIndex");
+  GX_CHECK_GL_ERRORS("glGetUniformBlockIndex");
   #endif
   // NOTE: returns GL_INVALID_INDEX on error
   return index;

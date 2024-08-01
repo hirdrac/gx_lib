@@ -34,8 +34,7 @@ bool GLSetupContext(GLADloadfunc loadProc);
 void GLClearState();
   // call after every frame to reset GL state
 
-int GLCheckErrors(std::string_view msg, std::string_view file = __FILE__,
-                  int line = __LINE__);
+int GLCheckErrors(std::string_view msg, std::string_view file, int line);
   // check for and log all OpenGL errors
   // returns number of errors found
 
@@ -263,9 +262,11 @@ constexpr GLenum GLType_v = GLType<T>::value;
 } // end gx namespace
 
 
-// **** Macros ****
+// **** Macros ***
+#define GX_CHECK_GL_ERRORS(msg) gx::GLCheckErrors(msg,__FILE__,__LINE__)
+
 #ifdef GX_DEBUG_GL
-#define GX_GLCALL(fn,...) do { (fn)(__VA_ARGS__); gx::GLCheckErrors(#fn); } while(0)
+#define GX_GLCALL(fn,...) do { (fn)(__VA_ARGS__); GX_CHECK_GL_ERRORS(#fn); } while(0)
 #else
 #define GX_GLCALL(fn,...) (fn)(__VA_ARGS__)
 #endif

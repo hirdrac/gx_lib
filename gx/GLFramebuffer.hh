@@ -117,13 +117,13 @@ GLenum gx::GLFramebuffer<VER>::status() const
     bindCheck();
     GLenum result = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 #ifdef GX_DEBUG_GL
-    if (result == 0) { GLCheckErrors("glCheckFramebufferStatus"); }
+    if (result == 0) { GX_CHECK_GL_ERRORS("glCheckFramebufferStatus"); }
 #endif
     return result;
   } else {
     GLenum result = glCheckNamedFramebufferStatus(_fbuffer, GL_FRAMEBUFFER);
 #ifdef GX_DEBUG_GL
-    if (result == 0) { GLCheckErrors("glCheckNamedFramebufferStatus"); }
+    if (result == 0) { GX_CHECK_GL_ERRORS("glCheckNamedFramebufferStatus"); }
 #endif
     return result;
   }
