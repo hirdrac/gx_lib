@@ -137,6 +137,10 @@ namespace {
         case CMD_lineTo2:      d += 3;  vsize += 2; break;
         case CMD_lineStart3:   d += 4;  break;
         case CMD_lineTo3:      d += 4;  vsize += 2; break;
+        case CMD_lineStart2C:  d += 4;  break;
+        case CMD_lineTo2C:     d += 4;  vsize += 2; break;
+        case CMD_lineStart3C:  d += 5;  break;
+        case CMD_lineTo3C:     d += 5;  vsize += 2; break;
         case CMD_triangle2:    d += 7;  vsize += 3; break;
         case CMD_triangle3:    d += 10; vsize += 3; break;
         case CMD_triangle2T:   d += 13; vsize += 3; break;
@@ -407,8 +411,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   void addLine(int32_t& first) {
     if (_lastOp == OP_drawLines) {
-      int32_t& last_count = _opData[_opData.size() - 1].ival;
-      last_count += 2;
+      _opData[_opData.size() - 1].ival += 2;
     } else {
       addOp(OP_drawLines, first, 2);
     }
@@ -420,8 +423,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
       const std::size_t s = _opData.size();
       const TextureID last_tid = _opData[s - 1].uval;
       if (last_tid == tid) {
-        int32_t& last_count = _opData[s - 2].ival;
-        last_count += count;
+        _opData[s - 2].ival += count;
         first += count;
         return;
       }
@@ -708,6 +710,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
     TextureID tid = 0;
     uint32_t normal = 0;
     Vec3 linePt;
+    uint32_t lineColor = 0;
 
     const DrawEntry* data     = dlPtr->data();
     const DrawEntry* data_end = data + dlPtr->size();
@@ -790,18 +793,39 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           addLine(first);
           break;
         }
-        case CMD_lineStart2: linePt.set(fval2(d), 0); break;
+        case CMD_lineStart2:
+          linePt.set(fval2(d), 0); lineColor = color; break;
         case CMD_lineTo2: {
-          vertex3d(ptr, linePt, color);
-          linePt.set(fval2(d), 0);
-          vertex3d(ptr, linePt, color);
+          vertex3d(ptr, linePt, lineColor);
+          linePt.set(fval2(d), 0); lineColor = color;
+          vertex3d(ptr, linePt, lineColor);
           addLine(first);
           break;
         }
-        case CMD_lineStart3: linePt = fval3(d); break;
+        case CMD_lineStart3:
+          linePt = fval3(d); lineColor = color; break;
         case CMD_lineTo3: {
-          vertex3d(ptr, linePt, color);
-          vertex3d(ptr, (linePt = fval3(d)), color);
+          vertex3d(ptr, linePt, lineColor);
+          linePt = fval3(d); lineColor = color;
+          vertex3d(ptr, linePt, lineColor);
+          addLine(first);
+          break;
+        }
+        case CMD_lineStart2C:
+          linePt.set(fval2(d), 0); lineColor = uval(d); break;
+        case CMD_lineTo2C: {
+          vertex3d(ptr, linePt, lineColor);
+          linePt.set(fval2(d), 0); lineColor = uval(d);
+          vertex3d(ptr, linePt, lineColor);
+          addLine(first);
+          break;
+        }
+        case CMD_lineStart3C:
+          linePt = fval3(d); lineColor = uval(d); break;
+        case CMD_lineTo3C: {
+          vertex3d(ptr, linePt, lineColor);
+          linePt = fval3(d); lineColor = uval(d);
+          vertex3d(ptr, linePt, lineColor);
           addLine(first);
           break;
         }

@@ -1,6 +1,6 @@
 //
 // gx/DrawEntry.hh
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #pragma once
@@ -45,6 +45,10 @@ namespace gx {
     CMD_lineTo2,      // <cmd x y> (3)
     CMD_lineStart3,   // <cmd x y z> (4)
     CMD_lineTo3,      // <cmd x y z> (4)
+    CMD_lineStart2C,  // <cmd x y c> (4)
+    CMD_lineTo2C,     // <cmd x y c> (4)
+    CMD_lineStart3C,  // <cmd x y z c> (5)
+    CMD_lineTo3C,     // <cmd x y z c> (5)
     CMD_triangle2,    // <cmd (x y)x3> (7)
     CMD_triangle3,    // <cmd (x y z)x3> (10)
     CMD_triangle2T,   // <cmd (x y s t)x3> (13)
