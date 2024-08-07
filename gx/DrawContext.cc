@@ -79,6 +79,50 @@ void DrawContext::line(const Vec3& a, const Vec3& b)
   }
 }
 
+void DrawContext::lineStart(Vec2 a)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    add(CMD_lineStart2, a.x, a.y);
+  } else {
+    add(CMD_lineStart2C, a.x, a.y, pointColor(a));
+  }
+}
+
+void DrawContext::lineTo(Vec2 a)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    add(CMD_lineTo2, a.x, a.y);
+  } else {
+    add(CMD_lineTo2C, a.x, a.y, pointColor(a));
+  }
+}
+
+void DrawContext::lineStart(const Vec3& a)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    add(CMD_lineStart3, a.x, a.y, a.z);
+  } else {
+    add(CMD_lineStart3C, a.x, a.y, a.z, pointColor(a));
+  }
+}
+
+void DrawContext::lineTo(const Vec3& a)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    add(CMD_lineTo3, a.x, a.y, a.z);
+  } else {
+    add(CMD_lineTo3C, a.x, a.y, a.z, pointColor(a));
+  }
+}
+
 void DrawContext::triangle(Vec2 a, Vec2 b, Vec2 c)
 {
   if ((_color0 | _color1) == 0) { return; }
