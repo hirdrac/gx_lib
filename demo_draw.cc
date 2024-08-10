@@ -4,6 +4,7 @@
 //
 
 // TODO: draw 3d cube w/ lighting
+// TODO: test for lineStart/lineTo
 
 #include "gx/Window.hh"
 #include "gx/Font.hh"
@@ -180,13 +181,15 @@ void draw_rborder5(gx::DrawContext& dc, float x, float y)
 void draw_lines1(gx::DrawContext& dc, float x, float y)
 {
   x += .5f; y += .5f;
+  const gx::Vec2 origin{x+20,y+30};
+
   dc.color(WHITE);
   //dc.lineWidth(.5f);
-  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+379,y+30});
-  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+379,y+180});
-  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+379,y+329});
-  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+200,y+329});
-  dc.line(gx::Vec2{x+20,y+30}, gx::Vec2{x+20,y+329});
+  dc.line(origin, gx::Vec2{x+379,y+30});
+  dc.line(origin, gx::Vec2{x+379,y+180});
+  dc.line(origin, gx::Vec2{x+379,y+329});
+  dc.line(origin, gx::Vec2{x+200,y+329});
+  dc.line(origin, gx::Vec2{x+20,y+329});
 }
 
 void draw_lines2(gx::DrawContext& dc, float x, float y)
