@@ -29,6 +29,7 @@ class gx::Camera
   [[nodiscard]] const Vec3& pos() const { return _pos; }
   [[nodiscard]] const Vec3& dir() const { return _vnormal; }
   [[nodiscard]] const Vec3& vup() const { return _vup; }
+  [[nodiscard]] const Vec3& vside() const { return _vside; }
 
   void setCoordSystem(CoordSystemType cs) { _coordSystem = cs; }
   bool setViewByCOI(const Vec3& pos, const Vec3& coi, const Vec3& vup);
