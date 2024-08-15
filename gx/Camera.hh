@@ -29,6 +29,7 @@ class gx::Camera
   [[nodiscard]] const Vec3& pos() const { return _pos; }
   [[nodiscard]] const Vec3& dir() const { return _vnormal; }
   [[nodiscard]] const Vec3& vup() const { return _vup; }
+  [[nodiscard]] const Vec3& vtop() const { return _vtop; }
   [[nodiscard]] const Vec3& vside() const { return _vside; }
 
   void setCoordSystem(CoordSystemType cs) { _coordSystem = cs; }
@@ -69,11 +70,8 @@ class gx::Camera
  private:
   // view config
   CoordSystemType _coordSystem = LEFT_HANDED;
-  Vec3 _pos{0,0,0};
-  Vec3 _vnormal{0,0,1};
-  Vec3 _vup{0,1,0};
-  Vec3 _vtop{0,1,0};
-  Vec3 _vside{1,0,0};
+  Vec3 _pos{0,0,0}, _vnormal{0,0,1}, _vup{0,1,0};
+  Vec3 _vtop{0,1,0}, _vside{1,0,0};
 
   // projection config
   ProjectionType _projection = PERSPECTIVE;
