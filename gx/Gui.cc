@@ -1017,8 +1017,8 @@ void Gui::processCharEvent(Window& win)
       // (CTRL-V) paste first line of clipboard
       usedEvent = true;
       const std::string cb = getClipboardFirstLine();
-      for (UTF8Iterator itr{cb}; !itr.done(); itr.next()) {
-        addEntryChar(e, itr.get());
+      for (UTF8Iterator itr{cb}; itr; ++itr) {
+        addEntryChar(e, *itr);
       }
     } else if (c.key == KEY_C && c.mods == MOD_CONTROL) {
       // (CTRL-C) copy selected text

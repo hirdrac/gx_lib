@@ -377,8 +377,8 @@ void DrawContext::_text(
       }
 
       float len = 0;
-      for (UTF8Iterator itr{line}; !itr.done(); itr.next()) {
-        int ch = itr.get();
+      for (UTF8Iterator itr{line}; itr; ++itr) {
+        int ch = *itr;
         if (ch == '\t') {
           if (tf.tabWidth <= 0) {
             ch = ' ';

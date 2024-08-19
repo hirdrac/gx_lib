@@ -75,6 +75,11 @@ class gx::UTF8Iterator
     // return byte position of iterator
     // (useful for substrings, but don't use for counting unicode characters)
 
+  // helper operators
+  [[nodiscard]] explicit operator bool() const { return !done(); }
+  UTF8Iterator& operator++() { next(); return *this; }
+  [[nodiscard]] int32_t operator*() const { return get(); }
+
  private:
   const char* _begin;
   const char* _itr;

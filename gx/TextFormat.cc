@@ -17,8 +17,8 @@ float TextFormat::calcLength(std::string_view text) const
   GX_ASSERT(font != nullptr);
 
   float max_len = 0, len = 0;
-  for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
-    int32_t ch = itr.get();
+  for (UTF8Iterator itr{text}; itr; ++itr) {
+    int32_t ch = *itr;
     if (ch == '\t') {
       if (tabWidth <= 0) {
         ch = ' ';
@@ -50,8 +50,8 @@ std::string_view TextFormat::fitText(
   maxLength += glyphSpacing;
 
   float len = 0;
-  for (UTF8Iterator itr{text}; !itr.done(); itr.next()) {
-    int32_t ch = itr.get();
+  for (UTF8Iterator itr{text}; itr; ++itr) {
+    int32_t ch = *itr;
     if (ch == '\t') {
       if (tabWidth <= 0) {
         ch = ' ';
