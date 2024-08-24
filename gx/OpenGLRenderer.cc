@@ -704,6 +704,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
   //  |/ |
   //  2--3
 
+  bool cameraSet = false;
   int32_t first = 0;
   for (const DrawList* dlPtr : dl) {
     uint32_t color = 0;
@@ -743,10 +744,15 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           const Mat4 viewT = mval(d);
           const Mat4 projT = mval(d);
           addOp(OP_camera, viewT, projT);
+          cameraSet = true;
           break;
         }
         case CMD_cameraReset:
-          addOp(OP_cameraReset); break;
+          if (cameraSet) {
+            addOp(OP_cameraReset);
+            cameraSet = false;
+          }
+          break;
 
         case CMD_light: {
           const Vec3 pos = fval3(d);
