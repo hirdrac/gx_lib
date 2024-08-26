@@ -40,17 +40,19 @@ class gx::Font
     // font pixel size
 
   bool load(const char* fileName);
+    // load TTF file & render glyphs for current size
 
   template<class T>
   bool load(const T& fn) { return load(fn.c_str()); }
 
   bool loadFromMemory(const void* mem, std::size_t memSize);
-    // load TTF file & render glyphs for current size
+    // load TTF file from memory
 
   bool loadFromData(const GlyphStaticData* data, int glyphs);
     // load from static glyph data
 
   bool makeAtlas(Renderer& ren);
+    // creates texture containing every glyph & sets glyph texture coords
 
   template<class T>
   bool makeAtlas(T& win) { return makeAtlas(win.renderer()); }
