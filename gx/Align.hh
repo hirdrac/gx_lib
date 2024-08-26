@@ -8,7 +8,7 @@
 
 namespace gx {
   // **** Types ****
-    enum AlignEnum {
+  enum AlignEnum {
     ALIGN_UNSPECIFIED = 0,
 
     // vertical alignments
