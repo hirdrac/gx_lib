@@ -9,6 +9,7 @@
 //     glfwSwapInterval(), glfwSwapBuffers() calls
 // TODO: init param to determine which shaders to create
 // TODO: SDF glyph shader
+// TODO: combine viewT & projT for CMD_camera?
 
 #include "OpenGLRenderer.hh"
 #include "DrawList.hh"

@@ -3,6 +3,10 @@
 // Copyright (C) 2024 Richard Bradley
 //
 
+// TODO: mouseIn can get lost with resize on Windows - auto set mouseIn for
+//   valid mouseMove events?
+// TODO: check if mouseIn even works for Windows
+
 #include "Window.hh"
 #include "OpenGLRenderer.hh"
 #include "Logger.hh"
