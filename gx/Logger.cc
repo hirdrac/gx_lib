@@ -177,5 +177,9 @@ void Logger::logMsg(std::ostringstream& ss, std::string_view file, int line)
   ss << file << ':' << line << ")\n";
 
   // output to stream
+#if __cplusplus >= 202002L
+  _impl->log(ss.view()); // C++20
+#else
   _impl->log(ss.str());
+#endif
 }
