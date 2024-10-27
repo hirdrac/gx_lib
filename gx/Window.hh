@@ -165,16 +165,20 @@ namespace gx {
         && ((buttons & button_mask) == button_mask); }
 
     [[nodiscard]] bool keyHeld(int key) const {
-      for (const KeyState& k : keyStates)
-        if (k.key == key)
-          return k.held || (k.pressCount > 0);
+      if (events & EVENT_KEY) {
+        for (const KeyState& k : keyStates)
+          if (k.key == key)
+            return k.held || (k.pressCount > 0);
+      }
       return false;
     }
 
     [[nodiscard]] int keyPressCount(int key, bool includeRepeat) const {
-      for (const KeyState& k : keyStates)
-        if (k.key == key)
-          return k.pressCount + (int(includeRepeat) * k.repeatCount);
+      if (events & EVENT_KEY) {
+        for (const KeyState& k : keyStates)
+          if (k.key == key)
+            return k.pressCount + (int(includeRepeat) * k.repeatCount);
+      }
       return 0;
     }
   };
