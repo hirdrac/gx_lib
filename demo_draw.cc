@@ -284,12 +284,12 @@ int main(int argc, char** argv)
     if (es.events & gx::EVENT_CLOSE) { running = false; }
     if (es.events & gx::EVENT_SIZE) { gfxPerPage = 0; redraw = true; }
 
-    if (es.events & gx::EVENT_KEY) {
+    if (es.events & gx::EVENT_INPUT) {
       int newPage = page;
-      for (const auto& k : es.keyStates) {
-        if (!k.pressCount && !k.repeatCount) { continue; }
+      for (const auto& in : es.inputStates) {
+        if (!in.pressCount && !in.repeatCount) { continue; }
 
-        switch (k.key) {
+        switch (in.value) {
           case gx::KEY_ESCAPE:
             running = false; break;
           case gx::KEY_LEFT: case gx::KEY_UP: case gx::KEY_PAGE_UP:
@@ -297,7 +297,7 @@ int main(int argc, char** argv)
           case gx::KEY_RIGHT: case gx::KEY_DOWN: case gx::KEY_PAGE_DOWN:
             ++newPage; break;
           case gx::KEY_F11:
-            if (k.pressCount) {
+            if (in.pressCount) {
               gfxPerPage = 0;
               redraw = true;
               if (win.fullScreen()) {

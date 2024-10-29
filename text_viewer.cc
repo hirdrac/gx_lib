@@ -226,11 +226,11 @@ int main(int argc, char** argv)
     const int endLine = std::max(int(buffer.lines()) - maxLines, 0);
     const int lastTop = topLine;
 
-    if (es.events & gx::EVENT_KEY) {
-      for (const auto& k : es.keyStates) {
-        if (!k.pressCount && !k.repeatCount) { continue; }
+    if (es.events & gx::EVENT_INPUT) {
+      for (const auto& in : es.inputStates) {
+        if (!in.pressCount && !in.repeatCount) { continue; }
 
-        switch (k.key) {
+        switch (in.value) {
           case gx::KEY_ESCAPE:    running = false; break;
           case gx::KEY_UP:        --topLine; break;
           case gx::KEY_DOWN:      ++topLine; break;
@@ -240,7 +240,7 @@ int main(int argc, char** argv)
           case gx::KEY_END:       topLine = endLine; break;
 
           case gx::KEY_F11:
-            if (k.pressCount) {
+            if (in.pressCount) {
               if (win.fullScreen()) {
                 win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
               } else {
@@ -252,7 +252,7 @@ int main(int argc, char** argv)
       }
     }
 
-    if (es.events & gx::EVENT_MOUSE_SCROLL) {
+    if (es.mouseScroll()) {
       topLine -= int(es.scrollPt.y) * SCROLL_STEP;
     }
 

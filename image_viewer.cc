@@ -181,27 +181,27 @@ int main(int argc, char* argv[])
     if (es.events & gx::EVENT_SIZE) { redraw = true; }
     if (es.events & gx::EVENT_CLOSE) { running = false; }
 
-    if (es.events & gx::EVENT_KEY) {
+    if (es.events & gx::EVENT_INPUT) {
       int no = entryNo;
       const bool last_entry = (no == lastNo);
       const bool first_entry = (no == 0);
 
-      for (const auto& k : es.keyStates) {
-        if (!k.pressCount && !k.repeatCount) { continue; }
+      for (const auto& in : es.inputStates) {
+        if (!in.pressCount && !in.repeatCount) { continue; }
 
-        switch (k.key) {
+        switch (in.value) {
           case gx::KEY_LEFT: case gx::KEY_BACKSPACE:
-            if ((k.pressCount || !first_entry) && --no < 0) { no = lastNo; }
+            if ((in.pressCount || !first_entry) && --no < 0) { no = lastNo; }
             break;
           case gx::KEY_RIGHT: case gx::KEY_SPACE:
-            if ((k.pressCount || !last_entry) && ++no > lastNo) { no = 0; }
+            if ((in.pressCount || !last_entry) && ++no > lastNo) { no = 0; }
             break;
           case gx::KEY_HOME: no = 0; break;
           case gx::KEY_END: no = lastNo; break;
 
           case gx::KEY_ESCAPE: running = false; break;
           case gx::KEY_F11:
-            if (k.pressCount) {
+            if (in.pressCount) {
               redraw = true;
               zoom = 100;
               imgScale = 1.0f;
@@ -230,7 +230,7 @@ int main(int argc, char* argv[])
     }
 
     if (win.fullScreen()) {
-      if (es.events & gx::EVENT_MOUSE_SCROLL) {
+      if (es.mouseScroll()) {
         const bool shiftHeld = es.mods & gx::MOD_SHIFT;
         const int scroll = static_cast<int>(es.scrollPt.y * (shiftHeld ? 8.0f : 1.0f));
         const int zoom2 = std::clamp(zoom + scroll, 20, 400);
@@ -242,9 +242,9 @@ int main(int argc, char* argv[])
         }
       }
 
-      if (es.buttonPress(gx::BUTTON1)) {
+      if (es.inputPress(gx::BUTTON_1)) {
         pressPos = es.mousePt;
-      } else if (es.buttonDrag(gx::BUTTON1)) {
+      } else if (es.inputDrag(gx::BUTTON_1)) {
         const auto pt = es.mousePt;
         imgOffset += (pt - pressPos);
         pressPos = pt;

@@ -412,14 +412,14 @@ struct gx::WindowImpl
     _eventState.removedEvents = 0;
     _eventState.scrollPt.set(0,0);
     _eventState.chars.clear();
-    for (auto i = _eventState.keyStates.begin();
-         i != _eventState.keyStates.end(); ) {
+    for (auto i = _eventState.inputStates.begin();
+         i != _eventState.inputStates.end(); ) {
       if (i->held) {
         i->pressCount = 0;
         i->repeatCount = 0;
         ++i;
       } else {
-        i = _eventState.keyStates.erase(i);
+        i = _eventState.inputStates.erase(i);
       }
     }
 
@@ -429,30 +429,6 @@ struct gx::WindowImpl
       _eventState.events |= EVENT_SIZE;
       updateMouseState(_renderer->window());
       _genSizeEvent = false;
-    }
-  }
-
-  void finalizeEventState()
-  {
-    // button event pressing
-    if (_eventState.buttonsPress != 0 || _eventState.buttonsRelease != 0) {
-      for (int b = 0; b < 8; ++b) {
-        const int bVal = BUTTON1<<b;
-        const int bEvent = EVENT_MOUSE_BUTTON1<<b;
-
-        if (_eventState.buttonsPress & bVal) {
-          _eventState.events |= bEvent;
-        } else if (_eventState.buttonsRelease & bVal) {
-          // button release event is delayed to next update if it happened in the
-          // same event poll as the press event
-          _eventState.events |= bEvent;
-          _eventState.buttonsRelease &= ~bVal;
-          _eventState.buttons &= ~bVal;
-        }
-      }
-
-      _eventState.buttons |= _eventState.buttonsPress;
-      _eventState.buttonsPress = 0;
     }
   }
 
@@ -532,7 +508,6 @@ int Window::pollEvents()
       // callbacks will set event values
 
     for (auto w : allImpls) {
-      w->finalizeEventState();
       e |= w->_eventState.events;
     }
   }
@@ -603,20 +578,20 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
 
   //println("key event: ", key, ' ', scancode, ' ', action, ' ', mods);
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
-  es.events |= EVENT_KEY;
+  es.events |= EVENT_INPUT;
   es.mods = mods;
 
-  auto& states = es.keyStates;
+  auto& states = es.inputStates;
   auto itr = std::find_if(states.begin(), states.end(),
-			  [key](auto& ks){ return ks.key == key; });
+			  [key](auto& in){ return in.value == key; });
   if (itr == states.end()) {
     itr = states.insert(states.end(), {int16_t(key),0,0,false});
   }
 
-  KeyState& ks = *itr;
+  InputState& in = *itr;
   if (action == GLFW_PRESS) {
-    ++ks.pressCount;
-    ks.held = true;
+    ++in.pressCount;
+    in.held = true;
     switch (key) {
       case KEY_LSHIFT:   case KEY_RSHIFT:   es.mods |= MOD_SHIFT; break;
       case KEY_LCONTROL: case KEY_RCONTROL: es.mods |= MOD_CONTROL; break;
@@ -624,7 +599,7 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
       case KEY_LSUPER:   case KEY_RSUPER:   es.mods |= MOD_SUPER; break;
     }
   } else if (action == GLFW_RELEASE) {
-    ks.held = false;
+    in.held = false;
     switch (key) {
       case KEY_LSHIFT:   case KEY_RSHIFT:   es.mods &= ~MOD_SHIFT; break;
       case KEY_LCONTROL: case KEY_RCONTROL: es.mods &= ~MOD_CONTROL; break;
@@ -632,7 +607,7 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
       case KEY_LSUPER:   case KEY_RSUPER:   es.mods &= ~MOD_SUPER; break;
     }
   } else if (action == GLFW_REPEAT) {
-    ++ks.repeatCount;
+    ++in.repeatCount;
   }
 
   if ((action == GLFW_PRESS || action == GLFW_REPEAT)
@@ -706,17 +681,24 @@ static void mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
     return;
   }
 
-  // bitfield value for button
-  const int bVal = BUTTON1<<button;
-
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;;
+  es.events |= EVENT_INPUT;
   es.mods = mods;
+
+  const int bVal = BUTTON_1 + button;
+  auto& states = es.inputStates;
+  auto itr = std::find_if(states.begin(), states.end(),
+			  [bVal](auto& in){ return in.value == bVal; });
+  if (itr == states.end()) {
+    itr = states.insert(states.end(), {int16_t(bVal),0,0,false});
+  }
+
+  InputState& in = *itr;
   if (action == GLFW_PRESS) {
-    es.buttonsPress |= bVal;
-    //println("button press:", int(b));
+    ++in.pressCount;
+    in.held = true;
   } else if (action == GLFW_RELEASE) {
-    es.buttonsRelease |= bVal;
-    //println("button release:", int(b));
+    in.held = false;
   }
 }
 

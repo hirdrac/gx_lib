@@ -678,7 +678,7 @@ bool Gui::update(Window& win)
 
   // mouse movement/button handling
   if (es.focused) {
-    if (es.allEvents() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_ANY_BUTTON)) {
+    if (es.allEvents() & (EVENT_MOUSE_MOVE | EVENT_INPUT)) {
       processMouseEvent(win);
     }
 
@@ -769,13 +769,21 @@ void Gui::processMouseEvent(Window& win)
   const int allEvents = es.allEvents();
   const int64_t now = win.lastPollTime();
 
-  const bool lbuttonDown = es.buttons & BUTTON1;
-  const bool rbuttonDown = es.buttons & BUTTON2;
-  const bool lbuttonEvent = es.events & EVENT_MOUSE_BUTTON1;
-  const bool rbuttonEvent = es.events & EVENT_MOUSE_BUTTON2;
-  const bool lpressEvent = lbuttonDown & lbuttonEvent;
-  const bool rpressEvent = rbuttonDown & rbuttonEvent;
-  const bool anyButtonEvent = allEvents & EVENT_MOUSE_ANY_BUTTON;
+  const InputState* b1 = es.getInputState(BUTTON_1);
+  const InputState* b2 = es.getInputState(BUTTON_2);
+
+  const bool lbuttonDown = b1 && b1->held;
+  const bool inputEvent = es.events & EVENT_INPUT;
+  const bool lpressEvent = inputEvent && b1 && (b1->pressCount > 0);
+  const bool rpressEvent = inputEvent && b2 && (b2->pressCount > 0);
+
+  const bool lbuttonEvent = // pressed or released
+    inputEvent && b1 && (b1->pressCount > 0 || !b1->held);
+  const bool rbuttonEvent = // pressed or released
+    inputEvent && b2 && (b2->pressCount > 0 || !b2->held);
+
+  const bool anyButtonPressEvent =
+    (b1 && (b1->pressCount > 0)) || (b2 && (b2->pressCount > 0));
   const bool moveEvent = allEvents & EVENT_MOUSE_MOVE;
 
   // get elem at mouse pointer
@@ -788,7 +796,7 @@ void Gui::processMouseEvent(Window& win)
       const Vec2 pt = es.mousePt - Vec2{p->layout.x, p->layout.y};
       if (!(ePtr = findElemByXY(p->root, pt.x, pt.y, _popupType))) { continue; }
 
-      win.removeEvent(EVENT_MOUSE_ANY_BUTTON);
+      win.removeEvent(EVENT_INPUT);
       if (ePtr->_enabled) {
         id = ePtr->_id;
         type = ePtr->type;
@@ -818,14 +826,14 @@ void Gui::processMouseEvent(Window& win)
   }
   if (moveEvent) { _clickCount = 0; }
 
-  if (lbuttonDown && anyButtonEvent && type != GUI_ENTRY) {
+  if (lbuttonDown && anyButtonPressEvent && type != GUI_ENTRY) {
     setFocus(win, nullptr);
   }
 
   // element specific behavior
   MouseShapeEnum shape = MOUSESHAPE_ARROW;
   if (_heldType == GUI_TITLEBAR) {
-    if (lbuttonDown && (es.events & EVENT_MOUSE_MOVE)) {
+    if (lbuttonDown && es.mouseMove()) {
       if (_heldID != id) {
         const auto [panelP,elemP] = findElem(_heldID);
         GX_ASSERT(panelP != nullptr);
@@ -955,7 +963,7 @@ void Gui::processMouseEvent(Window& win)
   }
 
   // popup cleanup
-  if (!hasPopup(type) && _popupID != 0 && anyButtonEvent) {
+  if (!hasPopup(type) && _popupID != 0 && anyButtonPressEvent) {
     deactivatePopups();
   }
 }

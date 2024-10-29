@@ -58,9 +58,9 @@ int main(int argc, char** argv)
     // handle events
     gx::Window::pollEvents();
     if (es.resized()) { redraw = true; }
-    if (es.closed() || es.keyPressCount(gx::KEY_ESCAPE, false)) { break; }
+    if (es.closed() || es.inputPress(gx::KEY_ESCAPE)) { break; }
 
-    if (es.mouseIn && (es.events & gx::EVENT_MOUSE_MOVE)) {
+    if (es.mouseIn && es.mouseMove()) {
       const auto [width,height] = win.dimensions();
       const float tx = es.mousePt.x / float(width);
       const float ty = es.mousePt.y / float(height);
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
       }
     }
 
-    if (es.keyPressCount(gx::KEY_F11, false)) {
+    if (es.inputPress(gx::KEY_F11)) {
       redraw = true;
       if (win.fullScreen()) {
         win.setSize(fnt.atlasWidth(), fnt.atlasHeight(), false);
