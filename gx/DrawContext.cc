@@ -564,7 +564,7 @@ void DrawContext::_circleSector(
   }
 }
 
-void DrawContext::circleSector(
+void DrawContext::circleSectorShaded(
   Vec2 center, float radius, float startAngle, float endAngle, int segments,
   RGBA8 innerColor, RGBA8 outerColor)
 {
@@ -646,7 +646,7 @@ void DrawContext::_arc(
   }
 }
 
-void DrawContext::_arc(
+void DrawContext::_arcShaded(
   Vec2 center, float radius, float angle0, float angle1, int segments,
   float arcWidth, RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
@@ -686,7 +686,7 @@ void DrawContext::_arc(
   }
 }
 
-void DrawContext::arc(
+void DrawContext::arcShaded(
   Vec2 center, float radius, float startAngle, float endAngle,
   int segments, float arcWidth, RGBA8 startColor, RGBA8 endColor)
 {
@@ -805,8 +805,9 @@ void DrawContext::border(const Rect& r, float borderWidth)
   }
 }
 
-void DrawContext::border(const Rect& r, float borderWidth,
-                         RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
+void DrawContext::borderShaded(
+  const Rect& r, float borderWidth,
+  RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
   if ((innerColor | outerColor | fillColor) == 0) { return; }
 
@@ -875,7 +876,7 @@ void DrawContext::roundedBorder(
   }
 }
 
-void DrawContext::roundedBorder(
+void DrawContext::roundedBorderShaded(
   const Rect& r, float curveRadius, int curveSegments, float borderWidth,
   RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
@@ -891,14 +892,14 @@ void DrawContext::roundedBorder(
   constexpr float a180 = degToRad(180.0f);
   constexpr float a270 = degToRad(270.0f);
   constexpr float a360 = degToRad(360.0f);
-  _arc({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth,
-       innerColor, outerColor, fillColor); // top/left
-  _arc({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth,
-       innerColor, outerColor, fillColor); // top/right
-  _arc({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth,
-       innerColor, outerColor, fillColor); // bottom/right
-  _arc({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth,
-       innerColor, outerColor, fillColor); // bottom/left
+  _arcShaded({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth,
+             innerColor, outerColor, fillColor); // top/left
+  _arcShaded({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth,
+             innerColor, outerColor, fillColor); // top/right
+  _arcShaded({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth,
+             innerColor, outerColor, fillColor); // bottom/right
+  _arcShaded({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth,
+             innerColor, outerColor, fillColor); // bottom/left
 
   // borders/center
   if (cr < half_w) {
@@ -967,4 +968,13 @@ void DrawContext::roundedBorder(
           x+w, y+h-cr, fillColor);
     }
   }
+}
+
+RGBA8 DrawContext::gradientColor(float g) const
+{
+  if (g <= _g0) { return _color0; }
+  else if (g >= _g1) { return _color1; }
+
+  const float t = (g - _g0) / (_g1 - _g0);
+  return packRGBA8((_fullcolor0 * (1.0f-t)) + (_fullcolor1 * t));
 }

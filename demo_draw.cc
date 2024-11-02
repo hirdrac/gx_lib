@@ -53,7 +53,7 @@ void draw_circle3(gx::DrawContext& dc, float x, float y)
 
 void draw_circle4(gx::DrawContext& dc, float x, float y)
 {
-  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32, RED, WHITE);
+  dc.circleSectorShaded({x + 200, y + 180}, 150, 0, 0, 32, RED, WHITE);
 }
 
 void draw_circle5(gx::DrawContext& dc, float x, float y)
@@ -64,7 +64,7 @@ void draw_circle5(gx::DrawContext& dc, float x, float y)
 
 void draw_circle6(gx::DrawContext& dc, float x, float y)
 {
-  dc.circleSector({x + 200, y + 180}, 150, 20, 270, 32, BLACK, WHITE);
+  dc.circleSectorShaded({x + 200, y + 180}, 150, 20, 270, 32, BLACK, WHITE);
 }
 
 void draw_rrect1(gx::DrawContext& dc, float x, float y)
@@ -117,7 +117,7 @@ void draw_arc2(gx::DrawContext& dc, float x, float y)
 
 void draw_arc3(gx::DrawContext& dc, float x, float y)
 {
-  dc.arc({x + 200, y + 180}, 150, 20, 270, 32, 32, BLACK, WHITE);
+  dc.arcShaded({x + 200, y + 180}, 150, 20, 270, 32, 32, BLACK, WHITE);
 }
 
 void draw_border1(gx::DrawContext& dc, float x, float y)
@@ -140,12 +140,14 @@ void draw_border3(gx::DrawContext& dc, float x, float y)
 
 void draw_border4(gx::DrawContext& dc, float x, float y)
 {
-  dc.border({x+20, y+30, 360, 300}, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
+  dc.borderShaded(
+    {x+20, y+30, 360, 300}, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
 }
 
 void draw_border5(gx::DrawContext& dc, float x, float y)
 {
-  dc.border({x+20, y+30, 360, 300}, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
+  dc.borderShaded(
+    {x+20, y+30, 360, 300}, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
 }
 
 void draw_rborder1(gx::DrawContext& dc, float x, float y)
@@ -168,13 +170,13 @@ void draw_rborder3(gx::DrawContext& dc, float x, float y)
 
 void draw_rborder4(gx::DrawContext& dc, float x, float y)
 {
-  dc.roundedBorder(
+  dc.roundedBorderShaded(
     {x+20, y+30, 360, 300}, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
 }
 
 void draw_rborder5(gx::DrawContext& dc, float x, float y)
 {
-  dc.roundedBorder(
+  dc.roundedBorderShaded(
     {x+20, y+30, 360, 300}, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
 }
 

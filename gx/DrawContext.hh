@@ -63,7 +63,7 @@ class gx::DrawContext
     init(); _data->insert(_data->end(), dl.begin(), dl.end()); }
   void append(DrawContext& dc) { append(dc.drawList()); }
 
-  // context state change (reset for every DrawList)
+  // Context state change (reset for every DrawList)
   inline void color(float r, float g, float b, float a = 1.0f);
   inline void color(const Color& c);
   inline void color(RGBA8 c);
@@ -80,7 +80,7 @@ class gx::DrawContext
   inline void texture(TextureID tid);
   void texture(const TextureHandle& h) { texture(h.id()); }
 
-  // render state change (persists across different DrawLists)
+  // Render state change (persists across different DrawLists)
   void lineWidth(float w) { add(CMD_lineWidth, w); }
 
   void modColor(float r, float g, float b, float a = 1.0f) {
@@ -90,16 +90,16 @@ class gx::DrawContext
 
   void capabilities(int32_t c) { add(CMD_capabilities, c); }
 
-  // camera
+  // Camera
   void camera(const Mat4& viewT, const Mat4& projT) {
     add(CMD_camera, viewT, projT); }
   void cameraReset() { add(CMD_cameraReset); }
 
-  // lighting
+  // Lighting
   void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
     add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
 
-  // view
+  // View
   void viewport(int x, int y, int w, int h) {
     add(CMD_viewport, x, y, w, h); }
   void viewportFull() {
@@ -111,7 +111,7 @@ class gx::DrawContext
   void clearView(RGBA8 c) {
     add(CMD_clear, c); }
 
-  // line drawing
+  // Line drawing
   void line(Vec2 a, Vec2 b);
   void line(const Vec3& a, const Vec3& b);
   void line(const Vertex2C& a, const Vertex2C& b) {
@@ -132,7 +132,7 @@ class gx::DrawContext
   void lineTo(const Vertex3C& a) {
     add(CMD_lineTo3C, a.x, a.y, a.z, a.c); }
 
-  // poly drawing
+  // Poly drawing
   // Triangle  Quad  Rectangle
   //   A--B    A--B    XY--+
   //   | /     | /|    |   H
@@ -187,7 +187,7 @@ class gx::DrawContext
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1);
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip);
 
-  // High-level data entry
+  // Text drawing
   void text(const TextFormat& tf, Vec2 pos, AlignEnum align,
             std::string_view text) {
     _text(tf, pos, align, text, nullptr); }
@@ -196,14 +196,18 @@ class gx::DrawContext
     _text(tf, pos, align, text, &clip); }
   void glyph(const TextFormat& tf, Vec2 pos, AlignEnum align, int code);
 
+  // High-level constructed primitives
   void circleSector(
     Vec2 center, float radius, float startAngle, float endAngle, int segments);
-  void circleSector(Vec2 center, float radius, float startAngle, float endAngle,
-                    int segments, RGBA8 innerColor, RGBA8 outerColor);
-  void arc(Vec2 center, float radius, float startAngle, float endAngle,
-           int segments, float arcWidth);
-  void arc(Vec2 center, float radius, float startAngle, float endAngle,
-           int segments, float arcWidth, RGBA8 startColor, RGBA8 endColor);
+  void circleSectorShaded(
+    Vec2 center, float radius, float startAngle, float endAngle,
+    int segments, RGBA8 innerColor, RGBA8 outerColor);
+  void arc(
+    Vec2 center, float radius, float startAngle, float endAngle,
+    int segments, float arcWidth);
+  void arcShaded(
+    Vec2 center, float radius, float startAngle, float endAngle,
+    int segments, float arcWidth, RGBA8 startColor, RGBA8 endColor);
     // NOTE:
     //  * make start and end angles equal for a full circle
     //  * angles are in degrees
@@ -212,14 +216,15 @@ class gx::DrawContext
   void roundedRectangle(const Rect& r, float curveRadius, int curveSegments);
 
   void border(const Rect& r, float borderWidth);
-  void border(const Rect& r, float borderWidth,
-              RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
+  void borderShaded(
+    const Rect& r, float borderWidth,
+    RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
-  void roundedBorder(const Rect& r,
-                     float curveRadius, int curveSegments, float borderWidth);
-  void roundedBorder(const Rect& r,
-                     float curveRadius, int curveSegments, float borderWidth,
-                     RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
+  void roundedBorder(
+    const Rect& r, float curveRadius, int curveSegments, float borderWidth);
+  void roundedBorderShaded(
+    const Rect& r, float curveRadius, int curveSegments, float borderWidth,
+    RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
   // Data extraction
   [[nodiscard]] const DrawList& drawList() const { return *_data; }
@@ -271,14 +276,14 @@ class gx::DrawContext
     Vec2 center, float radius, float angle0, float angle1, int segments);
   void _arc(Vec2 center, float radius, float angle0, float angle1,
             int segments, float arcWidth);
-  void _arc(Vec2 center, float radius, float angle0, float angle1,
-            int segments, float arcWidth,
-            RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
+  void _arcShaded(Vec2 center, float radius, float angle0, float angle1,
+                  int segments, float arcWidth,
+                  RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
   void _quad(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
     add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
 
-  [[nodiscard]] inline RGBA8 gradientColor(float g) const;
+  [[nodiscard]] RGBA8 gradientColor(float g) const;
   [[nodiscard]] inline RGBA8 pointColor(Vec2 pt) const;
   [[nodiscard]] inline RGBA8 pointColor(const Vec3& pt) const;
   inline void setColor();
@@ -374,15 +379,6 @@ void gx::DrawContext::texture(TextureID tid)
     _lastTexID = tid;
     add(CMD_texture, tid);
   }
-}
-
-gx::RGBA8 gx::DrawContext::gradientColor(float g) const
-{
-  if (g <= _g0) { return _color0; }
-  else if (g >= _g1) { return _color1; }
-
-  const float t = (g - _g0) / (_g1 - _g0);
-  return packRGBA8((_fullcolor0 * (1.0f-t)) + (_fullcolor1 * t));
 }
 
 gx::RGBA8 gx::DrawContext::pointColor(Vec2 pt) const
