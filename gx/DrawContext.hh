@@ -55,13 +55,8 @@ class gx::DrawContext
 
   // Low-level data entry
   void clearList() { init(); _data->clear(); }
-  void reserve(std::size_t n) { _data->reserve(n); }
-  [[nodiscard]] std::size_t size() const { return _data->size(); }
-  [[nodiscard]] bool empty() const { return _data->empty(); }
-
   void append(const DrawList& dl) {
     init(); _data->insert(_data->end(), dl.begin(), dl.end()); }
-  void append(DrawContext& dc) { append(dc.drawList()); }
 
   // Context state change (reset for every DrawList)
   inline void color(float r, float g, float b, float a = 1.0f);

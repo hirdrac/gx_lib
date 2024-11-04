@@ -724,8 +724,8 @@ bool Gui::update(Window& win)
       Panel& p = **it;
       _needRender |= drawElem(win, p, p.root, dc, dc2, &(p.theme->panel));
 
-      if (!dc2.empty()) {
-        dc.append(dc2);
+      if (!tmp.empty()) {
+        dc.append(tmp);
         dc2.clearList();
       }
     }
@@ -735,8 +735,8 @@ bool Gui::update(Window& win)
         Panel& p = **it;
         _needRender |= drawPopup(win, p, p.root, dc, dc2);
 
-        if (!dc2.empty()) {
-          dc.append(dc2);
+        if (!tmp.empty()) {
+          dc.append(tmp);
           dc2.clearList();
         }
       }
