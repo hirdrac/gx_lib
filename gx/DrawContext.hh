@@ -50,13 +50,12 @@ class gx::DrawContext
 {
  public:
   DrawContext(std::nullptr_t) = delete;
-  explicit DrawContext(DrawList* dl) : _data{dl} { init(); }
+  explicit DrawContext(DrawList* dl);
   explicit DrawContext(DrawList& dl) : DrawContext{&dl} { }
 
   // Low-level data entry
-  void clearList() { init(); _data->clear(); }
-  void append(const DrawList& dl) {
-    init(); _data->insert(_data->end(), dl.begin(), dl.end()); }
+  void clearList() { init(); _dl->clear(); }
+  void append(const DrawList& dl) { init(); _dl->append(dl); }
 
   // Context state change (reset for every DrawList)
   inline void color(float r, float g, float b, float a = 1.0f);
@@ -76,56 +75,56 @@ class gx::DrawContext
   void texture(const TextureHandle& h) { texture(h.id()); }
 
   // Render state change (persists across different DrawLists)
-  void lineWidth(float w) { add(CMD_lineWidth, w); }
+  void lineWidth(float w) { _dl->add(CMD_lineWidth, w); }
 
   void modColor(float r, float g, float b, float a = 1.0f) {
-    add(CMD_modColor, packRGBA8(r, g, b, a)); }
-  void modColor(const Color& c) { add(CMD_modColor, packRGBA8(c)); }
-  void modColor(RGBA8 c) { add(CMD_modColor, c); }
+    _dl->add(CMD_modColor, packRGBA8(r, g, b, a)); }
+  void modColor(const Color& c) { _dl->add(CMD_modColor, packRGBA8(c)); }
+  void modColor(RGBA8 c) { _dl->add(CMD_modColor, c); }
 
-  void capabilities(int32_t c) { add(CMD_capabilities, c); }
+  void capabilities(int32_t c) { _dl->add(CMD_capabilities, c); }
 
   // Camera
   void camera(const Mat4& viewT, const Mat4& projT) {
-    add(CMD_camera, viewT, projT); }
-  void cameraReset() { add(CMD_cameraReset); }
+    _dl->add(CMD_camera, viewT, projT); }
+  void cameraReset() { _dl->add(CMD_cameraReset); }
 
   // Lighting
   void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
-    add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
+    _dl->add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
 
   // View
   void viewport(int x, int y, int w, int h) {
-    add(CMD_viewport, x, y, w, h); }
+    _dl->add(CMD_viewport, x, y, w, h); }
   void viewportFull() {
-    add(CMD_viewportFull); }
+    _dl->add(CMD_viewportFull); }
   void clearView(float r, float g, float b) {
     clearView(packRGBA8(r,g,b,1.0f)); }
   void clearView(const Color& c) {
     clearView(packRGBA8(c)); }
   void clearView(RGBA8 c) {
-    add(CMD_clear, c); }
+    _dl->add(CMD_clear, c); }
 
   // Line drawing
   void line(Vec2 a, Vec2 b);
   void line(const Vec3& a, const Vec3& b);
   void line(const Vertex2C& a, const Vertex2C& b) {
-    add(CMD_line2C, a.x, a.y, a.c, b.x, b.y, b.c); }
+    _dl->add(CMD_line2C, a.x, a.y, a.c, b.x, b.y, b.c); }
   void line(const Vertex3C& a, const Vertex3C& b) {
-    add(CMD_line3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c); }
+    _dl->add(CMD_line3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c); }
 
   void lineStart(Vec2 a);
   void lineTo(Vec2 a);
   void lineStart(const Vec3& a);
   void lineTo(const Vec3& a);
   void lineStart(const Vertex2C& a) {
-    add(CMD_lineStart2C, a.x, a.y, a.c); }
+    _dl->add(CMD_lineStart2C, a.x, a.y, a.c); }
   void lineTo(const Vertex2C& a) {
-    add(CMD_lineTo2C, a.x, a.y, a.c); }
+    _dl->add(CMD_lineTo2C, a.x, a.y, a.c); }
   void lineStart(const Vertex3C& a) {
-    add(CMD_lineStart3C, a.x, a.y, a.z, a.c); }
+    _dl->add(CMD_lineStart3C, a.x, a.y, a.z, a.c); }
   void lineTo(const Vertex3C& a) {
-    add(CMD_lineTo3C, a.x, a.y, a.z, a.c); }
+    _dl->add(CMD_lineTo3C, a.x, a.y, a.z, a.c); }
 
   // Poly drawing
   // Triangle  Quad  Rectangle
@@ -136,47 +135,51 @@ class gx::DrawContext
   void triangle(Vec2 a, Vec2 b, Vec2 c);
   void triangle(const Vec3& a, const Vec3& b, const Vec3& c);
   void triangle(const Vertex2C& a, const Vertex2C& b, const Vertex2C& c) {
-    add(CMD_triangle2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c); }
+    _dl->add(CMD_triangle2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c); }
   void triangle(const Vertex3C& a, const Vertex3C& b, const Vertex3C& c) {
-    add(CMD_triangle3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
-        c.x, c.y, c.z, c.c); }
+    _dl->add(CMD_triangle3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
+             c.x, c.y, c.z, c.c); }
   void triangle(const Vertex2TC& a, const Vertex2TC& b, const Vertex2TC& c) {
-    add(CMD_triangle2TC, a.x, a.y, a.s, a.t, a.c,
-        b.x, b.y, b.s, b.t, b.c, c.x, c.y, c.s, c.t, c.c); }
+    _dl->add(CMD_triangle2TC, a.x, a.y, a.s, a.t, a.c,
+             b.x, b.y, b.s, b.t, b.c, c.x, c.y, c.s, c.t, c.c); }
   void triangle(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c) {
-    add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
-        b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
+    _dl->add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
+             b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
   void triangle(const Vertex3TCN& a, const Vertex3TCN& b, const Vertex3TCN& c) {
-    add(CMD_triangle3TCN,
-        a.x, a.y, a.z, a.s, a.t, a.c, a.n,
-        b.x, b.y, b.z, b.s, b.t, b.c, b.n,
-        c.x, c.y, c.z, c.s, c.t, c.c, c.n); }
+    _dl->add(CMD_triangle3TCN,
+             a.x, a.y, a.z, a.s, a.t, a.c, a.n,
+             b.x, b.y, b.z, b.s, b.t, b.c, b.n,
+             c.x, c.y, c.z, c.s, c.t, c.c, c.n); }
 
   void quad(const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d);
   void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d);
   void quad(const Vertex2C& a, const Vertex2C& b,
             const Vertex2C& c, const Vertex2C& d) {
-    add(CMD_quad2C, a.x, a.y, a.c, b.x, b.y, b.c,
-        c.x, c.y, c.c, d.x, d.y, d.c); }
+    _dl->add(CMD_quad2C,
+             a.x, a.y, a.c, b.x, b.y, b.c,
+             c.x, c.y, c.c, d.x, d.y, d.c); }
   void quad(const Vertex3C& a, const Vertex3C& b,
             const Vertex3C& c, const Vertex3C& d) {
-    add(CMD_quad3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
-        c.x, c.y, c.z, c.c, d.x, d.y, d.z, d.c); }
+    _dl->add(CMD_quad3C,
+             a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
+             c.x, c.y, c.z, c.c, d.x, d.y, d.z, d.c); }
   void quad(const Vertex2TC& a, const Vertex2TC& b,
             const Vertex2TC& c, const Vertex2TC& d) {
-    add(CMD_quad2TC, a.x, a.y, a.s, a.t, a.c, b.x, b.y, b.s, b.t, b.c,
-        c.x, c.y, c.s, c.t, c.c, d.x, d.y, d.s, d.t, d.c); }
+    _dl->add(CMD_quad2TC,
+             a.x, a.y, a.s, a.t, a.c, b.x, b.y, b.s, b.t, b.c,
+             c.x, c.y, c.s, c.t, c.c, d.x, d.y, d.s, d.t, d.c); }
   void quad(const Vertex3TC& a, const Vertex3TC& b,
             const Vertex3TC& c, const Vertex3TC& d) {
-    add(CMD_quad3TC, a.x, a.y, a.z, a.s, a.t, a.c, b.x, b.y, b.z, b.s, b.t, b.c,
-        c.x, c.y, c.z, c.s, c.t, c.c, d.x, d.y, d.z, d.s, d.t, d.c); }
+    _dl->add(CMD_quad3TC,
+             a.x, a.y, a.z, a.s, a.t, a.c, b.x, b.y, b.z, b.s, b.t, b.c,
+             c.x, c.y, c.z, c.s, c.t, c.c, d.x, d.y, d.z, d.s, d.t, d.c); }
   void quad(const Vertex3TCN& a, const Vertex3TCN& b,
             const Vertex3TCN& c, const Vertex3TCN& d) {
-    add(CMD_quad3TCN,
-        a.x, a.y, a.z, a.s, a.t, a.c, a.n,
-        b.x, b.y, b.z, b.s, b.t, b.c, b.n,
-        c.x, c.y, c.z, c.s, c.t, c.c, c.n,
-        d.x, d.y, d.z, d.s, d.t, d.c); }
+    _dl->add(CMD_quad3TCN,
+             a.x, a.y, a.z, a.s, a.t, a.c, a.n,
+             b.x, b.y, b.z, b.s, b.t, b.c, b.n,
+             c.x, c.y, c.z, c.s, c.t, c.c, c.n,
+             d.x, d.y, d.z, d.s, d.t, d.c); }
 
   void rectangle(const Rect& r);
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1);
@@ -222,10 +225,10 @@ class gx::DrawContext
     RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
   // Data extraction
-  [[nodiscard]] const DrawList& drawList() const { return *_data; }
+  [[nodiscard]] const DrawList& drawList() const { return *_dl; }
 
  private:
-  DrawList* _data = nullptr;
+  DrawList* _dl = nullptr;
 
   // general properties
   TextureID _lastTexID;
@@ -249,19 +252,6 @@ class gx::DrawContext
     _colorMode = CM_SOLID;
   }
 
-  void add(DrawCmd cmd, const Mat4& m1, const Mat4& m2) {
-    _data->reserve(_data->size() + 33);
-    _data->push_back(cmd);
-    _data->insert(_data->end(), m1.begin(), m1.end());
-    _data->insert(_data->end(), m2.begin(), m2.end());
-  }
-
-  template<class... Args>
-  void add(DrawCmd cmd, const Args&... args) {
-    const std::initializer_list<DrawEntry> x {cmd, args...};
-    _data->insert(_data->end(), x.begin(), x.end());
-  }
-
   void _rectangle(float x, float y, float w, float h);
   void _text(const TextFormat& tf, Vec2 pos, AlignEnum align,
              std::string_view text, const Rect* clipPtr);
@@ -276,7 +266,7 @@ class gx::DrawContext
                   RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
   void _quad(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
-    add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
+    _dl->add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
 
   [[nodiscard]] RGBA8 gradientColor(float g) const;
   [[nodiscard]] inline RGBA8 pointColor(Vec2 pt) const;
@@ -364,7 +354,7 @@ void gx::DrawContext::normal(uint32_t n)
 {
   if (n != _lastNormal) {
     _lastNormal = n;
-    add(CMD_normal, n);
+    _dl->add(CMD_normal, n);
   }
 }
 
@@ -372,7 +362,7 @@ void gx::DrawContext::texture(TextureID tid)
 {
   if (tid != _lastTexID) {
     _lastTexID = tid;
-    add(CMD_texture, tid);
+    _dl->add(CMD_texture, tid);
   }
 }
 
@@ -398,7 +388,7 @@ void gx::DrawContext::setColor()
 {
   if (_dataColor != _color0) {
     _dataColor = _color0;
-    add(CMD_color, _color0);
+    _dl->add(CMD_color, _color0);
   }
 }
 
