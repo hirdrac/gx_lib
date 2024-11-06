@@ -736,7 +736,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
         case CMD_normal:  normal = uval(d); break;
 
         case CMD_modColor:
-          addOp(OP_modColor, ival(d)); break;
+          addOp(OP_modColor, uval(d)); break;
 
         case CMD_capabilities:
           addOp(OP_capabilities, ival(d)); break;
