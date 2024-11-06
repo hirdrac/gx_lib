@@ -36,8 +36,12 @@ class gx::DrawList
 
   template<class... Args>
   void add(DrawCmd cmd, const Args&... args) {
-    const std::initializer_list<DrawEntry> x {cmd, args...};
-    _data.insert(_data.end(), x.begin(), x.end());
+    if constexpr (sizeof...(args) == 0) {
+      _data.push_back(cmd);
+    } else {
+      const std::initializer_list<DrawEntry> x {cmd, args...};
+      _data.insert(_data.end(), x.begin(), x.end());
+    }
   }
 
  private:
