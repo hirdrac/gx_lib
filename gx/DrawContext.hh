@@ -19,31 +19,11 @@
 #include "TextFormat.hh"
 #include "Types.hh"
 #include <string_view>
-#include <initializer_list>
 
 
 namespace gx {
   struct Glyph;
   class DrawContext;
-
-  struct Vertex2C {
-    float x, y; uint32_t c;
-
-    Vertex2C() = default;
-    constexpr Vertex2C(Vec2 pos, uint32_t col)
-      : x{pos.x}, y{pos.y}, c{col} { }
-    constexpr Vertex2C(float px, float py, uint32_t col)
-      : x{px}, y{py}, c{col} { }
-  };
-
-  struct Vertex2T { float x, y, s, t; };
-  struct Vertex2TC { float x, y, s, t; uint32_t c; };
-
-  struct Vertex3C { float x, y, z; uint32_t c; };
-  struct Vertex3T { float x, y, z, s, t; };
-  struct Vertex3TC { float x, y, z, s, t; uint32_t c; };
-
-  struct Vertex3TCN { float x,y,z,s,t; uint32_t c, n; };
 }
 
 class gx::DrawContext
@@ -58,8 +38,9 @@ class gx::DrawContext
   void append(const DrawList& dl) { init(); _dl->append(dl); }
 
   // Context state change (reset for every DrawList)
-  inline void color(float r, float g, float b, float a = 1.0f);
-  inline void color(const Color& c);
+  void color(float r, float g, float b, float a = 1.0f) {
+    color(packRGBA8(r, g, b, a)); }
+  void color(const Color& c) { color(packRGBA8(c)); }
   inline void color(RGBA8 c);
 
   inline void hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1);
@@ -67,64 +48,64 @@ class gx::DrawContext
   inline void vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1);
   inline void vgradient(float y0, const Color& c0, float y1, const Color& c1);
 
-  inline void normal(float x, float y, float z);
-  inline void normal(const Vec3& n);
+  void normal(float x, float y, float z) { normal(packNormal(x,y,z)); }
+  void normal(const Vec3& n) { normal(packNormal(n)); }
   inline void normal(uint32_t n);
 
   inline void texture(TextureID tid);
   void texture(const TextureHandle& h) { texture(h.id()); }
 
   // Render state change (persists across different DrawLists)
-  void lineWidth(float w) { _dl->add(CMD_lineWidth, w); }
+  void lineWidth(float w) { _dl->lineWidth(w); }
 
   void modColor(float r, float g, float b, float a = 1.0f) {
-    _dl->add(CMD_modColor, packRGBA8(r, g, b, a)); }
-  void modColor(const Color& c) { _dl->add(CMD_modColor, packRGBA8(c)); }
-  void modColor(RGBA8 c) { _dl->add(CMD_modColor, c); }
+    modColor(packRGBA8(r, g, b, a)); }
+  void modColor(const Color& c) { modColor(packRGBA8(c)); }
+  void modColor(RGBA8 c) { _dl->modColor(c); }
 
-  void capabilities(int32_t c) { _dl->add(CMD_capabilities, c); }
+  void capabilities(int32_t c) { _dl->capabilities(c); }
 
   // Camera
   void camera(const Mat4& viewT, const Mat4& projT) {
-    _dl->add(CMD_camera, viewT, projT); }
-  void cameraReset() { _dl->add(CMD_cameraReset); }
+    _dl->camera(viewT, projT); }
+  void cameraReset() { _dl->cameraReset(); }
 
   // Lighting
   void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
-    _dl->add(CMD_light, pos.x, pos.y, pos.z, ambient, diffuse); }
+    _dl->light(pos, ambient, diffuse); }
 
   // View
   void viewport(int x, int y, int w, int h) {
-    _dl->add(CMD_viewport, x, y, w, h); }
+    _dl->viewport(x, y, w, h); }
   void viewportFull() {
-    _dl->add(CMD_viewportFull); }
+    _dl->viewportFull(); }
   void clearView(float r, float g, float b) {
     clearView(packRGBA8(r,g,b,1.0f)); }
   void clearView(const Color& c) {
     clearView(packRGBA8(c)); }
   void clearView(RGBA8 c) {
-    _dl->add(CMD_clear, c); }
+    _dl->clear(c); }
 
   // Line drawing
   void line(Vec2 a, Vec2 b);
   void line(const Vec3& a, const Vec3& b);
   void line(const Vertex2C& a, const Vertex2C& b) {
-    _dl->add(CMD_line2C, a.x, a.y, a.c, b.x, b.y, b.c); }
+    _dl->line2C(a, b); }
   void line(const Vertex3C& a, const Vertex3C& b) {
-    _dl->add(CMD_line3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c); }
+    _dl->line3C(a, b); }
 
   void lineStart(Vec2 a);
   void lineTo(Vec2 a);
   void lineStart(const Vec3& a);
   void lineTo(const Vec3& a);
   void lineStart(const Vertex2C& a) {
-    _dl->add(CMD_lineStart2C, a.x, a.y, a.c); }
+    _dl->lineStart2C(a); }
   void lineTo(const Vertex2C& a) {
-    _dl->add(CMD_lineTo2C, a.x, a.y, a.c); }
+    _dl->lineTo2C(a); }
   void lineStart(const Vertex3C& a) {
-    _dl->add(CMD_lineStart3C, a.x, a.y, a.z, a.c); }
+    _dl->lineStart3C(a); }
   void lineTo(const Vertex3C& a) {
-    _dl->add(CMD_lineTo3C, a.x, a.y, a.z, a.c); }
+    _dl->lineTo3C(a); }
 
   // Poly drawing
   // Triangle  Quad  Rectangle
@@ -135,51 +116,33 @@ class gx::DrawContext
   void triangle(Vec2 a, Vec2 b, Vec2 c);
   void triangle(const Vec3& a, const Vec3& b, const Vec3& c);
   void triangle(const Vertex2C& a, const Vertex2C& b, const Vertex2C& c) {
-    _dl->add(CMD_triangle2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c); }
+    _dl->triangle2C(a, b, c); }
   void triangle(const Vertex3C& a, const Vertex3C& b, const Vertex3C& c) {
-    _dl->add(CMD_triangle3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
-             c.x, c.y, c.z, c.c); }
+    _dl->triangle3C(a, b, c); }
   void triangle(const Vertex2TC& a, const Vertex2TC& b, const Vertex2TC& c) {
-    _dl->add(CMD_triangle2TC, a.x, a.y, a.s, a.t, a.c,
-             b.x, b.y, b.s, b.t, b.c, c.x, c.y, c.s, c.t, c.c); }
+    _dl->triangle2TC(a, b, c); }
   void triangle(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c) {
-    _dl->add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
-             b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
+    _dl->triangle3TC(a, b, c); }
   void triangle(const Vertex3TCN& a, const Vertex3TCN& b, const Vertex3TCN& c) {
-    _dl->add(CMD_triangle3TCN,
-             a.x, a.y, a.z, a.s, a.t, a.c, a.n,
-             b.x, b.y, b.z, b.s, b.t, b.c, b.n,
-             c.x, c.y, c.z, c.s, c.t, c.c, c.n); }
+    _dl->triangle3TCN(a, b, c); }
 
   void quad(const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d);
   void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d);
   void quad(const Vertex2C& a, const Vertex2C& b,
             const Vertex2C& c, const Vertex2C& d) {
-    _dl->add(CMD_quad2C,
-             a.x, a.y, a.c, b.x, b.y, b.c,
-             c.x, c.y, c.c, d.x, d.y, d.c); }
+    _dl->quad2C(a, b, c, d); }
   void quad(const Vertex3C& a, const Vertex3C& b,
             const Vertex3C& c, const Vertex3C& d) {
-    _dl->add(CMD_quad3C,
-             a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
-             c.x, c.y, c.z, c.c, d.x, d.y, d.z, d.c); }
+    _dl->quad3C(a, b, c, d); }
   void quad(const Vertex2TC& a, const Vertex2TC& b,
             const Vertex2TC& c, const Vertex2TC& d) {
-    _dl->add(CMD_quad2TC,
-             a.x, a.y, a.s, a.t, a.c, b.x, b.y, b.s, b.t, b.c,
-             c.x, c.y, c.s, c.t, c.c, d.x, d.y, d.s, d.t, d.c); }
+    _dl->quad2TC(a, b, c, d); }
   void quad(const Vertex3TC& a, const Vertex3TC& b,
             const Vertex3TC& c, const Vertex3TC& d) {
-    _dl->add(CMD_quad3TC,
-             a.x, a.y, a.z, a.s, a.t, a.c, b.x, b.y, b.z, b.s, b.t, b.c,
-             c.x, c.y, c.z, c.s, c.t, c.c, d.x, d.y, d.z, d.s, d.t, d.c); }
+    _dl->quad3TC(a, b, c, d); }
   void quad(const Vertex3TCN& a, const Vertex3TCN& b,
             const Vertex3TCN& c, const Vertex3TCN& d) {
-    _dl->add(CMD_quad3TCN,
-             a.x, a.y, a.z, a.s, a.t, a.c, a.n,
-             b.x, b.y, b.z, b.s, b.t, b.c, b.n,
-             c.x, c.y, c.z, c.s, c.t, c.c, c.n,
-             d.x, d.y, d.z, d.s, d.t, d.c); }
+    _dl->quad3TCN(a, b, c, d); }
 
   void rectangle(const Rect& r);
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1);
@@ -265,9 +228,6 @@ class gx::DrawContext
                   int segments, float arcWidth,
                   RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
-  void _quad(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
-    _dl->add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
-
   [[nodiscard]] RGBA8 gradientColor(float g) const;
   [[nodiscard]] inline RGBA8 pointColor(Vec2 pt) const;
   [[nodiscard]] inline RGBA8 pointColor(const Vec3& pt) const;
@@ -277,16 +237,6 @@ class gx::DrawContext
 
 
 // **** Inline Implementations ****
-void gx::DrawContext::color(float r, float g, float b, float a)
-{
-  color(packRGBA8(r, g, b, a));
-}
-
-void gx::DrawContext::color(const Color& c)
-{
-  color(packRGBA8(c));
-}
-
 void gx::DrawContext::color(RGBA8 c)
 {
   _colorMode = CM_SOLID;
@@ -340,21 +290,11 @@ void gx::DrawContext::vgradient(
   _fullcolor1 = c1;
 }
 
-void gx::DrawContext::normal(float x, float y, float z)
-{
-  normal(packNormal(x,y,z));
-}
-
-void gx::DrawContext::normal(const Vec3& n)
-{
-  normal(packNormal(n));
-}
-
 void gx::DrawContext::normal(uint32_t n)
 {
   if (n != _lastNormal) {
     _lastNormal = n;
-    _dl->add(CMD_normal, n);
+    _dl->normal(n);
   }
 }
 
@@ -362,7 +302,7 @@ void gx::DrawContext::texture(TextureID tid)
 {
   if (tid != _lastTexID) {
     _lastTexID = tid;
-    _dl->add(CMD_texture, tid);
+    _dl->texture(tid);
   }
 }
 
@@ -388,7 +328,7 @@ void gx::DrawContext::setColor()
 {
   if (_dataColor != _color0) {
     _dataColor = _color0;
-    _dl->add(CMD_color, _color0);
+    _dl->color(_color0);
   }
 }
 

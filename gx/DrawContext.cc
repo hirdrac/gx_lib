@@ -65,11 +65,10 @@ void DrawContext::line(Vec2 a, Vec2 b)
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_line2, a.x, a.y, b.x, b.y);
+    _dl->line2(a, b);
   } else {
-    _dl->add(CMD_line2C,
-             a.x, a.y, pointColor(a),
-             b.x, b.y, pointColor(b));
+    _dl->line2C({a.x, a.y, pointColor(a)},
+                {b.x, b.y, pointColor(b)});
   }
 }
 
@@ -78,11 +77,10 @@ void DrawContext::line(const Vec3& a, const Vec3& b)
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z);
+    _dl->line3(a, b);
   } else {
-    _dl->add(CMD_line3C,
-             a.x, a.y, a.z, pointColor(a),
-             b.x, b.y, b.z, pointColor(b));
+    _dl->line3C({a.x, a.y, a.z, pointColor(a)},
+                {b.x, b.y, b.z, pointColor(b)});
   }
 }
 
@@ -91,9 +89,9 @@ void DrawContext::lineStart(Vec2 a)
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_lineStart2, a.x, a.y);
+    _dl->lineStart2(a);
   } else {
-    _dl->add(CMD_lineStart2C, a.x, a.y, pointColor(a));
+    _dl->lineStart2C({a.x, a.y, pointColor(a)});
   }
 }
 
@@ -102,9 +100,9 @@ void DrawContext::lineTo(Vec2 a)
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_lineTo2, a.x, a.y);
+    _dl->lineTo2(a);
   } else {
-    _dl->add(CMD_lineTo2C, a.x, a.y, pointColor(a));
+    _dl->lineTo2C({a.x, a.y, pointColor(a)});
   }
 }
 
@@ -113,9 +111,9 @@ void DrawContext::lineStart(const Vec3& a)
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_lineStart3, a.x, a.y, a.z);
+    _dl->lineStart3(a);
   } else {
-    _dl->add(CMD_lineStart3C, a.x, a.y, a.z, pointColor(a));
+    _dl->lineStart3C({a.x, a.y, a.z, pointColor(a)});
   }
 }
 
@@ -124,9 +122,9 @@ void DrawContext::lineTo(const Vec3& a)
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_lineTo3, a.x, a.y, a.z);
+    _dl->lineTo3(a);
   } else {
-    _dl->add(CMD_lineTo3C, a.x, a.y, a.z, pointColor(a));
+    _dl->lineTo3C({a.x, a.y, a.z, pointColor(a)});
   }
 }
 
@@ -135,12 +133,11 @@ void DrawContext::triangle(Vec2 a, Vec2 b, Vec2 c)
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_triangle2, a.x, a.y, b.x, b.y, c.x, c.y);
+    _dl->triangle2(a, b, c);
   } else {
-    _dl->add(CMD_triangle2C,
-             a.x, a.y, pointColor(a),
-             b.x, b.y, pointColor(b),
-             c.x, c.y, pointColor(c));
+    _dl->triangle2C({a.x, a.y, pointColor(a)},
+                    {b.x, b.y, pointColor(b)},
+                    {c.x, c.y, pointColor(c)});
   }
 }
 
@@ -149,12 +146,11 @@ void DrawContext::triangle(const Vec3& a, const Vec3& b, const Vec3& c)
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_triangle3, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
+    _dl->triangle3(a, b, c);
   } else {
-    _dl->add(CMD_triangle3C,
-             a.x, a.y, a.z, pointColor(a),
-             b.x, b.y, b.z, pointColor(b),
-             c.x, c.y, c.z, pointColor(c));
+    _dl->triangle3C({a.x, a.y, a.z, pointColor(a)},
+                    {b.x, b.y, b.z, pointColor(b)},
+                    {c.x, c.y, c.z, pointColor(c)});
   }
 }
 
@@ -164,13 +160,12 @@ void DrawContext::quad(
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _quad(a,b,c,d);
+    _dl->quad2(a, b, c, d);
   } else {
-    _dl->add(CMD_quad2C,
-             a.x, a.y, pointColor(a),
-             b.x, b.y, pointColor(b),
-             c.x, c.y, pointColor(c),
-             d.x, d.y, pointColor(d));
+    _dl->quad2C({a.x, a.y, pointColor(a)},
+                {b.x, b.y, pointColor(b)},
+                {c.x, c.y, pointColor(c)},
+                {d.x, d.y, pointColor(d)});
   }
 }
 
@@ -180,14 +175,12 @@ void DrawContext::quad(
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_quad3, a.x, a.y, a.z, b.x, b.y, b.z,
-             c.x, c.y, c.z, d.x, d.y, d.z);
+    _dl->quad3(a, b, c, d);
   } else {
-    _dl->add(CMD_quad3C,
-             a.x, a.y, a.z, pointColor(a),
-             b.x, b.y, b.z, pointColor(b),
-             c.x, c.y, c.z, pointColor(c),
-             d.x, d.y, d.z, pointColor(d));
+    _dl->quad3C({a.x, a.y, a.z, pointColor(a)},
+                {b.x, b.y, b.z, pointColor(b)},
+                {c.x, c.y, c.z, pointColor(c)},
+                {d.x, d.y, d.z, pointColor(d)});
   }
 }
 
@@ -204,17 +197,17 @@ void DrawContext::_rectangle(float x, float y, float w, float h)
     case CM_HGRADIENT: {
       const RGBA8 c0 = gradientColor(x);
       const RGBA8 c1 = gradientColor(x1);
-      _dl->add(CMD_quad2C, x, y, c0, x1, y, c1, x, y1, c0, x1, y1, c1);
+      _dl->quad2C({x, y, c0}, {x1, y, c1}, {x, y1, c0}, {x1, y1, c1});
       break;
     }
     case CM_VGRADIENT: {
       const RGBA8 c0 = gradientColor(y);
       const RGBA8 c1 = gradientColor(y1);
-      _dl->add(CMD_quad2C, x, y, c0, x1, y, c0, x, y1, c1, x1, y1, c1);
+      _dl->quad2C({x, y, c0}, {x1, y, c0}, {x, y1, c1}, {x1, y1, c1});
       break;
     }
     default:
-      _dl->add(CMD_rectangle, x, y, x1, y1);
+      _dl->rectangle({x, y}, {x1, y1});
       break;
   }
 }
@@ -231,26 +224,24 @@ void DrawContext::rectangle(const Rect& r, Vec2 t0, Vec2 t1)
     case CM_HGRADIENT: {
       const RGBA8 c0 = gradientColor(x0);
       const RGBA8 c1 = gradientColor(x1);
-      _dl->add(CMD_quad2TC,
-               x0, y0, t0.x, t0.y, c0,
-               x1, y0, t1.x, t0.y, c1,
-               x0, y1, t0.x, t1.y, c0,
-               x1, y1, t1.x, t1.y, c1);
+      _dl->quad2TC({x0, y0, t0.x, t0.y, c0},
+                   {x1, y0, t1.x, t0.y, c1},
+                   {x0, y1, t0.x, t1.y, c0},
+                   {x1, y1, t1.x, t1.y, c1});
       break;
     }
     case CM_VGRADIENT: {
       const RGBA8 c0 = gradientColor(y0);
       const RGBA8 c1 = gradientColor(y1);
-      _dl->add(CMD_quad2TC,
-               x0, y0, t0.x, t0.y, c0,
-               x1, y0, t1.x, t0.y, c0,
-               x0, y1, t0.x, t1.y, c1,
-               x1, y1, t1.x, t1.y, c1);
+      _dl->quad2TC({x0, y0, t0.x, t0.y, c0},
+                   {x1, y0, t1.x, t0.y, c0},
+                   {x0, y1, t0.x, t1.y, c1},
+                   {x1, y1, t1.x, t1.y, c1});
       break;
     }
     default:
       setColor();
-      _dl->add(CMD_rectangleT, x0, y0, t0.x, t0.y, x1, y1, t1.x, t1.y);
+      _dl->rectangleT({x0, y0, t0.x, t0.y}, {x1, y1, t1.x, t1.y});
       break;
   }
 }
@@ -297,13 +288,12 @@ void DrawContext::rectangle(
 
   if (_colorMode == CM_SOLID) {
     setColor();
-    _dl->add(CMD_rectangleT, x0, y0, tx0, ty0, x1, y1, tx1, ty1);
+    _dl->rectangleT({x0, y0, tx0, ty0}, {x1, y1, tx1, ty1});
   } else {
-    _dl->add(CMD_quad2TC,
-             x0, y0, tx0, ty0, pointColor({x0,y0}),
-             x1, y0, tx1, ty0, pointColor({x1,y0}),
-             x0, y1, tx0, ty1, pointColor({x0,y1}),
-             x1, y1, tx1, ty1, pointColor({x1,y1}));
+    _dl->quad2TC({x0, y0, tx0, ty0, pointColor({x0,y0})},
+                 {x1, y0, tx1, ty0, pointColor({x1,y0})},
+                 {x0, y1, tx0, ty1, pointColor({x0,y1})},
+                 {x1, y1, tx1, ty1, pointColor({x1,y1})});
   }
 }
 
@@ -515,17 +505,15 @@ void DrawContext::_glyph(
   }
 
   if (_colorMode == CM_SOLID) {
-    _dl->add(CMD_quad2T,
-             A.x, A.y, At.x, At.y,
-             B.x, B.y, Bt.x, Bt.y,
-             C.x, C.y, Ct.x, Ct.y,
-             D.x, D.y, Dt.x, Dt.y);
+    _dl->quad2T({A.x, A.y, At.x, At.y},
+                {B.x, B.y, Bt.x, Bt.y},
+                {C.x, C.y, Ct.x, Ct.y},
+                {D.x, D.y, Dt.x, Dt.y});
   } else {
-    _dl->add(CMD_quad2TC,
-             A.x, A.y, At.x, At.y, pointColor(A),
-             B.x, B.y, Bt.x, Bt.y, pointColor(B),
-             C.x, C.y, Ct.x, Ct.y, pointColor(C),
-             D.x, D.y, Dt.x, Dt.y, pointColor(D));
+    _dl->quad2TC({A.x, A.y, At.x, At.y, pointColor(A)},
+                 {B.x, B.y, Bt.x, Bt.y, pointColor(B)},
+                 {C.x, C.y, Ct.x, Ct.y, pointColor(C)},
+                 {D.x, D.y, Dt.x, Dt.y, pointColor(D)});
   }
 }
 
@@ -558,12 +546,11 @@ void DrawContext::_circleSector(
       center.y - (radius * std::cos(a))};
 
     if (_colorMode == CM_SOLID) {
-      _dl->add(CMD_triangle2, v0.x, v0.y, v1.x, v1.y, v2.x, v2.y);
+      _dl->triangle2(v0, v1, v2);
     } else {
-      _dl->add(CMD_triangle2C,
-               v0.x, v0.y, pointColor(v0),
-               v1.x, v1.y, pointColor(v1),
-               v2.x, v2.y, pointColor(v2));
+      _dl->triangle2C({v0.x, v0.y, pointColor(v0)},
+                      {v1.x, v1.y, pointColor(v1)},
+                      {v2.x, v2.y, pointColor(v2)});
     }
 
     // setup for next iteration
@@ -638,13 +625,12 @@ void DrawContext::_arc(
     const Vec2 v3{center.x + (innerR * sa), center.y - (innerR * ca)};
 
     if (_colorMode == CM_SOLID) {
-      _quad(v0, v1, v2, v3);
+      _dl->quad2(v0, v1, v2, v3);
     } else {
-      _dl->add(CMD_quad2C,
-               v0.x, v0.y, pointColor(v0),
-               v1.x, v1.y, pointColor(v1),
-               v2.x, v2.y, pointColor(v2),
-               v3.x, v3.y, pointColor(v3));
+      _dl->quad2C({v0.x, v0.y, pointColor(v0)},
+                  {v1.x, v1.y, pointColor(v1)},
+                  {v2.x, v2.y, pointColor(v2)},
+                  {v3.x, v3.y, pointColor(v3)});
     }
 
     // setup for next iteration
@@ -673,18 +659,16 @@ void DrawContext::_arcShaded(
     const Vec2 v3{center.x + (innerR * sa), center.y - (innerR * ca)};
 
     if (innerColor | outerColor) {
-      _dl->add(CMD_quad2C,
-               v0.x, v0.y, outerColor,
-               v1.x, v1.y, innerColor,
-               v2.x, v2.y, outerColor,
-               v3.x, v3.y, innerColor);
+      _dl->quad2C({v0.x, v0.y, outerColor},
+                  {v1.x, v1.y, innerColor},
+                  {v2.x, v2.y, outerColor},
+                  {v3.x, v3.y, innerColor});
     }
 
     if (fillColor) {
-      _dl->add(CMD_triangle2C,
-               v1.x, v1.y, fillColor,
-               v3.x, v3.y, fillColor,
-               center.x, center.y, fillColor);
+      _dl->triangle2C({v1.x, v1.y, fillColor},
+                      {v3.x, v3.y, fillColor},
+                      {center.x, center.y, fillColor});
     }
 
     // setup for next iteration
@@ -790,10 +774,10 @@ void DrawContext::border(const Rect& r, float borderWidth)
 
   if (_colorMode == CM_SOLID) {
     setColor();
-    _quad(A,B,iA,iB); // top
-    _quad(iC,iD,C,D); // bottom
-    _quad(A,iA,C,iC); // left
-    _quad(iB,B,iD,D); // right
+    _dl->quad2(A,B,iA,iB); // top
+    _dl->quad2(iC,iD,C,D); // bottom
+    _dl->quad2(A,iA,C,iC); // left
+    _dl->quad2(iB,B,iD,D); // right
   } else {
     const Vertex2C v_A{A, pointColor(A)};
     const Vertex2C v_B{B, pointColor(B)};
@@ -913,66 +897,58 @@ void DrawContext::roundedBorderShaded(
     // top/bottom borders
     const float x0 = x + cr;
     const float x1 = x + w - cr;
-    _dl->add(CMD_quad2C,
-             x0, y,               outerColor,
-             x1, y,               outerColor,
-             x0, y+borderWidth,   innerColor,
-             x1, y+borderWidth,   innerColor);
-    _dl->add(CMD_quad2C,
-             x0, y+h-borderWidth, innerColor,
-             x1, y+h-borderWidth, innerColor,
-             x0, y+h,             outerColor,
-             x1, y+h,             outerColor);
+    _dl->quad2C({x0, y,               outerColor},
+                {x1, y,               outerColor},
+                {x0, y+borderWidth,   innerColor},
+                {x1, y+borderWidth,   innerColor});
+    _dl->quad2C({x0, y+h-borderWidth, innerColor},
+                {x1, y+h-borderWidth, innerColor},
+                {x0, y+h,             outerColor},
+                {x1, y+h,             outerColor});
   }
 
   if (cr < half_h) {
     // left/right borders
     const float y0 = y + cr;
     const float y1 = y + h - cr;
-    _dl->add(CMD_quad2C,
-             x,               y0, outerColor,
-             x+borderWidth,   y0, innerColor,
-             x,               y1, outerColor,
-             x+borderWidth,   y1, innerColor);
-    _dl->add(CMD_quad2C,
-             x+w-borderWidth, y0, innerColor,
-             x+w,             y0, outerColor,
-             x+w-borderWidth, y1, innerColor,
-             x+w,             y1, outerColor);
+    _dl->quad2C({x,               y0, outerColor},
+                {x+borderWidth,   y0, innerColor},
+                {x,               y1, outerColor},
+                {x+borderWidth,   y1, innerColor});
+    _dl->quad2C({x+w-borderWidth, y0, innerColor},
+                {x+w,             y0, outerColor},
+                {x+w-borderWidth, y1, innerColor},
+                {x+w,             y1, outerColor});
   }
 
   if (fillColor) {
     if (cr < half_w) {
       // fill top/bottom borders & center
-      _dl->add(CMD_quad2C,
-               x+cr,   y+borderWidth,   fillColor,
-               x+w-cr, y+borderWidth,   fillColor,
-               x+cr,   y+h-borderWidth, fillColor,
-               x+w-cr, y+h-borderWidth, fillColor);
+      _dl->quad2C({x+cr,   y+borderWidth,   fillColor},
+                  {x+w-cr, y+borderWidth,   fillColor},
+                  {x+cr,   y+h-borderWidth, fillColor},
+                  {x+w-cr, y+h-borderWidth, fillColor});
       if (cr < half_h) {
         const float y0 = y + cr;
         const float y1 = y + h - cr;
 
         // fill left border
-        _dl->add(CMD_quad2C,
-                 x+borderWidth,   y0, fillColor,
-                 x+cr,            y0, fillColor,
-                 x+borderWidth,   y1, fillColor,
-                 x+cr,            y1, fillColor);
+        _dl->quad2C({x+borderWidth,   y0, fillColor},
+                    {x+cr,            y0, fillColor},
+                    {x+borderWidth,   y1, fillColor},
+                    {x+cr,            y1, fillColor});
         // fill right border
-        _dl->add(CMD_quad2C,
-                 x+w-cr,          y0, fillColor,
-                 x+w-borderWidth, y0, fillColor,
-                 x+w-cr,          y1, fillColor,
-                 x+w-borderWidth, y1, fillColor);
+        _dl->quad2C({x+w-cr,          y0, fillColor},
+                    {x+w-borderWidth, y0, fillColor},
+                    {x+w-cr,          y1, fillColor},
+                    {x+w-borderWidth, y1, fillColor});
       }
     } else if (cr < half_h) {
       // fill left/right borders & center
-      _dl->add(CMD_quad2C,
-               x,   y+cr,   fillColor,
-               x+w, y+cr,   fillColor,
-               x,   y+h-cr, fillColor,
-               x+w, y+h-cr, fillColor);
+      _dl->quad2C({x,   y+cr,   fillColor},
+                  {x+w, y+cr,   fillColor},
+                  {x,   y+h-cr, fillColor},
+                  {x+w, y+h-cr, fillColor});
     }
   }
 }
