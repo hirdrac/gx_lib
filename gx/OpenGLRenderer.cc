@@ -387,26 +387,22 @@ class gx::OpenGLRenderer final : public gx::Renderer
   int _currentGLCap = -1; // current GL capability state
   std::mutex _glMutex;
 
-  void addOp(GLOperation op, const Mat4& m) {
-    _opData.reserve(_opData.size() + 17);
-    _opData.push_back(op);
-    for (float v : m) { _opData.push_back(v); }
-    _lastOp = op;
-  }
-
   void addOp(GLOperation op, const Mat4& m1, const Mat4& m2) {
     _opData.reserve(_opData.size() + 33);
     _opData.push_back(op);
-    for (float v : m1) { _opData.push_back(v); }
-    for (float v : m2) { _opData.push_back(v); }
+    _opData.insert(_opData.end(), m1.begin(), m1.end());
+    _opData.insert(_opData.end(), m2.begin(), m2.end());
     _lastOp = op;
   }
 
   template<class... Args>
   void addOp(GLOperation op, const Args&... args) {
-    _opData.reserve(_opData.size() + sizeof...(args) + 1);
-    _opData.push_back(op);
-    (_opData.push_back(args), ...);
+    if constexpr (sizeof...(args) == 0) {
+      _opData.push_back(op);
+    } else {
+      const std::initializer_list<OpEntry> x{op, args...};
+      _opData.insert(_opData.end(), x.begin(), x.end());
+    }
     _lastOp = op;
   }
 
