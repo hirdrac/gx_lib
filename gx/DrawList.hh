@@ -35,14 +35,14 @@ namespace gx {
 class gx::DrawList
 {
  public:
-  [[nodiscard]] const DrawEntry* data() const { return _data.data(); }
+  [[nodiscard]] const Value* data() const { return _data.data(); }
   [[nodiscard]] std::size_t size() const { return _data.size(); }
   [[nodiscard]] bool empty() const { return _data.empty(); }
 
   void clear() { _data.clear(); }
 
   void append(const DrawList& dl) {
-    const DrawEntry* d = dl.data();
+    const Value* d = dl.data();
     _data.insert(_data.end(), d, d + dl.size());
   }
 
@@ -159,7 +159,7 @@ class gx::DrawList
     add(CMD_rectangleT, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t); }
 
  private:
-  std::vector<DrawEntry> _data;
+  std::vector<Value> _data;
 
   void add(DrawCmd cmd, const Mat4& m1, const Mat4& m2) {
     _data.reserve(_data.size() + 33);
@@ -173,7 +173,7 @@ class gx::DrawList
     if constexpr (sizeof...(args) == 0) {
       _data.push_back(cmd);
     } else {
-      const std::initializer_list<DrawEntry> x {cmd, args...};
+      const std::initializer_list<Value> x {cmd, args...};
       _data.insert(_data.end(), x.begin(), x.end());
     }
   }

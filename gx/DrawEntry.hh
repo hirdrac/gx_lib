@@ -70,18 +70,4 @@ namespace gx {
     CMD_rectangle,    // <cmd (x y)x2> (5)
     CMD_rectangleT,   // <cmd (x y s t)x2> (9)
   };
-
-  struct DrawEntry {
-    union {
-      DrawCmd  cmd;
-      float    fval;
-      int32_t  ival;
-      uint32_t uval;
-    };
-
-    DrawEntry(DrawCmd c) : cmd{c} { }
-    DrawEntry(float f) : fval{f} { }
-    DrawEntry(int32_t i) : ival{i} { }
-    DrawEntry(uint32_t u) : uval{u} { }
-  };
 }

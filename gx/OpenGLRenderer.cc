@@ -112,11 +112,11 @@ namespace {
   [[nodiscard]] std::size_t calcVSize(const DrawList& dl)
   {
     std::size_t vsize = 0;
-    const DrawEntry* d    = dl.data();
-    const DrawEntry* dEnd = d + dl.size();
+    const Value* d    = dl.data();
+    const Value* dEnd = d + dl.size();
 
     while (d < dEnd) {
-      const DrawCmd cmd = d->cmd;
+      const uint32_t cmd = d->uval;
       switch (cmd) {
         case CMD_viewport:     d += 5; break;
         case CMD_viewportFull: d += 1; break;
@@ -165,7 +165,7 @@ namespace {
 
         default:
           d = dEnd; // stop reading at first invalid cmd
-          GX_LOG_ERROR("unknown DrawCmd value: ", int(cmd));
+          GX_LOG_ERROR("unknown DrawCmd value: ", cmd);
           break;
       }
     }
@@ -188,24 +188,15 @@ namespace {
     }
   }
 
-  // DrawEntry iterator reading helper functions
-  [[nodiscard]] inline int32_t ival(const DrawEntry*& ptr) {
-    return (ptr++)->ival; }
-  [[nodiscard]] inline uint32_t uval(const DrawEntry*& ptr) {
+  // Value iterator reading helper functions
+  [[nodiscard]] inline uint32_t uval(const Value*& ptr) {
     return (ptr++)->uval; }
-  [[nodiscard]] inline float fval(const DrawEntry*& ptr) {
+  [[nodiscard]] inline float fval(const Value*& ptr) {
     return (ptr++)->fval; }
-  [[nodiscard]] inline Vec2 fval2(const DrawEntry*& ptr) {
+  [[nodiscard]] inline Vec2 fval2(const Value*& ptr) {
     return {fval(ptr), fval(ptr)}; }
-  [[nodiscard]] inline Vec3 fval3(const DrawEntry*& ptr) {
+  [[nodiscard]] inline Vec3 fval3(const Value*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
-  [[nodiscard]] inline Mat4 mval(const DrawEntry*& ptr) {
-    return {
-      fval(ptr), fval(ptr), fval(ptr), fval(ptr),
-      fval(ptr), fval(ptr), fval(ptr), fval(ptr),
-      fval(ptr), fval(ptr), fval(ptr), fval(ptr),
-      fval(ptr), fval(ptr), fval(ptr), fval(ptr)};
-  }
 
   struct Vertex {
     float x, y, z;  // pos
@@ -219,7 +210,7 @@ namespace {
       // 16-31  z texture coord
   };
 
-  inline Vertex vertex_val(const DrawEntry*& ptr) {
+  inline Vertex vertex_val(const Value*& ptr) {
     const float x = fval(ptr);
     const float y = fval(ptr);
     const float z = fval(ptr);
@@ -366,43 +357,27 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_drawTriangles, // <OP first count texID> (4)
   };
 
-  struct OpEntry {
-    union {
-      GLOperation op;
-      float    fval;
-      int32_t  ival;
-      uint32_t uval;
-    };
-
-    OpEntry(GLOperation o) : op{o} { }
-    OpEntry(float f) : fval{f} { }
-    OpEntry(int32_t i) : ival{i} { }
-    OpEntry(uint32_t u) : uval{u} { }
-  };
-  static_assert(sizeof(OpEntry) == 4);
-
   Mat4 _orthoT;
-  std::vector<OpEntry> _opData;
+  std::vector<Value> _opData;
   GLOperation _lastOp = OP_null;
   int _currentGLCap = -1; // current GL capability state
   std::mutex _glMutex;
-
-  void addOp(GLOperation op, const Mat4& m1, const Mat4& m2) {
-    _opData.reserve(_opData.size() + 33);
-    _opData.push_back(op);
-    _opData.insert(_opData.end(), m1.begin(), m1.end());
-    _opData.insert(_opData.end(), m2.begin(), m2.end());
-    _lastOp = op;
-  }
 
   template<class... Args>
   void addOp(GLOperation op, const Args&... args) {
     if constexpr (sizeof...(args) == 0) {
       _opData.push_back(op);
     } else {
-      const std::initializer_list<OpEntry> x{op, args...};
+      const std::initializer_list<Value> x{op, args...};
       _opData.insert(_opData.end(), x.begin(), x.end());
     }
+    _lastOp = op;
+  }
+
+  void addOpData(GLOperation op, const Value* begin, const Value* end) {
+    _opData.reserve(_opData.size() + std::size_t(end - begin) + 1);
+    _opData.push_back(op);
+    _opData.insert(_opData.end(), begin, end);
     _lastOp = op;
   }
 
@@ -710,17 +685,14 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
     Vec3 linePt;
     uint32_t lineColor = 0;
 
-    const DrawEntry* data     = dlPtr->data();
-    const DrawEntry* data_end = data + dlPtr->size();
-    for (const DrawEntry* d = data; d != data_end; ) {
-      const DrawCmd cmd = (d++)->cmd;
+    const Value* data     = dlPtr->data();
+    const Value* data_end = data + dlPtr->size();
+    for (const Value* d = data; d != data_end; ) {
+      const uint32_t cmd = (d++)->uval;
       switch (cmd) {
         case CMD_viewport: {
-          const int32_t x = ival(d);
-          const int32_t y = ival(d);
-          const int32_t w = ival(d);
-          const int32_t h = ival(d);
-          addOp(OP_viewport, x, y, w, h);
+          const Value* d0 = d; d += 4;
+          addOpData(OP_viewport, d0, d);
           break;
         }
         case CMD_viewportFull:
@@ -732,15 +704,14 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
         case CMD_normal:  normal = uval(d); break;
 
         case CMD_modColor:
-          addOp(OP_modColor, uval(d)); break;
+          addOp(OP_modColor, *d++); break;
 
         case CMD_capabilities:
-          addOp(OP_capabilities, ival(d)); break;
+          addOp(OP_capabilities, *d++); break;
 
         case CMD_camera: {
-          const Mat4 viewT = mval(d);
-          const Mat4 projT = mval(d);
-          addOp(OP_camera, viewT, projT);
+          const Value* d0 = d; d += 32;
+          addOpData(OP_camera, d0, d); // viewT + projT matrices
           cameraSet = true;
           break;
         }
@@ -752,19 +723,17 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           break;
 
         case CMD_light: {
-          const Vec3 pos = fval3(d);
-          const uint32_t ambient = uval(d);
-          const uint32_t diffuse = uval(d);
-          addOp(OP_light, pos.x, pos.y, pos.z, ambient, diffuse);
+          const Value* d0 = d; d += 5;
+          addOpData(OP_light, d0, d); // pos x/y/z, ambient, diffuse
           break;
         }
 
         case CMD_lineWidth:
-          addOp(OP_lineWidth, fval(d));
+          addOp(OP_lineWidth, *d++);
           break;
 
         case CMD_clear:
-          addOp(OP_clearColor, uval(d));
+          addOp(OP_clearColor, *d++);
           addOp(OP_clear, uint32_t(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
           break;
 
@@ -1142,10 +1111,10 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   int32_t newCap = BLEND;
   bool useLight = false;
 
-  const OpEntry* data     = _opData.data();
-  const OpEntry* data_end = data + _opData.size();
-  for (const OpEntry* d = data; d < data_end; ) {
-    const GLOperation op = (d++)->op;
+  const Value* data     = _opData.data();
+  const Value* data_end = data + _opData.size();
+  for (const Value* d = data; d < data_end; ) {
+    const uint32_t op = (d++)->uval;
     switch (op) {
       case OP_camera:
         std::memcpy(ud.viewT.data(), d, sizeof(float)*16); d += 16;
