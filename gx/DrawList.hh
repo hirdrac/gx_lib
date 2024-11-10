@@ -69,8 +69,8 @@ class gx::DrawList
     add(CMD_cameraReset); }
   void light(const Vec3& pt, uint32_t a, uint32_t d) {
     add(CMD_light, pt.x, pt.y, pt.z, a, d); }
-  void clear(uint32_t c) {
-    add(CMD_clear, c); }
+  void clearView(uint32_t c) {
+    add(CMD_clearView, c); }
   void line2(Vec2 a, Vec2 b) {
     add(CMD_line2, a.x, a.y, b.x, b.y); }
   void line3(const Vec3& a, const Vec3& b) {

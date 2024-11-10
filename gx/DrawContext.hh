@@ -84,7 +84,7 @@ class gx::DrawContext
   void clearView(const Color& c) {
     clearView(packRGBA8(c)); }
   void clearView(RGBA8 c) {
-    _dl->clear(c); }
+    _dl->clearView(c); }
 
   // Line drawing
   void line(Vec2 a, Vec2 b);

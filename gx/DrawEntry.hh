@@ -36,7 +36,7 @@ namespace gx {
     CMD_light,        // <cmd x y z a d> (6)
 
     // drawing commands
-    CMD_clear,        // <cmd c> (2)
+    CMD_clearView,    // <cmd c> (2)
     CMD_line2,        // <cmd (x y)x2> (5)
     CMD_line3,        // <cmd (x y z)x2> (7)
     CMD_line2C,       // <cmd (x y c)x2> (7)

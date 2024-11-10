@@ -129,7 +129,7 @@ namespace {
         case CMD_camera:       d += 33; break;
         case CMD_cameraReset:  d += 1; break;
         case CMD_light:        d += 6; break;
-        case CMD_clear:        d += 2; break;
+        case CMD_clearView:    d += 2; break;
         case CMD_line2:        d += 5;  vsize += 2; break;
         case CMD_line3:        d += 7;  vsize += 2; break;
         case CMD_line2C:       d += 7;  vsize += 2; break;
@@ -732,7 +732,7 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
           addOp(OP_lineWidth, *d++);
           break;
 
-        case CMD_clear:
+        case CMD_clearView:
           addOp(OP_clearColor, *d++);
           addOp(OP_clear, uint32_t(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
           break;
