@@ -5,6 +5,8 @@
 
 #pragma once
 #include "DrawEntry.hh"
+#include "Color.hh"
+#include "Normal.hh"
 #include "Types.hh"
 #include <initializer_list>
 #include <vector>
@@ -28,7 +30,6 @@ namespace gx {
   struct Vertex3C { float x, y, z; uint32_t c; };
   struct Vertex3T { float x, y, z, s, t; };
   struct Vertex3TC { float x, y, z, s, t; uint32_t c; };
-
   struct Vertex3TCN { float x,y,z,s,t; uint32_t c, n; };
 }
 
@@ -51,16 +52,26 @@ class gx::DrawList
     add(CMD_viewport, x, y, w, h); }
   void viewportFull() {
     add(CMD_viewportFull); }
-  void color(uint32_t c) {
-    add(CMD_color, c); }
+
+  void color(uint32_t c) { add(CMD_color, c); }
+  void color(float r, float g, float b, float a = 1.0f) {
+    color(packRGBA8(r, g, b, a)); }
+  void color(const Color& c) { color(packRGBA8(c)); }
+
   void texture(uint32_t t) {
     add(CMD_texture, t); }
   void lineWidth(float w) {
     add(CMD_lineWidth, w); }
-  void normal(uint32_t n) {
-    add(CMD_normal, n); }
-  void modColor(uint32_t c) {
-    add(CMD_modColor, c); }
+
+  void normal(uint32_t n) { add(CMD_normal, n); }
+  void normal(float x, float y, float z) { normal(packNormal(x,y,z)); }
+  void normal(const Vec3& n) { normal(packNormal(n)); }
+
+  void modColor(uint32_t c) { add(CMD_modColor, c); }
+  void modColor(float r, float g, float b, float a = 1.0f) {
+    modColor(packRGBA8(r, g, b, a)); }
+  void modColor(const Color& c) { modColor(packRGBA8(c)); }
+
   void capabilities(int32_t c) {
     add(CMD_capabilities, c); }
   void camera(const Mat4& m1, const Mat4& m2) {
@@ -69,8 +80,12 @@ class gx::DrawList
     add(CMD_cameraReset); }
   void light(const Vec3& pt, uint32_t a, uint32_t d) {
     add(CMD_light, pt.x, pt.y, pt.z, a, d); }
-  void clearView(uint32_t c) {
-    add(CMD_clearView, c); }
+
+  void clearView(uint32_t c) { add(CMD_clearView, c); }
+  void clearView(float r, float g, float b) {
+    clearView(packRGBA8(r,g,b,1.0f)); }
+  void clearView(const Color& c) { clearView(packRGBA8(c)); }
+
   void line2(Vec2 a, Vec2 b) {
     add(CMD_line2, a.x, a.y, b.x, b.y); }
   void line3(const Vec3& a, const Vec3& b) {
