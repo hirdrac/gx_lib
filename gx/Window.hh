@@ -145,7 +145,7 @@ namespace gx {
     std::vector<InputState> inputStates;
     std::vector<CharInfo> chars;
     Vec2 mousePt, scrollPt;
-    int mods;
+    int mods, shiftCount, controlCount, altCount, superCount;
     bool mouseIn, iconified, focused;
 
     // helper functions

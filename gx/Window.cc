@@ -48,6 +48,11 @@ namespace {
   static_assert(GLFW_MOUSE_BUTTON_7 == 6);
   static_assert(GLFW_MOUSE_BUTTON_8 == 7);
 
+  static_assert(GLFW_MOD_SHIFT == 1<<0);
+  static_assert(GLFW_MOD_CONTROL == 1<<1);
+  static_assert(GLFW_MOD_ALT == 1<<2);
+  static_assert(GLFW_MOD_SUPER == 1<<3);
+
   // **** Helper Functions ****
   [[nodiscard]] inline int64_t usecTime() {
     using namespace std::chrono;
@@ -334,6 +339,7 @@ struct gx::WindowImpl
     _width = _renderer->framebufferWidth();
     _height = _renderer->framebufferHeight();
 
+    //glfwSetInputMode(win, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
     glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
     glfwSetCursor(win, getCursorInstance(_mouseShape));
     if (resizable) {
@@ -579,7 +585,6 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
   //println("key event: ", key, ' ', scancode, ' ', action, ' ', mods);
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
   es.events |= EVENT_INPUT;
-  es.mods = mods;
 
   auto& states = es.inputStates;
   auto itr = std::find_if(states.begin(), states.end(),
@@ -593,18 +598,26 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
     ++in.pressCount;
     in.held = true;
     switch (key) {
-      case KEY_LSHIFT:   case KEY_RSHIFT:   es.mods |= MOD_SHIFT; break;
-      case KEY_LCONTROL: case KEY_RCONTROL: es.mods |= MOD_CONTROL; break;
-      case KEY_LALT:     case KEY_RALT:     es.mods |= MOD_ALT; break;
-      case KEY_LSUPER:   case KEY_RSUPER:   es.mods |= MOD_SUPER; break;
+      case KEY_LSHIFT:   case KEY_RSHIFT:
+        es.mods |= MOD_SHIFT;   ++es.shiftCount; break;
+      case KEY_LCONTROL: case KEY_RCONTROL:
+        es.mods |= MOD_CONTROL; ++es.controlCount; break;
+      case KEY_LALT:     case KEY_RALT:
+        es.mods |= MOD_ALT;     ++es.altCount; break;
+      case KEY_LSUPER:   case KEY_RSUPER:
+        es.mods |= MOD_SUPER;   ++es.superCount; break;
     }
   } else if (action == GLFW_RELEASE) {
     in.held = false;
     switch (key) {
-      case KEY_LSHIFT:   case KEY_RSHIFT:   es.mods &= ~MOD_SHIFT; break;
-      case KEY_LCONTROL: case KEY_RCONTROL: es.mods &= ~MOD_CONTROL; break;
-      case KEY_LALT:     case KEY_RALT:     es.mods &= ~MOD_ALT; break;
-      case KEY_LSUPER:   case KEY_RSUPER:   es.mods &= ~MOD_SUPER; break;
+      case KEY_LSHIFT:   case KEY_RSHIFT:
+        if (--es.shiftCount == 0) { es.mods &= ~MOD_SHIFT; } break;
+      case KEY_LCONTROL: case KEY_RCONTROL:
+        if (--es.controlCount == 0) { es.mods &= ~MOD_CONTROL; } break;
+      case KEY_LALT:     case KEY_RALT:
+        if (--es.altCount == 0) { es.mods &= ~MOD_ALT; } break;
+      case KEY_LSUPER:   case KEY_RSUPER:
+        if (--es.superCount == 0) { es.mods &= ~MOD_SUPER; } break;
     }
   } else if (action == GLFW_REPEAT) {
     ++in.repeatCount;
@@ -683,7 +696,6 @@ static void mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
 
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;;
   es.events |= EVENT_INPUT;
-  es.mods = mods;
 
   const int bVal = BUTTON_1 + button;
   auto& states = es.inputStates;
