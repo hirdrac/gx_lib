@@ -584,7 +584,7 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
 
   //println("key event: ", key, ' ', scancode, ' ', action, ' ', mods);
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
-  es.events |= EVENT_INPUT;
+  es.events |= EVENT_KEY;
 
   auto& states = es.inputStates;
   auto itr = std::find_if(states.begin(), states.end(),
@@ -623,20 +623,6 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
   } else if (action == GLFW_REPEAT) {
     ++in.repeatCount;
   }
-
-  if ((action == GLFW_PRESS || action == GLFW_REPEAT)
-      && (key > 255 || mods & (MOD_CONTROL | MOD_ALT)))
-  {
-    // generate fake char events so control keys can be processed inline
-    //   with actual char events
-    //
-    // ISSUES
-    // - MOD_SUPER+key produces real char event so it's excluded here
-
-    //println("gen char event: ", key, ' ', mods);
-    es.events |= EVENT_CHAR;
-    es.chars.push_back({0, int16_t(key), uint8_t(mods), action == GLFW_REPEAT});
-  }
 }
 
 static void charCB(GLFWwindow* win, unsigned int codepoint)
@@ -650,7 +636,7 @@ static void charCB(GLFWwindow* win, unsigned int codepoint)
   //println("char event: ", codepoint);
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
   es.events |= EVENT_CHAR;
-  es.chars.push_back({codepoint, 0, 0, false});
+  es.chars.push_back(int32_t(codepoint));
 }
 
 static void cursorEnterCB(GLFWwindow* win, int entered)
@@ -696,7 +682,7 @@ static void mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
   }
 
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;;
-  es.events |= EVENT_INPUT;
+  es.events |= EVENT_MOUSE_BUTTON;
 
   const int bVal = BUTTON_1 + button;
   auto& states = es.inputStates;

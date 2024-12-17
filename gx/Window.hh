@@ -57,16 +57,18 @@ namespace gx {
     EVENT_ICONIFY      = 1<<2,
     EVENT_FOCUS        = 1<<3,
 
-    // input events (keyboard & mouse buttons)
-    EVENT_INPUT        = 1<<4,
-
-    // key events
+    // key/char events
+    EVENT_KEY          = 1<<4,
     EVENT_CHAR         = 1<<5,
 
     // mouse events
-    EVENT_MOUSE_ENTER  = 1<<6,
-    EVENT_MOUSE_MOVE   = 1<<7,
-    EVENT_MOUSE_SCROLL = 1<<8
+    EVENT_MOUSE_BUTTON = 1<<6,
+    EVENT_MOUSE_ENTER  = 1<<7,
+    EVENT_MOUSE_MOVE   = 1<<8,
+    EVENT_MOUSE_SCROLL = 1<<9,
+
+    // groups
+    EVENT_INPUT = EVENT_KEY | EVENT_MOUSE_BUTTON,
   };
 
   enum ModEnum {
@@ -131,21 +133,10 @@ namespace gx {
   };
   static_assert(sizeof(InputState) == 8);
 
-  struct CharInfo {
-    // unicode value
-    uint32_t codepoint;
-
-    // set if non-printable key (codepoint is zero)
-    int16_t key;
-    uint8_t mods;
-    int8_t repeat;
-  };
-  static_assert(sizeof(CharInfo) == 8);
-
   struct EventState {
     int events, removedEvents;
     std::vector<InputState> inputStates;
-    std::vector<CharInfo> chars;
+    std::vector<int32_t> chars;
     Vec2 mousePt, scrollPt;
     int mods, shiftCount, controlCount, altCount, superCount;
     bool mouseIn, iconified, focused;
