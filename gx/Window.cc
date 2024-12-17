@@ -590,7 +590,8 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
   auto itr = std::find_if(states.begin(), states.end(),
 			  [key](auto& in){ return in.value == key; });
   if (itr == states.end()) {
-    itr = states.insert(states.end(), {int16_t(key),0,0,false});
+    itr = states.insert(
+      states.end(), {int16_t(key),int16_t(scancode),uint8_t(mods),0,0,false});
   }
 
   InputState& in = *itr;
@@ -702,7 +703,8 @@ static void mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
   auto itr = std::find_if(states.begin(), states.end(),
 			  [bVal](auto& in){ return in.value == bVal; });
   if (itr == states.end()) {
-    itr = states.insert(states.end(), {int16_t(bVal),0,0,false});
+    itr = states.insert(
+      states.end(), {int16_t(bVal),0,uint8_t(mods),0,0,false});
   }
 
   InputState& in = *itr;

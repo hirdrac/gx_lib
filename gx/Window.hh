@@ -123,9 +123,11 @@ namespace gx {
 
   struct InputState {
     int16_t value;       // InputEnum value
-    int16_t pressCount;  // number of press events since pollEvents
-    int16_t repeatCount; // number of repeat events since pollEvents
-    int16_t held;        // key is currently held
+    int16_t scancode;    // platform-specific key value
+    uint8_t mods;        // mods value at press
+    int8_t pressCount;   // number of press events since pollEvents
+    int8_t repeatCount;  // number of repeat events since pollEvents
+    int8_t held;         // key is currently held
   };
   static_assert(sizeof(InputState) == 8);
 
