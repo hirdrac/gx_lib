@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
 
     if (es.events & gx::EVENT_CLOSE) { running = false; }
     if (es.events & gx::EVENT_SIZE) { redraw = true; }
-    if (es.events & gx::EVENT_INPUT) {
+    if (es.events & gx::EVENT_KEY) {
       if (es.inputPress(gx::KEY_ESCAPE)) { running = false; }
       if (es.inputPress(gx::KEY_F11)) {
         if (win.fullScreen()) {

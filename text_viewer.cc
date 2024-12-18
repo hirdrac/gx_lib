@@ -226,7 +226,7 @@ int main(int argc, char** argv)
     const int endLine = std::max(int(buffer.lines()) - maxLines, 0);
     const int lastTop = topLine;
 
-    if (es.events & gx::EVENT_INPUT) {
+    if (es.events & gx::EVENT_KEY) {
       for (const auto& in : es.inputStates) {
         if (!in.pressCount && !in.repeatCount) { continue; }
 

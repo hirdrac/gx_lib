@@ -286,7 +286,7 @@ int main(int argc, char** argv)
     if (es.events & gx::EVENT_CLOSE) { running = false; }
     if (es.events & gx::EVENT_SIZE) { gfxPerPage = 0; redraw = true; }
 
-    if (es.events & gx::EVENT_INPUT) {
+    if (es.events & gx::EVENT_KEY) {
       int newPage = page;
       for (const auto& in : es.inputStates) {
         if (!in.pressCount && !in.repeatCount) { continue; }

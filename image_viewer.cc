@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
     if (es.events & gx::EVENT_SIZE) { redraw = true; }
     if (es.events & gx::EVENT_CLOSE) { running = false; }
 
-    if (es.events & gx::EVENT_INPUT) {
+    if (es.events & gx::EVENT_KEY) {
       int no = entryNo;
       const bool last_entry = (no == lastNo);
       const bool first_entry = (no == 0);
