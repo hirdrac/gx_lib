@@ -189,6 +189,8 @@ namespace {
   }
 
   // Value iterator reading helper functions
+  [[nodiscard]] inline int32_t ival(const Value*& ptr) {
+    return (ptr++)->ival; }
   [[nodiscard]] inline uint32_t uval(const Value*& ptr) {
     return (ptr++)->uval; }
   [[nodiscard]] inline float fval(const Value*& ptr) {
@@ -678,6 +680,8 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
 
   bool cameraSet = false;
   int32_t first = 0;
+  int32_t cap = -1;
+
   for (const DrawList* dlPtr : dl) {
     uint32_t color = 0;
     TextureID tid = 0;
@@ -706,8 +710,14 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
         case CMD_modColor:
           addOp(OP_modColor, *d++); break;
 
-        case CMD_capabilities:
-          addOp(OP_capabilities, *d++); break;
+        case CMD_capabilities: {
+          const int32_t newCap = ival(d);
+          if (cap != newCap) {
+            cap = newCap;
+            addOp(OP_capabilities, cap);
+          }
+          break;
+        }
 
         case CMD_camera: {
           const Value* d0 = d; d += 32;
@@ -1108,7 +1118,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   int lastShader = -1;
   int nextTexUnit = 0;
   int texUnit = -1;
-  int32_t newCap = BLEND;
+  int32_t newGLCap = BLEND; // default GL capabilities
   bool useLight = false;
 
   const Value* data     = _opData.data();
@@ -1158,7 +1168,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         break;
       case OP_capabilities: {
         const int32_t cap = (d++)->ival;
-        newCap = cap & ~LIGHTING;
+        newGLCap = cap & ~LIGHTING;
         useLight = cap & LIGHTING;
         break;
       }
@@ -1168,7 +1178,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
       case OP_drawLines: {
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
-        if (_currentGLCap != newCap) { setGLCapabilities(newCap); }
+        if (_currentGLCap != newGLCap) { setGLCapabilities(newGLCap); }
         if (udChanged) {
           _uniformBuf.setSubData(0, sizeof(ud), &ud);
           udChanged = false;
@@ -1186,7 +1196,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
-        if (_currentGLCap != newCap) { setGLCapabilities(newCap); }
+        if (_currentGLCap != newGLCap) { setGLCapabilities(newGLCap); }
         if (udChanged) {
           _uniformBuf.setSubData(0, sizeof(ud), &ud);
           udChanged = false;
