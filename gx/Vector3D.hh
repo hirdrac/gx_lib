@@ -83,6 +83,9 @@ class gx::Vector2
 
   constexpr void set(T vx, T vy) { x = vx; y = vy; }
   constexpr void set(const T* v) { set(v[0], v[1]); }
+
+  // Vector2 swizzle
+  [[nodiscard]] constexpr Vector2<T> yx() const { return {y, x}; }
 };
 
 
@@ -154,15 +157,12 @@ class gx::Vector3
   constexpr void set(Vector2<T> v, T vz) { set(v.x, v.y, vz); }
 
   // Vector2 swizzle
-  [[nodiscard]] constexpr Vector2<T>& xy() {
-    return *reinterpret_cast<Vector2<T>*>(data()); }
-  [[nodiscard]] constexpr const Vector2<T>& xy() const {
-    return *reinterpret_cast<const Vector2<T>*>(data()); }
-
-  [[nodiscard]] constexpr Vector2<T>& yz() {
-    return *reinterpret_cast<Vector2<T>*>(data()+1); }
-  [[nodiscard]] constexpr const Vector2<T>& yz() const {
-    return *reinterpret_cast<const Vector2<T>*>(data()+1); }
+  [[nodiscard]] constexpr Vector2<T> xy() const { return {x, y}; }
+  [[nodiscard]] constexpr Vector2<T> xz() const { return {x, z}; }
+  [[nodiscard]] constexpr Vector2<T> yx() const { return {y, x}; }
+  [[nodiscard]] constexpr Vector2<T> yz() const { return {y, z}; }
+  [[nodiscard]] constexpr Vector2<T> zx() const { return {z, x}; }
+  [[nodiscard]] constexpr Vector2<T> zy() const { return {z, y}; }
 };
 
 
@@ -231,36 +231,25 @@ class gx::Vector4
   constexpr void set(const Vector3<T>& v, T vw) { set(v.x, v.y, v.z, vw); }
 
   // Vector2 swizzle
-  [[nodiscard]] constexpr Vector2<T>& xy() {
-    return *reinterpret_cast<Vector2<T>*>(data()); }
-  [[nodiscard]] constexpr const Vector2<T>& xy() const {
-    return *reinterpret_cast<const Vector2<T>*>(data()); }
-
-  [[nodiscard]] constexpr Vector2<T>& yz() {
-    return *reinterpret_cast<Vector2<T>*>(data()+1); }
-  [[nodiscard]] constexpr const Vector2<T>& yz() const {
-    return *reinterpret_cast<const Vector2<T>*>(data()+1); }
-
-  [[nodiscard]] constexpr Vector2<T>& zw() {
-    return *reinterpret_cast<Vector2<T>*>(data()+2); }
-  [[nodiscard]] constexpr const Vector2<T>& zw() const {
-    return *reinterpret_cast<const Vector2<T>*>(data()+2); }
+  [[nodiscard]] constexpr Vector2<T> xy() const { return {x, y}; }
+  [[nodiscard]] constexpr Vector2<T> xz() const { return {x, z}; }
+  [[nodiscard]] constexpr Vector2<T> xw() const { return {x, w}; }
+  [[nodiscard]] constexpr Vector2<T> yx() const { return {y, x}; }
+  [[nodiscard]] constexpr Vector2<T> yz() const { return {y, z}; }
+  [[nodiscard]] constexpr Vector2<T> yw() const { return {y, w}; }
+  [[nodiscard]] constexpr Vector2<T> zx() const { return {z, x}; }
+  [[nodiscard]] constexpr Vector2<T> zy() const { return {z, y}; }
+  [[nodiscard]] constexpr Vector2<T> zw() const { return {z, w}; }
+  [[nodiscard]] constexpr Vector2<T> wx() const { return {w, x}; }
+  [[nodiscard]] constexpr Vector2<T> wy() const { return {w, y}; }
+  [[nodiscard]] constexpr Vector2<T> wz() const { return {w, z}; }
 
   // Vector3 swizzle
-  [[nodiscard]] constexpr Vector3<T>& xyz() {
-    return *reinterpret_cast<Vector3<T>*>(data()); }
-  [[nodiscard]] constexpr const Vector3<T>& xyz() const {
-    return *reinterpret_cast<const Vector3<T>*>(data()); }
-
-  [[nodiscard]] constexpr Vector3<T>& yzw() {
-    return *reinterpret_cast<Vector3<T>*>(data()+1); }
-  [[nodiscard]] constexpr const Vector3<T>& yzw() const {
-    return *reinterpret_cast<const Vector3<T>*>(data()+1); }
-
-  [[nodiscard]] constexpr Vector3<T>& rgb() {
-    return *reinterpret_cast<Vector3<T>*>(data()); }
-  [[nodiscard]] constexpr const Vector3<T>& rgb() const {
-    return *reinterpret_cast<const Vector3<T>*>(data()); }
+  [[nodiscard]] constexpr Vector3<T> xyz() const { return {x, y, z}; }
+  [[nodiscard]] constexpr Vector3<T> xyw() const { return {x, y, w}; }
+  [[nodiscard]] constexpr Vector3<T> xzw() const { return {x, z, w}; }
+  [[nodiscard]] constexpr Vector3<T> yzw() const { return {y, z, w}; }
+  [[nodiscard]] constexpr Vector3<T> rgb() const { return {r, g, b}; }
 };
 
 
