@@ -56,6 +56,7 @@ class gx::Vector2
     return (x == v.x) && (y == v.y); }
   [[nodiscard]] constexpr bool operator!=(const type& v) const {
     return (x != v.x) || (y != v.y); }
+  [[nodiscard]] constexpr type operator-() const { return {-x, -y}; }
 
 
   // Iterators
@@ -107,6 +108,8 @@ class gx::Vector3
   explicit Vector3(NoInit_t) { }
   constexpr Vector3() : Vector3{0,0,0} { }
   constexpr Vector3(T vx, T vy, T vz) : x{vx}, y{vy}, z{vz} { }
+  constexpr Vector3(const Vector2<T>& v, T vz)
+    : Vector3{v.x, v.y, vz} { }
 
 
   // Operators
@@ -127,6 +130,7 @@ class gx::Vector3
     return (x == v.x) && (y == v.y) && (z == v.z); }
   [[nodiscard]] constexpr bool operator!=(const type& v) const {
     return (x != v.x) || (y != v.y) || (z != v.z); }
+  [[nodiscard]] constexpr type operator-() const { return {-x, -y, -z}; }
 
 
   // Iterators
@@ -206,6 +210,7 @@ class gx::Vector4
     return (x == v.x) && (y == v.y) && (z == v.z) && (w == v.w); }
   [[nodiscard]] constexpr bool operator!=(const type& v) const {
     return (x != v.x) || (y != v.y) || (z != v.z) || (w != v.w); }
+  [[nodiscard]] constexpr type operator-() const { return {-x, -y, -z, -w}; }
 
 
   // Iterators
@@ -254,20 +259,6 @@ class gx::Vector4
 
 
 namespace gx {
-  // **** Unary Operators ****
-  template<class T>
-  [[nodiscard]] constexpr Vector2<T> operator-(const Vector2<T>& v) {
-    return {-v.x, -v.y}; }
-
-  template<class T>
-  [[nodiscard]] constexpr Vector3<T> operator-(const Vector3<T>& v) {
-    return {-v.x, -v.y, -v.z}; }
-
-  template<class T>
-  [[nodiscard]] constexpr Vector4<T> operator-(const Vector4<T>& v) {
-    return {-v.x, -v.y, -v.z, -v.w}; }
-
-
   // **** Binary Operators ****
   // vec + vec
   template<class T>
