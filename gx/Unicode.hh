@@ -20,22 +20,22 @@ namespace gx
     // returns UTF-8 encoded value (1-4 characters) of a unicode character
 
   [[nodiscard]] std::size_t lengthUTF8(std::string_view sv);
-    // returns UTF8 string length
+    // returns UTF-8 string length
 
   [[nodiscard]] std::size_t indexUTF8(std::string_view sv, std::size_t pos);
-    // returns string index of specified position for UTF8 encoded string
-    // (returns string::npos if pos >= number of UTF8 encoded chars in input)
+    // returns string index of specified position for UTF-8 encoded string
+    // (returns string::npos if pos >= number of UTF-8 encoded chars in input)
 
   bool eraseUTF8(std::string& str, std::size_t pos, std::size_t len);
-    // remove len character(s) starting at pos
+    // removes len character(s) starting at pos
     // (len == string::npos will delete all characters from pos to end)
 
   bool insertUTF8(std::string& str, std::size_t pos, int32_t code);
-    // add UTF8 character to UTF8 string at specified character position
+    // adds UTF-8 character to UTF-8 string at specified character position
 
   [[nodiscard]] std::string_view substrUTF8(
     std::string_view sv, std::size_t pos, std::size_t len);
-    // return sub-view of UTF-8 encoded string
+    // returns sub-view of UTF-8 encoded string
     // (returns empty string_view if pos > utf8length)
 
   class UTF8Iterator;
@@ -65,14 +65,14 @@ class gx::UTF8Iterator
     // return true if there is no more data to read
 
   bool next();
-    // advance to next character, return false if already at the end
+    // advance to next character, returns false if at the end
 
   [[nodiscard]] int32_t get() const;
-    // return current unicode character
+    // returns current unicode character
     // (returns -1 for an invalid encoding or at the end of the string)
 
   [[nodiscard]] std::size_t pos() const { return std::size_t(_itr - _begin); }
-    // return byte position of iterator
+    // returns byte position of iterator
     // (useful for substrings, but don't use for counting unicode characters)
 
   // helper operators

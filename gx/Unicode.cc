@@ -1,6 +1,6 @@
 //
 // gx/Unicode.cc
-// Copyright (C) 2023 Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 
 #include "Unicode.hh"
@@ -115,11 +115,12 @@ bool gx::UTF8Iterator::next()
   if (_end) {
     if (_itr == _end) { return false; }
     do { ++_itr; } while ((_itr != _end) && isMultiChar(uint8_t(*_itr)));
+    return _itr != _end;
   } else {
     if (*_itr == '\0') { return false; }
-    do { ++_itr; } while (*_itr && isMultiChar(uint8_t(*_itr)));
+    do { ++_itr; } while ((*_itr != '\0') && isMultiChar(uint8_t(*_itr)));
+    return *_itr != '\0';
   }
-  return true;
 }
 
 int32_t gx::UTF8Iterator::get() const
