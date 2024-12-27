@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     assert(itr.get() == -1);
     assert(!itr.done());
     assert(!itr.next());
-    assert(itr.get() == -1);
+    assert(itr.get() == 0);
     assert(itr.done());
   }
   return 0;

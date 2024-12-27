@@ -125,7 +125,7 @@ bool gx::UTF8Iterator::next()
 
 int32_t gx::UTF8Iterator::get() const
 {
-  if (done()) { return -1; }
+  if (done()) { return 0; }
 
   const int ch = uint8_t(*_itr);
   if (ch < 0x80) {

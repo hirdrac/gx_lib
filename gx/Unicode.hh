@@ -69,7 +69,7 @@ class gx::UTF8Iterator
 
   [[nodiscard]] int32_t get() const;
     // returns current unicode character
-    // (returns -1 for an invalid encoding or at the end of the string)
+    // (returns -1 for an invalid encoding, 0 for end of string)
 
   [[nodiscard]] std::size_t pos() const { return std::size_t(_itr - _begin); }
     // returns byte position of iterator
