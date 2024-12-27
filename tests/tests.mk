@@ -1,5 +1,6 @@
 FLAGS_TEST = -UNDEBUG
 INCLUDE_TEST = .
+LIBS_TEST = LIB_gx
 
 TEST_CmdLineParser.SRC = tests/CmdLineParserTest.cc
 TEST_Color.SRC = tests/ColorTest.cc
