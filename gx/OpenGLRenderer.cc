@@ -317,8 +317,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   GLBuffer<VER> _uniformBuf;
   struct UniformData {
     // NOTE: for std140 layout, alignment of array types must be 16 bytes
-    Mat4 viewT{INIT_IDENTITY};
-    Mat4 projT{INIT_IDENTITY};
+    Mat4 cameraT{INIT_IDENTITY}; // viewT * projT
     Color modColor = WHITE;
     Vec3 lightPos;
     uint32_t pad0 = 0;
@@ -341,7 +340,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_null,
 
     // set uniform data
-    OP_camera,        // <OP val*32> (33)
+    OP_cameraT,       // <OP val*16> (17)
     OP_cameraReset,   // <OP> (1)
     OP_modColor,      // <OP rgba8> (2)
     OP_light,         // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
@@ -374,6 +373,12 @@ class gx::OpenGLRenderer final : public gx::Renderer
       _opData.insert(_opData.end(), x.begin(), x.end());
     }
     _lastOp = op;
+  }
+
+  void addOpData(GLOperation op, const Mat4& m) {
+    _opData.reserve(_opData.size() + m.size() + 1);
+    _opData.push_back(op);
+    _opData.insert(_opData.end(), m.begin(), m.end());
   }
 
   void addOpData(GLOperation op, const Value* begin, const Value* end) {
@@ -432,8 +437,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   _uniformBuf.init(sizeof(UniformData), nullptr);
   #define UNIFORM_BLOCK_SRC\
     "layout(std140) uniform ub0 {"\
-    "  mat4 viewT;"\
-    "  mat4 projT;"\
+    "  mat4 cameraT;"\
     "  vec4 modColor;"\
     "  vec3 lightPos;"\
     "  vec3 lightA;"\
@@ -451,7 +455,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "void main() {"
     "  v_color = unpackUnorm4x8(in_color) * modColor;"
     "  v_texCoord = in_tc;"
-    "  gl_Position = projT * viewT * vec4(in_pos, 1);"
+    "  gl_Position = cameraT * vec4(in_pos, 1);"
     "}");
 
   // vertex shader w/ lighting support
@@ -484,7 +488,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "  v_lightPos = lightPos;"
     "  v_lightA = lightA;"
     "  v_lightD = lightD;"
-    "  gl_Position = projT * viewT * vec4(in_pos, 1);"
+    "  gl_Position = cameraT * vec4(in_pos, 1);"
     "}");
 
   // solid color shader
@@ -720,8 +724,10 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
         }
 
         case CMD_camera: {
-          const Value* d0 = d; d += 32;
-          addOpData(OP_camera, d0, d); // viewT + projT matrices
+          Mat4 viewT{INIT_NONE}, projT{INIT_NONE};
+          std::memcpy(viewT.data(), d, sizeof(float)*16); d += 16;
+          std::memcpy(projT.data(), d, sizeof(float)*16); d += 16;
+          addOpData(OP_cameraT, viewT * projT);
           cameraSet = true;
           break;
         }
@@ -1111,7 +1117,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
 
   bool udChanged = true;
   UniformData ud{};
-  ud.projT = _orthoT; // default 2D projection
+  ud.cameraT = _orthoT; // default 2D projection
 
   // draw
   _vao.bind();
@@ -1126,14 +1132,12 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   for (const Value* d = data; d < data_end; ) {
     const uint32_t op = (d++)->uval;
     switch (op) {
-      case OP_camera:
-        std::memcpy(ud.viewT.data(), d, sizeof(float)*16); d += 16;
-        std::memcpy(ud.projT.data(), d, sizeof(float)*16); d += 16;
+      case OP_cameraT:
+        std::memcpy(ud.cameraT.data(), d, sizeof(float)*16); d += 16;
         udChanged = true;
         break;
       case OP_cameraReset:
-        ud.viewT = Mat4{INIT_IDENTITY};
-        ud.projT = _orthoT;
+        ud.cameraT = _orthoT;
         udChanged = true;
         break;
       case OP_modColor:
