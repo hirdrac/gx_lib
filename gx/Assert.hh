@@ -1,8 +1,7 @@
 //
 // gx/Assert.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
-
 // Macros (both disabled with NDEBUG or GX_NDEBUG)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // GX_ASSERT()
@@ -10,7 +9,7 @@
 // GX_ASSERT_DEBUG()
 //   same as assert() but disabled by default, enable with GX_DEBUG_ASSERT
 //   (use for expensive asserts only needed for extreme debugging)
-
+//
 
 #pragma once
 #include <cassert>
@@ -19,9 +18,9 @@
 #  define GX_ASSERT(...) static_cast<void>(0)
 #  define GX_ASSERT_DEBUG(...) static_cast<void>(0)
 #else
-#  define GX_ASSERT(...) assert(__VA_ARGS__)
+#  define GX_ASSERT(...) assert((__VA_ARGS__))
 #  ifdef GX_DEBUG_ASSERT
-#    define GX_ASSERT_DEBUG(...) assert(__VA_ARGS__)
+#    define GX_ASSERT_DEBUG(...) assert((__VA_ARGS__))
 #  else
 #    define GX_ASSERT_DEBUG(...) static_cast<void>(0)
 #  endif
