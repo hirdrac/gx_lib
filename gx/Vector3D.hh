@@ -1,6 +1,6 @@
 //
 // gx/Vector3D.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 // vector template types/functions for 3D calculations
 //
@@ -8,6 +8,7 @@
 #pragma once
 #include "MathUtil.hh"
 #include "InitType.hh"
+#include "Assert.hh"
 #include <ostream>
 
 
@@ -79,8 +80,7 @@ class gx::Vector2
 
   [[nodiscard]] constexpr T lengthSqr() const { return sqr(x)+sqr(y); }
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
-  [[nodiscard]] T lengthInv() const { return T{1} / length(); }
-  [[nodiscard]] constexpr bool isUnit() const { return IsOne(lengthSqr()); }
+  [[nodiscard]] constexpr bool isUnit() const { return isOne(lengthSqr()); }
 
   constexpr void set(T vx, T vy) { x = vx; y = vy; }
   constexpr void set(const T* v) { set(v[0], v[1]); }
@@ -153,8 +153,7 @@ class gx::Vector3
 
   [[nodiscard]] constexpr T lengthSqr() const { return sqr(x)+sqr(y)+sqr(z); }
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
-  [[nodiscard]] T lengthInv() const { return T{1} / length(); }
-  [[nodiscard]] constexpr bool isUnit() const { return IsOne(lengthSqr()); }
+  [[nodiscard]] constexpr bool isUnit() const { return isOne(lengthSqr()); }
 
   constexpr void set(T vx, T vy, T vz) { x = vx; y = vy; z = vz; }
   constexpr void set(const T* v) { set(v[0], v[1], v[2]); }
@@ -413,12 +412,20 @@ namespace gx {
   }
 
   template<class T>
-  [[nodiscard]] inline Vector2<T> unitVec(const Vector2<T>& v) {
-    return v * v.lengthInv(); }
+  [[nodiscard]] inline Vector2<T> unitVec(const Vector2<T>& v)
+  {
+    const T len = v.length();
+    GX_ASSERT_DEBUG(isPos(len));
+    return v * (T{1} / len);
+  }
 
   template<class T>
-  [[nodiscard]] inline Vector3<T> unitVec(const Vector3<T>& v) {
-    return v * v.lengthInv(); }
+  [[nodiscard]] inline Vector3<T> unitVec(const Vector3<T>& v)
+  {
+    const T len = v.length();
+    GX_ASSERT_DEBUG(isPos(len));
+    return v * (T{1} / len);
+  }
 
 
   // Simplified vector rotation functions to avoid using a matrix

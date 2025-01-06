@@ -1,6 +1,6 @@
 //
 // gx/Matrix3D.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 // 4x4 matrix template type/functions for 3D calculations
 //
@@ -616,7 +616,7 @@ namespace gx {
 
     // calculate determinant
     const T det = m[0]*c0 + m[4]*c1 + m[8]*c2 + m[12]*c3;
-    if (IsZero(det)) {
+    if (isZero(det)) {
       return -1; // error - singular matrix
     }
 
