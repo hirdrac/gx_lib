@@ -1,15 +1,11 @@
 //
-// gx/System.cc
-// Copyright (C) 2024 Richard Bradley
+// gx/GLFW.cc
+// Copyright (C) 2025 Richard Bradley
 //
 
-#include "System.hh"
-#include "Logger.hh"
-#include "Assert.hh"
+#include "GLFW.hh"
 #include "StringUtil.hh"
-#include "ThreadID.hh"
-#include <GLFW/glfw3.h>
-#include <string_view>
+#include "Logger.hh"
 #include <cstdlib>
 
 namespace {
@@ -57,33 +53,4 @@ bool gx::initGLFW()
 bool gx::glfwInitStatus()
 {
   return lib_init;
-}
-
-std::string gx::getClipboardFull()
-{
-  GX_ASSERT(isMainThread());
-
-  initGLFW();
-  const char* txt = glfwGetClipboardString(nullptr);
-  return (txt == nullptr) ? std::string{} : txt;
-}
-
-std::string gx::getClipboardFirstLine()
-{
-  GX_ASSERT(isMainThread());
-
-  initGLFW();
-  const char* txt = glfwGetClipboardString(nullptr);
-  if (txt == nullptr) { return {}; }
-
-  const std::string_view sv{txt};
-  return std::string{sv.substr(0, sv.find('\n'))};
-}
-
-void gx::setClipboard(const char* s)
-{
-  GX_ASSERT(isMainThread());
-
-  initGLFW();
-  glfwSetClipboardString(nullptr, s);
 }

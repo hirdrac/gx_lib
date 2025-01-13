@@ -1,11 +1,10 @@
 //
 // gx/Renderer.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #include "Renderer.hh"
-#include "System.hh"
-#include <GLFW/glfw3.h>
+#include "GLFW.hh"
 #include <mutex>
 #include <unordered_map>
 using namespace gx;

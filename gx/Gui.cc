@@ -1,6 +1,6 @@
 //
 // gx/Gui.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #include "Gui.hh"
@@ -8,7 +8,7 @@
 #include "DrawContext.hh"
 #include "Font.hh"
 #include "Unicode.hh"
-#include "System.hh"
+#include "Clipboard.hh"
 #include "Logger.hh"
 #include "Assert.hh"
 #include "Print.hh"

@@ -1,6 +1,6 @@
 //
 // gx/OpenGLRenderer.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 // TODO: add blur transparency shader
@@ -27,7 +27,7 @@
 #include "OpenGL.hh"
 #include "Assert.hh"
 #include "Print.hh"
-#include <GLFW/glfw3.h>
+#include "GLFW.hh"
 #include <vector>
 #include <unordered_map>
 #include <mutex>

@@ -1,6 +1,6 @@
 //
 // gx/Window.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 // TODO: mouseIn can get lost with resize on Windows - auto set mouseIn for
@@ -10,14 +10,13 @@
 #include "Window.hh"
 #include "OpenGLRenderer.hh"
 #include "Logger.hh"
-#include "System.hh"
 #include "Assert.hh"
 #include "ThreadID.hh"
+#include "GLFW.hh"
 #include <chrono>
 #include <mutex>
 #include <vector>
 #include <algorithm>
-#include <GLFW/glfw3.h>
 using namespace gx;
 
 // NOTES:
@@ -59,9 +58,6 @@ namespace {
     return duration_cast<microseconds>(
       steady_clock::now().time_since_epoch()).count();
   }
-
-  [[nodiscard]] constexpr int glfwBool(bool val) {
-    return val ? GLFW_TRUE : GLFW_FALSE; }
 
   [[nodiscard]] constexpr int cursorInputModeVal(MouseModeEnum mode) {
     switch (mode) {
