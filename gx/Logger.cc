@@ -1,6 +1,6 @@
 //
 // gx/Logger.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 // TODO: threaded support
@@ -13,6 +13,7 @@
 
 #include "Logger.hh"
 #include "ThreadID.hh"
+#include "Assert.hh"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -28,10 +29,16 @@ using namespace gx;
   return ((td.tm_year + 1900) * 10000) + ((td.tm_mon + 1) * 100) + td.tm_mday;
 }
 
+[[nodiscard]] static std::tm make_tm(std::time_t t)
+{
+  std::tm* tdPtr = std::localtime(&t);
+  GX_ASSERT(tdPtr != nullptr);
+  return *tdPtr;
+}
+
 [[nodiscard]] static std::string fileTime()
 {
-  const std::time_t t = std::time(nullptr);
-  const std::tm td = *std::localtime(&t);
+  const std::tm td = make_tm(std::time(nullptr));
   char str[32];
   const int len = snprintf(
     str, sizeof(str), "-%d_%02d%02d%02d",
@@ -130,7 +137,7 @@ std::ostringstream Logger::logStream(LogLevel lvl)
   timespec ts;
   clock_gettime(CLOCK_REALTIME, &ts);
 
-  const std::tm td = *std::localtime(&ts.tv_sec);
+  const std::tm td = make_tm(ts.tv_sec);
   char str[32];
   int len = 0;
 
