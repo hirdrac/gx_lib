@@ -69,21 +69,21 @@ namespace {
   }
 
   [[nodiscard]] GLFWcursor* getCursorInstance(MouseShapeEnum shape) {
-    static GLFWcursor* ibeam = nullptr;
-    static GLFWcursor* crosshair = nullptr;
+    constexpr int cursorID[6] {
+      GLFW_ARROW_CURSOR, GLFW_IBEAM_CURSOR, GLFW_CROSSHAIR_CURSOR,
+      GLFW_HAND_CURSOR, GLFW_HRESIZE_CURSOR, GLFW_VRESIZE_CURSOR};
+    static GLFWcursor* cursor[6] {};
       // cursors are freed with glfwTerminate()
 
-    switch (shape) {
-      case MOUSESHAPE_IBEAM:
-        if (!ibeam) { ibeam = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR); }
-        return ibeam;
-      case MOUSESHAPE_CROSSHAIR:
-        if (!crosshair) {
-          crosshair = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR); }
-        return crosshair;
-      default: // MOUSESHAPE_ARROW
-        return nullptr;
+    const int i = int(shape);
+    if (i <= 0 || i > MOUSESHAPE_VRESIZE) {
+      return nullptr; // MOUSESHAPE_ARROW
     }
+
+    if (!cursor[i]) {
+      cursor[i] = glfwCreateStandardCursor(cursorID[i]);
+    }
+    return cursor[i];
   }
 
   // **** Window Instance Tracking ****

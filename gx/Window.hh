@@ -1,6 +1,6 @@
 //
 // gx/Window.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 // encapsulation of OS specific window handling & user input
 //
@@ -43,9 +43,12 @@ namespace gx {
   };
 
   enum MouseShapeEnum {
-    MOUSESHAPE_ARROW,
+    MOUSESHAPE_ARROW = 0,
     MOUSESHAPE_IBEAM,
     MOUSESHAPE_CROSSHAIR,
+    MOUSESHAPE_HAND,
+    MOUSESHAPE_HRESIZE,
+    MOUSESHAPE_VRESIZE,
   };
 
 
