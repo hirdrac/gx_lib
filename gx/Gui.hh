@@ -1,6 +1,6 @@
 //
 // gx/Gui.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 // Graphical user interface rendering & event handling
 //
@@ -187,10 +187,9 @@ class gx::Gui
   void deactivatePopups();
   void activatePopup(Panel& p, const GuiElem& def);
   bool drawElem(
-    Window& win, Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+    Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
     const GuiTheme::Style* style);
-  bool drawPopup(Window& win, Panel& p, GuiElem& def,
-                 DrawContext& dc, DrawContext& dc2);
+  bool drawPopup(Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2);
 
   [[nodiscard]] std::pair<Panel*,GuiElem*> findElem(ElemID id);
   [[nodiscard]] GuiElem* findEventElem(PanelID pid, EventID eid);

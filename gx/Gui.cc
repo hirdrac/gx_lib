@@ -722,7 +722,7 @@ bool Gui::update(Window& win)
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
       Panel& p = **it;
-      _needRender |= drawElem(win, p, p.root, dc, dc2, &(p.theme->panel));
+      _needRender |= drawElem(p, p.root, dc, dc2, &(p.theme->panel));
 
       if (!tmp.empty()) {
         dc.append(tmp);
@@ -733,7 +733,7 @@ bool Gui::update(Window& win)
     if (_popupID != 0) {
       for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {
         Panel& p = **it;
-        _needRender |= drawPopup(win, p, p.root, dc, dc2);
+        _needRender |= drawPopup(p, p.root, dc, dc2);
 
         if (!tmp.empty()) {
           dc.append(tmp);
@@ -1377,7 +1377,7 @@ void Gui::initElem(GuiElem& def)
 }
 
 bool Gui::drawElem(
-  Window& win, Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
   const GuiTheme::Style* style)
 {
   const GuiTheme& thm = *p.theme;
@@ -1603,24 +1603,23 @@ bool Gui::drawElem(
   // draw child elements
   for (GuiElem& e : def.elems) {
     if (e.type != GUI_POPUP) {
-      needRedraw |= drawElem(win, p, e, dc, dc2, style);
+      needRedraw |= drawElem(p, e, dc, dc2, style);
     }
   }
   return needRedraw;
 }
 
-bool Gui::drawPopup(Window& win, Panel& p, GuiElem& def,
-                    DrawContext& dc, DrawContext& dc2)
+bool Gui::drawPopup(Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2)
 {
   bool needRedraw = false; // use for anim trigger later
   for (GuiElem& e : def.elems) {
     if (def._active && e.type == GUI_POPUP) {
       const GuiTheme& thm = *p.theme;
       needRedraw |= drawElem(
-        win, p, e, dc, dc2,
+        p, e, dc, dc2,
         isMenu(def.type) ? &thm.menuFrame : &thm.listSelectFrame);
     }
-    needRedraw |= drawPopup(win, p, e, dc, dc2);
+    needRedraw |= drawPopup(p, e, dc, dc2);
   }
   return needRedraw;
 }
