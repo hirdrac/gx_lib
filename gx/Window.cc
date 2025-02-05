@@ -509,12 +509,14 @@ int Window::pollEvents()
     glfwPollEvents();
       // callbacks will set event values
 
+    _lastPollTime = usecTime();
     for (auto w : allImpls) {
-      e |= w->_eventState.events;
+      EventState& es = w->_eventState;
+      es.lastPollTime = _lastPollTime;
+      e |= es.events;
     }
   }
 
-  _lastPollTime = usecTime();
   return e;
 }
 

@@ -137,6 +137,7 @@ namespace gx {
   static_assert(sizeof(InputState) == 8);
 
   struct EventState {
+    int64_t lastPollTime;
     int events, removedEvents;
     std::vector<InputState> inputStates;
     std::vector<int32_t> chars;
