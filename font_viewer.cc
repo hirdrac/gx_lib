@@ -1,11 +1,12 @@
 //
 // font_viewer.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 // displays font atlas texture
 //
 
 #include "gx/Window.hh"
+#include "gx/EventState.hh"
 #include "gx/Font.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"

@@ -5,6 +5,7 @@
 
 #include "Gui.hh"
 #include "Window.hh"
+#include "EventState.hh"
 #include "DrawContext.hh"
 #include "Font.hh"
 #include "Unicode.hh"
@@ -656,10 +657,8 @@ bool Gui::getPanelLayout(PanelID id, Rect& layout) const
   return true;
 }
 
-bool Gui::update(Window& win)
+bool Gui::update(Window& win, EventState& es)
 {
-  const int64_t now = win.lastPollTime();
-
   // make saved event active
   _event = _event2;
   _event2 = {};
@@ -674,12 +673,13 @@ bool Gui::update(Window& win)
     }
   }
 
-  const EventState& es = win.eventState();
+  const int64_t now = es.lastPollTime;
 
   // mouse movement/button handling
   if (es.focused) {
-    if (es.allEvents() & (EVENT_MOUSE_MOVE | EVENT_MOUSE_BUTTON)) {
-      processMouseEvent(win);
+    const int allEvents = win.eventState().events;
+    if (allEvents & (EVENT_MOUSE_MOVE | EVENT_MOUSE_BUTTON)) {
+      processMouseEvent(win, es);
     }
 
     if (!_event && _heldID != 0 && _repeatDelay >= 0
@@ -697,7 +697,7 @@ bool Gui::update(Window& win)
 
   // entry input handling & cursor update
   if (_focusID != 0) {
-    if (es.events & (EVENT_CHAR | EVENT_KEY)) { processCharEvent(win); }
+    if (es.events & (EVENT_CHAR | EVENT_KEY)) { processCharEvent(es); }
 
     if (_focusCursorPos == _focusRangeStart && _cursorBlinkTime > 0) {
       // check for cursor blink
@@ -763,11 +763,10 @@ void Gui::activatePopup(Panel& p, const GuiElem& def)
   _popupType = getPopupType(def.type);
 }
 
-void Gui::processMouseEvent(Window& win)
+void Gui::processMouseEvent(Window& win, EventState& es)
 {
-  const EventState& es = win.eventState();
-  const int allEvents = es.allEvents();
-  const int64_t now = win.lastPollTime();
+  const int allEvents = win.eventState().events;
+  const int64_t now = es.lastPollTime;
 
   const InputState* b1 = es.getInputState(BUTTON_1);
   const InputState* b2 = es.getInputState(BUTTON_2);
@@ -796,7 +795,7 @@ void Gui::processMouseEvent(Window& win)
       const Vec2 pt = es.mousePt - Vec2{p->layout.x, p->layout.y};
       if (!(ePtr = findElemByXY(p->root, pt.x, pt.y, _popupType))) { continue; }
 
-      win.removeEvent(EVENT_MOUSE_BUTTON);
+      es.removeMouseButtonEvent();
       if (ePtr->_enabled) {
         id = ePtr->_id;
         type = ePtr->type;
@@ -827,7 +826,7 @@ void Gui::processMouseEvent(Window& win)
   if (moveEvent) { _clickCount = 0; }
 
   if (lbuttonDown && anyButtonPressEvent && type != GUI_ENTRY) {
-    setFocus(win, nullptr);
+    setFocus(nullptr, now);
   }
 
   // element specific behavior
@@ -857,7 +856,7 @@ void Gui::processMouseEvent(Window& win)
     const TextFormat tf{thm.font, float(thm.textSpacing)};
     if (lpressEvent) {
       // update focus
-      setFocus(win, ePtr);
+      setFocus(ePtr, now);
       _cursorBlinkTime = thm.cursorBlinkTime;
       const auto& entry = ePtr->entry();
       if (_clickCount == 3) {
@@ -968,7 +967,7 @@ void Gui::processMouseEvent(Window& win)
   }
 }
 
-void Gui::processCharEvent(Window& win)
+void Gui::processCharEvent(EventState& es)
 {
   const auto [panelP,elemP] = findElem(_focusID);
   if (!elemP) { return; }
@@ -977,7 +976,7 @@ void Gui::processCharEvent(Window& win)
   GX_ASSERT(e.type == GUI_ENTRY);
   auto& entry = e.entry();
 
-  const EventState& es = win.eventState();
+  const int64_t now = es.lastPollTime;
   bool usedEvent = false;
 
   for (int32_t ch : es.chars) {
@@ -986,7 +985,7 @@ void Gui::processCharEvent(Window& win)
     // TODO: flash 'error' color if char isn't added
   }
 
-  for (const InputState& in : es.inputStates) {
+  for (const InputState& in : es.keyStates) {
     if (!in.pressCount && !in.repeatCount) { continue; }
 
     const std::size_t rangeStart = std::min(_focusCursorPos, _focusRangeStart);
@@ -1054,11 +1053,11 @@ void Gui::processCharEvent(Window& win)
       _needRender = true;
     } else if ((in.value == KEY_TAB && in.mods == 0) || in.value == KEY_ENTER) {
       usedEvent = true;
-      setFocus(win, findNextElem(panelP->root, e.eid, GUI_ENTRY));
+      setFocus(findNextElem(panelP->root, e.eid, GUI_ENTRY), now);
       // TODO: select all text on focus change
     } else if (in.value == KEY_TAB && in.mods == MOD_SHIFT) {
       usedEvent = true;
-      setFocus(win, findPrevElem(panelP->root, e.eid, GUI_ENTRY));
+      setFocus(findPrevElem(panelP->root, e.eid, GUI_ENTRY), now);
       // TODO: select all text on focus change
     } else if (in.value == KEY_LEFT) {
       usedEvent = true;
@@ -1117,11 +1116,12 @@ void Gui::processCharEvent(Window& win)
   }
 
   if (usedEvent) {
-    win.removeEvent(EVENT_CHAR);
+    es.removeCharEvent();
+    es.removeKeyEvent();
     if (_focusCursorPos == _focusRangeStart) {
       // reset cursor blink state
       _needRender |= !_cursorState;
-      _lastCursorUpdate = win.lastPollTime();
+      _lastCursorUpdate = now;
       _cursorState = true;
     }
   }
@@ -1226,10 +1226,8 @@ void Gui::addEntryChar(GuiElem& e, int32_t code)
   _needRender = _textChanged = true;
 }
 
-void Gui::setFocus(Window& win, const GuiElem* e)
+void Gui::setFocus(const GuiElem* e, int64_t now)
 {
-  const int64_t now = win.lastPollTime();
-
   // reset cursor blink
   _lastCursorUpdate = now;
   _cursorState = true;

@@ -1,6 +1,6 @@
 //
 // text_viewer.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 // gx_lib example program for text rendering & basic event handling
 //
@@ -19,6 +19,7 @@
 // TODO: change TextBuffer to file buffer & string_view for each line
 
 #include "gx/Window.hh"
+#include "gx/EventState.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Font.hh"
 #include "gx/Logger.hh"
@@ -227,7 +228,7 @@ int main(int argc, char** argv)
     const int lastTop = topLine;
 
     if (es.events & gx::EVENT_KEY) {
-      for (const auto& in : es.inputStates) {
+      for (const auto& in : es.keyStates) {
         if (!in.pressCount && !in.repeatCount) { continue; }
 
         switch (in.value) {

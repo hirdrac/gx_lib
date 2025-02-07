@@ -1,9 +1,10 @@
 //
 // demo_gui.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #include "gx/Window.hh"
+#include "gx/EventState.hh"
 #include "gx/Font.hh"
 #include "gx/GuiBuilder.hh"
 #include "gx/Gui.hh"
@@ -146,7 +147,7 @@ int main(int argc, char* argv[])
   while (running) {
     // handle events
     gx::Window::pollEvents();
-    const gx::EventState& es = win.eventState();
+    gx::EventState es = win.eventState();
 
     if (es.events & gx::EVENT_CLOSE) { running = false; }
     if (es.events & gx::EVENT_SIZE) { redraw = true; }
@@ -162,7 +163,7 @@ int main(int argc, char* argv[])
     }
 
     // update gui
-    redraw |= gui.update(win);
+    redraw |= gui.update(win, es);
     if (gui.event()) {
       print_err("GUI event:", gui.event().eid);
       switch (gui.event().type) {

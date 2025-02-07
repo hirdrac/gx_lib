@@ -28,9 +28,6 @@ namespace gx {
     EVENT_MOUSE_ENTER  = 1<<7,
     EVENT_MOUSE_MOVE   = 1<<8,
     EVENT_MOUSE_SCROLL = 1<<9,
-
-    // groups
-    EVENT_INPUT = EVENT_KEY | EVENT_MOUSE_BUTTON,
   };
 
   enum ModEnum {
@@ -85,6 +82,14 @@ namespace gx {
     BUTTON_8 = 1008,
   };
 
+  constexpr bool isButtonInput(InputEnum val) {
+    return (val >= BUTTON_1) && (val <= BUTTON_8);
+  }
+
+  constexpr bool isKeyInput(InputEnum val) {
+    return !isButtonInput(val);
+  }
+
   struct InputState {
     int16_t value;       // InputEnum value
     int16_t scancode;    // platform-specific key value
@@ -101,15 +106,13 @@ namespace gx {
 struct gx::EventState
 {
   int64_t lastPollTime;
-  int events, removedEvents;
-  std::vector<InputState> inputStates;
+  std::vector<InputState> keyStates, buttonStates;
   std::vector<int32_t> chars;
   Vec2 mousePt, scrollPt;
-  int mods, shiftCount, controlCount, altCount, superCount;
+  int events, mods, shiftCount, controlCount, altCount, superCount;
   bool mouseIn, iconified, focused;
 
   // helper functions
-  [[nodiscard]] int allEvents() const { return events | removedEvents; }
   [[nodiscard]] bool resized() const { return events & EVENT_SIZE; }
   [[nodiscard]] bool closed() const { return events & EVENT_CLOSE; }
   [[nodiscard]] bool mouseMove() const { return events & EVENT_MOUSE_MOVE; }
@@ -117,8 +120,9 @@ struct gx::EventState
     return events & EVENT_MOUSE_SCROLL; }
 
   [[nodiscard]] const InputState* getInputState(InputEnum value) const {
-    for (const InputState& in : inputStates) {
-        if (in.value == value) { return &in; }
+    auto& states = isButtonInput(value) ? buttonStates : keyStates;
+    for (const InputState& in : states) {
+      if (in.value == value) { return &in; }
     }
     return nullptr;
   }
@@ -150,4 +154,37 @@ struct gx::EventState
 
   [[nodiscard]] bool inputDrag(InputEnum value) const {
     return mouseMove() && inputHeld(value); }
+
+  // remove/consume events
+  void removeInputEvent(InputEnum value) {
+    const bool bv = isButtonInput(value);
+    auto& states = bv ? buttonStates : keyStates;
+    for (auto itr = states.begin(), end = states.end(); itr != end; ++itr) {
+      if (itr->value == value) {
+        states.erase(itr);
+        if (states.empty()) {
+          removeEvent(bv ? EVENT_MOUSE_BUTTON : EVENT_KEY);
+        }
+      }
+    }
+  }
+
+  void removeKeyEvent() {
+    removeEvent(EVENT_KEY);
+    keyStates.clear();
+  }
+
+  void removeCharEvent() {
+    removeEvent(EVENT_CHAR);
+    chars.clear();
+  }
+
+  void removeMouseButtonEvent() {
+    removeEvent(EVENT_MOUSE_BUTTON);
+    buttonStates.clear();
+  }
+
+  void removeEvent(int eventMask) {
+    events &= ~(events & eventMask);
+  }
 };

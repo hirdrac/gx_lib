@@ -7,7 +7,6 @@
 
 #pragma once
 #include "Renderer.hh"
-#include "EventState.hh"
 #include "Types.hh"
 #include <string_view>
 #include <string>
@@ -55,6 +54,7 @@ namespace gx {
   class Window;
   class Renderer;
   struct WindowImpl;
+  struct EventState;
 }
 
 class gx::Window
@@ -105,9 +105,6 @@ class gx::Window
 
   [[nodiscard]] const EventState& eventState() const;
     // current event state for window
-
-  void removeEvent(int event_mask);
-    // remove event(s) from current event mask
 
   // renderer access methods
   [[nodiscard]] Renderer& renderer();

@@ -1,12 +1,13 @@
 //
 // demo_draw.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 // TODO: draw 3d cube w/ lighting
 // TODO: test for lineStart/lineTo
 
 #include "gx/Window.hh"
+#include "gx/EventState.hh"
 #include "gx/Font.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"
@@ -288,7 +289,7 @@ int main(int argc, char** argv)
 
     if (es.events & gx::EVENT_KEY) {
       int newPage = page;
-      for (const auto& in : es.inputStates) {
+      for (const auto& in : es.keyStates) {
         if (!in.pressCount && !in.repeatCount) { continue; }
 
         switch (in.value) {

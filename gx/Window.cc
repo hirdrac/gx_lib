@@ -8,6 +8,7 @@
 // TODO: check if mouseIn even works for Windows
 
 #include "Window.hh"
+#include "EventState.hh"
 #include "OpenGLRenderer.hh"
 #include "Logger.hh"
 #include "Assert.hh"
@@ -408,22 +409,26 @@ struct gx::WindowImpl
     }
   }
 
-  void resetEventState()
+  static void resetInputStates(std::vector<InputState>& states)
   {
-    _eventState.events = 0;
-    _eventState.removedEvents = 0;
-    _eventState.scrollPt.set(0,0);
-    _eventState.chars.clear();
-    for (auto i = _eventState.inputStates.begin();
-         i != _eventState.inputStates.end(); ) {
+    for (auto i = states.begin(); i != states.end(); ) {
       if (i->held) {
         i->pressCount = 0;
         i->repeatCount = 0;
         ++i;
       } else {
-        i = _eventState.inputStates.erase(i);
+        i = states.erase(i);
       }
     }
+  }
+
+  void resetEventState()
+  {
+    _eventState.events = 0;
+    _eventState.scrollPt.set(0,0);
+    _eventState.chars.clear();
+    resetInputStates(_eventState.keyStates);
+    resetInputStates(_eventState.buttonStates);
 
     // work-around for Windows where glfwSetWindowMonitor() isn't
     // triggering EVENT_SIZE
@@ -520,15 +525,9 @@ int Window::pollEvents()
   return e;
 }
 
-const gx::EventState& Window::eventState() const {
-  return _impl->_eventState; }
-
-void Window::removeEvent(int event_mask)
+const gx::EventState& Window::eventState() const
 {
-  EventState& es = _impl->_eventState;
-  int e = es.events & event_mask;
-  es.removedEvents |= e;
-  es.events &= ~e;
+  return _impl->_eventState;
 }
 
 Renderer& Window::renderer()
@@ -584,7 +583,7 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
   es.events |= EVENT_KEY;
 
-  auto& states = es.inputStates;
+  auto& states = es.keyStates;
   auto itr = std::find_if(states.begin(), states.end(),
 			  [key](auto& in){ return in.value == key; });
   if (itr == states.end()) {
@@ -683,7 +682,7 @@ static void mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
   es.events |= EVENT_MOUSE_BUTTON;
 
   const int bVal = BUTTON_1 + button;
-  auto& states = es.inputStates;
+  auto& states = es.buttonStates;
   auto itr = std::find_if(states.begin(), states.end(),
 			  [bVal](auto& in){ return in.value == bVal; });
   if (itr == states.end()) {

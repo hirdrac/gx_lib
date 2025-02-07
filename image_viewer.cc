@@ -1,6 +1,6 @@
 //
 // image_viewer.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 // TODO: background loading of images after 1st image loaded
@@ -13,6 +13,7 @@
 #include "gx/Image.hh"
 #include "gx/Logger.hh"
 #include "gx/Window.hh"
+#include "gx/EventState.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
@@ -186,7 +187,7 @@ int main(int argc, char* argv[])
       const bool last_entry = (no == lastNo);
       const bool first_entry = (no == 0);
 
-      for (const auto& in : es.inputStates) {
+      for (const auto& in : es.keyStates) {
         if (!in.pressCount && !in.repeatCount) { continue; }
 
         switch (in.value) {

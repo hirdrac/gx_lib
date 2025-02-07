@@ -21,6 +21,7 @@ namespace gx {
   using PanelID = int32_t;  // internal/external panel ID
 
   class Window;
+  struct EventState;
   class DrawContext;
   class Font;
   class Gui;
@@ -61,7 +62,7 @@ class gx::Gui
   [[nodiscard]] PanelID bottomPanel() const {
     return _panels.empty() ? 0 : _panels.back()->id; }
 
-  bool update(Window& win);
+  bool update(Window& win, EventState& es);
     // process events & update drawLists
     // returns true if redraw is required (same as needRedraw())
 
@@ -179,10 +180,10 @@ class gx::Gui
 
   PanelID addPanel(PanelPtr ptr, float x, float y, AlignEnum align);
   void layout(Panel& p, float x, float y, AlignEnum align);
-  void processMouseEvent(Window& win);
-  void processCharEvent(Window& win);
+  void processMouseEvent(Window& win, EventState& es);
+  void processCharEvent(EventState& es);
   void addEntryChar(GuiElem& e, int32_t code);
-  void setFocus(Window& win, const GuiElem* e);
+  void setFocus(const GuiElem* e, int64_t now);
   void initElem(GuiElem& def);
   void deactivatePopups();
   void activatePopup(Panel& p, const GuiElem& def);
