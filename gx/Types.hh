@@ -1,6 +1,6 @@
 //
 // gx/Types.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #pragma once
@@ -14,6 +14,20 @@ namespace gx {
   using Vec3 = Vector3<float>;
   using Vec4 = Vector4<float>;
   using Mat4 = Matrix4x4<float,ROW_MAJOR>;
+
+
+  // forward declare major types
+  class Camera;
+  class DrawContext;
+  class DrawList;
+  struct EventState;
+  class Font;
+  struct Glyph;
+  class Image;
+  class Renderer;
+  struct TextFormat;
+  class Window;
+
 
   // basic types
   struct Rect {
