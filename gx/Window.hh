@@ -112,7 +112,10 @@ class gx::Window
     //   until the Window is destroyed.
 
   template<class... Args>
-  void draw(Args&&... args) { renderer().draw({&args...}); }
+  void draw(Args&&... args) {
+    const DrawList* dls[]{&args...};
+    renderer().draw(std::data(dls), std::size(dls));
+  }
 
   void renderFrame() { renderer().renderFrame(_lastPollTime); }
 

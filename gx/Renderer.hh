@@ -1,6 +1,6 @@
 //
 // gx/Renderer.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 // TODO: frame stats (draw calls, buffer size)
@@ -8,7 +8,6 @@
 
 #pragma once
 #include "DrawList.hh"
-#include <initializer_list>
 #include <utility>
 #include <cstdint>
 
@@ -98,7 +97,7 @@ class gx::Renderer
     const Image& img, const TextureParams& params) = 0;
 
   // draw methods
-  virtual void draw(std::initializer_list<const DrawList*> dl) = 0;
+  virtual void draw(const DrawList* const* lists, std::size_t count) = 0;
   virtual void renderFrame(int64_t usecTime) = 0;
 
   // general accessors

@@ -306,7 +306,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   TextureHandle newTexture(
     const Image& img, const TextureParams& params) override;
   void freeTexture(TextureID id) override;
-  void draw(std::initializer_list<const DrawList*> dl) override;
+  void draw(const DrawList* const* lists, std::size_t count) override;
   void renderFrame(int64_t usecTime) override;
 
  private:
@@ -654,10 +654,14 @@ void OpenGLRenderer<VER>::freeTexture(TextureID id)
 }
 
 template<int VER>
-void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
+void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
 {
+  const DrawList* const* listsEnd = lists + count;
+
   std::size_t vsize = 0; // vertices needed for all layers
-  for (const DrawList* dlPtr : dl) { vsize += calcVSize(*dlPtr); }
+  for (const DrawList* const* dlPtr = lists; dlPtr != listsEnd; ++dlPtr) {
+    vsize += calcVSize(**dlPtr);
+  }
 
   const std::lock_guard lg{_glMutex};
   setCurrentContext(_window);
@@ -686,15 +690,16 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
   int32_t first = 0;
   int32_t cap = -1;
 
-  for (const DrawList* dlPtr : dl) {
+  for (const DrawList* const* dlPtr = lists; dlPtr != listsEnd; ++dlPtr) {
+    const DrawList& dl = **dlPtr;
     uint32_t color = 0;
     TextureID tid = 0;
     uint32_t normal = 0;
     Vec3 linePt;
     uint32_t lineColor = 0;
 
-    const Value* data     = dlPtr->data();
-    const Value* data_end = data + dlPtr->size();
+    const Value* data     = dl.data();
+    const Value* data_end = data + dl.size();
     for (const Value* d = data; d != data_end; ) {
       const uint32_t cmd = (d++)->uval;
       switch (cmd) {
@@ -1085,7 +1090,9 @@ void OpenGLRenderer<VER>::draw(std::initializer_list<const DrawList*> dl)
 
 #if 0
   std::size_t dsize = 0;
-  for (const DrawList* dlPtr : dl) { dsize += dlPtr->size(); }
+  for (const DrawList* const* dlPtr = lists; dlPtr != listsEnd; ++dlPtr) {
+    dsize += (*dlPtr)->size();
+  }
   println_err("entries:", dsize, "  vertices:", vsize,
               "  opData:", _opData.size());
 #endif
