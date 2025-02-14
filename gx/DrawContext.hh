@@ -1,6 +1,6 @@
 //
 // gx/DrawContext.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 // TODO: textured roundedRectangle()
@@ -22,7 +22,6 @@
 
 
 namespace gx {
-  struct Glyph;
   class DrawContext;
 }
 

@@ -20,10 +20,6 @@
 namespace gx {
   using PanelID = int32_t;  // internal/external panel ID
 
-  class Window;
-  struct EventState;
-  class DrawContext;
-  class Font;
   class Gui;
   struct GuiEvent;
 

@@ -8,6 +8,7 @@
 
 #pragma once
 #include "DrawList.hh"
+#include "Types.hh"
 #include <utility>
 #include <cstdint>
 
@@ -15,7 +16,6 @@
 struct GLFWwindow;
 
 namespace gx {
-  class Image;
   class Renderer;
 
 

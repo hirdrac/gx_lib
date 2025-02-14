@@ -52,9 +52,7 @@ namespace gx {
 
 
   class Window;
-  class Renderer;
   struct WindowImpl;
-  struct EventState;
 }
 
 class gx::Window
