@@ -420,6 +420,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
 template<int VER>
 bool OpenGLRenderer<VER>::init(GLFWwindow* win)
 {
+  GX_ASSERT(win != nullptr);
+
   const std::lock_guard lg{_glMutex};
   _window = win;
 
@@ -656,10 +658,12 @@ void OpenGLRenderer<VER>::freeTexture(TextureID id)
 template<int VER>
 void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
 {
+  GX_ASSERT(lists != nullptr);
   const DrawList* const* listsEnd = lists + count;
 
   std::size_t vsize = 0; // vertices needed for all layers
   for (const DrawList* const* dlPtr = lists; dlPtr != listsEnd; ++dlPtr) {
+    GX_ASSERT(*dlPtr != nullptr);
     vsize += calcVSize(**dlPtr);
   }
 
