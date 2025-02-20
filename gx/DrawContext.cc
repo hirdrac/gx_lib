@@ -1,6 +1,6 @@
 //
 // gx/DrawContext.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #include "DrawContext.hh"
@@ -338,7 +338,7 @@ void DrawContext::_text(
   const TextFormat& tf, Vec2 pos, AlignEnum align,
   std::string_view text, const Rect* clipPtr)
 {
-  if (text.empty() || !checkColor()) { return; }
+  if (text.empty()) { return; }
 
   GX_ASSERT(tf.font != nullptr);
   const Font& f = *tf.font;
@@ -359,10 +359,11 @@ void DrawContext::_text(
   }
 
   texture(f.atlas());
+  if (_colorMode == CM_SOLID) { setColor(); }
   std::size_t lineStart = 0;
 
   for (;;) {
-    const std::size_t i = text.find('\n', lineStart);
+    const std::size_t i = tf.find(text, '\n', lineStart);
     const std::string_view line = text.substr(
       lineStart, (i != std::string_view::npos) ? (i - lineStart) : i);
 
@@ -374,9 +375,27 @@ void DrawContext::_text(
       }
 
       float len = 0;
+      std::size_t tagStart = std::string_view::npos;
       for (UTF8Iterator itr{line}; itr; ++itr) {
         int ch = *itr;
-        if (ch == '\t') {
+        if (tagStart != std::string_view::npos) {
+          if (ch == tf.endTag) {
+            if (_tagParserFn) {
+              auto tag = text.substr(tagStart, itr.pos() - tagStart);
+              _tagParserFn(*this, tag);
+              if (_colorMode == CM_SOLID) { setColor(); }
+            }
+            tagStart = std::string_view::npos;
+          }
+          continue;
+        } else if (ch == tf.startTag) {
+          if (!++itr) {
+            break;
+          } else if (*itr != tf.startTag) {
+            tagStart = itr.pos();
+            continue;
+          }
+        } else if (ch == '\t') {
           if (tf.tabWidth <= 0) {
             ch = ' ';
           } else {
@@ -960,4 +979,25 @@ RGBA8 DrawContext::gradientColor(float g) const
 
   const float t = (g - _g0) / (_g1 - _g0);
   return packRGBA8((_fullcolor0 * (1.0f-t)) + (_fullcolor1 * t));
+}
+
+void DrawContext::defaultTagParser(DrawContext& dc, std::string_view tag)
+{
+  if (tag == "white") {
+    dc.color(WHITE);
+  } else if (tag == "black") {
+    dc.color(BLACK);
+  } else if (tag == "red") {
+    dc.color(RED);
+  } else if (tag == "green") {
+    dc.color(GREEN);
+  } else if (tag == "blue") {
+    dc.color(BLUE);
+  } else if (tag == "gray25") {
+    dc.color(GRAY25);
+  } else if (tag == "gray50") {
+    dc.color(GRAY50);
+  } else if (tag == "gray75") {
+    dc.color(GRAY75);
+  }
 }

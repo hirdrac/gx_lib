@@ -23,6 +23,9 @@ struct gx::TextFormat
   Vec2 glyphX{1,0};       // glyph quad sides
   Vec2 glyphY{0,1};
 
+  int32_t startTag = '{'; // meta-tag start char
+  int32_t endTag = '}';   // meta-tag end char
+
   // transforms
   void scaleX(float s) { advX *= s; glyphX *= s; }
   void scaleY(float s) { advY *= s; glyphY *= s; }
@@ -37,6 +40,13 @@ struct gx::TextFormat
 
   [[nodiscard]] float calcLength(std::string_view text) const;
     // returns pixel length of longest line in input text
+
+  [[nodiscard]] int countLines(std::string_view text) const;
+    // returns number of lines in text (zero if text is empty)
+
+  [[nodiscard]] std::size_t find(
+    std::string_view text, int32_t val, std::size_t pos = 0) const;
+    // find char in text, ignoring values in tags
 
   [[nodiscard]] std::string_view fitText(
     std::string_view text, float maxLength) const;
