@@ -1,6 +1,6 @@
 //
 // gx/Color.hh
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 // Color types & utility functions
 //
@@ -23,6 +23,9 @@ namespace gx {
   // color constants
   constexpr Color WHITE  {1.0f, 1.0f, 1.0f, 1.0f};
   constexpr Color BLACK  {0.0f, 0.0f, 0.0f, 1.0f};
+  constexpr Color RED    {1.0f, 0.0f, 0.0f, 1.0f};
+  constexpr Color GREEN  {0.0f, 1.0f, 0.0f, 1.0f};
+  constexpr Color BLUE   {0.0f, 0.0f, 1.0f, 1.0f};
   constexpr Color GRAY25 {0.25f, 0.25f, 0.25f, 1.0f};
   constexpr Color GRAY50 {0.5f, 0.5f, 0.5f, 1.0f};
   constexpr Color GRAY75 {0.75f, 0.75f, 0.75f, 1.0f};
