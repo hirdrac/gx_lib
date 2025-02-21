@@ -211,6 +211,7 @@ int main(int argc, char** argv)
   gx::TextFormat tf{&fnt};
   tf.glyphSpacing = float(args.glyphSpacing);
   tf.tabWidth = fnt.glyphWidth(' ') * float(args.tabSize);
+  tf.startTag = 0; // disable color tag parsing
 
   // main loop
   bool redraw = true, running = true;
