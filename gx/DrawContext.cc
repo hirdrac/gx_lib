@@ -7,6 +7,7 @@
 #include "Font.hh"
 #include "Unicode.hh"
 #include "MathUtil.hh"
+#include "StringUtil.hh"
 #include "Assert.hh"
 using namespace gx;
 
@@ -983,21 +984,20 @@ RGBA8 DrawContext::gradientColor(float g) const
 
 void DrawContext::defaultTagParser(DrawContext& dc, std::string_view tag)
 {
-  if (tag == "white") {
-    dc.color(WHITE);
-  } else if (tag == "black") {
-    dc.color(BLACK);
-  } else if (tag == "red") {
-    dc.color(RED);
-  } else if (tag == "green") {
-    dc.color(GREEN);
-  } else if (tag == "blue") {
-    dc.color(BLUE);
-  } else if (tag == "gray25") {
-    dc.color(GRAY25);
-  } else if (tag == "gray50") {
-    dc.color(GRAY50);
-  } else if (tag == "gray75") {
-    dc.color(GRAY75);
+  RGBA8 c = 0;
+  switch (hashStr(tag)) {
+    case hashStr("white"):   c = packRGBA8(WHITE); break;
+    case hashStr("black"):   c = packRGBA8(BLACK); break;
+    case hashStr("gray25"):  c = packRGBA8(GRAY25); break;
+    case hashStr("gray50"):  c = packRGBA8(GRAY50); break;
+    case hashStr("gray75"):  c = packRGBA8(GRAY75); break;
+    case hashStr("red"):     c = packRGBA8(RED); break;
+    case hashStr("green"):   c = packRGBA8(GREEN); break;
+    case hashStr("blue"):    c = packRGBA8(BLUE); break;
+    case hashStr("cyan"):    c = packRGBA8(CYAN); break;
+    case hashStr("yellow"):  c = packRGBA8(YELLOW); break;
+    case hashStr("magenta"): c = packRGBA8(MAGENTA); break;
+    default: return;
   }
+  dc.color(c);
 }

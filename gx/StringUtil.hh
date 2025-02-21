@@ -1,6 +1,6 @@
 //
 // gx/StringUtil.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #pragma once
@@ -62,5 +62,22 @@ namespace gx
     while (!str.empty() && str.front() == ' ') { str.remove_prefix(1); }
     while (!str.empty() && str.back() == ' ') { str.remove_suffix(1); }
     return str;
+  }
+
+  [[nodiscard]] constexpr uint64_t hashStr(std::string_view str)
+  {
+    // 64-bit FNV-1a hash function
+    // https://en.wikipedia.org/wiki/Fowler-Noll-Vo_hash_function
+    // (NOTE: not a cryptographic hash)
+
+    const uint64_t offsetBasis = 14695981039346656037ull;
+    const uint64_t prime = 1099511628211ull;
+
+    uint64_t result = offsetBasis;
+    for (char c : str) {
+      result ^= uint8_t(c);
+      result *= prime;
+    }
+    return result;
   }
 }
