@@ -21,14 +21,18 @@ namespace gx {
   using RGBA8 = uint32_t;
 
   // color constants
-  constexpr Color WHITE  {1.0f, 1.0f, 1.0f, 1.0f};
-  constexpr Color BLACK  {0.0f, 0.0f, 0.0f, 1.0f};
-  constexpr Color RED    {1.0f, 0.0f, 0.0f, 1.0f};
-  constexpr Color GREEN  {0.0f, 1.0f, 0.0f, 1.0f};
-  constexpr Color BLUE   {0.0f, 0.0f, 1.0f, 1.0f};
-  constexpr Color GRAY25 {0.25f, 0.25f, 0.25f, 1.0f};
-  constexpr Color GRAY50 {0.5f, 0.5f, 0.5f, 1.0f};
-  constexpr Color GRAY75 {0.75f, 0.75f, 0.75f, 1.0f};
+  constexpr Color WHITE   {1.0f, 1.0f, 1.0f, 1.0f};
+  constexpr Color BLACK   {0.0f, 0.0f, 0.0f, 1.0f};
+  constexpr Color GRAY25  {0.25f, 0.25f, 0.25f, 1.0f};
+  constexpr Color GRAY50  {0.5f, 0.5f, 0.5f, 1.0f};
+  constexpr Color GRAY75  {0.75f, 0.75f, 0.75f, 1.0f};
+
+  constexpr Color RED     {1.0f, 0.0f, 0.0f, 1.0f};
+  constexpr Color GREEN   {0.0f, 1.0f, 0.0f, 1.0f};
+  constexpr Color BLUE    {0.0f, 0.0f, 1.0f, 1.0f};
+  constexpr Color CYAN    {0.0f, 1.0f, 1.0f, 1.0f};
+  constexpr Color YELLOW  {1.0f, 1.0f, 0.0f, 1.0f};
+  constexpr Color MAGENTA {1.0f, 0.0f, 1.0f, 1.0f};
 
   // functions
   [[nodiscard]] constexpr RGBA8 packRGBA8(float r, float g, float b, float a) {
