@@ -1,6 +1,6 @@
 //
 // gx/Camera.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #include "Camera.hh"
@@ -66,13 +66,21 @@ bool Camera::setZoom(float zoom)
 
 bool Camera::calcView(Mat4& result) const
 {
-  result.setTranslation(-_pos.x, -_pos.y, -_pos.z);
-  result *= { // 'lookAt' transform
+  //result.setTranslation(-_pos.x, -_pos.y, -_pos.z);
+  //result *= { // 'lookAt' transform
+  //  _vside.x, _vtop.x, -_vnormal.x, 0,
+  //  _vside.y, _vtop.y, -_vnormal.y, 0,
+  //  _vside.z, _vtop.z, -_vnormal.z, 0,
+  //  0,        0,        0,          1.0f
+  //};
+
+  result = {
     _vside.x, _vtop.x, -_vnormal.x, 0,
     _vside.y, _vtop.y, -_vnormal.y, 0,
     _vside.z, _vtop.z, -_vnormal.z, 0,
-    0,        0,        0,          1.0f
-  };
+    -dotProduct(_pos, _vside),
+    -dotProduct(_pos, _vtop),
+    dotProduct(_pos, _vnormal), 1.0f};
   return true;
 }
 

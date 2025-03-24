@@ -1,6 +1,6 @@
 //
 // gx/Camera.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #pragma once
@@ -24,6 +24,12 @@ namespace gx {
 class gx::Camera
 {
  public:
+  Camera() = default;
+  Camera(CoordSystemType cs) : _coordSystem{cs} { }
+  Camera(ProjectionType pt) : _projection{pt} { }
+  Camera(CoordSystemType cs, ProjectionType pt)
+    : _coordSystem{cs}, _projection{pt} { }
+
   // view methods
   [[nodiscard]] CoordSystemType coordSystem() const { return _coordSystem; }
   [[nodiscard]] const Vec3& pos() const { return _pos; }
@@ -69,16 +75,16 @@ class gx::Camera
 
  private:
   // view config
-  CoordSystemType _coordSystem = LEFT_HANDED;
   Vec3 _pos{0,0,0}, _vnormal{0,0,1}, _vup{0,1,0};
   Vec3 _vtop{0,1,0}, _vside{1,0,0};
+  CoordSystemType _coordSystem = LEFT_HANDED;
 
   // projection config
-  ProjectionType _projection = PERSPECTIVE;
   float _zoom = 1.0f, _fov = 90.0f, _vlen = 1.0f;
   float _nearClip = 1.0f, _farClip = 1000.0f;
   float _screenWidth = 1.0f, _screenHeight = 1.0f;
   float _vpX = 0.0f, _vpY = 0.0f, _vpWidth = 0.0f, _vpHeight = 0.0f;
+  ProjectionType _projection = PERSPECTIVE;
   bool _vpSet = false;
 
   bool setView(const Vec3& p, const Vec3& vn, const Vec3& vu);
