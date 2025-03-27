@@ -26,7 +26,7 @@ constexpr int ITEM_HEIGHT = 360;
 constexpr auto WHITE = gx::packRGBA8(gx::WHITE);
 constexpr auto GRAY50 = gx::packRGBA8(gx::GRAY50);
 constexpr auto BLACK = gx::packRGBA8(gx::BLACK);
-constexpr auto RED = gx::packRGBA8(1.0f, 0, 0, 1.0f);
+constexpr auto RED = gx::packRGBA8(gx::RED);
 
 
 // **** Globals ****
@@ -209,7 +209,7 @@ void draw_lines2(gx::DrawContext& dc, float x, float y)
 
 void draw_text1(gx::DrawContext& dc, float x, float y)
 {
-  gx::TextFormat tf{&TheFont};
+  gx::TextFormat tf{.font = &TheFont};
   tf.scale(2.0f);
   dc.color(WHITE);
 
@@ -271,7 +271,7 @@ int main(int argc, char** argv)
 
   TheFont.makeAtlas(win);
 
-  gx::TextFormat tf{&TheFont};
+  const gx::TextFormat tf{.font = &TheFont};
   const int gfxCount = std::size(gfxData);
   int page = 0, gfxPerPage = 0, maxPage = 0;
   bool redraw = true, running = true;
@@ -342,9 +342,9 @@ int main(int argc, char** argv)
         if (x > float(width - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }
 
-      dc.color(WHITE);
       x = y = 0;
       for (int i = start_gfx; i < end_gfx; ++i) {
+        dc.color(WHITE);
         dc.text(tf, {x+(ITEM_WIDTH/2), y+6}, gx::ALIGN_TOP_CENTER,
                 gfxData[i].desc);
         x += ITEM_WIDTH;
@@ -352,6 +352,7 @@ int main(int argc, char** argv)
       }
 
       if (maxPage > 0) {
+        dc.color(WHITE);
         dc.text(tf, {float(width-10), float(height-1)},
                 gx::ALIGN_BOTTOM_RIGHT,
                 gx::concat("Page ", page+1, " of ", maxPage+1));
