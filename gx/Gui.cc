@@ -232,88 +232,6 @@ template<class T>
   return nullptr;
 }
 
-static void drawRec(DrawContext& dc, float x, float y, float w, float h,
-                    const GuiTheme& thm, const GuiTheme::Style* style)
-{
-  if (style->backgroundType != GuiTheme::BG_NONE) {
-    switch (style->backgroundType) {
-      default: // BG_SOLID
-        dc.color(style->backgroundColor);
-        break;
-      case GuiTheme::BG_VGRADIENT:
-        dc.vgradient(y, style->backgroundColor, y+h, style->backgroundColor2);
-        break;
-    }
-
-    switch (style->shapeType) {
-      default: // SHAPE_DEFAULT
-        dc.rectangle({x, y, w, h});
-        break;
-      case GuiTheme::SHAPE_ROUNDED: {
-        dc.roundedRectangle(
-          {x, y, w, h}, thm.roundedRadius, thm.roundedSegments);
-        break;
-      }
-    }
-  }
-
-  if (style->edgeType != GuiTheme::EDGE_NONE && style->edgeColor != 0) {
-    dc.color(style->edgeColor);
-    switch (style->shapeType) {
-      default: // SHAPE_DEFAULT
-        switch (style->edgeType) {
-          default: // EDGE_BORDER_1px
-            dc.border({x, y, w, h}, 1);
-            break;
-          case GuiTheme::EDGE_BORDER_2px:
-            dc.border({x, y, w, h}, 2);
-            break;
-          case GuiTheme::EDGE_UNDERLINE_1px:
-            dc.rectangle({x, y + h - 1, w, 1});
-            break;
-          case GuiTheme::EDGE_UNDERLINE_2px:
-            dc.rectangle({x, y + h - 2, w, 2});
-            break;
-          case GuiTheme::EDGE_OVERLINE_1px:
-            dc.rectangle({x, y, w, 1});
-            break;
-          case GuiTheme::EDGE_OVERLINE_2px:
-            dc.rectangle({x, y, w, 2});
-            break;
-        }
-        break;
-      case GuiTheme::SHAPE_ROUNDED:
-        switch (style->edgeType) {
-          default: // EDGE_BORDER_1px
-            dc.roundedBorder(
-              {x, y, w, h}, thm.roundedRadius, thm.roundedSegments, 1);
-            break;
-          case GuiTheme::EDGE_BORDER_2px:
-            dc.roundedBorder(
-              {x, y, w, h}, thm.roundedRadius, thm.roundedSegments, 2);
-            break;
-          case GuiTheme::EDGE_UNDERLINE_1px:
-            dc.rectangle(
-              {x+thm.roundedRadius, y+h-1, w-(thm.roundedRadius*2), 1});
-            break;
-          case GuiTheme::EDGE_UNDERLINE_2px:
-            dc.rectangle(
-              {x+thm.roundedRadius, y+h-2, w-(thm.roundedRadius*2), 2});
-            break;
-          case GuiTheme::EDGE_OVERLINE_1px:
-            dc.rectangle(
-              {x+thm.roundedRadius, y, w-(thm.roundedRadius*2), 1});
-            break;
-          case GuiTheme::EDGE_OVERLINE_2px:
-            dc.rectangle(
-              {x+thm.roundedRadius, y, w-(thm.roundedRadius*2), 2});
-            break;
-        }
-        break;
-    }
-  }
-}
-
 [[nodiscard]] static constexpr uint16_t borderVal(
   const GuiTheme& thm, GuiElemType type)
 {
@@ -1376,7 +1294,7 @@ void Gui::initElem(GuiElem& def)
 
 bool Gui::drawElem(
   Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
-  const GuiTheme::Style* style)
+  const Style* style)
 {
   const GuiTheme& thm = *p.theme;
   switch (def.type) {
@@ -1483,7 +1401,7 @@ bool Gui::drawElem(
       const float b = thm.border;
       const float cw = thm.font->glyphWidth(thm.checkCode) + (b*2);
       const float ch = float(thm.font->size() - 1) + (b*2);
-      drawRec(dc, ex, ey, cw, ch, thm, style);
+      dc.shape({ex, ey, cw, ch}, *style);
       if (def.checkbox().set) {
         dc2.color(style->textColor);
         dc2.glyph({thm.font, float(thm.textSpacing)},
@@ -1493,13 +1411,13 @@ bool Gui::drawElem(
       break;
     }
     case GUI_SUBMENU:
-      drawRec(dc, ex, ey, ew, eh, thm, style);
+      dc.shape({ex, ey, ew, eh}, *style);
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
                 {ex + ew, ey + thm.border}, ALIGN_TOP_RIGHT, thm.subMenuCode);
       break;
     case GUI_LISTSELECT: {
-      drawRec(dc, ex, ey, ew, eh, thm, style);
+      dc.shape({ex, ey, ew, eh}, *style);
       const float b = thm.border;
       const int32_t code = def._active
         ? thm.listSelectOpenCode : thm.listSelectCode;
@@ -1509,7 +1427,7 @@ bool Gui::drawElem(
       break;
     }
     case GUI_LISTSELECT_ITEM:
-      drawRec(dc, ex, ey, ew, eh, thm, style);
+      dc.shape({ex, ey, ew, eh}, *style);
       if (thm.listSelectItemCode != 0) {
         const GuiElem* parent = findItemParent(p.root, def._id);
         if (parent && parent->item().no == def.item().no) {
@@ -1522,7 +1440,7 @@ bool Gui::drawElem(
       break;
     case GUI_ENTRY: {
       const TextFormat tf{thm.font, float(thm.textSpacing)};
-      drawRec(dc, ex, ey, ew, eh, thm, style);
+      dc.shape({ex, ey, ew, eh}, *style);
       auto& entry = def.entry();
       const std::string txt = (entry.type == ENTRY_PASSWORD)
         ? passwordStr(thm.passwordCode, lengthUTF8(entry.text)) : entry.text;
@@ -1594,7 +1512,7 @@ bool Gui::drawElem(
     case GUI_VFRAME:
       break; // layout only - nothing to draw
     default:
-      drawRec(dc, ex, ey, ew, eh, thm, style);
+      dc.shape({ex, ey, ew, eh}, *style);
       break;
   }
 

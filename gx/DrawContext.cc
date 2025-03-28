@@ -973,6 +973,80 @@ void DrawContext::roundedBorderShaded(
   }
 }
 
+void DrawContext::shape(const Rect& r, const Style& style)
+{
+  if (style.fill != Style::no_fill) {
+    switch (style.fill) {
+      default: // Style::solid
+        color(style.fillColor);
+        break;
+      case Style::hgradient:
+        hgradient(r.x, style.fillColor, r.x+r.w, style.fillColor2);
+        break;
+      case Style::vgradient:
+        vgradient(r.y, style.fillColor, r.y+r.h, style.fillColor2);
+        break;
+    }
+
+    if (isLTE(style.cornerRadius, 0.0f)) {
+      rectangle(r);
+    } else {
+      roundedRectangle(r, style.cornerRadius, style.cornerSegments);
+    }
+  }
+
+  if (style.edge != Style::no_edge && style.edgeColor != 0) {
+    color(style.edgeColor);
+    if (isLTE(style.cornerRadius, 0.0f)) {
+      switch (style.edge) {
+        default: // Style::border_1px
+          border(r, 1);
+          break;
+        case Style::border_2px:
+          border(r, 2);
+          break;
+        case Style::underline_1px:
+          rectangle({r.x, r.y+r.h-1, r.w, 1});
+          break;
+        case Style::underline_2px:
+          rectangle({r.x, r.y+r.h-2, r.w, 2});
+          break;
+        case Style::overline_1px:
+          rectangle({r.x, r.y, r.w, 1});
+          break;
+        case Style::overline_2px:
+          rectangle({r.x, r.y, r.w, 2});
+          break;
+      }
+    } else {
+      switch (style.edge) {
+        default: // Style::border_1px
+          roundedBorder(r, style.cornerRadius, style.cornerSegments, 1);
+          break;
+        case Style::border_2px:
+          roundedBorder(r, style.cornerRadius, style.cornerSegments, 2);
+          break;
+        case Style::underline_1px:
+          rectangle(
+            {r.x+style.cornerRadius, r.y+r.h-1, r.w-(style.cornerRadius*2), 1});
+          break;
+        case Style::underline_2px:
+          rectangle(
+            {r.x+style.cornerRadius, r.y+r.h-2, r.w-(style.cornerRadius*2), 2});
+          break;
+        case Style::overline_1px:
+          rectangle(
+            {r.x+style.cornerRadius, r.y, r.w-(style.cornerRadius*2), 1});
+          break;
+        case Style::overline_2px:
+          rectangle(
+            {r.x+style.cornerRadius, r.y, r.w-(style.cornerRadius*2), 2});
+          break;
+      }
+    }
+  }
+}
+
 RGBA8 DrawContext::gradientColor(float g) const
 {
   if (g <= _g0) { return _color0; }

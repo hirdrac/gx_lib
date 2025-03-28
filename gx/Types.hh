@@ -25,6 +25,7 @@ namespace gx {
   struct Glyph;
   class Image;
   class Renderer;
+  struct Style;
   struct TextFormat;
   class Window;
 

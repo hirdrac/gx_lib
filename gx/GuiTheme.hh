@@ -4,6 +4,7 @@
 //
 
 #pragma once
+#include "Style.hh"
 #include "Color.hh"
 #include "Types.hh"
 
@@ -12,44 +13,12 @@ namespace gx {
   struct GuiTheme;
 }
 
-
 struct gx::GuiTheme
 {
-  enum EdgeTypeEnum : int32_t {
-    EDGE_NONE          = 0,
-    EDGE_BORDER_1px    = 1,
-    EDGE_BORDER_2px    = 2,
-    EDGE_UNDERLINE_1px = 3,
-    EDGE_UNDERLINE_2px = 4,
-    EDGE_OVERLINE_1px  = 5,
-    EDGE_OVERLINE_2px  = 6,
-  };
-
-  enum BackgroundTypeEnum : int16_t {
-    BG_NONE      = 0,
-    BG_SOLID     = 1, // backgroundColor only
-    BG_VGRADIENT = 2, // backgroundColor(top), backgroundColor2(bottom)
-  };
-
-  enum ShapeTypeEnum : int16_t {
-    SHAPE_DEFAULT = 0,
-    SHAPE_ROUNDED = 1,
-  };
-
-  struct Style {
-    RGBA8 textColor;
-    RGBA8 backgroundColor;
-    RGBA8 backgroundColor2 = 0;
-    RGBA8 edgeColor = 0;
-    EdgeTypeEnum edgeType = EDGE_BORDER_1px;
-    BackgroundTypeEnum backgroundType = BG_SOLID;
-    ShapeTypeEnum shapeType = SHAPE_DEFAULT;
-  };
-
   const Font* font = nullptr;
   Style panel = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.2f,.2f,.2f,1.0f), 0,
-    packRGBA8(.18f,.18f,.18f,1), EDGE_BORDER_1px};
+    packRGBA8(.18f,.18f,.18f,1), Style::border_1px};
   Style titlebar = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.3f,.3f,.3f,1.0f)};
 
@@ -66,19 +35,19 @@ struct gx::GuiTheme
 
   Style checkbox = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f),
-    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
+    0,0, Style::no_edge, Style::solid, 8.0f};
   Style checkboxHover = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f),
-    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
+    0,0, Style::no_edge, Style::solid, 8.0f};
   Style checkboxPress = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f),
-    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
+    0,0, Style::no_edge, Style::solid, 8.0f};
   Style checkboxHold = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f),
-    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
+    0,0, Style::no_edge, Style::solid, 8.0f};
   Style checkboxDisable = {
     packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f),
-    0,0,EDGE_NONE,BG_SOLID,SHAPE_ROUNDED};
+    0,0, Style::no_edge, Style::solid, 8.0f};
 
   Style menuButton = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), 0};
@@ -86,7 +55,7 @@ struct gx::GuiTheme
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f)};
   Style menuButtonOpen = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0,
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), EDGE_UNDERLINE_2px};
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), Style::underline_2px};
   Style menuFrame = {
     packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(0.0f,0.0f,0.0f,.85f)};
   Style menuItem = {
@@ -102,7 +71,7 @@ struct gx::GuiTheme
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f)};
   Style listSelectOpen = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f), 0,
-    packRGBA8(1.0f,1.0f,1.0f,1.0f), EDGE_UNDERLINE_2px};
+    packRGBA8(1.0f,1.0f,1.0f,1.0f), Style::underline_2px};
   Style listSelectDisable = {
     packRGBA8(.6f,.6f,.6f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f)};
   Style listSelectFrame = {
@@ -119,7 +88,7 @@ struct gx::GuiTheme
   Style entryFocus = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f),
     packRGBA8(0.0f,0.0f,.2f,1.0f), packRGBA8(.15f,.15f,.35f,1.0f), 0,
-    EDGE_NONE, BG_VGRADIENT};
+    Style::no_edge, Style::vgradient};
   Style entryDisable = {
     packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.15f,.15f,.2f,1.0f)};
 
@@ -155,7 +124,4 @@ struct gx::GuiTheme
   uint16_t lineWidth = 2;
   uint16_t emptyHeight = 12;
   uint16_t emptyWidth = 12;
-
-  float    roundedRadius = 8;
-  uint16_t roundedSegments = 3;
 };

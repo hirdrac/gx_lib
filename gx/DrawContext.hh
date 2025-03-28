@@ -17,6 +17,7 @@
 #include "Normal.hh"
 #include "Align.hh"
 #include "TextFormat.hh"
+#include "Style.hh"
 #include "Types.hh"
 #include <string_view>
 #include <functional>
@@ -192,6 +193,8 @@ class gx::DrawContext
   void roundedBorderShaded(
     const Rect& r, float curveRadius, int curveSegments, float borderWidth,
     RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
+
+  void shape(const Rect& r, const Style& style);
 
   // Data extraction
   [[nodiscard]] const DrawList& drawList() const { return *_dl; }
