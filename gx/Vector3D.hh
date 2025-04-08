@@ -366,15 +366,15 @@ namespace gx {
 
   // **** Template Stream Operators ****
   template<class T>
-  inline std::ostream& operator<<(std::ostream& os, const Vector2<T>& v) {
+  std::ostream& operator<<(std::ostream& os, const Vector2<T>& v) {
     return os << '[' << v.x << ' ' << v.y << ']'; }
 
   template<class T>
-  inline std::ostream& operator<<(std::ostream& os, const Vector3<T>& v) {
+  std::ostream& operator<<(std::ostream& os, const Vector3<T>& v) {
     return os << '[' << v.x << ' ' << v.y << ' ' << v.z << ']'; }
 
   template<class T>
-  inline std::ostream& operator<<(std::ostream& os, const Vector4<T>& v) {
+  std::ostream& operator<<(std::ostream& os, const Vector4<T>& v) {
     return os << '[' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ']'; }
 
 
@@ -388,11 +388,11 @@ namespace gx {
     return (a - b).lengthSqr(); }
 
   template<class T>
-  [[nodiscard]] inline T pointDistance(const Vector2<T>& a, const Vector2<T>& b) {
+  [[nodiscard]] T pointDistance(const Vector2<T>& a, const Vector2<T>& b) {
     return (a - b).length(); }
 
   template<class T>
-  [[nodiscard]] inline T pointDistance(const Vector3<T>& a, const Vector3<T>& b) {
+  [[nodiscard]] T pointDistance(const Vector3<T>& a, const Vector3<T>& b) {
     return (a - b).length(); }
 
   template<class T>
@@ -412,7 +412,7 @@ namespace gx {
   }
 
   template<class T>
-  [[nodiscard]] inline Vector2<T> unitVec(const Vector2<T>& v)
+  [[nodiscard]] Vector2<T> unitVec(const Vector2<T>& v)
   {
     const T len = v.length();
     GX_ASSERT_DEBUG(isPos(len));
@@ -420,11 +420,29 @@ namespace gx {
   }
 
   template<class T>
-  [[nodiscard]] inline Vector3<T> unitVec(const Vector3<T>& v)
+  [[nodiscard]] Vector3<T> unitVec(const Vector3<T>& v)
   {
     const T len = v.length();
     GX_ASSERT_DEBUG(isPos(len));
     return v * (T{1} / len);
+  }
+
+  template<class T>
+  [[nodiscard]] Vector2<T> unitVec(T x, T y)
+  {
+    const T len = std::sqrt(sqr(x) + sqr(y));
+    GX_ASSERT_DEBUG(isPos(len));
+    const T inv = T{1} / len;
+    return {x * inv, y * inv};
+  }
+
+  template<class T>
+  [[nodiscard]] Vector3<T> unitVec(T x, T y, T z)
+  {
+    const T len = std::sqrt(sqr(x) + sqr(y) + sqr(z));
+    GX_ASSERT_DEBUG(isPos(len));
+    const T inv = T{1} / len;
+    return {x * inv, y * inv, z * inv};
   }
 
 
