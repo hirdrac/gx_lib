@@ -186,8 +186,7 @@ namespace gx {
 
   // **** Template Stream Operators ****
   template<class T>
-  inline std::ostream& operator<<(
-    std::ostream& os, const Matrix4x4<T,ROW_MAJOR>& m)
+  std::ostream& operator<<(std::ostream& os, const Matrix4x4<T,ROW_MAJOR>& m)
   {
     for (unsigned int i = 0; i != 16; i += 4) {
       os << '[' << m[i] << '\t' << m[i+1] << '\t' << m[i+2]
@@ -198,8 +197,7 @@ namespace gx {
   }
 
   template<class T>
-  inline std::ostream& operator<<(
-    std::ostream& os, const Matrix4x4<T,COLUMN_MAJOR>& m)
+  std::ostream& operator<<(std::ostream& os, const Matrix4x4<T,COLUMN_MAJOR>& m)
   {
     for (unsigned int i = 0; i != 4; ++i) {
       os << '[' << m[i] << '\t' << m[i+4] << '\t' << m[i+8]
