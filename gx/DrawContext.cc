@@ -14,13 +14,18 @@ using namespace gx;
 
 namespace {
   template<class T>
+  [[nodiscard]] constexpr T min3(T a, T b, T c) {
+    return std::min(a, std::min(b, c));
+  }
+
+  template<class T>
   [[nodiscard]] constexpr T min4(T a, T b, T c, T d) {
-    return std::min(std::min(a,b),std::min(c,d));
+    return std::min(std::min(a, b), std::min(c, d));
   }
 
   template<class T>
   [[nodiscard]] constexpr T max4(T a, T b, T c, T d) {
-    return std::max(std::max(a,b),std::max(c,d));
+    return std::max(std::max(a, b), std::max(c, d));
   }
 
   [[nodiscard]] constexpr float triangleArea(Vec2 a, Vec2 b, Vec2 c) {
@@ -748,7 +753,7 @@ void DrawContext::roundedRectangle(
   const auto [x,y,w,h] = r;
   const float half_w = w * .5f;
   const float half_h = h * .5f;
-  const float cr = std::min(curveRadius, std::min(half_w, half_h));
+  const float cr = min3(curveRadius, half_w, half_h);
 
   // corners
   constexpr float a90  = degToRad(90.0f);
@@ -859,7 +864,7 @@ void DrawContext::roundedBorder(
   const auto [x,y,w,h] = r;
   const float half_w = w * .5f;
   const float half_h = h * .5f;
-  const float cr = std::min(curveRadius, std::min(half_w, half_h));
+  const float cr = min3(curveRadius, half_w, half_h);
 
   // corners
   constexpr float a90  = degToRad(90.0f);
@@ -896,7 +901,7 @@ void DrawContext::roundedBorderShaded(
   const auto [x,y,w,h] = r;
   const float half_w = w * .5f;
   const float half_h = h * .5f;
-  const float cr = std::min(curveRadius, std::min(half_w, half_h));
+  const float cr = min3(curveRadius, half_w, half_h);
 
   // corners
   constexpr float a90  = degToRad(90.0f);
