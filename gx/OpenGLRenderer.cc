@@ -28,10 +28,10 @@
 #include "Assert.hh"
 #include "Print.hh"
 #include "GLFW.hh"
+#include "Time.hh"
 #include <vector>
 #include <unordered_map>
 #include <mutex>
-#include <chrono>
 #include <cstring>
 using namespace gx;
 
@@ -1270,8 +1270,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
 
   // frame rate calculation
   ++_frames;
-  const int64_t t = std::chrono::duration_cast<std::chrono::seconds>(
-    std::chrono::steady_clock::now().time_since_epoch()).count();
+  const int64_t t = secTime();
   if (t - _lastFrameTime >= 1) {
     _frameRate = _frames;
     _frames = 0;

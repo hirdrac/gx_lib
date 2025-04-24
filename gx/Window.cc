@@ -14,7 +14,7 @@
 #include "Assert.hh"
 #include "ThreadID.hh"
 #include "GLFW.hh"
-#include <chrono>
+#include "Time.hh"
 #include <mutex>
 #include <vector>
 #include <algorithm>
@@ -54,12 +54,6 @@ namespace {
   static_assert(GLFW_MOD_SUPER == 1<<3);
 
   // **** Helper Functions ****
-  [[nodiscard]] inline int64_t usecTime() {
-    using namespace std::chrono;
-    return duration_cast<microseconds>(
-      steady_clock::now().time_since_epoch()).count();
-  }
-
   [[nodiscard]] constexpr int cursorInputModeVal(MouseModeEnum mode) {
     switch (mode) {
       case MOUSEMODE_NORMAL:  return GLFW_CURSOR_NORMAL;
