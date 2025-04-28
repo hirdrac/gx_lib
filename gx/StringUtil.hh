@@ -10,6 +10,7 @@
 #include <limits>
 #include <type_traits>
 #include <cstdint>
+#include <cctype>
 
 
 namespace gx
@@ -57,6 +58,15 @@ namespace gx
     return {ptr, end};
   }
 
+  [[nodiscard]] inline std::string formatHex(uint64_t val)
+  {
+    char buffer[16];
+    char* end = buffer + std::size(buffer);
+    char* ptr = end;
+    do { *(--ptr) = "0123456789abcdef"[val&15]; val >>= 4; } while (val > 0);
+    return {ptr, end};
+  }
+
   [[nodiscard]] constexpr std::string_view trimSpaces(std::string_view str)
   {
     while (!str.empty() && str.front() == ' ') { str.remove_prefix(1); }
@@ -79,5 +89,19 @@ namespace gx
       result *= prime;
     }
     return result;
+  }
+
+  [[nodiscard]] inline std::string toUpper(std::string s)
+  {
+    // only supports ASCII
+    for (char& c : s) { c = char(std::toupper(c)); }
+    return s;
+  }
+
+  [[nodiscard]] inline std::string toLower(std::string s)
+  {
+    // only supports ASCII
+    for (char& c : s) { c = char(std::tolower(c)); }
+    return s;
   }
 }
