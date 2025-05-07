@@ -118,6 +118,8 @@ struct gx::EventState
   [[nodiscard]] bool mouseMove() const { return events & EVENT_MOUSE_MOVE; }
   [[nodiscard]] bool mouseScroll() const {
     return events & EVENT_MOUSE_SCROLL; }
+  [[nodiscard]] bool buttonEvent() const { return events & EVENT_MOUSE_BUTTON; }
+  [[nodiscard]] bool keyEvent() const { return events & EVENT_KEY; }
 
   [[nodiscard]] const InputState* getInputState(InputEnum value) const {
     auto& states = isButtonInput(value) ? buttonStates : keyStates;
