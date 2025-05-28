@@ -5,9 +5,9 @@
 
 #include "DrawContext.hh"
 #include "Font.hh"
+#include "TextFormat.hh"
 #include "Unicode.hh"
 #include "MathUtil.hh"
-#include "StringUtil.hh"
 #include "Assert.hh"
 using namespace gx;
 
@@ -365,7 +365,11 @@ void DrawContext::_text(
   }
 
   texture(f.atlas());
-  if (_colorMode == CM_SOLID) { setColor(); }
+  TextState ts{};
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    ts.color = _color0;
+  }
   std::size_t lineStart = 0;
 
   for (;;) {
@@ -386,10 +390,13 @@ void DrawContext::_text(
         int ch = *itr;
         if (tagStart != std::string_view::npos) {
           if (ch == tf.endTag) {
-            if (_tagParserFn) {
-              auto tag = text.substr(tagStart, itr.pos() - tagStart);
-              _tagParserFn(*this, tag);
-              if (_colorMode == CM_SOLID) { setColor(); }
+            auto tag = text.substr(tagStart, itr.pos() - tagStart);
+            if (tf.parseTag(ts, tag)) {
+              if (ts.color != 0
+                  && (_colorMode != CM_SOLID || _color0 != ts.color)) {
+                color(ts.color);
+                setColor();
+              }
             }
             tagStart = std::string_view::npos;
           }
@@ -1059,24 +1066,4 @@ RGBA8 DrawContext::gradientColor(float g) const
 
   const float t = (g - _g0) / (_g1 - _g0);
   return packRGBA8((_fullcolor0 * (1.0f-t)) + (_fullcolor1 * t));
-}
-
-void DrawContext::defaultTagParser(DrawContext& dc, std::string_view tag)
-{
-  RGBA8 c = 0;
-  switch (hashStr(tag)) {
-    case hashStr("white"):   c = packRGBA8(WHITE); break;
-    case hashStr("black"):   c = packRGBA8(BLACK); break;
-    case hashStr("gray25"):  c = packRGBA8(GRAY25); break;
-    case hashStr("gray50"):  c = packRGBA8(GRAY50); break;
-    case hashStr("gray75"):  c = packRGBA8(GRAY75); break;
-    case hashStr("red"):     c = packRGBA8(RED); break;
-    case hashStr("green"):   c = packRGBA8(GREEN); break;
-    case hashStr("blue"):    c = packRGBA8(BLUE); break;
-    case hashStr("cyan"):    c = packRGBA8(CYAN); break;
-    case hashStr("yellow"):  c = packRGBA8(YELLOW); break;
-    case hashStr("magenta"): c = packRGBA8(MAGENTA); break;
-    default: return;
-  }
-  dc.color(c);
 }

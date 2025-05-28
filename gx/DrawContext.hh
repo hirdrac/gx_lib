@@ -16,17 +16,12 @@
 #include "Color.hh"
 #include "Normal.hh"
 #include "Align.hh"
-#include "TextFormat.hh"
 #include "Style.hh"
 #include "Types.hh"
 #include <string_view>
-#include <functional>
 
 
 namespace gx {
-  using TagParserFn =
-    std::function<void(DrawContext& dc, std::string_view tag)>;
-
   class DrawContext;
 }
 
@@ -161,9 +156,6 @@ class gx::DrawContext
     _text(tf, pos, align, text, &clip); }
   void glyph(const TextFormat& tf, Vec2 pos, AlignEnum align, int code);
 
-  void setTagParser(TagParserFn fn) { _tagParserFn = fn; }
-  static void defaultTagParser(DrawContext& dc, std::string_view tag);
-
   // High-level constructed primitives
   void circleSector(
     Vec2 center, float radius, float startAngle, float endAngle, int segments);
@@ -201,7 +193,6 @@ class gx::DrawContext
 
  private:
   DrawList* _dl = nullptr;
-  TagParserFn _tagParserFn = defaultTagParser;
 
   // general properties
   TextureID _lastTexID;

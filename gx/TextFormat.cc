@@ -8,6 +8,7 @@
 #include "TextFormat.hh"
 #include "Font.hh"
 #include "Unicode.hh"
+#include "StringUtil.hh"
 #include "Assert.hh"
 using namespace gx;
 
@@ -147,4 +148,24 @@ std::string_view TextFormat::fitText(
   }
 
   return text;
+}
+
+bool TextFormat::parseTag(TextState& ts, std::string_view tag) const
+{
+  switch (hashStr(tag)) {
+    case hashStr("white"):   ts.color = packRGBA8(WHITE); break;
+    case hashStr("black"):   ts.color = packRGBA8(BLACK); break;
+    case hashStr("gray25"):  ts.color = packRGBA8(GRAY25); break;
+    case hashStr("gray50"):  ts.color = packRGBA8(GRAY50); break;
+    case hashStr("gray75"):  ts.color = packRGBA8(GRAY75); break;
+    case hashStr("red"):     ts.color = packRGBA8(RED); break;
+    case hashStr("green"):   ts.color = packRGBA8(GREEN); break;
+    case hashStr("blue"):    ts.color = packRGBA8(BLUE); break;
+    case hashStr("cyan"):    ts.color = packRGBA8(CYAN); break;
+    case hashStr("yellow"):  ts.color = packRGBA8(YELLOW); break;
+    case hashStr("magenta"): ts.color = packRGBA8(MAGENTA); break;
+    default: return false;
+  }
+
+  return true;
 }

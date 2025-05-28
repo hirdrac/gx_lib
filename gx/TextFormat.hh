@@ -4,12 +4,17 @@
 //
 
 #pragma once
+#include "Color.hh"
 #include "Types.hh"
 #include <string_view>
 
 
 namespace gx {
   struct TextFormat;
+
+  struct TextState {
+    gx::RGBA8 color = 0;
+  };
 }
 
 struct gx::TextFormat
@@ -51,4 +56,6 @@ struct gx::TextFormat
   [[nodiscard]] std::string_view fitText(
     std::string_view text, float maxLength) const;
     // returns sub-string that fits in specified length
+
+  bool parseTag(TextState& ts, std::string_view tag) const;
 };
