@@ -9,6 +9,7 @@
 #include "gx/Window.hh"
 #include "gx/EventState.hh"
 #include "gx/Font.hh"
+#include "gx/TextFormat.hh"
 #include "gx/DrawContext.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"

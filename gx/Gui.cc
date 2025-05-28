@@ -8,6 +8,7 @@
 #include "EventState.hh"
 #include "DrawContext.hh"
 #include "Font.hh"
+#include "TextFormat.hh"
 #include "Unicode.hh"
 #include "Clipboard.hh"
 #include "Logger.hh"
