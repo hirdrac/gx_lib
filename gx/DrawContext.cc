@@ -373,7 +373,7 @@ void DrawContext::_text(
   std::size_t lineStart = 0;
 
   for (;;) {
-    const std::size_t i = tf.find(text, '\n', lineStart);
+    const std::size_t i = text.find('\n', lineStart);
     const std::string_view line = text.substr(
       lineStart, (i != std::string_view::npos) ? (i - lineStart) : i);
 

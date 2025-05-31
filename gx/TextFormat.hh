@@ -46,16 +46,10 @@ struct gx::TextFormat
   [[nodiscard]] float calcLength(std::string_view text) const;
     // returns pixel length of longest line in input text
 
-  [[nodiscard]] int countLines(std::string_view text) const;
-    // returns number of lines in text (zero if text is empty)
-
-  [[nodiscard]] std::size_t find(
-    std::string_view text, int32_t val, std::size_t pos = 0) const;
-    // find char in text, ignoring values in tags
-
   [[nodiscard]] std::string_view fitText(
     std::string_view text, float maxLength) const;
     // returns sub-string that fits in specified length
 
   bool parseTag(TextState& ts, std::string_view tag) const;
+    // returns true if text is a valid text meta tag & updates TextState
 };
