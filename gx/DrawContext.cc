@@ -365,7 +365,7 @@ void DrawContext::_text(
   }
 
   texture(f.atlas());
-  TextState ts{};
+  TextState ts;
   if (_colorMode == CM_SOLID) {
     setColor();
     ts.color = _color0;
@@ -385,28 +385,23 @@ void DrawContext::_text(
       }
 
       float len = 0;
-      std::size_t tagStart = std::string_view::npos;
       for (UTF8Iterator itr{line}; itr; ++itr) {
         int ch = *itr;
-        if (tagStart != std::string_view::npos) {
-          if (ch == tf.endTag) {
-            auto tag = text.substr(tagStart, itr.pos() - tagStart);
+        if (ch == tf.startTag) {
+          const std::size_t startPos = itr.pos() + 1;
+          const std::size_t endPos = findUTF8(line, tf.endTag, startPos);
+          if (endPos != std::string_view::npos) {
+            auto tag = line.substr(startPos, endPos - startPos);
             if (tf.parseTag(ts, tag)) {
               if (ts.color != 0
                   && (_colorMode != CM_SOLID || _color0 != ts.color)) {
                 color(ts.color);
                 setColor();
               }
+
+              itr.setPos(endPos);
+              continue;
             }
-            tagStart = std::string_view::npos;
-          }
-          continue;
-        } else if (ch == tf.startTag) {
-          if (!++itr) {
-            break;
-          } else if (*itr != tf.startTag) {
-            tagStart = itr.pos();
-            continue;
           }
         } else if (ch == '\t') {
           if (tf.tabWidth <= 0) {

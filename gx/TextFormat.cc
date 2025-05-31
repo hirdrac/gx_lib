@@ -17,19 +17,20 @@ float TextFormat::calcLength(std::string_view text) const
 {
   GX_ASSERT(font != nullptr);
 
+  TextState ts;
   float max_len = 0, len = 0;
-  bool inTag = false;
   for (UTF8Iterator itr{text}; itr; ++itr) {
     int32_t ch = *itr;
-    if (inTag) {
-      if (ch == endTag) { inTag = false; }
-      continue;
-    } else if (ch == startTag) {
-      if (!++itr) {
-        break;
-      } else if (*itr != startTag) {
-        inTag = true;
-        continue;
+    if (ch == startTag) {
+      const std::size_t startPos = itr.pos() + 1;
+      auto line = text.substr(startPos, text.find('\n', startPos+1));
+      const std::size_t endPos = findUTF8(line, endTag);
+      if (endPos != std::string_view::npos) {
+        auto tag = line.substr(0, endPos);
+        if (parseTag(ts, tag)) {
+          itr.setPos(startPos + endPos);
+          continue;
+        }
       }
     } else if (ch == '\t') {
       if (tabWidth <= 0) {
@@ -61,19 +62,20 @@ std::string_view TextFormat::fitText(
   GX_ASSERT(font != nullptr);
   maxLength += glyphSpacing;
 
+  TextState ts;
   float len = 0;
-  bool inTag = false;
   for (UTF8Iterator itr{text}; itr; ++itr) {
     int32_t ch = *itr;
-    if (inTag) {
-      if (ch == endTag) { inTag = false; }
-      continue;
-    } else if (ch == startTag) {
-      if (!++itr) {
-        break;
-      } else if (*itr != startTag) {
-        inTag = true;
-        continue;
+    if (ch == startTag) {
+      const std::size_t startPos = itr.pos() + 1;
+      auto line = text.substr(startPos, text.find('\n', startPos+1));
+      const std::size_t endPos = findUTF8(line, endTag);
+      if (endPos != std::string_view::npos) {
+        auto tag = line.substr(0, endPos);
+        if (parseTag(ts, tag)) {
+          itr.setPos(startPos + endPos);
+          continue;
+        }
       }
     } else if (ch == '\t') {
       if (tabWidth <= 0) {
