@@ -1,6 +1,6 @@
 //
 // gx/Unicode.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 // Unicode/UTF-8 utilities
 //
@@ -38,6 +38,11 @@ namespace gx
     // returns sub-view of UTF-8 encoded string
     // (returns empty string_view if pos > utf8length)
 
+  [[nodiscard]] std::size_t findUTF8(
+    std::string_view sv, int32_t code, std::size_t start = 0);
+    // returns index of first occurence of character in UTF-8 encoded string
+    // (search begins at 'start' byte position)
+
   class UTF8Iterator;
 }
 
@@ -74,6 +79,9 @@ class gx::UTF8Iterator
   [[nodiscard]] std::size_t pos() const { return std::size_t(_itr - _begin); }
     // returns byte position of iterator
     // (useful for substrings, but don't use for counting unicode characters)
+
+  void setPos(std::size_t p) { _itr = _begin + p; }
+    // reset internal byte position
 
   // helper operators
   [[nodiscard]] explicit operator bool() const { return !done(); }

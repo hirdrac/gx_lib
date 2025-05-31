@@ -1,6 +1,6 @@
 //
 // gx/Unicode.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #include "Unicode.hh"
@@ -106,6 +106,14 @@ std::string_view gx::substrUTF8(
 
   const char* e = &sv[itr.pos()];
   return {s, std::size_t(e-s)};
+}
+
+std::size_t gx::findUTF8(std::string_view sv, int32_t code, std::size_t start)
+{
+  for (UTF8Iterator itr{sv.substr(start)}; itr; ++itr) {
+    if (*itr == code) { return itr.pos() + start; }
+  }
+  return NPOS;
 }
 
 
