@@ -366,10 +366,7 @@ void DrawContext::_text(
 
   texture(f.atlas());
   TextState ts;
-  if (_colorMode == CM_SOLID) {
-    setColor();
-    ts.color = _color0;
-  }
+  if (_colorMode == CM_SOLID) { setColor(); }
   std::size_t lineStart = 0;
 
   for (;;) {
