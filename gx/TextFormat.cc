@@ -102,21 +102,34 @@ std::string_view TextFormat::fitText(
   return text;
 }
 
+[[nodiscard]] static RGBA8 parseColorStr(std::string_view str)
+{
+  // TODO: add parsing hex color value
+
+  switch (hashStr(str)) {
+    case hashStr("white"):   return packRGBA8(WHITE);
+    case hashStr("black"):   return packRGBA8(BLACK);
+    case hashStr("gray25"):  return packRGBA8(GRAY25);
+    case hashStr("gray50"):  return packRGBA8(GRAY50);
+    case hashStr("gray75"):  return packRGBA8(GRAY75);
+    case hashStr("red"):     return packRGBA8(RED);
+    case hashStr("green"):   return packRGBA8(GREEN);
+    case hashStr("blue"):    return packRGBA8(BLUE);
+    case hashStr("cyan"):    return packRGBA8(CYAN);
+    case hashStr("yellow"):  return packRGBA8(YELLOW);
+    case hashStr("magenta"): return packRGBA8(MAGENTA);
+    default:                 return 0;
+  }
+}
+
 bool TextFormat::parseTag(TextState& ts, std::string_view tag) const
 {
-  switch (hashStr(tag)) {
-    case hashStr("white"):   ts.color = packRGBA8(WHITE); break;
-    case hashStr("black"):   ts.color = packRGBA8(BLACK); break;
-    case hashStr("gray25"):  ts.color = packRGBA8(GRAY25); break;
-    case hashStr("gray50"):  ts.color = packRGBA8(GRAY50); break;
-    case hashStr("gray75"):  ts.color = packRGBA8(GRAY75); break;
-    case hashStr("red"):     ts.color = packRGBA8(RED); break;
-    case hashStr("green"):   ts.color = packRGBA8(GREEN); break;
-    case hashStr("blue"):    ts.color = packRGBA8(BLUE); break;
-    case hashStr("cyan"):    ts.color = packRGBA8(CYAN); break;
-    case hashStr("yellow"):  ts.color = packRGBA8(YELLOW); break;
-    case hashStr("magenta"): ts.color = packRGBA8(MAGENTA); break;
-    default: return false;
+  if (tag.substr(0, 6) == "color=") {
+    ts.pushColor(parseColorStr(tag.substr(6)));
+  } else if (tag == "/color") {
+    ts.popColor();
+  } else {
+    return false;
   }
 
   return true;

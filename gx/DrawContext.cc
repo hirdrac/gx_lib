@@ -366,7 +366,10 @@ void DrawContext::_text(
 
   texture(f.atlas());
   TextState ts;
-  if (_colorMode == CM_SOLID) { setColor(); }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    ts.pushColor(_color0);
+  }
   std::size_t lineStart = 0;
 
   for (;;) {
@@ -390,9 +393,9 @@ void DrawContext::_text(
           if (endPos != std::string_view::npos) {
             auto tag = line.substr(startPos, endPos - startPos);
             if (tf.parseTag(ts, tag)) {
-              if (ts.color != 0
-                  && (_colorMode != CM_SOLID || _color0 != ts.color)) {
-                color(ts.color);
+              const RGBA8 c = ts.color();
+              if (c != 0 && (_colorMode != CM_SOLID || _color0 != c)) {
+                color(c);
                 setColor();
               }
 

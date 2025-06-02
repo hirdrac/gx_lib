@@ -7,15 +7,36 @@
 #include "Color.hh"
 #include "Types.hh"
 #include <string_view>
-
+#include <array>
 
 namespace gx {
+  class TextState;
   struct TextFormat;
-
-  struct TextState {
-    gx::RGBA8 color = 0;
-  };
 }
+
+
+class gx::TextState
+{
+ public:
+  [[nodiscard]] RGBA8 color() const {
+    return (_colors > 0) ? _colorStack[_colors - 1] : 0;
+  }
+
+  void pushColor(RGBA8 c) {
+    _colorStack[_colors] = c;
+    if (_colors < (_colorStack.size() - 1)) { ++_colors; }
+  }
+
+  bool popColor() {
+    if (_colors == 0) { return false; }
+    --_colors; return true;
+  }
+
+ private:
+  std::array<RGBA8,7> _colorStack;
+  uint32_t _colors = 0;
+};
+
 
 struct gx::TextFormat
 {
