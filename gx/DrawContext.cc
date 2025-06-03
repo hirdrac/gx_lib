@@ -391,12 +391,15 @@ void DrawContext::_text(
           const std::size_t startPos = itr.pos() + 1;
           const std::size_t endPos = findUTF8(line, tf.endTag, startPos);
           if (endPos != std::string_view::npos) {
-            auto tag = line.substr(startPos, endPos - startPos);
-            if (tf.parseTag(ts, tag)) {
-              const RGBA8 c = ts.color();
-              if (c != 0 && (_colorMode != CM_SOLID || _color0 != c)) {
-                color(c);
-                setColor();
+            const auto tag = line.substr(startPos, endPos - startPos);
+            const auto tagType = tf.parseTag(ts, tag);
+            if (tagType != TAG_unknown) {
+              if (tagType == TAG_color) {
+                const RGBA8 c = ts.color();
+                if (c != 0 && (_colorMode != CM_SOLID || _color0 != c)) {
+                  color(c);
+                  setColor();
+                }
               }
 
               itr.setPos(endPos);

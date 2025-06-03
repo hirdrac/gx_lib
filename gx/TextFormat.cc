@@ -23,11 +23,11 @@ float TextFormat::calcLength(std::string_view text) const
     int32_t ch = *itr;
     if (ch == startTag) {
       const std::size_t startPos = itr.pos() + 1;
-      auto line = text.substr(startPos, text.find('\n', startPos+1));
+      const auto line = text.substr(startPos, text.find('\n', startPos+1));
       const std::size_t endPos = findUTF8(line, endTag);
       if (endPos != std::string_view::npos) {
-        auto tag = line.substr(0, endPos);
-        if (parseTag(ts, tag)) {
+        const auto tag = line.substr(0, endPos);
+        if (parseTag(ts, tag) != TAG_unknown) {
           itr.setPos(startPos + endPos);
           continue;
         }
@@ -68,11 +68,11 @@ std::string_view TextFormat::fitText(
     int32_t ch = *itr;
     if (ch == startTag) {
       const std::size_t startPos = itr.pos() + 1;
-      auto line = text.substr(startPos, text.find('\n', startPos+1));
+      const auto line = text.substr(startPos, text.find('\n', startPos+1));
       const std::size_t endPos = findUTF8(line, endTag);
       if (endPos != std::string_view::npos) {
-        auto tag = line.substr(0, endPos);
-        if (parseTag(ts, tag)) {
+        const auto tag = line.substr(0, endPos);
+        if (parseTag(ts, tag) != TAG_unknown) {
           itr.setPos(startPos + endPos);
           continue;
         }
@@ -122,15 +122,16 @@ std::string_view TextFormat::fitText(
   }
 }
 
-bool TextFormat::parseTag(TextState& ts, std::string_view tag) const
+gx::TextMetaTagType TextFormat::parseTag(
+  TextState& ts, std::string_view tag) const
 {
   if (tag.substr(0, 6) == "color=") {
     ts.pushColor(parseColorStr(tag.substr(6)));
+    return TAG_color;
   } else if (tag == "/color") {
     ts.popColor();
-  } else {
-    return false;
+    return TAG_color;
   }
 
-  return true;
+  return TAG_unknown;
 }

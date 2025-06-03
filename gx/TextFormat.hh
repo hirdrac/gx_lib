@@ -12,6 +12,11 @@
 namespace gx {
   class TextState;
   struct TextFormat;
+
+  enum TextMetaTagType {
+    TAG_unknown = 0,
+    TAG_color = 1
+  };
 }
 
 
@@ -71,6 +76,6 @@ struct gx::TextFormat
     std::string_view text, float maxLength) const;
     // returns sub-string that fits in specified length
 
-  bool parseTag(TextState& ts, std::string_view tag) const;
+  TextMetaTagType parseTag(TextState& ts, std::string_view tag) const;
     // returns true if text is a valid text meta tag & updates TextState
 };
