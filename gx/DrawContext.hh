@@ -220,7 +220,7 @@ class gx::DrawContext
   void _text(const TextFormat& tf, Vec2 pos, AlignEnum align,
              std::string_view text, const Rect* clipPtr);
   void _glyph(const Glyph& g, const TextFormat& tf, Vec2 pos,
-              const Rect* clipPtr);
+              const Rect* clipPtr, float altWidth = 0);
   void _circleSector(
     Vec2 center, float radius, float angle0, float angle1, int segments);
   void _arc(Vec2 center, float radius, float angle0, float angle1,

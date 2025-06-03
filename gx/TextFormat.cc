@@ -128,10 +128,19 @@ gx::TextMetaTagType TextFormat::parseTag(
   if (tag.substr(0, 6) == "color=") {
     ts.pushColor(parseColorStr(tag.substr(6)));
     return TAG_color;
-  } else if (tag == "/color") {
-    ts.popColor();
-    return TAG_color;
   }
 
-  return TAG_unknown;
+  switch (hashStr(tag)) {
+    case hashStr("/color"):
+      ts.popColor();
+      return TAG_color;
+    case hashStr("ul"):
+      ts.pushUnderline();
+      return TAG_underline;
+    case hashStr("/ul"):
+      ts.popUnderline();
+      return TAG_underline;
+    default:
+      return TAG_unknown;
+  }
 }

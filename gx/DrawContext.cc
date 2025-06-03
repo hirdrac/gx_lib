@@ -372,6 +372,11 @@ void DrawContext::_text(
   }
   std::size_t lineStart = 0;
 
+  Vec2 ulPos;
+  float ulLen = 0, ulLen2 = 0;
+  bool underline = false;
+  // FIXME: handle line breaks in underline text
+
   for (;;) {
     const std::size_t i = text.find('\n', lineStart);
     const std::string_view line = text.substr(
@@ -385,7 +390,15 @@ void DrawContext::_text(
       }
 
       float len = 0;
+      enum { UL_noop, UL_start, UL_end} ulOp = UL_noop;
       for (UTF8Iterator itr{line}; itr; ++itr) {
+        if (ulOp == UL_end) {
+          const Glyph* g = f.findGlyph('_');
+          if (g) { _glyph(*g, tf, ulPos, clipPtr, ulLen + ulLen2); }
+          underline = false;
+          ulOp = UL_noop;
+        }
+
         int ch = *itr;
         if (ch == tf.startTag) {
           const std::size_t startPos = itr.pos() + 1;
@@ -399,6 +412,12 @@ void DrawContext::_text(
                 if (c != 0 && (_colorMode != CM_SOLID || _color0 != c)) {
                   color(c);
                   setColor();
+                }
+              } else if (tagType == TAG_underline) {
+                if (!underline && ts.underline()) {
+                  ulOp = UL_start;
+                } else if (underline && !ts.underline()) {
+                  ulOp = UL_end;
                 }
               }
 
@@ -422,7 +441,17 @@ void DrawContext::_text(
         }
 
         if (g->bitmap) {
-          _glyph(*g, tf, pos + (tf.advX * (len - offset)), clipPtr);
+          const Vec2 p = pos + (tf.advX * (len - offset));
+          _glyph(*g, tf, p, clipPtr);
+
+          if (ulOp == UL_start) {
+            ulPos = p; ulLen = 0;
+            underline = true; ulOp = UL_noop;
+          }
+          if (underline) {
+            ulLen += g->advX + tf.glyphSpacing;
+            ulLen2 = g->left + g->width;
+          }
         }
 
         len += g->advX + tf.glyphSpacing;
@@ -438,9 +467,10 @@ void DrawContext::_text(
 }
 
 void DrawContext::_glyph(
-  const Glyph& g, const TextFormat& tf, Vec2 pos, const Rect* clipPtr)
+  const Glyph& g, const TextFormat& tf, Vec2 pos, const Rect* clipPtr,
+  float altWidth)
 {
-  const Vec2 gx = tf.glyphX * float(g.width);
+  const Vec2 gx = tf.glyphX * (altWidth > 0 ? altWidth : float(g.width));
   const Vec2 gy = tf.glyphY * float(g.height);
 
   // quad: A-B
