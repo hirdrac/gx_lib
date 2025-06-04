@@ -373,9 +373,8 @@ void DrawContext::_text(
   std::size_t lineStart = 0;
 
   Vec2 ulPos;
-  float ulLen = 0, ulLen2 = 0;
+  float ulLen = 0;
   bool underline = false;
-  // FIXME: handle line breaks in underline text
 
   for (;;) {
     const std::size_t i = text.find('\n', lineStart);
@@ -394,13 +393,13 @@ void DrawContext::_text(
       for (UTF8Iterator itr{line}; itr; ++itr) {
         if (ulOp == UL_end) {
           const Glyph* g = f.findGlyph('_');
-          if (g) { _glyph(*g, tf, ulPos, clipPtr, ulLen + ulLen2); }
+          if (g) { _glyph(*g, tf, ulPos, clipPtr, ulLen - tf.glyphSpacing); }
           underline = false;
           ulOp = UL_noop;
         }
 
         int ch = *itr;
-        if (ch == tf.startTag) {
+        if (ch == tf.startTag && tf.startTag != 0) {
           const std::size_t startPos = itr.pos() + 1;
           const std::size_t endPos = findUTF8(line, tf.endTag, startPos);
           if (endPos != std::string_view::npos) {
@@ -440,21 +439,26 @@ void DrawContext::_text(
           GX_ASSERT(g != nullptr);
         }
 
-        if (g->bitmap) {
-          const Vec2 p = pos + (tf.advX * (len - offset));
-          _glyph(*g, tf, p, clipPtr);
+        const Vec2 p = pos + (tf.advX * (len - offset));
+        if (g->bitmap) { _glyph(*g, tf, p, clipPtr); }
+        len += g->advX + tf.glyphSpacing;
 
-          if (ulOp == UL_start) {
-            ulPos = p; ulLen = 0;
-            underline = true; ulOp = UL_noop;
-          }
-          if (underline) {
-            ulLen += g->advX + tf.glyphSpacing;
-            ulLen2 = g->left + g->width;
-          }
+        if (ulOp == UL_start) {
+          ulPos = p; ulLen = 0;
+          underline = true; ulOp = UL_noop;
         }
 
-        len += g->advX + tf.glyphSpacing;
+        if (underline) {
+          ulLen += g->advX + tf.glyphSpacing;
+        }
+      }
+
+      // finish end-of-line underline
+      if (underline) {
+        const Glyph* ulg = f.findGlyph('_');
+        if (ulg) { _glyph(*ulg, tf, ulPos, clipPtr, ulLen - tf.glyphSpacing); }
+        underline = false;
+        ulOp = (ulOp == UL_end) ? UL_noop : UL_start;
       }
     }
 
