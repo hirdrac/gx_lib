@@ -21,7 +21,7 @@ float TextFormat::calcLength(std::string_view text) const
   float max_len = 0, len = 0;
   for (UTF8Iterator itr{text}; itr; ++itr) {
     int32_t ch = *itr;
-    if (ch == startTag) {
+    if (ch == startTag && startTag != 0) {
       const std::size_t startPos = itr.pos() + 1;
       const auto line = text.substr(startPos, text.find('\n', startPos+1));
       const std::size_t endPos = findUTF8(line, endTag);
@@ -66,7 +66,7 @@ std::string_view TextFormat::fitText(
   float len = 0;
   for (UTF8Iterator itr{text}; itr; ++itr) {
     int32_t ch = *itr;
-    if (ch == startTag) {
+    if (ch == startTag && startTag != 0) {
       const std::size_t startPos = itr.pos() + 1;
       const auto line = text.substr(startPos, text.find('\n', startPos+1));
       const std::size_t endPos = findUTF8(line, endTag);
