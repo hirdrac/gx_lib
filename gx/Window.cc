@@ -163,18 +163,17 @@ struct gx::WindowImpl
     if (_renderer) {
       GX_ASSERT(isMainThread());
       GLFWwindow* win = _renderer->window();
+      //GLFWmonitor* monitor = glfwGetWindowMonitor(win);
       GLFWmonitor* monitor = glfwGetPrimaryMonitor();
       const GLFWvidmode* mode = glfwGetVideoMode(monitor);
       int wx = 0, wy = 0;
-      if (fullScreen) {
-        if (width <= 0 || height <= 0) {
-          width = mode->width;
-          height = mode->height;
-        }
-      } else {
+      if (!fullScreen) {
         wx = (mode->width - width) / 2;
         wy = (mode->height - height) / 2;
         monitor = nullptr;
+      } else if (width <= 0 || height <= 0) {
+        width = mode->width;
+        height = mode->height;
       }
 
       glfwSetWindowMonitor(
