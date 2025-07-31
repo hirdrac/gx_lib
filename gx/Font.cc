@@ -1,6 +1,6 @@
 //
 // gx/Font.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 // TODO: investigate using stb_truetype.h
@@ -211,11 +211,11 @@ void Font::addGlyph(
   Glyph& g = newGlyph(code, width, height, left, top, advX, advY);
   const std::size_t size = g.width * g.height;
   if (copy && bitmap && size > 0) {
-    g.bitmap_copy.reset(new uint8_t[size]);
-    std::memcpy(g.bitmap_copy.get(), bitmap, size);
-    g.bitmap = g.bitmap_copy.get();
+    g.bitmapCopy.reset(new uint8_t[size]);
+    std::memcpy(g.bitmapCopy.get(), bitmap, size);
+    g.bitmap = g.bitmapCopy.get();
   } else {
-    g.bitmap_copy.reset(nullptr);
+    g.bitmapCopy.reset(nullptr);
     g.bitmap = bitmap;
   }
 }
@@ -230,6 +230,7 @@ Glyph& Font::newGlyph(
   GX_ASSERT(height >= 0 && height < std::numeric_limits<height_t>::max());
 
   Glyph& g = _glyphs[code];
+  g.fontSize = _size;
   g.width = static_cast<width_t>(width);
   g.height = static_cast<height_t>(height);
   g.left = left;
