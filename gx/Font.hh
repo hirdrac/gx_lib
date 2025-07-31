@@ -1,6 +1,6 @@
 //
 // gx/Font.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 // Create texture atlas for font glyph rendering
 //
@@ -102,7 +102,5 @@ class gx::Font
   float _digitWidth = 0;
   int32_t _unknownCode = '*';
 
-  Glyph& newGlyph(int code, int width, int height, float left, float top,
-		  float advX, float advY);
   void calcAttributes();
 };

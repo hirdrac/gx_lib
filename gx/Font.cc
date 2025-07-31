@@ -208,21 +208,6 @@ void Font::addGlyph(
   int code, int width, int height, float left, float top,
   float advX, float advY, const uint8_t* bitmap, bool copy)
 {
-  Glyph& g = newGlyph(code, width, height, left, top, advX, advY);
-  const std::size_t size = g.width * g.height;
-  if (copy && bitmap && size > 0) {
-    g.bitmapCopy.reset(new uint8_t[size]);
-    std::memcpy(g.bitmapCopy.get(), bitmap, size);
-    g.bitmap = g.bitmapCopy.get();
-  } else {
-    g.bitmapCopy.reset(nullptr);
-    g.bitmap = bitmap;
-  }
-}
-
-Glyph& Font::newGlyph(
-  int code, int width, int height, float left, float top, float advX, float advY)
-{
   using width_t = decltype(Glyph::width);
   using height_t = decltype(Glyph::height);
 
@@ -237,7 +222,16 @@ Glyph& Font::newGlyph(
   g.top = top;
   g.advX = advX;
   g.advY = advY;
-  return g;
+
+  const std::size_t size = g.width * g.height;
+  if (copy && bitmap && size > 0) {
+    g.bitmapCopy.reset(new uint8_t[size]);
+    std::memcpy(g.bitmapCopy.get(), bitmap, size);
+    g.bitmap = g.bitmapCopy.get();
+  } else {
+    g.bitmapCopy.reset(nullptr);
+    g.bitmap = bitmap;
+  }
 }
 
 void Font::calcAttributes()
