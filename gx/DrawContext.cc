@@ -322,11 +322,11 @@ void DrawContext::glyph(
   if (v_align == ALIGN_TOP) {
     pos += tf.advY * f.ymax();
   } else {
-    const float fs = float(f.size()) + tf.lineSpacing;
+    const float lh = float(f.size()) + tf.lineSpacing;
     if (v_align == ALIGN_BOTTOM) {
-      pos += tf.advY * (f.ymin() - fs);
+      pos += tf.advY * (f.ymin() - lh);
     } else { // ALIGN_VCENTER
-      pos += tf.advY * ((f.ymax() - fs) * .5f);
+      pos += tf.advY * ((f.ymax() - lh) * .5f);
     }
   }
 
@@ -348,7 +348,7 @@ void DrawContext::_text(
 
   GX_ASSERT(tf.font != nullptr);
   const Font& f = *tf.font;
-  const float fs = float(f.size()) + tf.lineSpacing;
+  const float lh = float(f.size()) + tf.lineSpacing;
   const AlignEnum h_align = HAlign(align);
   const AlignEnum v_align = VAlign(align);
 
@@ -358,9 +358,9 @@ void DrawContext::_text(
     int nl = 0;
     for (int ch : text) { nl += (ch == '\n'); }
     if (v_align == ALIGN_BOTTOM) {
-      pos += tf.advY * (f.ymin() - (fs*float(nl)));
+      pos += tf.advY * (f.ymin() - (lh*float(nl)));
     } else { // ALIGN_VCENTER
-      pos += tf.advY * ((f.ymax() - (fs*float(nl))) * .5f);
+      pos += tf.advY * ((f.ymax() - (lh*float(nl))) * .5f);
     }
   }
 
@@ -466,7 +466,7 @@ void DrawContext::_text(
 
     // move to start of next line
     lineStart = i + 1;
-    pos += tf.advY * fs;
+    pos += tf.advY * lh;
   }
 }
 
