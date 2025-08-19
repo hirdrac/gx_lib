@@ -34,17 +34,12 @@ namespace gx {
   struct Rect {
     float x, y, w, h;
 
-    Rect() = default;
-    constexpr Rect(float rw, float rh)
-      : x{0}, y{0}, w{rw}, h{rh} { }
-    constexpr Rect(float rx, float ry, float rw, float rh)
-      : x{rx}, y{ry}, w{rw}, h{rh} { }
-
     [[nodiscard]] constexpr bool contains(Vec2 pt) const {
       return (pt.x >= x) && (pt.x < (x+w)) && (pt.y >= y) && (pt.y < (y+h)); }
   };
 
-  struct Value {
+  class Value {
+   public:
     union {
       int32_t  ival;
       uint32_t uval;
