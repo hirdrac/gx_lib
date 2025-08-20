@@ -106,6 +106,14 @@ class gx::DrawContext
   void lineTo(const Vertex3C& a) {
     _dl->lineTo3C(a); }
 
+  template<class T1, class T2, class T3, class... Args>
+  void line(const T1& p1, const T2& p2, const T3& p3, Args&&... args) {
+    lineStart(p1);
+    lineTo(p2);
+    lineTo(p3);
+    (lineTo(args),...);
+  }
+
   // Poly drawing
   // Triangle  Quad  Rectangle
   //   A--B    A--B    XY--+
