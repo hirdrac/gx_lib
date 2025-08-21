@@ -114,6 +114,11 @@ class gx::DrawContext
     (lineTo(args),...);
   }
 
+  template<class T1, class T2, class T3, class... Args>
+  void lineLoop(const T1& p1, const T2& p2, const T3& p3, Args&&... args) {
+    line(p1, p2, p3, args..., p1);
+  }
+
   // Poly drawing
   // Triangle  Quad  Rectangle
   //   A--B    A--B    XY--+
