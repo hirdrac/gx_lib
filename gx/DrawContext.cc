@@ -471,8 +471,8 @@ void DrawContext::_text(
 }
 
 void DrawContext::_glyph(
-  const Glyph& g, const TextFormat& tf, Vec2 pos, const Rect* clipPtr,
-  float altWidth)
+  const Glyph& g, const TextFormat& tf, Vec2 baseline,
+  const Rect* clipPtr, float altWidth)
 {
   const Vec2 gx = tf.glyphX * (altWidth > 0 ? altWidth : float(g.width));
   const Vec2 gy = tf.glyphY * float(g.height);
@@ -481,7 +481,7 @@ void DrawContext::_glyph(
   //       |/|
   //       C-D
 
-  Vec2 A = pos + (tf.glyphX * g.left) - (tf.glyphY * g.top);
+  Vec2 A = baseline + (tf.glyphX * g.left) - (tf.glyphY * g.top);
   Vec2 B = A + gx;
   Vec2 C = A + gy;
   Vec2 D = C + gx;

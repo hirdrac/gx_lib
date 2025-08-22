@@ -232,7 +232,7 @@ class gx::DrawContext
   void _rectangle(float x, float y, float w, float h);
   void _text(const TextFormat& tf, Vec2 pos, AlignEnum align,
              std::string_view text, const Rect* clipPtr);
-  void _glyph(const Glyph& g, const TextFormat& tf, Vec2 pos,
+  void _glyph(const Glyph& g, const TextFormat& tf, Vec2 baseline,
               const Rect* clipPtr, float altWidth = 0);
   void _circleSector(
     Vec2 center, float radius, float angle0, float angle1, int segments);
