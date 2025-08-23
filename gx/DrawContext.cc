@@ -321,14 +321,13 @@ void DrawContext::glyph(
   const AlignEnum v_align = VAlign(align);
   if (v_align == ALIGN_TOP) {
     pos += tf.advY * f.ymax();
-  } else {
+  } else if (v_align == ALIGN_BOTTOM) {
     const float lh = float(f.size()) + tf.lineSpacing;
-    if (v_align == ALIGN_BOTTOM) {
-      pos += tf.advY * (f.ymin() - lh);
-    } else { // ALIGN_VCENTER
-      pos += tf.advY * ((f.ymax() - lh) * .5f);
-    }
-  }
+    pos += tf.advY * (f.ymin() - lh);
+  } else if (v_align == ALIGN_VCENTER) {
+    const float lh = float(f.size()) + tf.lineSpacing;
+    pos += tf.advY * ((f.ymax() - lh) * .5f);
+  } // otherwise, pos is baseline
 
   const AlignEnum h_align = HAlign(align);
   if (h_align != ALIGN_LEFT) {
@@ -354,15 +353,15 @@ void DrawContext::_text(
 
   if (v_align == ALIGN_TOP) {
     pos += tf.advY * f.ymax();
-  } else {
+  } else if (v_align == ALIGN_BOTTOM) {
     int nl = 0;
     for (int ch : text) { nl += (ch == '\n'); }
-    if (v_align == ALIGN_BOTTOM) {
-      pos += tf.advY * (f.ymin() - (lh*float(nl)));
-    } else { // ALIGN_VCENTER
-      pos += tf.advY * ((f.ymax() - (lh*float(nl))) * .5f);
-    }
-  }
+    pos += tf.advY * (f.ymin() - (lh*float(nl)));
+  } else if (v_align == ALIGN_VCENTER) {
+    int nl = 0;
+    for (int ch : text) { nl += (ch == '\n'); }
+    pos += tf.advY * ((f.ymax() - (lh*float(nl))) * .5f);
+  } // otherwise, pos is baseline of 1st line
 
   texture(f.atlas());
   TextState ts;
