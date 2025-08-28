@@ -16,11 +16,13 @@ namespace {
 
   bool lib_init = false;
 
+#if 0
   void shutdown()
   {
     glfwTerminate();
     lib_init = false;
   }
+#endif
 
   [[nodiscard]] std::string libVersionStr()
   {
@@ -46,7 +48,7 @@ bool gx::initGLFW()
     return false;
   }
 
-  std::atexit(shutdown);
+  //std::atexit(shutdown);
   return true;
 }
 
