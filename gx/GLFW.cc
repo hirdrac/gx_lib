@@ -9,9 +9,33 @@
 #include <cstdlib>
 
 namespace {
+  [[nodiscard]] std::string_view errorStr(int error)
+  {
+    #define ERROR_CASE(x) case GLFW_##x: return #x
+    switch (error) {
+      ERROR_CASE(NO_ERROR);
+      ERROR_CASE(NOT_INITIALIZED);
+      ERROR_CASE(NO_CURRENT_CONTEXT);
+      ERROR_CASE(INVALID_ENUM);
+      ERROR_CASE(INVALID_VALUE);
+      ERROR_CASE(OUT_OF_MEMORY);
+      ERROR_CASE(API_UNAVAILABLE);
+      ERROR_CASE(VERSION_UNAVAILABLE);
+      ERROR_CASE(PLATFORM_ERROR);
+      ERROR_CASE(FORMAT_UNAVAILABLE);
+      ERROR_CASE(NO_WINDOW_CONTEXT);
+      ERROR_CASE(CURSOR_UNAVAILABLE);
+      ERROR_CASE(FEATURE_UNAVAILABLE);
+      ERROR_CASE(FEATURE_UNIMPLEMENTED);
+      ERROR_CASE(PLATFORM_UNAVAILABLE);
+      default: return "unknown";
+    }
+    #undef ERROR_CASE
+  }
+
   void errorCB(int error, const char* txt)
   {
-    GX_LOG_ERROR("GLFW ERROR(", error, "): ", txt);
+    GX_LOG_ERROR("GLFW ERROR(", errorStr(error), " 0x", gx::formatHexUC(error), "): ", txt);
   }
 
   bool lib_init = false;
