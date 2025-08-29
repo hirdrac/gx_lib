@@ -67,6 +67,15 @@ namespace gx
     return {ptr, end};
   }
 
+  [[nodiscard]] inline std::string formatHexUC(uint64_t val)
+  {
+    char buffer[16];
+    char* end = buffer + std::size(buffer);
+    char* ptr = end;
+    do { *(--ptr) = "0123456789ABCDEF"[val&15]; val >>= 4; } while (val > 0);
+    return {ptr, end};
+  }
+
   [[nodiscard]] constexpr std::string_view trimSpaces(std::string_view str)
   {
     while (!str.empty() && str.front() == ' ') { str.remove_prefix(1); }
