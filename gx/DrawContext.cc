@@ -47,6 +47,8 @@ namespace {
     // |/   |/
     // C    w
     const float area = triangleArea(A,B,C);
+    if (isZero(area)) { return false; }
+
     u = triangleArea(pt, B, C) / area;
     v = triangleArea(A, pt, C) / area;
     w = triangleArea(A, B, pt) / area;
