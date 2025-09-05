@@ -4,7 +4,6 @@
 //
 
 // TODO: textured roundedRectangle()
-// TODO: continuous lines [lineX <vertex count> <v1> <v2> ...]
 // TODO: lines as quads
 //   - any width supported
 //   - multi-line corner types: squared, angled, rounded
