@@ -35,12 +35,10 @@ class gx::Matrix4x4
 
 
   explicit Matrix4x4(NoInit_t) { }
-
   constexpr Matrix4x4()
     : Matrix4x4{0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0} { }
-  constexpr Matrix4x4(IdentityInit_t)
+  explicit constexpr Matrix4x4(IdentityInit_t)
     : Matrix4x4{1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1} { }
-
   constexpr Matrix4x4(T a, T b, T c, T d, T e, T f, T g, T h,
 		      T i, T j, T k, T l, T m, T n, T o, T p)
     : _val{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p} { }
@@ -58,19 +56,19 @@ class gx::Matrix4x4
   using iterator = T*;
   using const_iterator = const T*;
 
-  [[nodiscard]] constexpr iterator begin() noexcept { return data(); }
-  [[nodiscard]] constexpr const_iterator begin() const noexcept { return data(); }
-  [[nodiscard]] constexpr const_iterator cbegin() const noexcept { return data(); }
+  [[nodiscard]] constexpr iterator begin() { return data(); }
+  [[nodiscard]] constexpr const_iterator begin() const { return data(); }
+  [[nodiscard]] constexpr const_iterator cbegin() const { return data(); }
 
-  [[nodiscard]] constexpr iterator end() noexcept { return data() + size(); }
-  [[nodiscard]] constexpr const_iterator end() const noexcept { return data() + size(); }
-  [[nodiscard]] constexpr const_iterator cend() const noexcept { return data() + size(); }
+  [[nodiscard]] constexpr iterator end() { return data() + size(); }
+  [[nodiscard]] constexpr const_iterator end() const { return data() + size(); }
+  [[nodiscard]] constexpr const_iterator cend() const { return data() + size(); }
 
 
   // Member Functions
-  [[nodiscard]] static constexpr size_type size() noexcept { return 16; }
-  [[nodiscard]] constexpr T* data() noexcept { return _val; }
-  [[nodiscard]] constexpr const T* data() const noexcept { return _val; }
+  [[nodiscard]] static constexpr size_type size() { return 16; }
+  [[nodiscard]] constexpr T* data() { return _val; }
+  [[nodiscard]] constexpr const T* data() const { return _val; }
 
   constexpr void setTranslation(T tx, T ty, T tz);
   constexpr void setTranslation(const Vector3<T>& v) {

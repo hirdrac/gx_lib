@@ -64,19 +64,19 @@ class gx::Vector2
   using iterator = T*;
   using const_iterator = const T*;
 
-  [[nodiscard]] constexpr iterator begin() noexcept { return data(); }
-  [[nodiscard]] constexpr const_iterator begin() const noexcept { return data(); }
-  [[nodiscard]] constexpr const_iterator cbegin() const noexcept { return data(); }
+  [[nodiscard]] constexpr iterator begin() { return data(); }
+  [[nodiscard]] constexpr const_iterator begin() const { return data(); }
+  [[nodiscard]] constexpr const_iterator cbegin() const { return data(); }
 
-  [[nodiscard]] constexpr iterator end() noexcept { return data() + size(); }
-  [[nodiscard]] constexpr const_iterator end() const noexcept { return data() + size(); }
-  [[nodiscard]] constexpr const_iterator cend() const noexcept { return data() + size(); }
+  [[nodiscard]] constexpr iterator end() { return data() + size(); }
+  [[nodiscard]] constexpr const_iterator end() const { return data() + size(); }
+  [[nodiscard]] constexpr const_iterator cend() const { return data() + size(); }
 
 
   // Member Functions
-  [[nodiscard]] static constexpr size_type size() noexcept { return 2; }
-  [[nodiscard]] constexpr T* data() noexcept { return _val; }
-  [[nodiscard]] constexpr const T* data() const noexcept { return _val; }
+  [[nodiscard]] static constexpr size_type size() { return 2; }
+  [[nodiscard]] constexpr T* data() { return _val; }
+  [[nodiscard]] constexpr const T* data() const { return _val; }
 
   [[nodiscard]] constexpr T lengthSqr() const { return sqr(x)+sqr(y); }
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
@@ -137,19 +137,19 @@ class gx::Vector3
   using iterator = T*;
   using const_iterator = const T*;
 
-  [[nodiscard]] constexpr iterator begin() noexcept { return data(); }
-  [[nodiscard]] constexpr const_iterator begin() const noexcept { return data(); }
-  [[nodiscard]] constexpr const_iterator cbegin() const noexcept { return data(); }
+  [[nodiscard]] constexpr iterator begin() { return data(); }
+  [[nodiscard]] constexpr const_iterator begin() const { return data(); }
+  [[nodiscard]] constexpr const_iterator cbegin() const { return data(); }
 
-  [[nodiscard]] constexpr iterator end() noexcept { return data() + size(); }
-  [[nodiscard]] constexpr const_iterator end() const noexcept { return data() + size(); }
-  [[nodiscard]] constexpr const_iterator cend() const noexcept { return data() + size(); }
+  [[nodiscard]] constexpr iterator end() { return data() + size(); }
+  [[nodiscard]] constexpr const_iterator end() const { return data() + size(); }
+  [[nodiscard]] constexpr const_iterator cend() const { return data() + size(); }
 
 
   // Member Functions
-  [[nodiscard]] static constexpr size_type size() noexcept { return 3; }
-  [[nodiscard]] constexpr T* data() noexcept { return _val; }
-  [[nodiscard]] constexpr const T* data() const noexcept { return _val; }
+  [[nodiscard]] static constexpr size_type size() { return 3; }
+  [[nodiscard]] constexpr T* data() { return _val; }
+  [[nodiscard]] constexpr const T* data() const { return _val; }
 
   [[nodiscard]] constexpr T lengthSqr() const { return sqr(x)+sqr(y)+sqr(z); }
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
@@ -216,19 +216,19 @@ class gx::Vector4
   using iterator = T*;
   using const_iterator = const T*;
 
-  [[nodiscard]] constexpr iterator begin() noexcept { return data(); }
-  [[nodiscard]] constexpr const_iterator begin() const noexcept { return data(); }
-  [[nodiscard]] constexpr const_iterator cbegin() const noexcept { return data(); }
+  [[nodiscard]] constexpr iterator begin() { return data(); }
+  [[nodiscard]] constexpr const_iterator begin() const { return data(); }
+  [[nodiscard]] constexpr const_iterator cbegin() const { return data(); }
 
-  [[nodiscard]] constexpr iterator end() noexcept { return data() + size(); }
-  [[nodiscard]] constexpr const_iterator end() const noexcept { return data() + size(); }
-  [[nodiscard]] constexpr const_iterator cend() const noexcept { return data() + size(); }
+  [[nodiscard]] constexpr iterator end() { return data() + size(); }
+  [[nodiscard]] constexpr const_iterator end() const { return data() + size(); }
+  [[nodiscard]] constexpr const_iterator cend() const { return data() + size(); }
 
 
   // Member Functions
-  [[nodiscard]] static constexpr size_type size() noexcept { return 4; }
-  [[nodiscard]] constexpr T* data() noexcept { return _val; }
-  [[nodiscard]] constexpr const T* data() const noexcept { return _val; }
+  [[nodiscard]] static constexpr size_type size() { return 4; }
+  [[nodiscard]] constexpr T* data() { return _val; }
+  [[nodiscard]] constexpr const T* data() const { return _val; }
 
   constexpr void set(T vx, T vy, T vz, T vw) { x = vx; y = vy; z = vz; w = vw; }
   constexpr void set(const T* v) { set(v[0], v[1], v[2], v[3]); }
