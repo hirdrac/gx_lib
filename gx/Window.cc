@@ -602,13 +602,21 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
     in.held = false;
     switch (key) {
       case KEY_LSHIFT:   case KEY_RSHIFT:
-        if (--es.shiftCount == 0) { es.mods &= ~MOD_SHIFT; } break;
+        if (--es.shiftCount <= 0) {
+          es.shiftCount = 0; es.mods &= ~MOD_SHIFT; }
+        break;
       case KEY_LCONTROL: case KEY_RCONTROL:
-        if (--es.controlCount == 0) { es.mods &= ~MOD_CONTROL; } break;
+        if (--es.controlCount <= 0) {
+          es.controlCount = 0; es.mods &= ~MOD_CONTROL; }
+        break;
       case KEY_LALT:     case KEY_RALT:
-        if (--es.altCount == 0) { es.mods &= ~MOD_ALT; } break;
+        if (--es.altCount <= 0) {
+          es.altCount = 0; es.mods &= ~MOD_ALT; }
+        break;
       case KEY_LSUPER:   case KEY_RSUPER:
-        if (--es.superCount == 0) { es.mods &= ~MOD_SUPER; } break;
+        if (--es.superCount <= 0) {
+          es.superCount = 0; es.mods &= ~MOD_SUPER; }
+        break;
     }
   } else if (action == GLFW_REPEAT) {
     ++in.repeatCount;
