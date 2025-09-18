@@ -103,14 +103,14 @@ namespace gx
   [[nodiscard]] inline std::string toUpper(std::string s)
   {
     // only supports ASCII
-    for (char& c : s) { c = char(std::toupper(c)); }
+    for (char& c : s) { c = char(std::toupper(static_cast<unsigned char>(c))); }
     return s;
   }
 
   [[nodiscard]] inline std::string toLower(std::string s)
   {
     // only supports ASCII
-    for (char& c : s) { c = char(std::tolower(c)); }
+    for (char& c : s) { c = char(std::tolower(static_cast<unsigned char>(c))); }
     return s;
   }
 }
