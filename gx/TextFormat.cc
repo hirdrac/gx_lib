@@ -10,6 +10,7 @@
 #include "Unicode.hh"
 #include "StringUtil.hh"
 #include "Assert.hh"
+#include <optional>
 using namespace gx;
 
 
@@ -102,7 +103,7 @@ std::string_view TextFormat::fitText(
   return text;
 }
 
-[[nodiscard]] static RGBA8 parseColorStr(std::string_view str)
+[[nodiscard]] static std::optional<RGBA8> parseColorStr(std::string_view str)
 {
   // TODO: add parsing hex color value
 
@@ -118,7 +119,7 @@ std::string_view TextFormat::fitText(
     case hashStr("cyan"):    return packRGBA8(CYAN);
     case hashStr("yellow"):  return packRGBA8(YELLOW);
     case hashStr("magenta"): return packRGBA8(MAGENTA);
-    default:                 return 0;
+    default:                 return std::nullopt;
   }
 }
 
@@ -126,20 +127,23 @@ gx::TextMetaTagType TextFormat::parseTag(
   TextState& ts, std::string_view tag) const
 {
   if (tag.substr(0, 6) == "color=") {
-    ts.pushColor(parseColorStr(tag.substr(6)));
-    return TAG_color;
+    const auto color = parseColorStr(tag.substr(6));
+    if (color.has_value()) {
+      ts.pushColor(color.value());
+      return TAG_color;
+    } else {
+      return TAG_unknown;
+    }
   }
 
   switch (hashStr(tag)) {
     case hashStr("/color"):
-      ts.popColor();
-      return TAG_color;
+      return ts.popColor() ? TAG_color : TAG_unknown;
     case hashStr("ul"):
       ts.pushUnderline();
       return TAG_underline;
     case hashStr("/ul"):
-      ts.popUnderline();
-      return TAG_underline;
+      return ts.popUnderline() ? TAG_underline : TAG_unknown;
     default:
       return TAG_unknown;
   }
