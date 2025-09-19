@@ -35,6 +35,11 @@ namespace gx {
   constexpr Color MAGENTA {1.0f, 0.0f, 1.0f, 1.0f};
 
   // functions
+  [[nodiscard]] constexpr RGBA8 packRGBA8i(
+    uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    return RGBA8(r) | (RGBA8(g) << 8) | (RGBA8(b) << 16) | (RGBA8(a) << 24);
+  }
+
   [[nodiscard]] constexpr RGBA8 packRGBA8(float r, float g, float b, float a) {
     return RGBA8(std::clamp(r * 256.0f, 0.0f, 255.0f))
       | (RGBA8(std::clamp(g * 256.0f, 0.0f, 255.0f)) << 8)
@@ -46,16 +51,28 @@ namespace gx {
     return packRGBA8(c.x, c.y, c.z, c.w);
   }
 
-  [[nodiscard]] constexpr float unpackRed(RGBA8 c) {
-    return float(c & 255) / 255.0f; }
-  [[nodiscard]] constexpr float unpackGreen(RGBA8 c) {
-    return float((c >> 8) & 255) / 255.0f; }
-  [[nodiscard]] constexpr float unpackBlue(RGBA8 c) {
-    return float((c >> 16) & 255) / 255.0f; }
-  [[nodiscard]] constexpr float unpackAlpha(RGBA8 c) {
-    return float((c >> 24) & 255) / 255.0f; }
+  [[nodiscard]] constexpr uint8_t unpackRedInt(RGBA8 c) {
+    return uint8_t(c & 255); }
+  [[nodiscard]] constexpr float unpackRedFloat(RGBA8 c) {
+    return float(unpackRedInt(c)) / 255.0f; }
+
+  [[nodiscard]] constexpr uint8_t unpackGreenInt(RGBA8 c) {
+    return uint8_t((c >> 8) & 255); }
+  [[nodiscard]] constexpr float unpackGreenFloat(RGBA8 c) {
+    return float(unpackGreenInt(c)) / 255.0f; }
+
+  [[nodiscard]] constexpr uint8_t unpackBlueInt(RGBA8 c) {
+    return uint8_t((c >> 16) & 255); }
+  [[nodiscard]] constexpr float unpackBlueFloat(RGBA8 c) {
+    return float(unpackBlueInt(c)) / 255.0f; }
+
+  [[nodiscard]] constexpr uint8_t unpackAlphaInt(RGBA8 c) {
+    return uint8_t((c >> 24) & 255); }
+  [[nodiscard]] constexpr float unpackAlphaFloat(RGBA8 c) {
+    return float(unpackAlphaInt(c)) / 255.0f; }
 
   [[nodiscard]] constexpr Color unpackRGBA8(RGBA8 c) {
-    return {unpackRed(c), unpackGreen(c), unpackBlue(c), unpackAlpha(c)};
+    return {unpackRedFloat(c), unpackGreenFloat(c),
+      unpackBlueFloat(c), unpackAlphaFloat(c)};
   }
 }
