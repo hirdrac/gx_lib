@@ -25,6 +25,7 @@ class gx::TextState
 {
  public:
   // color
+  [[nodiscard]] uint32_t colorCount() const { return _colors; }
   [[nodiscard]] RGBA8 color() const {
     return (_colors > 0) ? _colorStack[_colors - 1] : 0;
   }
@@ -50,7 +51,7 @@ class gx::TextState
   }
 
  private:
-  std::array<RGBA8,7> _colorStack;
+  std::array<RGBA8,6> _colorStack;
   uint32_t _colors = 0;
   uint32_t _underline = 0;
 };

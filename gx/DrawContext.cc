@@ -366,12 +366,11 @@ void DrawContext::_text(
   } // otherwise, pos is baseline of 1st line
 
   texture(f.atlas());
+  if (_colorMode == CM_SOLID) { setColor(); }
+
   TextState ts;
-  if (_colorMode == CM_SOLID) {
-    setColor();
-    ts.pushColor(_color0);
-  }
   std::size_t lineStart = 0;
+  RGBA8 initColor = _color0; // TODO: track initial gradients
 
   Vec2 ulPos;
   float ulLen = 0;
@@ -408,11 +407,9 @@ void DrawContext::_text(
             const auto tagType = tf.parseTag(ts, tag);
             if (tagType != TAG_unknown) {
               if (tagType == TAG_color) {
-                const RGBA8 c = ts.color();
-                if (c != 0 && (_colorMode != CM_SOLID || _color0 != c)) {
-                  color(c);
-                  setColor();
-                }
+                // TODO: support restoring gradients
+                color((ts.colorCount() > 0) ? ts.color() : initColor);
+                setColor();
               } else if (tagType == TAG_underline) {
                 if (!underline && ts.underline()) {
                   ulOp = UL_start;
