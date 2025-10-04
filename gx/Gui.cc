@@ -330,21 +330,21 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
       break;
     }
     case GUI_LABEL: {
-      const Font& fnt = *thm.font;
       const auto& label = def.label();
       const int lines = std::max(calcLines(label.text), label.minLines);
-      const TextFormat tf{thm.font, float(thm.textSpacing)};
+      const TextFormat tf{
+        .font = thm.font, .lineSpacing = float(thm.textSpacing)};
       def._w = std::max(tf.calcLength(label.text), label.minLength);
-      def._h = float((fnt.size() - 1) * lines
+      def._h = float((thm.font->size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
       break;
     }
     case GUI_VLABEL: {
-      const Font& fnt = *thm.font;
       const auto& label = def.label();
       const int lines = std::max(calcLines(label.text), label.minLines);
-      const TextFormat tf{thm.font, float(thm.textSpacing)};
-      def._w = float((fnt.size() - 1) * lines
+      const TextFormat tf{
+        .font = thm.font, .lineSpacing = float(thm.textSpacing)};
+      def._w = float((thm.font->size() - 1) * lines
                      + (thm.textSpacing * std::max(lines - 1, 0)));
       def._h = std::max(tf.calcLength(label.text), label.minLength);
       break;
@@ -772,7 +772,8 @@ void Gui::processMouseEvent(Window& win, EventState& es)
   } else if (type == GUI_ENTRY) {
     shape = MOUSESHAPE_IBEAM;
     const GuiTheme& thm = *(pPtr->theme);
-    const TextFormat tf{thm.font, float(thm.textSpacing)};
+    const TextFormat tf{
+      .font = thm.font, .lineSpacing = float(thm.textSpacing)};
     if (lpressEvent) {
       // update focus
       setFocus(ePtr, now);
@@ -1440,7 +1441,8 @@ bool Gui::drawElem(
       }
       break;
     case GUI_ENTRY: {
-      const TextFormat tf{thm.font, float(thm.textSpacing)};
+      const TextFormat tf{
+        .font = thm.font, .lineSpacing = float(thm.textSpacing)};
       dc.shape({ex, ey, ew, eh}, *style);
       auto& entry = def.entry();
       const std::string txt = (entry.type == ENTRY_PASSWORD)
