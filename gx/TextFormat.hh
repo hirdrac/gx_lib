@@ -86,6 +86,9 @@ struct gx::TextFormat
   [[nodiscard]] float calcLength(std::string_view text) const;
     // returns pixel length of longest line in input text
 
+  [[nodiscard]] std::pair<float,float> calcSize(std::string_view text) const;
+    // returns pixel width,height of input text
+
   [[nodiscard]] std::string_view fitText(
     std::string_view text, float maxLength) const;
     // returns sub-string that fits in specified length
