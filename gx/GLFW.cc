@@ -9,6 +9,19 @@
 #include <cstdlib>
 
 namespace {
+  [[nodiscard]] std::string_view platformStr(int platform)
+  {
+    #define PLATFORM_CASE(x) case GLFW_PLATFORM_##x: return #x;
+    switch (platform) {
+      PLATFORM_CASE(WIN32);
+      PLATFORM_CASE(COCOA);
+      PLATFORM_CASE(WAYLAND);
+      PLATFORM_CASE(X11);
+      default: return "unknown";
+    }
+    #undef PLATFORM_CASE
+  }
+
   [[nodiscard]] std::string_view errorStr(int error)
   {
     #define ERROR_CASE(x) case GLFW_##x: return #x
@@ -71,6 +84,8 @@ bool gx::initGLFW()
     GX_LOG_ERROR("glfwInit() failed");
     return false;
   }
+
+  GX_LOG_INFO("GLFW platform: ", platformStr(glfwGetPlatform()));
 
   //std::atexit(shutdown);
   return true;
