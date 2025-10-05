@@ -292,7 +292,13 @@ struct gx::WindowImpl
     glfwDefaultWindowHints();
     glfwWindowHint(GLFW_DECORATED, glfwBool(decorated));
     glfwWindowHint(GLFW_RESIZABLE, glfwBool(resizable));
-    glfwWindowHint(GLFW_VISIBLE, glfwBool(false));
+    if (!_sizeSet) {
+      glfwWindowHint(GLFW_VISIBLE, glfwBool(false));
+    } else if (!_fullScreen) {
+      glfwWindowHint(GLFW_POSITION_X, (_fsWidth - _width) / 2);
+      glfwWindowHint(GLFW_POSITION_Y, (_fsHeight - _height) / 2);
+    }
+
     //glfwWindowHint(GLFW_FOCUSED, glfwBool(false));
     //glfwWindowHint(GLFW_FOCUS_ON_SHOW, glfwBool(false));
 
@@ -361,19 +367,11 @@ struct gx::WindowImpl
     glfwSetScrollCallback(win, scrollCB);
     glfwSetWindowIconifyCallback(win, iconifyCB);
     glfwSetWindowFocusCallback(win, focusCB);
-
-    if (_sizeSet) { showWindow(win); }
     return true;
   }
 
   void showWindow(GLFWwindow* w)
   {
-    if (!_fullScreen) {
-      // center window initially
-      // FIXME: doesn't account for decoration size
-      glfwSetWindowPos(w, (_fsWidth - _width) / 2, (_fsHeight - _height) / 2);
-    }
-
     glfwShowWindow(w);
 
     // unmaximize if window started out maximized
