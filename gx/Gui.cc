@@ -285,10 +285,10 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
   }
 }
 
-static void calcSize(GuiElem& def, const GuiTheme& thm)
+static void updateSize(GuiElem& def, const GuiTheme& thm)
 {
   // calculate child sizes before parent
-  for (GuiElem& e : def.elems) { calcSize(e, thm); }
+  for (GuiElem& e : def.elems) { updateSize(e, thm); }
 
   switch (def.type) {
     case GUI_HFRAME: {
@@ -427,8 +427,8 @@ static void calcSize(GuiElem& def, const GuiTheme& thm)
   }
 }
 
-static void calcPos(GuiElem& def, const GuiTheme& thm,
-                    float left, float top, float right, float bottom)
+static void updatePos(GuiElem& def, const GuiTheme& thm,
+                      float left, float top, float right, float bottom)
 {
   left   += def.l_margin;
   top    += def.t_margin;
@@ -461,7 +461,7 @@ static void calcPos(GuiElem& def, const GuiTheme& thm,
       for (const GuiElem& e : def.elems) { total_w += e.layoutW() + fs; }
       for (GuiElem& e : def.elems) {
         total_w -= e.layoutW() + fs;
-        calcPos(e, thm, left, top, right - total_w, bottom);
+        updatePos(e, thm, left, top, right - total_w, bottom);
         left = e._x + e._w + e.r_margin + fs;
       }
       break;
@@ -472,38 +472,38 @@ static void calcPos(GuiElem& def, const GuiTheme& thm,
       for (const GuiElem& e : def.elems) { total_h += e.layoutH() + fs; }
       for (GuiElem& e : def.elems) {
         total_h -= e.layoutH() + fs;
-        calcPos(e, thm, left, top, right, bottom - total_h);
+        updatePos(e, thm, left, top, right, bottom - total_h);
         top = e._y + e._h + e.b_margin + fs;
       }
       break;
     }
     case GUI_CHECKBOX:
       left += thm.font->glyphWidth(thm.checkCode) + (thm.border * 3);
-      calcPos(def.elems[0], thm, left, top, right, bottom);
+      updatePos(def.elems[0], thm, left, top, right, bottom);
       break;
     case GUI_MENU: {
       GuiElem& e0 = def.elems[0];
-      calcPos(e0, thm, left, top, right, bottom);
+      updatePos(e0, thm, left, top, right, bottom);
       // always position menu frame below menu button for now
       top = e0._y + e0.layoutH() + thm.border;
       GuiElem& e1 = def.elems[1];
-      calcPos(e1, thm, left, top, left + e1.layoutW(), top + e1.layoutH());
+      updatePos(e1, thm, left, top, left + e1.layoutW(), top + e1.layoutH());
       break;
     }
     case GUI_SUBMENU: {
       const float b = thm.border;
-      calcPos(def.elems[0], thm, left + b, top + b, right - b, bottom - b);
+      updatePos(def.elems[0], thm, left + b, top + b, right - b, bottom - b);
       // sub-menu items
       left += def.layoutW();
       GuiElem& e1 = def.elems[1];
-      calcPos(e1, thm, left, top, left + e1.layoutW(), top + e1.layoutH());
+      updatePos(e1, thm, left, top, left + e1.layoutW(), top + e1.layoutH());
       break;
     }
     case GUI_LISTSELECT: {
       const float b = thm.border;
-      calcPos(def.elems[0], thm, left + b, top + b, right - b, bottom - b);
-      calcPos(def.elems[1], thm, left - thm.popupBorder, bottom,
-              right, bottom);
+      updatePos(def.elems[0], thm, left + b, top + b, right - b, bottom - b);
+      updatePos(def.elems[1], thm, left - thm.popupBorder, bottom,
+                right, bottom);
       break;
     }
     default:
@@ -511,7 +511,7 @@ static void calcPos(GuiElem& def, const GuiTheme& thm,
         // align single child element
         GX_ASSERT(def.elems.size() == 1);
         const float b = borderVal(thm, def.type);
-        calcPos(def.elems[0], thm, left + b, top + b, right - b, bottom - b);
+        updatePos(def.elems[0], thm, left + b, top + b, right - b, bottom - b);
       }
       break;
   }
@@ -586,8 +586,8 @@ bool Gui::update(Window& win, EventState& es)
   for (auto& p : _panels) {
     // size & position update
     if (p->needLayout) {
-      calcSize(p->root, *p->theme);
-      calcPos(p->root, *p->theme, 0, 0, p->layout.w, p->layout.h);
+      updateSize(p->root, *p->theme);
+      updatePos(p->root, *p->theme, 0, 0, p->layout.w, p->layout.h);
       p->needLayout = false;
     }
   }
@@ -839,8 +839,8 @@ void Gui::processMouseEvent(Window& win, EventState& es)
         e0.eid  = src.eid;
         const GuiTheme& thm = *(pPtr->theme);
         const float b = thm.border;
-        calcPos(e0, thm, ls._x + b, ls._y + b, ls._x + ls._w - b,
-                ls._y + ls._h - b);
+        updatePos(e0, thm, ls._x + b, ls._y + b, ls._x + ls._w - b,
+                  ls._y + ls._h - b);
         addEvent(*pPtr, ls, item_no, now);
         deactivatePopups();
       }
@@ -1271,8 +1271,8 @@ void Gui::layout(Panel& p, float x, float y, AlignEnum align)
   if (VAlign(align) == ALIGN_BOTTOM) { std::swap(p.layout.y, p.layout.h); }
   p.needLayout = false;
   p.root.align = align;
-  calcSize(p.root, thm);
-  calcPos(p.root, thm, 0, 0, p.layout.w, p.layout.h);
+  updateSize(p.root, thm);
+  updatePos(p.root, thm, 0, 0, p.layout.w, p.layout.h);
   _needRender = true;
 }
 
