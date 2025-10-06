@@ -279,7 +279,8 @@ int main(int argc, char** argv)
           const std::string_view line = buffer[std::size_t(lineNo)];
           dc.color(gx::WHITE);
           dc.text(tf, {0, ty}, gx::ALIGN_TOP_LEFT, line);
-          if (tf.calcLength(line) > win_w) {
+          const auto [sizeW,sizeH] = tf.calcSize(line);
+          if (sizeW > win_w) {
             dc.color(1.0f,0,0);
             dc.text(tf, {win_w+1, ty}, gx::ALIGN_TOP_RIGHT, "*");
           }

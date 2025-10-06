@@ -384,8 +384,8 @@ void DrawContext::_text(
     if (!line.empty()) {
       float offset = 0;
       if (h_align != ALIGN_LEFT) {
-        const float tw = tf.calcLength(line);
-        offset = (h_align == ALIGN_RIGHT) ? tw : (tw * .5f);
+        const auto [sizeW,sizeH] = tf.calcSize(line);
+        offset = (h_align == ALIGN_RIGHT) ? sizeW : (sizeW * .5f);
       }
 
       float len = 0;
