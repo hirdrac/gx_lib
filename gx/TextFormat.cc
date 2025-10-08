@@ -3,8 +3,6 @@
 // Copyright (C) 2025 Richard Bradley
 //
 
-// TODO: add width/height calc for multi-line text
-
 #include "TextFormat.hh"
 #include "Font.hh"
 #include "Unicode.hh"
@@ -13,49 +11,6 @@
 #include <optional>
 using namespace gx;
 
-
-float TextFormat::calcLength(std::string_view text) const
-{
-  GX_ASSERT(font != nullptr);
-
-  TextState ts;
-  float max_len = 0, len = 0;
-  for (UTF8Iterator itr{text}; itr; ++itr) {
-    int32_t ch = *itr;
-    if (ch == startTag && startTag != 0) {
-      const std::size_t startPos = itr.pos() + 1;
-      const auto line = text.substr(startPos, text.find('\n', startPos+1));
-      const std::size_t endPos = findUTF8(line, endTag);
-      if (endPos != std::string_view::npos) {
-        const auto tag = line.substr(0, endPos);
-        if (parseTag(ts, tag) != TAG_unknown) {
-          itr.setPos(startPos + endPos);
-          continue;
-        }
-      }
-    } else if (ch == '\t') {
-      if (tabWidth <= 0) {
-        ch = ' ';
-      } else {
-        len = (std::floor(len / tabWidth) + 1.0f) * tabWidth;
-        continue;
-      }
-    } else if (ch == '\n') {
-      max_len = std::max(max_len, len);
-      len = 0;
-    }
-
-    const Glyph* g = font->findGlyph(ch);
-    if (!g) {
-      g = font->findGlyph(font->unknownCode());
-      GX_ASSERT(g != nullptr);
-    }
-
-    len += g->advX + glyphSpacing;
-  }
-
-  return std::max(max_len, len - glyphSpacing);
-}
 
 std::pair<float,float> TextFormat::calcSize(std::string_view text) const
 {
