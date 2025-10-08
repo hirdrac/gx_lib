@@ -6,6 +6,7 @@
 //
 
 #pragma once
+#include "Assert.hh"
 #include <string>
 #include <string_view>
 #include <cstdint>
@@ -52,25 +53,17 @@ class gx::UTF8Iterator
 {
  public:
   // constructors
-  UTF8Iterator(const char* s) noexcept
-    : _begin{s}, _itr{s}, _end{nullptr} { }
-  UTF8Iterator(const char* s, const char* e) noexcept
-    : _begin{s}, _itr{s}, _end{e} { }
-  UTF8Iterator(const char* data, std::size_t size) noexcept
-    : _begin{data}, _itr{data}, _end{data + size} { }
-
-  template<class T>
-  explicit UTF8Iterator(const T& s)
-    : UTF8Iterator{std::data(s), std::size(s)} { }
+  UTF8Iterator(std::string_view sv)
+    : _begin{sv.data()}, _itr{sv.data()}, _end{sv.data() + sv.size()} {
+    GX_ASSERT(_begin != nullptr); }
 
 
   // member functions
-  [[nodiscard]] bool done() const {
-    return (_itr == _end) || (!_end && *_itr == '\0'); }
+  [[nodiscard]] bool done() const { return _itr == _end; }
     // return true if there is no more data to read
 
   bool next();
-    // advance to next character, returns false if at the end
+    // advance to next character, returns false if done
 
   [[nodiscard]] int32_t get() const;
     // returns current unicode character
@@ -80,8 +73,12 @@ class gx::UTF8Iterator
     // returns byte position of iterator
     // (useful for substrings, but don't use for counting unicode characters)
 
-  void setPos(std::size_t p) { _itr = _begin + p; }
+  [[nodiscard]] std::size_t nextPos() const;
+    // returns position of next character without advancing iterator
+
+  void setPos(std::size_t p);
     // reset internal byte position
+    // (if p is NPOS or past the end, position will be set to the end)
 
   // helper operators
   [[nodiscard]] explicit operator bool() const { return !done(); }

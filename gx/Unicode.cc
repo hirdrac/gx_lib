@@ -21,7 +21,22 @@ namespace {
   static_assert(NPOS == std::string_view::npos);
 
   [[nodiscard]] constexpr bool isMultiChar(int ch) {
-    return (ch & 0b11000000) == 0b10000000;
+    return (ch & 0b11000000) == 0b10000000; }
+
+  [[nodiscard]] std::size_t codeLength(const char* str)
+  {
+    const uint32_t ch = uint8_t(*str);
+    if (ch < 0x80) {
+      return 1;
+    } else if ((ch & 0b11100000) == 0b11000000) {
+      return 2;
+    } else if ((ch & 0b11110000) == 0b11100000) {
+      return 3;
+    } else if ((ch & 0b11111000) == 0b11110000) {
+      return 4;
+    } else {
+      return 1; // bad unicode value, just advance to the next byte
+    }
   }
 }
 
@@ -57,6 +72,7 @@ std::string gx::toUTF8(int32_t code)
 
 std::size_t gx::lengthUTF8(std::string_view sv)
 {
+  // TODO: change behavior to be consistent with UTF8Iterator::next()
   std::size_t len = 0;
   for (char ch : sv) { len += !isMultiChar(uint8_t(ch)); }
   return len;
@@ -120,15 +136,10 @@ std::size_t gx::findUTF8(std::string_view sv, int32_t code, std::size_t start)
 // UTF8Iterator implementation
 bool gx::UTF8Iterator::next()
 {
-  if (_end) {
-    if (_itr == _end) { return false; }
-    do { ++_itr; } while ((_itr != _end) && isMultiChar(uint8_t(*_itr)));
-    return _itr != _end;
-  } else {
-    if (*_itr == '\0') { return false; }
-    do { ++_itr; } while ((*_itr != '\0') && isMultiChar(uint8_t(*_itr)));
-    return *_itr != '\0';
-  }
+  if (_itr == _end) { return false; }
+  _itr += codeLength(_itr);
+  if (_itr > _end) { _itr = _end; }
+  return _itr != _end;
 }
 
 int32_t gx::UTF8Iterator::get() const
@@ -170,5 +181,25 @@ int32_t gx::UTF8Iterator::get() const
     return -1; // reject overlong encoding except for 2 byte null encoding
   } else {
     return val;
+  }
+}
+
+std::size_t gx::UTF8Iterator::nextPos() const
+{
+  const char* np = _end;
+  if (_itr != _end) {
+    np = _itr + codeLength(_itr);
+    if (np > _end) { np = _end; }
+  }
+  return std::size_t(np - _begin);
+}
+
+void gx::UTF8Iterator::setPos(std::size_t p)
+{
+  if (p == NPOS) {
+    _itr = _end;
+  } else {
+    _itr = _begin + p;
+    if (_itr > _end) { _itr = _end; }
   }
 }

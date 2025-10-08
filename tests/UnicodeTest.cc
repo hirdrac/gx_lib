@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 
   for (int ch : invalid_bytes) {
     const char str[] = {char(ch)};
-    UTF8Iterator itr{str, 1};
+    UTF8Iterator itr{std::string_view{str, 1}};
 
     assert(itr.get() == -1);
     assert(!itr.done());
@@ -24,5 +24,6 @@ int main(int argc, char** argv)
     assert(itr.get() == 0);
     assert(itr.done());
   }
+
   return 0;
 }
