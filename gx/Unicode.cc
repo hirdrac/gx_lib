@@ -2,6 +2,9 @@
 // gx/Unicode.cc
 // Copyright (C) 2025 Richard Bradley
 //
+// REFERENCES:
+//   https://en.wikipedia.org/wiki/UTF-8
+//
 
 #include "Unicode.hh"
 
@@ -72,9 +75,11 @@ std::string gx::toUTF8(int32_t code)
 
 std::size_t gx::lengthUTF8(std::string_view sv)
 {
-  // TODO: change behavior to be consistent with UTF8Iterator::next()
+  if (sv.empty()) { return 0; }
+
   std::size_t len = 0;
-  for (char ch : sv) { len += !isMultiChar(uint8_t(ch)); }
+  UTF8Iterator itr{sv};
+  do { ++len; } while (itr.next());
   return len;
 }
 
@@ -179,6 +184,8 @@ int32_t gx::UTF8Iterator::get() const
 
   if (val < minVal && (bytes != 2 || val != 0)) {
     return -1; // reject overlong encoding except for 2 byte null encoding
+  } else if (val > 0x10ffff) {
+    return -1; // over max allowed code point value
   } else {
     return val;
   }
