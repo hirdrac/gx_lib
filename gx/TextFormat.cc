@@ -3,6 +3,8 @@
 // Copyright (C) 2025 Richard Bradley
 //
 
+// TODO: use advX,advY,glyphX,glyphY for calcSize(),fixText()
+
 #include "TextFormat.hh"
 #include "Font.hh"
 #include "Unicode.hh"
@@ -32,7 +34,7 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
     for (UTF8Iterator itr{line}; itr; ++itr) {
       int32_t ch = *itr;
       if (ch == startTag && startTag != 0) {
-        const std::size_t tagStart = itr.pos() + 1;
+        const std::size_t tagStart = itr.nextPos();
         const std::size_t tagEnd = findUTF8(line, endTag, tagStart);
         if (tagEnd != std::string_view::npos) {
           const auto tag = line.substr(tagStart, tagEnd - tagStart);
@@ -68,23 +70,27 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
 }
 
 std::string_view TextFormat::fitText(
-  std::string_view text, float maxLength) const
+  std::string_view text, float maxWidth) const
 {
   GX_ASSERT(font != nullptr);
-  maxLength += glyphSpacing;
+  maxWidth += glyphSpacing;
+
+  const auto nlPos = text.find('\n');
+  const auto line = (nlPos == std::string_view::npos)
+    ? text : text.substr(0, nlPos);
 
   TextState ts;
-  float len = 0;
-  for (UTF8Iterator itr{text}; itr; ++itr) {
+  float width = 0;
+
+  for (UTF8Iterator itr{line}; itr; ++itr) {
     int32_t ch = *itr;
     if (ch == startTag && startTag != 0) {
-      const std::size_t startPos = itr.pos() + 1;
-      const auto line = text.substr(startPos, text.find('\n', startPos+1));
-      const std::size_t endPos = findUTF8(line, endTag);
-      if (endPos != std::string_view::npos) {
-        const auto tag = line.substr(0, endPos);
+      const std::size_t tagStart = itr.nextPos();
+      const std::size_t tagEnd = findUTF8(line, endTag, tagStart);
+      if (tagEnd != std::string_view::npos) {
+        const auto tag = line.substr(tagStart, tagEnd - tagStart);
         if (parseTag(ts, tag) != TAG_unknown) {
-          itr.setPos(startPos + endPos);
+          itr.setPos(tagEnd);
           continue;
         }
       }
@@ -92,12 +98,9 @@ std::string_view TextFormat::fitText(
       if (tabWidth <= 0) {
         ch = ' ';
       } else {
-        len = (std::floor(len / tabWidth) + 1.0f) * tabWidth;
+        width = (std::floor(width / tabWidth) + 1.0f) * tabWidth;
         continue;
       }
-    } else if (ch == '\n') {
-      // stop at first linebreak
-      return text.substr(0, itr.pos());
     }
 
     const Glyph* g = font->findGlyph(ch);
@@ -106,8 +109,9 @@ std::string_view TextFormat::fitText(
       GX_ASSERT(g != nullptr);
     }
 
-    if ((len + g->advX) > maxLength) { return text.substr(0, itr.pos()); }
-    len += g->advX + glyphSpacing;
+    const float len = g->advX + glyphSpacing;
+    if ((width + len) > maxWidth) { return text.substr(0, itr.pos()); }
+    width += len;
   }
 
   return text;

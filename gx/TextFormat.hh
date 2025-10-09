@@ -68,7 +68,7 @@ struct gx::TextFormat
   Vec2 glyphX{1,0};       // glyph quad sides
   Vec2 glyphY{0,1};
 
-  int32_t startTag = '<'; // meta-tag start char
+  int32_t startTag = '<'; // meta-tag start char (set to '\0' to disable tags)
   int32_t endTag = '>';   // meta-tag end char
 
   // transforms
@@ -87,7 +87,7 @@ struct gx::TextFormat
     // returns pixel width,height of input text
 
   [[nodiscard]] std::string_view fitText(
-    std::string_view text, float maxLength) const;
+    std::string_view text, float maxWidth) const;
     // returns sub-string that fits in specified length
 
   TextMetaTagType parseTag(TextState& ts, std::string_view tag) const;
