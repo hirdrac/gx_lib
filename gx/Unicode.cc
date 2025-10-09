@@ -33,26 +33,20 @@ std::string gx::toUTF8(int32_t code)
 {
   char str[8];
   char* ptr = str;
-  if (code > 0) {
-    if (code <= 0x7f) {
-      *ptr++ = char(code);
-    } else if (code <= 0x7ff) {
-      *ptr++ = char(0b11000000 | (code>>6));
-      *ptr++ = char(0b10000000 | (code&63));
-    } else if (code <= 0xffff) {
-      *ptr++ = char(0b11100000 | (code>>12));
-      *ptr++ = char(0b10000000 | ((code>>6)&63));
-      *ptr++ = char(0b10000000 | (code&63));
-    } else if (code <= 0x10ffff) {
-      *ptr++ = char(0b11110000 | (code>>18));
-      *ptr++ = char(0b10000000 | ((code>>12)&63));
-      *ptr++ = char(0b10000000 | ((code>>6)&63));
-      *ptr++ = char(0b10000000 | (code&63));
-    }
-  } else if (code == 0) {
-    // modified UTF-8 encoding of null character
-    *ptr++ = char(0b11000000);
-    *ptr++ = char(0b10000000);
+  if (code <= 0x7f) {
+    *ptr++ = char(code);
+  } else if (code <= 0x7ff) {
+    *ptr++ = char(0b11000000 | (code>>6));
+    *ptr++ = char(0b10000000 | (code&63));
+  } else if (code <= 0xffff) {
+    *ptr++ = char(0b11100000 | (code>>12));
+    *ptr++ = char(0b10000000 | ((code>>6)&63));
+    *ptr++ = char(0b10000000 | (code&63));
+  } else if (code <= 0x10ffff) {
+    *ptr++ = char(0b11110000 | (code>>18));
+    *ptr++ = char(0b10000000 | ((code>>12)&63));
+    *ptr++ = char(0b10000000 | ((code>>6)&63));
+    *ptr++ = char(0b10000000 | (code&63));
   }
   return {str, ptr};
 }
@@ -159,8 +153,8 @@ int32_t gx::UTF8Iterator::get() const
     val = (val << 6) | (c & 0b111111);
   }
 
-  if (val < minVal && (bytes != 2 || val != 0)) {
-    return -1; // reject overlong encoding except for 2 byte null encoding
+  if (val < minVal) {
+    return -1; // reject overlong encoding
   } else if (val > 0x10ffff) {
     return -1; // over max allowed code point value
   } else {
