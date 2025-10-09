@@ -25,22 +25,6 @@ namespace {
 
   [[nodiscard]] constexpr bool isMultiChar(int ch) {
     return (ch & 0b11000000) == 0b10000000; }
-
-  [[nodiscard]] std::size_t codeLength(const char* str)
-  {
-    const uint32_t ch = uint8_t(*str);
-    if (ch < 0x80) {
-      return 1;
-    } else if ((ch & 0b11100000) == 0b11000000) {
-      return 2;
-    } else if ((ch & 0b11110000) == 0b11100000) {
-      return 3;
-    } else if ((ch & 0b11111000) == 0b11110000) {
-      return 4;
-    } else {
-      return 1; // bad unicode value, just advance to the next byte
-    }
-  }
 }
 
 
@@ -139,14 +123,6 @@ std::size_t gx::findUTF8(std::string_view sv, int32_t code, std::size_t start)
 
 
 // UTF8Iterator implementation
-bool gx::UTF8Iterator::next()
-{
-  if (_itr == _end) { return false; }
-  _itr += codeLength(_itr);
-  if (_itr > _end) { _itr = _end; }
-  return _itr != _end;
-}
-
 int32_t gx::UTF8Iterator::get() const
 {
   if (done()) { return 0; }
@@ -174,9 +150,10 @@ int32_t gx::UTF8Iterator::get() const
   }
 
   const char* ptr = _itr;
-  const char* ptr_end = _itr + bytes;
-  while (++ptr != ptr_end) {
-    if (ptr == _end) { return -1; }
+  const char* ptrEnd = _itr + bytes;
+  if (ptrEnd > _end) { return -1; }
+
+  while (++ptr != ptrEnd) {
     const int c = uint8_t(*ptr);
     if (!isMultiChar(c)) { return -1; }
     val = (val << 6) | (c & 0b111111);
@@ -191,22 +168,29 @@ int32_t gx::UTF8Iterator::get() const
   }
 }
 
-std::size_t gx::UTF8Iterator::nextPos() const
-{
-  const char* np = _end;
-  if (_itr != _end) {
-    np = _itr + codeLength(_itr);
-    if (np > _end) { np = _end; }
-  }
-  return std::size_t(np - _begin);
-}
-
 void gx::UTF8Iterator::setPos(std::size_t p)
 {
   if (p == NPOS) {
     _itr = _end;
   } else {
-    _itr = _begin + p;
-    if (_itr > _end) { _itr = _end; }
+    _itr = std::min(_begin + p, _end);
   }
+}
+
+const char* gx::UTF8Iterator::nextItr() const
+{
+  if (done()) { return _end; }
+
+  int bytes = 1;
+  const uint32_t ch = uint8_t(*_itr);
+  if (ch > 0x7f) {
+    if ((ch & 0b11100000) == 0b11000000) { bytes = 2; }
+    else if ((ch & 0b11110000) == 0b11100000) { bytes = 3; }
+    else if ((ch & 0b11111000) == 0b11110000) { bytes = 4; }
+  }
+
+  const char* ptr = _itr;
+  const char* ptrEnd = std::min(_itr + bytes, _end);
+  do { ++ptr; } while (ptr != ptrEnd && isMultiChar(uint8_t(*ptr)));
+  return ptr;
 }

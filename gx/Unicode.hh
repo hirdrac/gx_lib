@@ -62,18 +62,20 @@ class gx::UTF8Iterator
   [[nodiscard]] bool done() const { return _itr == _end; }
     // return true if there is no more data to read
 
-  bool next();
+  bool next() { _itr = nextItr(); return _itr != _end; }
     // advance to next character, returns false if done
 
   [[nodiscard]] int32_t get() const;
     // returns current unicode character
     // (returns -1 for an invalid encoding, 0 for end of string)
 
-  [[nodiscard]] std::size_t pos() const { return std::size_t(_itr - _begin); }
+  [[nodiscard]] std::size_t pos() const {
+    return std::size_t(_itr - _begin); }
     // returns byte position of iterator
     // (useful for substrings, but don't use for counting unicode characters)
 
-  [[nodiscard]] std::size_t nextPos() const;
+  [[nodiscard]] std::size_t nextPos() const {
+    return std::size_t(nextItr() - _begin); }
     // returns position of next character without advancing iterator
 
   void setPos(std::size_t p);
@@ -89,4 +91,6 @@ class gx::UTF8Iterator
   const char* _begin;
   const char* _itr;
   const char* _end;
+
+  const char* nextItr() const;
 };
