@@ -83,8 +83,8 @@ class gx::UTF8Iterator
     // (if p is NPOS or past the end, position will be set to the end)
 
   // helper operators
-  [[nodiscard]] explicit operator bool() const { return !done(); }
-  UTF8Iterator& operator++() { next(); return *this; }
+  [[nodiscard]] explicit operator bool() const { return _itr != _end; }
+  UTF8Iterator& operator++() { _itr = nextItr(); return *this; }
   [[nodiscard]] int32_t operator*() const { return get(); }
 
  private:

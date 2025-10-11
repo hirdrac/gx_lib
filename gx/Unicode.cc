@@ -66,7 +66,7 @@ std::size_t gx::indexUTF8(std::string_view sv, std::size_t pos)
   if (pos == NPOS) { return NPOS; }
 
   UTF8Iterator itr{sv};
-  while (!itr.done() && pos > 0) { --pos; itr.next(); }
+  while (!itr.done() && pos > 0) { --pos; ++itr; }
   return (pos != 0) ? NPOS : itr.pos();
 }
 
@@ -80,7 +80,7 @@ bool gx::eraseUTF8(std::string& str, std::size_t pos, std::size_t len)
 
   if (len == NPOS) { len = str.size(); }
   const std::size_t i = itr.pos();
-  while (!itr.done() && len > 0) { itr.next(); --len; }
+  while (!itr.done() && len > 0) { ++itr; --len; }
   str.erase(i, itr.done() ? NPOS : (itr.pos() - i));
   return true;
 }
@@ -97,11 +97,11 @@ std::string_view gx::substrUTF8(
   std::string_view sv, std::size_t pos, std::size_t len)
 {
   UTF8Iterator itr{sv};
-  while (!itr.done() && pos > 0) { --pos; itr.next(); }
+  while (!itr.done() && pos > 0) { --pos; ++itr; }
   if (pos != 0) { return {}; }
 
   const char* s = &sv[itr.pos()];
-  while (!itr.done() && len > 0) { --len; itr.next(); }
+  while (!itr.done() && len > 0) { --len; ++itr; }
 
   const char* e = &sv[itr.pos()];
   return {s, std::size_t(e-s)};
