@@ -48,7 +48,8 @@ namespace {
 
   void errorCB(int error, const char* txt)
   {
-    GX_LOG_ERROR("GLFW ERROR(", errorStr(error), " 0x", gx::formatHexUC(error), "): ", txt);
+    GX_LOG_ERROR("GLFW ERROR(", errorStr(error), " 0x",
+                 gx::formatHexUC(uint64_t(error)), "): ", txt);
   }
 
   bool lib_init = false;

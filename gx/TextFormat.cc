@@ -133,8 +133,8 @@ std::string_view TextFormat::fitText(
     if (str.size() != 7 && str.size() != 9) { return std::nullopt; }
 
     int vals[8]{0,0,0,0,0,0,15,15};
-    const int num = int(str.size() - 1);
-    for (int i = 0; i < num; ++i) {
+    const std::size_t num = str.size() - 1;
+    for (std::size_t i = 0; i < num; ++i) {
       vals[i] = hexDigitVal(str[i+1]);
       if (vals[i] < 0) { return std::nullopt; }
     }
