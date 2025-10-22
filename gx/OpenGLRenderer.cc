@@ -299,6 +299,8 @@ template<int VER>
 class gx::OpenGLRenderer final : public gx::Renderer
 {
  public:
+  OpenGLRenderer() { _opData.reserve(256); }
+
   // gx::Renderer methods
   bool init(GLFWwindow* win) override;
   bool setSwapInterval(int interval) override;
@@ -369,20 +371,17 @@ class gx::OpenGLRenderer final : public gx::Renderer
     if constexpr (sizeof...(args) == 0) {
       _opData.push_back(op);
     } else {
-      const std::initializer_list<Value> x{op, args...};
-      _opData.insert(_opData.end(), x.begin(), x.end());
+      _opData.insert(_opData.end(), {op, args...});
     }
     _lastOp = op;
   }
 
   void addOpData(GLOperation op, const Mat4& m) {
-    _opData.reserve(_opData.size() + m.size() + 1);
     _opData.push_back(op);
     _opData.insert(_opData.end(), m.begin(), m.end());
   }
 
   void addOpData(GLOperation op, const Value* begin, const Value* end) {
-    _opData.reserve(_opData.size() + std::size_t(end - begin) + 1);
     _opData.push_back(op);
     _opData.insert(_opData.end(), begin, end);
     _lastOp = op;

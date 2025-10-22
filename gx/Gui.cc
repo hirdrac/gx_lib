@@ -112,14 +112,13 @@ template<class T>
 [[nodiscard]] static inline T* findByElemID(T& root, ElemID id)
 {
   std::vector<T*> stack;
+  stack.reserve(16);
+
   T* e = &root;
   while (e->_id != id) {
-    if (!e->elems.empty()) {
-      stack.reserve(stack.size() + e->elems.size());
-      for (T& c : e->elems) { stack.push_back(&c); }
-    }
-
+    for (T& c : e->elems) { stack.push_back(&c); }
     if (stack.empty()) { return nullptr; }
+
     e = stack.back();
     stack.pop_back();
   }
@@ -131,14 +130,13 @@ template<class T>
 {
   GX_ASSERT(eid != 0);
   std::vector<T*> stack;
+  stack.reserve(16);
+
   T* e = &root;
   while (e->eid != eid) {
-    if (!e->elems.empty()) {
-      stack.reserve(stack.size() + e->elems.size());
-      for (T& c : e->elems) { stack.push_back(&c); }
-    }
-
+    for (T& c : e->elems) { stack.push_back(&c); }
     if (stack.empty()) { return nullptr; }
+
     e = stack.back();
     stack.pop_back();
   }
@@ -149,6 +147,8 @@ template<class T>
   GuiElem& root, EventID eid, GuiElemType type)
 {
   std::vector<GuiElem*> stack;
+  stack.reserve(16);
+
   GuiElem* e = &root;
   GuiElem* next = nullptr;
   GuiElem* first = nullptr;
@@ -159,12 +159,9 @@ template<class T>
       if (!first || e->eid < first->eid) { first = e; }
     }
 
-    if (!e->elems.empty()) {
-      stack.reserve(stack.size() + e->elems.size());
-      for (GuiElem& c : e->elems) { stack.push_back(&c); }
-    }
-
+    for (GuiElem& c : e->elems) { stack.push_back(&c); }
     if (stack.empty()) { return next ? next : first; }
+
     e = stack.back();
     stack.pop_back();
   }
@@ -174,6 +171,8 @@ template<class T>
   GuiElem& root, EventID eid, GuiElemType type)
 {
   std::vector<GuiElem*> stack;
+  stack.reserve(16);
+
   GuiElem* e = &root;
   GuiElem* prev = nullptr;
   GuiElem* last = nullptr;
@@ -184,12 +183,9 @@ template<class T>
       if (!last || e->eid > last->eid) { last = e; }
     }
 
-    if (!e->elems.empty()) {
-      stack.reserve(stack.size() + e->elems.size());
-      for (GuiElem& c : e->elems) { stack.push_back(&c); }
-    }
-
+    for (GuiElem& c : e->elems) { stack.push_back(&c); }
     if (stack.empty()) { return prev ? prev : last; }
+
     e = stack.back();
     stack.pop_back();
   }
