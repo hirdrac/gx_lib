@@ -1,6 +1,6 @@
 //
 // gx/DrawList.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #pragma once
@@ -8,7 +8,6 @@
 #include "Color.hh"
 #include "Normal.hh"
 #include "Types.hh"
-#include <initializer_list>
 #include <vector>
 
 namespace gx {
@@ -28,8 +27,12 @@ class gx::DrawList
 {
  public:
   [[nodiscard]] const Value* data() const { return _data.data(); }
-  [[nodiscard]] std::size_t size() const { return _data.size(); }
+
   [[nodiscard]] bool empty() const { return _data.empty(); }
+  [[nodiscard]] std::size_t size() const { return _data.size(); }
+
+  void reserve(std::size_t cap) { _data.reserve(cap); }
+  [[nodiscard]] std::size_t capacity() const { return _data.capacity(); }
 
   void clear() { _data.clear(); }
 
@@ -168,7 +171,6 @@ class gx::DrawList
   std::vector<Value> _data;
 
   void add(DrawCmd cmd, const Mat4& m1, const Mat4& m2) {
-    _data.reserve(_data.size() + 33);
     _data.push_back(cmd);
     _data.insert(_data.end(), m1.begin(), m1.end());
     _data.insert(_data.end(), m2.begin(), m2.end());
@@ -179,8 +181,7 @@ class gx::DrawList
     if constexpr (sizeof...(args) == 0) {
       _data.push_back(cmd);
     } else {
-      const std::initializer_list<Value> x {cmd, args...};
-      _data.insert(_data.end(), x.begin(), x.end());
+      _data.insert(_data.end(), {cmd, args...});
     }
   }
 };
