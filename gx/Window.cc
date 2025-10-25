@@ -18,6 +18,14 @@
 #include <mutex>
 #include <vector>
 #include <algorithm>
+#ifdef _WIN32
+#  define GLFW_EXPOSE_NATIVE_WIN32
+#  include <GLFW/glfw3native.h>
+#  include <dwmapi.h>
+#  ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#    define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#  endif
+#endif
 using namespace gx;
 
 // NOTES:
@@ -301,6 +309,7 @@ struct gx::WindowImpl
 
     //glfwWindowHint(GLFW_FOCUSED, glfwBool(false));
     //glfwWindowHint(GLFW_FOCUS_ON_SHOW, glfwBool(false));
+    //glfwWindowHint(GLFW_WIN32_KEYBOARD_MENU, glfwBool(true));
 
     // framebuffer hints
     glfwWindowHint(GLFW_SAMPLES, _samples);
@@ -328,6 +337,15 @@ struct gx::WindowImpl
       GX_LOG_ERROR("glfwCreateWindow() failed");
       return false;
     }
+
+#ifdef _WIN32
+    // allow Windows to use dark mode for titlebar
+    {
+      HWND hwnd = glfwGetWin32Window(win);
+      BOOL value = true;
+      ::DwmSetWindowAttribute(hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &value, sizeof(value));
+    }
+#endif
 
     _renderer = makeOpenGLRenderer(win);
     if (!_renderer) { return false; }

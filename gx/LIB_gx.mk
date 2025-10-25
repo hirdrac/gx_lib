@@ -11,5 +11,7 @@ LIB_gx.SRC =\
   3rd/glad_gl.c 3rd/stb_image.c
 
 LIB_gx.LIBS = -
+WINDOWS.LIB_gx.LIBS = Dwmapi
+
 LIB_gx.PACKAGES = glfw3:3.2 freetype2
   # freetype2:24 for SDF support
