@@ -300,9 +300,8 @@ struct gx::WindowImpl
     glfwDefaultWindowHints();
     glfwWindowHint(GLFW_DECORATED, glfwBool(decorated));
     glfwWindowHint(GLFW_RESIZABLE, glfwBool(resizable));
-    if (!_sizeSet) {
-      glfwWindowHint(GLFW_VISIBLE, glfwBool(false));
-    } else if (!_fullScreen) {
+    glfwWindowHint(GLFW_VISIBLE, glfwBool(false));
+    if (_sizeSet && !_fullScreen) {
       glfwWindowHint(GLFW_POSITION_X, (_fsWidth - _width) / 2);
       glfwWindowHint(GLFW_POSITION_Y, (_fsHeight - _height) / 2);
     }
@@ -385,6 +384,7 @@ struct gx::WindowImpl
     glfwSetScrollCallback(win, scrollCB);
     glfwSetWindowIconifyCallback(win, iconifyCB);
     glfwSetWindowFocusCallback(win, focusCB);
+    if (_sizeSet) { showWindow(win); }
     return true;
   }
 
