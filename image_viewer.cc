@@ -61,6 +61,13 @@ struct ImgSize { float width, height; };
   return {iw*scale, ih*scale};
 }
 
+void setTitle(gx::Window& win, const Entry& e)
+{
+  win.setTitle(
+    gx::concat(e.file, " (", e.img.width(), 'x', e.img.height(),
+               'x', e.img.channels(), ')'));
+}
+
 int showUsage(const char* const* argv)
 {
   println("Usage: ", argv[0], " [options] <image file(s)>");
@@ -172,6 +179,7 @@ int main(int argc, char* argv[])
   gx::DrawContext dc{dl};
   bool redraw = true, running = true;
   constexpr float border = 8.0f;
+  setTitle(win, entries[0]);
 
   // main loop
   while (running) {
@@ -223,9 +231,7 @@ int main(int argc, char* argv[])
 
         const Entry& e = entries[std::size_t(entryNo)];
         if (!win.fullScreen()) { setWinSize(win, e.img); }
-        win.setTitle(
-          gx::concat(e.file, " - ", e.img.width(), 'x', e.img.height(),
-                     'x', e.img.channels()));
+        setTitle(win, e);
         redraw = true;
       }
     }
