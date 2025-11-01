@@ -93,7 +93,6 @@ namespace gx {
   struct InputState {
     int16_t value;       // InputEnum value
     int16_t scancode;    // platform-specific key value
-    uint8_t mods;        // mods value at press
     int8_t pressCount;   // number of press events since pollEvents
     int8_t repeatCount;  // number of repeat events since pollEvents
     int8_t held;         // key is currently held

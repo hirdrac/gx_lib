@@ -56,11 +56,6 @@ namespace {
   static_assert(GLFW_MOUSE_BUTTON_7 == 6);
   static_assert(GLFW_MOUSE_BUTTON_8 == 7);
 
-  static_assert(GLFW_MOD_SHIFT == 1<<0);
-  static_assert(GLFW_MOD_CONTROL == 1<<1);
-  static_assert(GLFW_MOD_ALT == 1<<2);
-  static_assert(GLFW_MOD_SUPER == 1<<3);
-
   // **** Helper Functions ****
   [[nodiscard]] constexpr int cursorInputModeVal(MouseModeEnum mode) {
     switch (mode) {
@@ -597,7 +592,7 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
 			  [key](auto& in){ return in.value == key; });
   if (itr == states.end()) {
     itr = states.insert(
-      states.end(), {int16_t(key),int16_t(scancode),uint8_t(mods),0,0,false});
+      states.end(), {int16_t(key),int16_t(scancode),0,0,false});
   }
 
   InputState& in = *itr;
@@ -703,8 +698,7 @@ static void mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
   auto itr = std::find_if(states.begin(), states.end(),
 			  [bVal](auto& in){ return in.value == bVal; });
   if (itr == states.end()) {
-    itr = states.insert(
-      states.end(), {int16_t(bVal),0,uint8_t(mods),0,0,false});
+    itr = states.insert(states.end(), {int16_t(bVal),0,0,0,false});
   }
 
   InputState& in = *itr;

@@ -907,7 +907,7 @@ void Gui::processCharEvent(EventState& es)
         _needRender = _textChanged = true;
       } else if (_focusCursorPos > 0) {
         GX_ASSERT(!entry.text.empty());
-        if (in.mods == MOD_CONTROL) {
+        if (es.mods == MOD_CONTROL) {
           eraseUTF8(entry.text, 0, _focusCursorPos);
           _focusCursorPos = 0;
         } else {
@@ -923,28 +923,28 @@ void Gui::processCharEvent(EventState& es)
         _focusCursorPos = _focusRangeStart = rangeStart;
         _needRender = _textChanged = true;
       } else if (_focusCursorPos < lengthUTF8(entry.text)) {
-        if (in.mods == MOD_CONTROL) {
+        if (es.mods == MOD_CONTROL) {
           eraseUTF8(entry.text, _focusCursorPos, std::string::npos);
         } else {
           eraseUTF8(entry.text, _focusCursorPos, 1);
         }
         _needRender = _textChanged = true;
       }
-    } else if (in.value == KEY_V && in.mods == MOD_CONTROL) {
+    } else if (in.value == KEY_V && es.mods == MOD_CONTROL) {
       // (CTRL-V) paste first line of clipboard
       usedEvent = true;
       const std::string cb = getClipboardFirstLine();
       for (UTF8Iterator itr{cb}; itr; ++itr) {
         addEntryChar(e, *itr);
       }
-    } else if (in.value == KEY_C && in.mods == MOD_CONTROL) {
+    } else if (in.value == KEY_C && es.mods == MOD_CONTROL) {
       // (CTRL-C) copy selected text
       usedEvent = true;
       if (rangeLen > 0) {
         const std::string cp{substrUTF8(entry.text, rangeStart, rangeLen)};
         setClipboard(cp);
       }
-    } else if (in.value == KEY_X && in.mods == MOD_CONTROL) {
+    } else if (in.value == KEY_X && es.mods == MOD_CONTROL) {
       // (CTRL-X) cut selected text
       usedEvent = true;
       if (rangeLen > 0) {
@@ -954,22 +954,22 @@ void Gui::processCharEvent(EventState& es)
         _focusCursorPos = _focusRangeStart = rangeStart;
         _needRender = _textChanged = true;
       }
-    } else if (in.value == KEY_A && in.mods == MOD_CONTROL) {
+    } else if (in.value == KEY_A && es.mods == MOD_CONTROL) {
       // (CTRL-A) select all text
       _focusRangeStart = 0;
       _focusCursorPos = lengthUTF8(entry.text);
       _needRender = true;
-    } else if ((in.value == KEY_TAB && in.mods == 0) || in.value == KEY_ENTER) {
+    } else if ((in.value == KEY_TAB && es.mods == 0) || in.value == KEY_ENTER) {
       usedEvent = true;
       setFocus(findNextElem(panelP->root, e.eid, GUI_ENTRY), now);
       // TODO: select all text on focus change
-    } else if (in.value == KEY_TAB && in.mods == MOD_SHIFT) {
+    } else if (in.value == KEY_TAB && es.mods == MOD_SHIFT) {
       usedEvent = true;
       setFocus(findPrevElem(panelP->root, e.eid, GUI_ENTRY), now);
       // TODO: select all text on focus change
     } else if (in.value == KEY_LEFT) {
       usedEvent = true;
-      if (in.mods == 0) {
+      if (es.mods == 0) {
         if (rangeLen > 0) {
           _focusCursorPos = _focusRangeStart = rangeStart;
           _needRender = true;
@@ -977,14 +977,14 @@ void Gui::processCharEvent(EventState& es)
           _focusRangeStart = --_focusCursorPos;
           _needRender = true;
         }
-      } else if (in.mods == MOD_SHIFT) {
+      } else if (es.mods == MOD_SHIFT) {
         if (_focusCursorPos > 0) {
           --_focusCursorPos; _needRender = true;
         }
       }
     } else if (in.value == KEY_RIGHT) {
       usedEvent = true;
-      if (in.mods == 0) {
+      if (es.mods == 0) {
         if (rangeLen > 0) {
           _focusCursorPos = _focusRangeStart = rangeEnd;
           _needRender = true;
@@ -992,18 +992,18 @@ void Gui::processCharEvent(EventState& es)
           _focusRangeStart = ++_focusCursorPos;
           _needRender = true;
         }
-      } else if (in.mods == MOD_SHIFT) {
+      } else if (es.mods == MOD_SHIFT) {
         if (_focusCursorPos < lengthUTF8(entry.text)) {
           ++_focusCursorPos; _needRender = true;
         }
       }
     } else if (in.value == KEY_HOME) {
       usedEvent = true;
-      if (in.mods == 0) {
+      if (es.mods == 0) {
         if (_focusCursorPos > 0 || rangeLen > 0) {
           _focusCursorPos = _focusRangeStart = 0; _needRender = true;
         }
-      } else if (in.mods == MOD_SHIFT) {
+      } else if (es.mods == MOD_SHIFT) {
         if (_focusCursorPos > 0) {
           _focusCursorPos = 0; _needRender = true;
         }
@@ -1011,11 +1011,11 @@ void Gui::processCharEvent(EventState& es)
     } else if (in.value == KEY_END) {
       usedEvent = true;
       const std::size_t ts = lengthUTF8(entry.text);
-      if (in.mods == 0) {
+      if (es.mods == 0) {
         if (_focusCursorPos < ts || rangeLen > 0) {
           _focusCursorPos = _focusRangeStart = ts; _needRender = true;
         }
-      } else if (in.mods == MOD_SHIFT) {
+      } else if (es.mods == MOD_SHIFT) {
         if (_focusCursorPos < ts) {
           _focusCursorPos = ts; _needRender = true;
         }
