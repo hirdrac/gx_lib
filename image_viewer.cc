@@ -238,7 +238,7 @@ int main(int argc, char* argv[])
 
     if (win.fullScreen()) {
       if (es.mouseScroll()) {
-        const bool shiftHeld = es.mods & gx::MOD_SHIFT;
+        const bool shiftHeld = es.mods & gx::MODIFIER_SHIFT;
         const int scroll = static_cast<int>(es.scrollPt.y * (shiftHeld ? 8.0f : 1.0f));
         const int zoom2 = std::clamp(zoom + scroll, 20, 400);
         if (zoom != zoom2) {

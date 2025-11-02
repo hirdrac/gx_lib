@@ -30,8 +30,11 @@ namespace gx {
     EVENT_MOUSE_SCROLL = 1<<9,
   };
 
-  enum ModEnum {
-    MOD_SHIFT = 1<<0, MOD_CONTROL = 1<<1, MOD_ALT = 1<<2, MOD_SUPER = 1<<3,
+  enum ModifierEnum {
+    MODIFIER_SHIFT = 1<<0,
+    MODIFIER_CTRL  = 1<<1,
+    MODIFIER_ALT   = 1<<2,
+    MODIFIER_SUPER = 1<<3,
   };
 
   enum InputEnum {

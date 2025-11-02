@@ -601,32 +601,32 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
     in.held = true;
     switch (key) {
       case KEY_LSHIFT:   case KEY_RSHIFT:
-        es.mods |= MOD_SHIFT;   ++es.shiftCount; break;
+        es.mods |= MODIFIER_SHIFT;   ++es.shiftCount; break;
       case KEY_LCONTROL: case KEY_RCONTROL:
-        es.mods |= MOD_CONTROL; ++es.controlCount; break;
+        es.mods |= MODIFIER_CTRL; ++es.controlCount; break;
       case KEY_LALT:     case KEY_RALT:
-        es.mods |= MOD_ALT;     ++es.altCount; break;
+        es.mods |= MODIFIER_ALT;     ++es.altCount; break;
       case KEY_LSUPER:   case KEY_RSUPER:
-        es.mods |= MOD_SUPER;   ++es.superCount; break;
+        es.mods |= MODIFIER_SUPER;   ++es.superCount; break;
     }
   } else if (action == GLFW_RELEASE) {
     in.held = false;
     switch (key) {
       case KEY_LSHIFT:   case KEY_RSHIFT:
         if (--es.shiftCount <= 0) {
-          es.shiftCount = 0; es.mods &= ~MOD_SHIFT; }
+          es.shiftCount = 0; es.mods &= ~MODIFIER_SHIFT; }
         break;
       case KEY_LCONTROL: case KEY_RCONTROL:
         if (--es.controlCount <= 0) {
-          es.controlCount = 0; es.mods &= ~MOD_CONTROL; }
+          es.controlCount = 0; es.mods &= ~MODIFIER_CTRL; }
         break;
       case KEY_LALT:     case KEY_RALT:
         if (--es.altCount <= 0) {
-          es.altCount = 0; es.mods &= ~MOD_ALT; }
+          es.altCount = 0; es.mods &= ~MODIFIER_ALT; }
         break;
       case KEY_LSUPER:   case KEY_RSUPER:
         if (--es.superCount <= 0) {
-          es.superCount = 0; es.mods &= ~MOD_SUPER; }
+          es.superCount = 0; es.mods &= ~MODIFIER_SUPER; }
         break;
     }
   } else if (action == GLFW_REPEAT) {
