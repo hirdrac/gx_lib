@@ -118,7 +118,9 @@ struct gx::WindowImpl
   {
     {
       const std::lock_guard lg{allImplsMutex};
-      //std::erase(allImpls, this);  // C++20
+#if __cplusplus >= 202002L
+      std::erase(allImpls, this); // C++20
+#else
       for (auto it = allImpls.begin(); it != allImpls.end(); ) {
         if (*it == this) {
           it = allImpls.erase(it);
@@ -126,6 +128,7 @@ struct gx::WindowImpl
           ++it;
         }
       }
+#endif
     }
 
     if (_renderer && glfwInitStatus()) {

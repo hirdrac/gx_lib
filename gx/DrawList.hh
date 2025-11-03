@@ -37,9 +37,7 @@ class gx::DrawList
   void clear() { _data.clear(); }
 
   void append(const DrawList& dl) {
-    const Value* d = dl.data();
-    _data.insert(_data.end(), d, d + dl.size());
-  }
+    _data.insert(_data.end(), dl._data.begin(), dl._data.end()); }
 
   // raw draw commands
   void viewport(int32_t x, int32_t y, int32_t w, int32_t h) {
