@@ -18,61 +18,53 @@ static_assert(__BYTE_ORDER == __LITTLE_ENDIAN);
 namespace gx {
   // types
   using Color = Vec4;
-  using RGBA8 = uint32_t;
+  using RGBA8 = uint32_t;  // red/green/blue/alpha 8 bits per channel
 
   // color constants
-  constexpr Color WHITE   {1.0f, 1.0f, 1.0f, 1.0f};
-  constexpr Color BLACK   {0.0f, 0.0f, 0.0f, 1.0f};
-  constexpr Color GRAY25  {0.25f, 0.25f, 0.25f, 1.0f};
-  constexpr Color GRAY50  {0.5f, 0.5f, 0.5f, 1.0f};
-  constexpr Color GRAY75  {0.75f, 0.75f, 0.75f, 1.0f};
+  constexpr Vec3 WHITE   {1.0f, 1.0f, 1.0f};
+  constexpr Vec3 BLACK   {0.0f, 0.0f, 0.0f};
+  constexpr Vec3 GRAY25  {0.25f, 0.25f, 0.25f};
+  constexpr Vec3 GRAY50  {0.5f, 0.5f, 0.5f};
+  constexpr Vec3 GRAY75  {0.75f, 0.75f, 0.75f};
 
-  constexpr Color RED     {1.0f, 0.0f, 0.0f, 1.0f};
-  constexpr Color GREEN   {0.0f, 1.0f, 0.0f, 1.0f};
-  constexpr Color BLUE    {0.0f, 0.0f, 1.0f, 1.0f};
-  constexpr Color CYAN    {0.0f, 1.0f, 1.0f, 1.0f};
-  constexpr Color YELLOW  {1.0f, 1.0f, 0.0f, 1.0f};
-  constexpr Color MAGENTA {1.0f, 0.0f, 1.0f, 1.0f};
+  constexpr Vec3 RED     {1.0f, 0.0f, 0.0f};
+  constexpr Vec3 GREEN   {0.0f, 1.0f, 0.0f};
+  constexpr Vec3 BLUE    {0.0f, 0.0f, 1.0f};
+  constexpr Vec3 CYAN    {0.0f, 1.0f, 1.0f};
+  constexpr Vec3 YELLOW  {1.0f, 1.0f, 0.0f};
+  constexpr Vec3 MAGENTA {1.0f, 0.0f, 1.0f};
 
-  // functions
+  // RGBA8 functions
   [[nodiscard]] constexpr RGBA8 packRGBA8i(
     uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
     return RGBA8(r) | (RGBA8(g) << 8) | (RGBA8(b) << 16) | (RGBA8(a) << 24);
   }
 
-  [[nodiscard]] constexpr RGBA8 packRGBA8(float r, float g, float b, float a) {
-    return RGBA8(std::clamp(r * 256.0f, 0.0f, 255.0f))
-      | (RGBA8(std::clamp(g * 256.0f, 0.0f, 255.0f)) << 8)
-      | (RGBA8(std::clamp(b * 256.0f, 0.0f, 255.0f)) << 16)
-      | (RGBA8(std::clamp(a * 256.0f, 0.0f, 255.0f)) << 24);
+  [[nodiscard]] constexpr RGBA8 packRGBA8(
+    float r, float g, float b, float a = 1.0f) {
+    return packRGBA8i(
+      uint8_t(std::clamp(r, 0.0f, 1.0f) * 255.0f + .5f),
+      uint8_t(std::clamp(g, 0.0f, 1.0f) * 255.0f + .5f),
+      uint8_t(std::clamp(b, 0.0f, 1.0f) * 255.0f + .5f),
+      uint8_t(std::clamp(a, 0.0f, 1.0f) * 255.0f + .5f));
   }
 
-  [[nodiscard]] constexpr RGBA8 packRGBA8(const Color& c) {
-    return packRGBA8(c.x, c.y, c.z, c.w);
-  }
+  [[nodiscard]] constexpr RGBA8 packRGBA8(const Vec3& c, float a = 1.0f) {
+    return packRGBA8(c.x, c.y, c.z, a); }
+  [[nodiscard]] constexpr RGBA8 packRGBA8(const Vec4& c) {
+    return packRGBA8(c.x, c.y, c.z, c.w); }
 
-  [[nodiscard]] constexpr uint8_t unpackRedInt(RGBA8 c) {
-    return uint8_t(c & 255); }
-  [[nodiscard]] constexpr float unpackRedFloat(RGBA8 c) {
-    return float(unpackRedInt(c)) / 255.0f; }
+  [[nodiscard]] constexpr float unpackRGBA8Red(RGBA8 c) {
+    return float(c & 255) / 255.0f; }
+  [[nodiscard]] constexpr float unpackRGBA8Green(RGBA8 c) {
+    return float((c >> 8) & 255) / 255.0f; }
+  [[nodiscard]] constexpr float unpackRGBA8Blue(RGBA8 c) {
+    return float((c >> 16) & 255) / 255.0f; }
+  [[nodiscard]] constexpr float unpackRGBA8Alpha(RGBA8 c) {
+    return float(c >> 24) / 255.0f; }
 
-  [[nodiscard]] constexpr uint8_t unpackGreenInt(RGBA8 c) {
-    return uint8_t((c >> 8) & 255); }
-  [[nodiscard]] constexpr float unpackGreenFloat(RGBA8 c) {
-    return float(unpackGreenInt(c)) / 255.0f; }
-
-  [[nodiscard]] constexpr uint8_t unpackBlueInt(RGBA8 c) {
-    return uint8_t((c >> 16) & 255); }
-  [[nodiscard]] constexpr float unpackBlueFloat(RGBA8 c) {
-    return float(unpackBlueInt(c)) / 255.0f; }
-
-  [[nodiscard]] constexpr uint8_t unpackAlphaInt(RGBA8 c) {
-    return uint8_t((c >> 24) & 255); }
-  [[nodiscard]] constexpr float unpackAlphaFloat(RGBA8 c) {
-    return float(unpackAlphaInt(c)) / 255.0f; }
-
-  [[nodiscard]] constexpr Color unpackRGBA8(RGBA8 c) {
-    return {unpackRedFloat(c), unpackGreenFloat(c),
-      unpackBlueFloat(c), unpackAlphaFloat(c)};
+  [[nodiscard]] constexpr Vec4 unpackRGBA8(RGBA8 c) {
+    return {unpackRGBA8Red(c), unpackRGBA8Green(c),
+      unpackRGBA8Blue(c), unpackRGBA8Alpha(c)};
   }
 }

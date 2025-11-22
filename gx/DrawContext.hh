@@ -38,7 +38,8 @@ class gx::DrawContext
   // Context state change (reset for every DrawList)
   void color(float r, float g, float b, float a = 1.0f) {
     color(packRGBA8(r, g, b, a)); }
-  void color(const Color& c) { color(packRGBA8(c)); }
+  void color(const Vec3& c, float a = 1.0f) { color(packRGBA8(c, a)); }
+  void color(const Vec4& c) { color(packRGBA8(c)); }
   inline void color(RGBA8 c);
 
   inline void hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1);
@@ -58,7 +59,8 @@ class gx::DrawContext
 
   void modColor(float r, float g, float b, float a = 1.0f) {
     modColor(packRGBA8(r, g, b, a)); }
-  void modColor(const Color& c) { modColor(packRGBA8(c)); }
+  void modColor(const Vec3& c, float a = 1.0f) { modColor(packRGBA8(c, a)); }
+  void modColor(const Vec4& c) { modColor(packRGBA8(c)); }
   void modColor(RGBA8 c) { _dl->modColor(c); }
 
   void capabilities(int32_t c) { _dl->capabilities(c); }
@@ -79,10 +81,9 @@ class gx::DrawContext
     _dl->viewportFull(); }
   void clearView(float r, float g, float b) {
     clearView(packRGBA8(r,g,b,1.0f)); }
-  void clearView(const Color& c) {
-    clearView(packRGBA8(c)); }
-  void clearView(RGBA8 c) {
-    _dl->clearView(c); }
+  void clearView(const Vec3& c, float a = 1.0f) { clearView(packRGBA8(c, a)); }
+  void clearView(const Vec4& c) { clearView(packRGBA8(c)); }
+  void clearView(RGBA8 c) { _dl->clearView(c); }
 
   // Line drawing
   void line(Vec2 a, Vec2 b);
