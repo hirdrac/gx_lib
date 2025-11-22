@@ -320,7 +320,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   struct UniformData {
     // NOTE: for std140 layout, alignment of array types must be 16 bytes
     Mat4 cameraT{INIT_IDENTITY}; // viewT * projT
-    Color modColor = WHITE;
+    Color modColor{1.0f, 1.0f, 1.0f, 1.0f};
     Vec3 lightPos;
     uint32_t pad0 = 0;
     Vec3 lightA;
