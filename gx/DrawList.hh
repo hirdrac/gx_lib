@@ -72,8 +72,9 @@ class gx::DrawList
     add(CMD_camera, m1, m2); }
   void cameraReset() {
     add(CMD_cameraReset); }
-  void light(const Vec3& pt, uint32_t a, uint32_t d) {
-    add(CMD_light, pt.x, pt.y, pt.z, a, d); }
+  void light(const Vec3& pt, const Vec3& ambient, const Vec3& diffuse) {
+    add(CMD_light, pt.x, pt.y, pt.z, ambient.r, ambient.g, ambient.b,
+        diffuse.r, diffuse.g, diffuse.b); }
 
   void clearView(uint32_t c) { add(CMD_clearView, c); }
   void clearView(float r, float g, float b) {

@@ -71,7 +71,7 @@ class gx::DrawContext
   void cameraReset() { _dl->cameraReset(); }
 
   // Lighting
-  void light(Vec3 pos, RGBA8 ambient, RGBA8 diffuse) {
+  void light(const Vec3& pos, const Vec3& ambient, const Vec3& diffuse) {
     _dl->light(pos, ambient, diffuse); }
 
   // View

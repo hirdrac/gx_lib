@@ -1,6 +1,6 @@
 //
 // gx/DrawEntry.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2025 Richard Bradley
 //
 
 #pragma once
@@ -33,7 +33,7 @@ namespace gx {
     CMD_cameraReset,  // <cmd> (1)
 
     // lighting
-    CMD_light,        // <cmd x y z a d> (6)
+    CMD_light,        // <cmd x y z ar ag ab dr dg db> (10)
 
     // drawing commands
     CMD_clearView,    // <cmd c> (2)

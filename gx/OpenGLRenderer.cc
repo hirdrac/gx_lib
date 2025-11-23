@@ -128,7 +128,7 @@ namespace {
         case CMD_capabilities: d += 2; break;
         case CMD_camera:       d += 33; break;
         case CMD_cameraReset:  d += 1; break;
-        case CMD_light:        d += 6; break;
+        case CMD_light:        d += 10; break;
         case CMD_clearView:    d += 2; break;
         case CMD_line2:        d += 5;  vsize += 2; break;
         case CMD_line3:        d += 7;  vsize += 2; break;
@@ -345,7 +345,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_cameraT,       // <OP val*16> (17)
     OP_cameraReset,   // <OP> (1)
     OP_modColor,      // <OP rgba8> (2)
-    OP_light,         // <OP x y z ambient(rgba8) diffuse(rgba8)> (6)
+    OP_light,         // <OP pos(x y z) ambient(r g b) diffuse(r g b)> (10)
 
     // set GL state
     OP_viewport,      // <OP x y w h> (5)
@@ -747,8 +747,8 @@ void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
           break;
 
         case CMD_light: {
-          const Value* d0 = d; d += 5;
-          addOpData(OP_light, d0, d); // pos x/y/z, ambient, diffuse
+          const Value* d0 = d; d += 9;
+          addOpData(OP_light, d0, d); // pos(3), ambient(3), diffuse(3)
           break;
         }
 
@@ -1156,8 +1156,8 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         break;
       case OP_light:
         std::memcpy(ud.lightPos.data(), d, sizeof(float)*3); d += 3;
-        ud.lightA = unpackRGBA8((d++)->uval).rgb();
-        ud.lightD = unpackRGBA8((d++)->uval).rgb();
+        std::memcpy(ud.lightA.data(), d, sizeof(float)*3); d += 3;
+        std::memcpy(ud.lightD.data(), d, sizeof(float)*3); d += 3;
         udChanged = true;
         break;
       case OP_lineWidth:
