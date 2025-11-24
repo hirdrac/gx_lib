@@ -475,9 +475,9 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
     "out vec3 v_lightD;"
 
     "vec3 unpackNormal(uint n) {"
-    "  float x = float(int(n & 0x3ffU) - 511) / 511.0;"
-    "  float y = float(int((n>>10) & 0x3ffU) - 511) / 511.0;"
-    "  float z = float(int((n>>20) & 0x3ffU) - 511) / 511.0;"
+    "  float x = float(n & 1023U) / 511.0 - 1.0;"
+    "  float y = float((n >> 10) & 1023U) / 511.0 - 1.0;"
+    "  float z = float((n >> 20) & 1023U) / 511.0 - 1.0;"
     "  return vec3(x, y, z);"
     "}"
 
