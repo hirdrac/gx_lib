@@ -50,9 +50,9 @@ namespace gx {
   }
 
   [[nodiscard]] constexpr RGBA8 packRGBA8(const Vec3& c, float a = 1.0f) {
-    return packRGBA8(c.x, c.y, c.z, a); }
+    return packRGBA8(c[0], c[1], c[2], a); }
   [[nodiscard]] constexpr RGBA8 packRGBA8(const Vec4& c) {
-    return packRGBA8(c.x, c.y, c.z, c.w); }
+    return packRGBA8(c[0], c[1], c[2], c[3]); }
 
   [[nodiscard]] constexpr float unpackRGBA8Red(RGBA8 c) {
     return float(c & 255) / 255.0f; }
