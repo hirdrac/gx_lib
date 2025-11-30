@@ -164,7 +164,7 @@ class gx::Vector3
   constexpr void set(T vx, T vy, T vz) {
     _val[0] = vx; _val[1] = vy; _val[2] = vz; }
   constexpr void set(const T* v) { set(v[0], v[1], v[2]); }
-  constexpr void set(Vector2<T> v, T vz) { set(v[0], v[1], vz); }
+  constexpr void set(const Vector2<T>& v, T vz) { set(v[0], v[1], vz); }
 
   // Vector2 swizzle
   [[nodiscard]] constexpr Vector2<T> xy() const { return {_val[0], _val[1]}; }
