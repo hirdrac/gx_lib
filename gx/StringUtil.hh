@@ -118,16 +118,18 @@ namespace gx
     return result;
   }
 
-  [[nodiscard]] inline std::string toUpper(std::string s)
+  [[nodiscard]] inline std::string toUpper(std::string_view sv)
   {
     // only supports ASCII
+    std::string s{sv};
     for (char& c : s) { c = char(std::toupper(static_cast<unsigned char>(c))); }
     return s;
   }
 
-  [[nodiscard]] inline std::string toLower(std::string s)
+  [[nodiscard]] inline std::string toLower(std::string_view sv)
   {
     // only supports ASCII
+    std::string s{sv};
     for (char& c : s) { c = char(std::tolower(static_cast<unsigned char>(c))); }
     return s;
   }
