@@ -145,27 +145,28 @@ std::string_view TextFormat::fitText(
                       uint8_t((vals[6]<<4) + vals[7]));
   }
 
-  switch (hashStrLC(str)) {
-    case hashStrLC("white"):   return packRGBA8(WHITE);
-    case hashStrLC("black"):   return packRGBA8(BLACK);
-    case hashStrLC("gray25"):  return packRGBA8(GRAY25);
-    case hashStrLC("gray50"):  return packRGBA8(GRAY50);
-    case hashStrLC("gray75"):  return packRGBA8(GRAY75);
-    case hashStrLC("red"):     return packRGBA8(RED);
-    case hashStrLC("green"):   return packRGBA8(GREEN);
-    case hashStrLC("blue"):    return packRGBA8(BLUE);
-    case hashStrLC("cyan"):    return packRGBA8(CYAN);
-    case hashStrLC("yellow"):  return packRGBA8(YELLOW);
-    case hashStrLC("magenta"): return packRGBA8(MAGENTA);
-    default:                   return std::nullopt;
+  switch (hashStr(str)) {
+    case hashStr("white"):   return packRGBA8(WHITE);
+    case hashStr("black"):   return packRGBA8(BLACK);
+    case hashStr("gray25"):  return packRGBA8(GRAY25);
+    case hashStr("gray50"):  return packRGBA8(GRAY50);
+    case hashStr("gray75"):  return packRGBA8(GRAY75);
+    case hashStr("red"):     return packRGBA8(RED);
+    case hashStr("green"):   return packRGBA8(GREEN);
+    case hashStr("blue"):    return packRGBA8(BLUE);
+    case hashStr("cyan"):    return packRGBA8(CYAN);
+    case hashStr("yellow"):  return packRGBA8(YELLOW);
+    case hashStr("magenta"): return packRGBA8(MAGENTA);
+    default:                 return std::nullopt;
   }
 }
 
 gx::TextMetaTagType TextFormat::parseTag(
   TextState& ts, std::string_view tag) const
 {
-  if (tag.substr(0, 6) == "color=") {
-    const auto color = parseColorStr(trimSpaces(tag.substr(6)));
+  std::string tagLC = toLower(tag);
+  if (tagLC.substr(0, 6) == "color=") {
+    const auto color = parseColorStr(trimSpaces(tagLC.substr(6)));
     if (color.has_value()) {
       ts.pushColor(color.value());
       return TAG_color;
@@ -174,7 +175,7 @@ gx::TextMetaTagType TextFormat::parseTag(
     }
   }
 
-  switch (hashStr(tag)) {
+  switch (hashStr(tagLC)) {
     case hashStr("/color"):
       return ts.popColor() ? TAG_color : TAG_unknown;
     case hashStr("ul"):
