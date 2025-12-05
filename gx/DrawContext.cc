@@ -342,8 +342,8 @@ void DrawContext::glyph(
 }
 
 void DrawContext::_text(
-  const TextFormat& tf, Vec2 pos, AlignEnum align,
-  std::string_view text, const Rect* clipPtr)
+  const TextFormat& tf, Vec2 pos, AlignEnum align, std::string_view text,
+  const Rect* clipPtr, bool fixedColor)
 {
   if (text.empty()) { return; }
 
@@ -407,9 +407,11 @@ void DrawContext::_text(
             const auto tagType = tf.parseTag(ts, tag);
             if (tagType != TAG_unknown) {
               if (tagType == TAG_color) {
-                // TODO: support restoring gradients
-                color((ts.colorCount() > 0) ? ts.color() : initColor);
-                setColor();
+                if (!fixedColor) {
+                  // TODO: support restoring gradients
+                  color((ts.colorCount() > 0) ? ts.color() : initColor);
+                  setColor();
+                }
               } else if (tagType == TAG_underline) {
                 if (!underline && ts.underline()) {
                   ulOp = UL_start;

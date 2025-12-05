@@ -161,12 +161,19 @@ class gx::DrawContext
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip);
 
   // Text drawing
+  //   textFixedColor() functions ignore meta tag color changes
   void text(const TextFormat& tf, Vec2 pos, AlignEnum align,
             std::string_view text) {
-    _text(tf, pos, align, text, nullptr); }
+    _text(tf, pos, align, text, nullptr, false); }
   void text(const TextFormat& tf, Vec2 pos, AlignEnum align,
             std::string_view text, const Rect& clip) {
-    _text(tf, pos, align, text, &clip); }
+    _text(tf, pos, align, text, &clip, false); }
+  void textFixedColor(const TextFormat& tf, Vec2 pos, AlignEnum align,
+                      std::string_view text) {
+    _text(tf, pos, align, text, nullptr, true); }
+  void textFixedColor(const TextFormat& tf, Vec2 pos, AlignEnum align,
+                      std::string_view text, const Rect& clip) {
+    _text(tf, pos, align, text, &clip, true); }
   void glyph(const TextFormat& tf, Vec2 pos, AlignEnum align, int code);
 
   // High-level constructed primitives
@@ -231,7 +238,8 @@ class gx::DrawContext
 
   void _rectangle(float x, float y, float w, float h);
   void _text(const TextFormat& tf, Vec2 pos, AlignEnum align,
-             std::string_view text, const Rect* clipPtr);
+             std::string_view text, const Rect* clipPtr,
+             bool fixedColor);
   void _glyph(const Glyph& g, const TextFormat& tf, Vec2 baseline,
               const Rect* clipPtr, float altWidth = 0);
   void _circleSector(
