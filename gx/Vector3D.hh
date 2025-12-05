@@ -451,20 +451,19 @@ namespace gx {
   template<class T>
   std::ostream& operator<<(std::ostream& os, const Vector2<T>& v)
   {
-    return os << '[' << v[0] << ' ' << v[1] << ']';
+    return os << '[' << v.x << ' ' << v.y << ']';
   }
 
   template<class T>
   std::ostream& operator<<(std::ostream& os, const Vector3<T>& v)
   {
-    return os << '[' << v[0] << ' ' << v[1] << ' ' << v[2] << ']';
+    return os << '[' << v.x << ' ' << v.y << ' ' << v.z << ']';
   }
 
   template<class T>
   std::ostream& operator<<(std::ostream& os, const Vector4<T>& v)
   {
-    return os << '[' << v[0] << ' ' << v[1] << ' '
-              << v[2] << ' ' << v[3] << ']';
+    return os << '[' << v.x << ' ' << v.y << ' ' << v.z << ' ' << v.w << ']';
   }
 
 
