@@ -6,6 +6,7 @@
 // TODO: use advX,advY,glyphX,glyphY for calcSize(),fixText()
 
 #include "TextFormat.hh"
+#include "TextState.hh"
 #include "Font.hh"
 #include "Unicode.hh"
 #include "StringUtil.hh"

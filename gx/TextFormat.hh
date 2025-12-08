@@ -2,59 +2,22 @@
 // gx/TextFormat.hh
 // Copyright (C) 2025 Richard Bradley
 //
+// Text rendering attributes & meta tag parsing
+//
 
 #pragma once
-#include "Color.hh"
 #include "Types.hh"
 #include <string_view>
-#include <array>
 
 namespace gx {
-  class TextState;
-  struct TextFormat;
-
   enum TextMetaTagType {
     TAG_unknown = 0,
     TAG_color = 1,
     TAG_underline = 2,
   };
+
+  struct TextFormat;
 }
-
-
-class gx::TextState
-{
- public:
-  // color
-  [[nodiscard]] uint32_t colorCount() const { return _colors; }
-  [[nodiscard]] RGBA8 color() const {
-    return (_colors > 0) ? _colorStack[_colors - 1] : 0;
-  }
-
-  void pushColor(RGBA8 c) {
-    _colorStack[_colors] = c;
-    if (_colors < (_colorStack.size() - 1)) { ++_colors; }
-  }
-
-  bool popColor() {
-    if (_colors == 0) { return false; }
-    --_colors; return true;
-  }
-
-  // underline
-  [[nodiscard]] bool underline() const { return _underline > 0; }
-
-  void pushUnderline() { ++_underline; }
-
-  bool popUnderline() {
-    if (_underline == 0) { return false; }
-    --_underline; return true;
-  }
-
- private:
-  std::array<RGBA8,6> _colorStack;
-  uint32_t _colors = 0;
-  uint32_t _underline = 0;
-};
 
 
 struct gx::TextFormat
@@ -91,5 +54,5 @@ struct gx::TextFormat
     // returns sub-string that fits in specified length
 
   TextMetaTagType parseTag(TextState& ts, std::string_view tag) const;
-    // returns true if text is a valid text meta tag & updates TextState
+    // returns type of text meta tag & updates TextState
 };

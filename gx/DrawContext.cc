@@ -6,6 +6,7 @@
 #include "DrawContext.hh"
 #include "Font.hh"
 #include "TextFormat.hh"
+#include "TextState.hh"
 #include "Unicode.hh"
 #include "MathUtil.hh"
 #include "Assert.hh"
