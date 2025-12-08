@@ -2,7 +2,7 @@
 // gx/TextState.hh
 // Copyright (C) 2025 Richard Bradley
 //
-// Internal class for text meta tag handling
+// Text meta tag parsing & tag state handling
 //
 
 #pragma once
@@ -11,6 +11,12 @@
 #include <array>
 
 namespace gx {
+  enum TextMetaTagType {
+    TAG_unknown = 0,
+    TAG_color = 1,
+    TAG_underline = 2,
+  };
+
   class TextState;
 }
 
@@ -43,6 +49,9 @@ class gx::TextState
     if (_underline == 0) { return false; }
     --_underline; return true;
   }
+
+  TextMetaTagType parseTag(std::string_view tag);
+    // returns type of text meta tag & updates state
 
  private:
   std::array<RGBA8,6> _colorStack;

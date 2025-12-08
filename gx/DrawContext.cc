@@ -405,7 +405,7 @@ void DrawContext::_text(
           const std::size_t endPos = findUTF8(line, tf.endTag, startPos);
           if (endPos != std::string_view::npos) {
             const auto tag = line.substr(startPos, endPos - startPos);
-            const auto tagType = tf.parseTag(ts, tag);
+            const auto tagType = ts.parseTag(tag);
             if (tagType != TAG_unknown) {
               if (tagType == TAG_color) {
                 if (!fixedColor) {

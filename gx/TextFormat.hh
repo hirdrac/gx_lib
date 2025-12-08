@@ -2,7 +2,7 @@
 // gx/TextFormat.hh
 // Copyright (C) 2025 Richard Bradley
 //
-// Text rendering attributes & meta tag parsing
+// Text rendering attributes
 //
 
 #pragma once
@@ -10,12 +10,6 @@
 #include <string_view>
 
 namespace gx {
-  enum TextMetaTagType {
-    TAG_unknown = 0,
-    TAG_color = 1,
-    TAG_underline = 2,
-  };
-
   struct TextFormat;
 }
 
@@ -52,7 +46,4 @@ struct gx::TextFormat
   [[nodiscard]] std::string_view fitText(
     std::string_view text, float maxWidth) const;
     // returns sub-string that fits in specified length
-
-  TextMetaTagType parseTag(TextState& ts, std::string_view tag) const;
-    // returns type of text meta tag & updates TextState
 };
