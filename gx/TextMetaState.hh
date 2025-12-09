@@ -1,5 +1,5 @@
 //
-// gx/TextState.hh
+// gx/TextMetaState.hh
 // Copyright (C) 2025 Richard Bradley
 //
 // Text meta tag parsing & tag state handling
@@ -17,11 +17,11 @@ namespace gx {
     TAG_underline = 2,
   };
 
-  class TextState;
+  class TextMetaState;
 }
 
 
-class gx::TextState
+class gx::TextMetaState
 {
  public:
   // color

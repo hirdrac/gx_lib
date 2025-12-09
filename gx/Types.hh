@@ -27,7 +27,7 @@ namespace gx {
   class Renderer;
   struct Style;
   struct TextFormat;
-  class TextState;
+  class TextMetaState;
   class Window;
 
 

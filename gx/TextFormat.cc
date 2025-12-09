@@ -6,7 +6,7 @@
 // TODO: use advX,advY,glyphX,glyphY for calcSize(),fixText()
 
 #include "TextFormat.hh"
-#include "TextState.hh"
+#include "TextMetaState.hh"
 #include "Font.hh"
 #include "Unicode.hh"
 #include "Assert.hh"
@@ -17,7 +17,7 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
 {
   GX_ASSERT(font != nullptr);
 
-  TextState ts;
+  TextMetaState ts;
   std::size_t lineStart = 0;
   float maxWidth = 0, height = -lineSpacing;
 
@@ -78,7 +78,7 @@ std::string_view TextFormat::fitText(
   const auto line = (nlPos == std::string_view::npos)
     ? text : text.substr(0, nlPos);
 
-  TextState ts;
+  TextMetaState ts;
   float width = 0;
 
   for (UTF8Iterator itr{line}; itr; ++itr) {

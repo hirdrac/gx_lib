@@ -1,9 +1,9 @@
 //
-// gx/TextState.cc
+// gx/TextMetaState.cc
 // Copyright (C) 2025 Richard Bradley
 //
 
-#include "TextState.hh"
+#include "TextMetaState.hh"
 #include "StringUtil.hh"
 #include <optional>
 using namespace gx;
@@ -53,7 +53,7 @@ using namespace gx;
   }
 }
 
-TextMetaTagType TextState::parseTag(std::string_view tag)
+TextMetaTagType TextMetaState::parseTag(std::string_view tag)
 {
   std::string tagLC = toLower(tag);
   if (tagLC.substr(0, 6) == "color=") {

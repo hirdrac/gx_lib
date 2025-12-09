@@ -6,7 +6,7 @@
 #include "DrawContext.hh"
 #include "Font.hh"
 #include "TextFormat.hh"
-#include "TextState.hh"
+#include "TextMetaState.hh"
 #include "Unicode.hh"
 #include "MathUtil.hh"
 #include "Assert.hh"
@@ -369,7 +369,7 @@ void DrawContext::_text(
   texture(f.atlas());
   if (_colorMode == CM_SOLID) { setColor(); }
 
-  TextState ts;
+  TextMetaState ts;
   std::size_t lineStart = 0;
   RGBA8 initColor = _color0; // TODO: track initial gradients
 
