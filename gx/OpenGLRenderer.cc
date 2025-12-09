@@ -4,7 +4,7 @@
 //
 
 // TODO: add blur transparency shader
-// TODO: render thread
+// TODO: separate render thread
 //   - thread for OpenGL, glfwMakeContextCurrent(), glfwGetProcAddress(),
 //     glfwSwapInterval(), glfwSwapBuffers() calls
 // TODO: init param to determine which shaders to create
@@ -189,52 +189,44 @@ namespace {
   }
 
   // Value iterator reading helper functions
-  [[nodiscard]] inline int32_t ival(const Value*& ptr) {
-    return (ptr++)->ival; }
-  [[nodiscard]] inline uint32_t uval(const Value*& ptr) {
-    return (ptr++)->uval; }
-  [[nodiscard]] inline float fval(const Value*& ptr) {
-    return (ptr++)->fval; }
-  [[nodiscard]] inline Vec2 fval2(const Value*& ptr) {
-    return {fval(ptr), fval(ptr)}; }
-  [[nodiscard]] inline Vec3 fval3(const Value*& ptr) {
-    return {fval(ptr), fval(ptr), fval(ptr)}; }
+  int32_t ival(const Value*& ptr) { return (ptr++)->ival; }
+  uint32_t uval(const Value*& ptr) { return (ptr++)->uval; }
+  float fval(const Value*& ptr) { return (ptr++)->fval; }
+  Vec2 fval2(const Value*& ptr) { return {fval(ptr), fval(ptr)}; }
+  Vec3 fval3(const Value*& ptr) { return {fval(ptr), fval(ptr), fval(ptr)}; }
 
   struct Vertex {
     float x, y, z;  // pos
     uint32_t c;     // color (packed 8-bit RGBA)
     float s, t;     // tex coords
     uint32_t n;     // normal (packed 10-bit XYZ)
-    uint32_t m;     // mode (ignored for now)
-      // TODO: possible values
+    uint32_t m;     // mode (currently unused)
+      // TODO: possible mode values:
       //  0-7   color
       //  8-15  transform
       // 16-31  z texture coord
   };
 
-  inline Vertex vertex_val(const Value*& ptr) {
-    const float x = fval(ptr);
-    const float y = fval(ptr);
-    const float z = fval(ptr);
-    const float s = fval(ptr);
-    const float t = fval(ptr);
-    const uint32_t c = uval(ptr);
-    const uint32_t n = uval(ptr);
-    return {x,y,z,c,s,t,n,0};
+  Vertex vertex_val(const Value*& ptr) {
+    return {
+      fval(ptr), fval(ptr), fval(ptr), // x,y,z
+      uval(ptr),                       // color
+      fval(ptr), fval(ptr),            // s,t
+      uval(ptr), 0};                   // normal, mode
   }
 
   // vertex output functions
-  inline void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c) {
+  void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c) {
     *ptr++ = {pt.x,pt.y,0.0f, c, 0.0f,0.0f, 0, 0}; }
-  inline void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c, Vec2 tx) {
+  void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c, Vec2 tx) {
     *ptr++ = {pt.x,pt.y,0.0f, c, tx.x,tx.y, 0, 0}; }
 
-  inline void vertex3d(Vertex*& ptr, const Vec3& pt, uint32_t c) {
+  void vertex3d(Vertex*& ptr, const Vec3& pt, uint32_t c) {
     *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, 0, 0}; }
-  inline void vertex3d(
+  void vertex3d(
     Vertex*& ptr, const Vec3& pt, uint32_t c, uint32_t n) {
     *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, n, 0}; }
-  inline void vertex3d(
+  void vertex3d(
     Vertex*& ptr, const Vec3& pt, uint32_t c, Vec2 tx, uint32_t n) {
     *ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, n, 0}; }
 
@@ -396,18 +388,18 @@ class gx::OpenGLRenderer final : public gx::Renderer
     first += 2;
   }
 
-  void addTriangles(int32_t& first, int32_t count, TextureID tid) {
+  void addTriangles(int32_t& first, int32_t vertices, TextureID tid) {
     if (_lastOp == OP_drawTriangles) {
       const std::size_t s = _opData.size();
       const TextureID last_tid = _opData[s - 1].uval;
       if (last_tid == tid) {
-        _opData[s - 2].ival += count;
-        first += count;
+        _opData[s - 2].ival += vertices;
+        first += vertices;
         return;
       }
     }
-    addOp(OP_drawTriangles, first, count, tid);
-    first += count;
+    addOp(OP_drawTriangles, first, vertices, tid);
+    first += vertices;
   }
 
   void setGLCapabilities(int32_t cap);
@@ -563,15 +555,15 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
 
 #if 0
   // debug output
-  float val[2] = {};
+  float val[2]{};
   GX_GLCALL(glGetFloatv, GL_ALIASED_LINE_WIDTH_RANGE, val);
-  println("GL_ALIASED_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
+  GX_LOG_INFO("GL_ALIASED_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
 
   GX_GLCALL(glGetFloatv, GL_SMOOTH_LINE_WIDTH_RANGE, val);
-  println("GL_SMOOTH_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
+  GX_LOG_INFO("GL_SMOOTH_LINE_WIDTH_RANGE: ", val[0], " ", val[1]);
 
   GX_GLCALL(glGetFloatv, GL_SMOOTH_LINE_WIDTH_GRANULARITY, val);
-  println("GL_SMOOTH_LINE_WIDTH_GRANULARITY: ", val[0]);
+  GX_LOG_INFO("GL_SMOOTH_LINE_WIDTH_GRANULARITY: ", val[0]);
 #endif
 
   return status;
@@ -1338,7 +1330,8 @@ std::unique_ptr<Renderer> gx::makeOpenGLRenderer(GLFWwindow* win)
   GX_LOG_INFO("GL_VENDOR: ", getGLString(GL_VENDOR));
   GX_LOG_INFO("GL_RENDERER: ", getGLString(GL_RENDERER));
   GX_LOG_INFO("GL_VERSION: ", getGLString(GL_VERSION));
-  GX_LOG_INFO("GL_SHADING_LANGUAGE_VERSION: ", getGLString(GL_SHADING_LANGUAGE_VERSION));
+  GX_LOG_INFO("GL_SHADING_LANGUAGE_VERSION: ",
+              getGLString(GL_SHADING_LANGUAGE_VERSION));
 
   const int major_ver = GLAD_VERSION_MAJOR(GLVersion);
   const int minor_ver = GLAD_VERSION_MINOR(GLVersion);
