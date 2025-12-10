@@ -6,7 +6,12 @@
 #include "GLFW.hh"
 #include "StringUtil.hh"
 #include "Logger.hh"
+#include "Init.hh"
 #include <cstdlib>
+using namespace gx;
+
+
+Platform gx::initPlatform = Platform::unspecified;
 
 namespace {
   [[nodiscard]] std::string_view platformStr(int platform)
@@ -49,7 +54,7 @@ namespace {
   void errorCB(int error, const char* txt)
   {
     GX_LOG_ERROR("GLFW ERROR(", errorStr(error), " 0x",
-                 gx::formatHexUC(uint64_t(error)), "): ", txt);
+                 formatHexUC(uint64_t(error)), "): ", txt);
   }
 
   bool lib_init = false;
@@ -66,7 +71,29 @@ namespace {
   {
     int major = 0, minor = 0, revision = 0;
     glfwGetVersion(&major, &minor, &revision);
-    return gx::concat(major, '.', minor, '.', revision);
+    return concat(major, '.', minor, '.', revision);
+  }
+
+  bool tryPlatform(Platform p)
+  {
+    int glfw_platform;
+    switch (p) {
+      case Platform::x11:
+        glfw_platform = GLFW_PLATFORM_X11; break;
+      case Platform::wayland:
+        glfw_platform = GLFW_PLATFORM_WAYLAND; break;
+      case Platform::win32:
+        glfw_platform = GLFW_PLATFORM_WIN32; break;
+      case Platform::cocoa:
+        glfw_platform = GLFW_PLATFORM_COCOA; break;
+      default:
+        return false;
+    }
+
+    if (!glfwBool(glfwPlatformSupported(glfw_platform))) { return false; }
+
+    glfwInitHint(GLFW_PLATFORM, glfw_platform);
+    return true;
   }
 }
 
@@ -81,6 +108,18 @@ bool gx::initGLFW()
   lib_init = true;
   glfwSetErrorCallback(errorCB);
   //glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, GLFW_FALSE);
+
+  tryPlatform(initPlatform);
+
+#if 0
+  if (glfwBool(glfwPlatformSupported(GLFW_PLATFORM_WAYLAND))
+      && glfwBool(glfwPlatformSupported(GLFW_PLATFORM_X11))) {
+    // force X11 instead of wayland because of wayland issues
+    // TODO: add option to force wayland in this case
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+  }
+#endif
+
   if (!glfwInit()) {
     GX_LOG_ERROR("glfwInit() failed");
     return false;
