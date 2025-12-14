@@ -18,6 +18,7 @@
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
 #include "gx/CmdLineParser.hh"
+#include "gx/Init.hh"
 #include <vector>
 
 using gx::println;
@@ -76,6 +77,7 @@ int showUsage(const char* const* argv)
   println("  --height=PIXELS            Set window height");
   println("  --fullscreen               Start in fullscreen mode");
   println("  --filter=(linear|nearest)  Image filter setting");
+  println("  --x11                      Force X11 when running under Wayland");
   println("  -h,--help                  Show usage");
   return 0;
 }
@@ -122,6 +124,8 @@ int main(int argc, char* argv[])
           println_err("ERROR: unknown filter type '", val, "'");
           return errorUsage(argv);
         }
+      } else if (p.option(0,"x11")) {
+        gx::initPlatform = gx::Platform::x11;
       } else if (p.option('h',"help")) {
         return showUsage(argv);
       } else {

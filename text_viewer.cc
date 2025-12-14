@@ -26,6 +26,7 @@
 #include "gx/Logger.hh"
 #include "gx/Print.hh"
 #include "gx/CmdLineParser.hh"
+#include "gx/Init.hh"
 #include <fstream>
 #include <string>
 #include <string_view>
@@ -101,6 +102,7 @@ int showUsage(const char* const* argv)
   println("  -l,--linespacing=[]   Line spacing (default ", DEFAULT_LINE_SPACING, ")");
   println("  -g,--glyphspacing=[]  Glyph spacing (default ", DEFAULT_GLYPH_SPACING, ")");
   println("  -t,--tab=[]           Tab size (default ", DEFAULT_TAB_SIZE, ")");
+  println("  --x11                 Force X11 when running under Wayland");
   println("  -h,--help             Show usage");
   return 0;
 }
@@ -142,10 +144,12 @@ struct ArgParser
           }
         } else if (p.option('l',"linespacing", lineSpacing)) {
           // no lineSpacing value check currently
-      } else if (p.option('g',"glyphspacing", glyphSpacing)) {
+        } else if (p.option('g',"glyphspacing", glyphSpacing)) {
           // no glyphSpacing value check currently
         } else if (p.option('t',"tab", tabSize)) {
           // no tabSize value check currently
+        } else if (p.option(0,"x11")) {
+          gx::initPlatform = gx::Platform::x11;
         } else {
           println_err("ERROR: Bad option '", p.arg(), "'");
           return errorUsage(argv);
