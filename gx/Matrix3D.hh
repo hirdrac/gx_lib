@@ -35,10 +35,9 @@ class gx::Matrix4x4
 
 
   explicit Matrix4x4(NoInit_t) { }
-  constexpr Matrix4x4()
-    : Matrix4x4{0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0} { }
+  constexpr Matrix4x4() : _val{} { }
   explicit constexpr Matrix4x4(IdentityInit_t)
-    : Matrix4x4{1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1} { }
+    : _val{1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1} { }
   constexpr Matrix4x4(T a, T b, T c, T d, T e, T f, T g, T h,
 		      T i, T j, T k, T l, T m, T n, T o, T p)
     : _val{a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p} { }
@@ -72,13 +71,13 @@ class gx::Matrix4x4
 
   constexpr void setTranslation(T tx, T ty, T tz);
   constexpr void setTranslation(const Vector3<T>& v) {
-    setTranslation(v.x, v.y, v.z); }
+    setTranslation(v[0], v[1], v[2]); }
   constexpr void translate(T tx, T ty, T tz);
-  constexpr void translate(const Vector3<T>& v) { translate(v.x, v.y, v.z); }
+  constexpr void translate(const Vector3<T>& v) { translate(v[0], v[1], v[2]); }
 
   inline void translateOptimized(T tx, T ty, T tz);
   void translateOptimized(const Vector3<T>& v) {
-    translateOptimized(v.x, v.y, v.z); }
+    translateOptimized(v[0], v[1], v[2]); }
 
   void setRotationX(T rad) { setRotationX_sc(std::sin(rad), std::cos(rad)); }
   constexpr void setRotationX_sc(T sinVal, T cosVal);
@@ -103,9 +102,10 @@ class gx::Matrix4x4
   constexpr void rotate_sc(const Vector3<T>& axis, T sinVal, T cosVal);
 
   constexpr void setScaling(T sx, T sy, T sz);
-  constexpr void setScaling(const Vector3<T>& v) { setScaling(v.x, v.y, v.z); }
+  constexpr void setScaling(const Vector3<T>& v) {
+    setScaling(v[0], v[1], v[2]); }
   constexpr void scale(T sx, T sy, T sz);
-  constexpr void scale(const Vector3<T>& v) { scale(v.x, v.y, v.z); }
+  constexpr void scale(const Vector3<T>& v) { scale(v[0], v[1], v[2]); }
   constexpr void scaleX(T sx);
   constexpr void scaleY(T sy);
   constexpr void scaleZ(T sz);
@@ -165,20 +165,20 @@ namespace gx {
   [[nodiscard]] constexpr Vector4<T> operator*(
     const Vector4<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
-    return {(v.x*m[0]) + (v.y*m[4]) + (v.z*m[8])  + (v.w*m[12]),
-            (v.x*m[1]) + (v.y*m[5]) + (v.z*m[9])  + (v.w*m[13]),
-            (v.x*m[2]) + (v.y*m[6]) + (v.z*m[10]) + (v.w*m[14]),
-            (v.x*m[3]) + (v.y*m[7]) + (v.z*m[11]) + (v.w*m[15])};
+    return {(v[0]*m[0]) + (v[1]*m[4]) + (v[2]*m[8])  + (v[3]*m[12]),
+            (v[0]*m[1]) + (v[1]*m[5]) + (v[2]*m[9])  + (v[3]*m[13]),
+            (v[0]*m[2]) + (v[1]*m[6]) + (v[2]*m[10]) + (v[3]*m[14]),
+            (v[0]*m[3]) + (v[1]*m[7]) + (v[2]*m[11]) + (v[3]*m[15])};
   }
 
   template<class T>
   [[nodiscard]] constexpr Vector4<T> operator*(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector4<T>& v)
   {
-    return {(m[0]*v.x) + (m[4]*v.y) + (m[8]*v.z)  + (m[12]*v.w),
-            (m[1]*v.x) + (m[5]*v.y) + (m[9]*v.z)  + (m[13]*v.w),
-            (m[2]*v.x) + (m[6]*v.y) + (m[10]*v.z) + (m[14]*v.w),
-            (m[3]*v.x) + (m[7]*v.y) + (m[11]*v.z) + (m[15]*v.w)};
+    return {(m[0]*v[0]) + (m[4]*v[1]) + (m[8]*v[2])  + (m[12]*v[3]),
+            (m[1]*v[0]) + (m[5]*v[1]) + (m[9]*v[2])  + (m[13]*v[3]),
+            (m[2]*v[0]) + (m[6]*v[1]) + (m[10]*v[2]) + (m[14]*v[3]),
+            (m[3]*v[0]) + (m[7]*v[1]) + (m[11]*v[2]) + (m[15]*v[3])};
   }
 
 
@@ -369,26 +369,26 @@ constexpr void gx::Matrix4x4<T,MOT>::setRotation_sc(
   const Vector3<T>& axis, T sinVal, T cosVal)
 {
   const T cinv = T{1} - cosVal;
-  const T xyc = axis.x * axis.y * cinv;
-  const T xzc = axis.x * axis.z * cinv;
-  const T yzc = axis.y * axis.z * cinv;
-  const T xs = axis.x * sinVal;
-  const T ys = axis.y * sinVal;
-  const T zs = axis.z * sinVal;
+  const T xyc = axis[0] * axis[1] * cinv;
+  const T xzc = axis[0] * axis[2] * cinv;
+  const T yzc = axis[1] * axis[2] * cinv;
+  const T xs = axis[0] * sinVal;
+  const T ys = axis[1] * sinVal;
+  const T zs = axis[2] * sinVal;
 
-  _val[0]  = (Sqr(axis.x) * cinv) + cosVal;
+  _val[0]  = (Sqr(axis[0]) * cinv) + cosVal;
   _val[1]  = xyc + zs;
   _val[2]  = xzc - ys;
   _val[3]  = 0;
 
   _val[4]  = xyc - zs;
-  _val[5]  = (Sqr(axis.y) * cinv) + cosVal;
+  _val[5]  = (Sqr(axis[1]) * cinv) + cosVal;
   _val[6]  = yzc + xs;
   _val[7]  = 0;
 
   _val[8]  = xzc + ys;
   _val[9]  = yzc - xs;
-  _val[10] = (Sqr(axis.z) * cinv) + cosVal;
+  _val[10] = (Sqr(axis[2]) * cinv) + cosVal;
   _val[11] = 0;
 
   _val[12] = 0;
@@ -409,15 +409,15 @@ constexpr void gx::Matrix4x4<T,MOT>::rotate_sc(
   // [      0             0             0       1]
 
   const T cinv = T{1} - cosVal;
-  const T xxc = (Sqr(axis.x) * cinv) + cosVal;
-  const T yyc = (Sqr(axis.y) * cinv) + cosVal;
-  const T zzc = (Sqr(axis.z) * cinv) + cosVal;
-  const T xy = axis.x * axis.y * cinv;
-  const T xz = axis.x * axis.z * cinv;
-  const T yz = axis.y * axis.z * cinv;
-  const T xs = axis.x * sinVal;
-  const T ys = axis.y * sinVal;
-  const T zs = axis.z * sinVal;
+  const T xxc = (Sqr(axis[0]) * cinv) + cosVal;
+  const T yyc = (Sqr(axis[1]) * cinv) + cosVal;
+  const T zzc = (Sqr(axis[2]) * cinv) + cosVal;
+  const T xy = axis[0] * axis[1] * cinv;
+  const T xz = axis[0] * axis[2] * cinv;
+  const T yz = axis[1] * axis[2] * cinv;
+  const T xs = axis[0] * sinVal;
+  const T ys = axis[1] * sinVal;
+  const T zs = axis[2] * sinVal;
 
   for (size_type i = 0; i != 16; i += 4) {
     const T t0 = _val[i];
@@ -521,10 +521,10 @@ namespace gx {
   [[nodiscard]] constexpr Vector3<T> multPoint(
     const Vector3<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
-    // assumptions: v.w = 1, m[3,7,11] = 0, m[15] = 1
-    return {(v.x*m[0]) + (v.y*m[4]) + (v.z*m[8])  + m[12],
-            (v.x*m[1]) + (v.y*m[5]) + (v.z*m[9])  + m[13],
-            (v.x*m[2]) + (v.y*m[6]) + (v.z*m[10]) + m[14]};
+    // assumptions: v[3] = 1, m[3,7,11] = 0, m[15] = 1
+    return {(v[0]*m[0]) + (v[1]*m[4]) + (v[2]*m[8])  + m[12],
+            (v[0]*m[1]) + (v[1]*m[5]) + (v[2]*m[9])  + m[13],
+            (v[0]*m[2]) + (v[1]*m[6]) + (v[2]*m[10]) + m[14]};
   }
 
   // multPoint() - column major matrix * column vector
@@ -532,10 +532,10 @@ namespace gx {
   [[nodiscard]] constexpr Vector3<T> multPoint(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector3<T>& v)
   {
-    // assumptions: v.w = 1, m[3,7,11] = 0, m[15] = 1
-    return {(m[0]*v.x) + (m[4]*v.y) + (m[8]*v.z)  + m[12],
-            (m[1]*v.x) + (m[5]*v.y) + (m[9]*v.z)  + m[13],
-            (m[2]*v.x) + (m[6]*v.y) + (m[10]*v.z) + m[14]};
+    // assumptions: v[3] = 1, m[3,7,11] = 0, m[15] = 1
+    return {(m[0]*v[0]) + (m[4]*v[1]) + (m[8]*v[2])  + m[12],
+            (m[1]*v[0]) + (m[5]*v[1]) + (m[9]*v[2])  + m[13],
+            (m[2]*v[0]) + (m[6]*v[1]) + (m[10]*v[2]) + m[14]};
   }
 
   // multVector() - row vector * row major matrix
@@ -543,10 +543,10 @@ namespace gx {
   [[nodiscard]] constexpr Vector3<T> multVector(
     const Vector3<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
-    // assumptions: v.w = 0, m[3,7,11] = 0, m[15] = 1
-    return {(v.x*m[0]) + (v.y*m[4]) + (v.z*m[8]),
-            (v.x*m[1]) + (v.y*m[5]) + (v.z*m[9]),
-            (v.x*m[2]) + (v.y*m[6]) + (v.z*m[10])};
+    // assumptions: v[3] = 0, m[3,7,11] = 0, m[15] = 1
+    return {(v[0]*m[0]) + (v[1]*m[4]) + (v[2]*m[8]),
+            (v[0]*m[1]) + (v[1]*m[5]) + (v[2]*m[9]),
+            (v[0]*m[2]) + (v[1]*m[6]) + (v[2]*m[10])};
   }
 
   // multVector() - column major matrix * column vector
@@ -554,10 +554,10 @@ namespace gx {
   [[nodiscard]] constexpr Vector3<T> multVector(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector3<T>& v)
   {
-    // assumptions: v.w = 0, m[3,7,11] = 0, m[15] = 1
-    return {(m[0]*v.x) + (m[4]*v.y) + (m[8]*v.z),
-            (m[1]*v.x) + (m[5]*v.y) + (m[9]*v.z),
-            (m[2]*v.x) + (m[6]*v.y) + (m[10]*v.z)};
+    // assumptions: v[3] = 0, m[3,7,11] = 0, m[15] = 1
+    return {(m[0]*v[0]) + (m[4]*v[1]) + (m[8]*v[2]),
+            (m[1]*v[0]) + (m[5]*v[1]) + (m[9]*v[2]),
+            (m[2]*v[0]) + (m[6]*v[1]) + (m[10]*v[2])};
   }
 
   // multVectorTrans - row vector * transpose(row major matrix)
@@ -565,10 +565,10 @@ namespace gx {
   [[nodiscard]] constexpr Vector3<T> multVectorTrans(
     const Vector3<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
-    // assumptions: v.w = 0, m[12,13,14] = 0, m[15] = 1
-    return {(v.x*m[0]) + (v.y*m[1]) + (v.z*m[2]),
-            (v.x*m[4]) + (v.y*m[5]) + (v.z*m[6]),
-            (v.x*m[8]) + (v.y*m[9]) + (v.z*m[10])};
+    // assumptions: v[3] = 0, m[12,13,14] = 0, m[15] = 1
+    return {(v[0]*m[0]) + (v[1]*m[1]) + (v[2]*m[2]),
+            (v[0]*m[4]) + (v[1]*m[5]) + (v[2]*m[6]),
+            (v[0]*m[8]) + (v[1]*m[9]) + (v[2]*m[10])};
   }
 
   // multVectorTrans() - transpose(column major matrix) * column vector
@@ -576,10 +576,10 @@ namespace gx {
   [[nodiscard]] constexpr Vector3<T> multVectorTrans(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector3<T>& v)
   {
-    // assumptions: v.w = 0, m[12,13,14] = 0, m[15] = 1
-    return {(m[0]*v.x) + (m[1]*v.y) + (m[2]*v.z),
-            (m[4]*v.x) + (m[5]*v.y) + (m[6]*v.z),
-            (m[8]*v.x) + (m[9]*v.y) + (m[10]*v.z)};
+    // assumptions: v[3] = 0, m[12,13,14] = 0, m[15] = 1
+    return {(m[0]*v[0]) + (m[1]*v[1]) + (m[2]*v[2]),
+            (m[4]*v[0]) + (m[5]*v[1]) + (m[6]*v[2]),
+            (m[8]*v[0]) + (m[9]*v[1]) + (m[10]*v[2])};
   }
 
   // Matrix Inversion
