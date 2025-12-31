@@ -368,15 +368,15 @@ class gx::OpenGLRenderer final : public gx::Renderer
     _lastOp = op;
   }
 
-  void addOpData(GLOperation op, const Mat4& m) {
-    _opData.push_back(op);
-    _opData.insert(_opData.end(), m.begin(), m.end());
-  }
-
-  void addOpData(GLOperation op, const Value* begin, const Value* end) {
+  template<class Iter>
+  void addOpData(GLOperation op, Iter begin, Iter end) {
     _opData.push_back(op);
     _opData.insert(_opData.end(), begin, end);
     _lastOp = op;
+  }
+
+  void addOpMatrix(GLOperation op, const Mat4& m) {
+    addOpData(op, m.begin(), m.end());
   }
 
   void addLine(int32_t& first) {
@@ -727,7 +727,7 @@ void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
           Mat4 viewT{INIT_NONE}, projT{INIT_NONE};
           std::memcpy(viewT.data(), d, sizeof(float)*16); d += 16;
           std::memcpy(projT.data(), d, sizeof(float)*16); d += 16;
-          addOpData(OP_cameraT, viewT * projT);
+          addOpMatrix(OP_cameraT, viewT * projT);
           cameraSet = true;
           break;
         }
