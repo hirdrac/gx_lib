@@ -1,6 +1,6 @@
 //
 // gx/Renderer.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 // TODO: frame stats (draw calls, buffer size)
@@ -90,9 +90,16 @@ class gx::Renderer
   // setup methods
   virtual bool init(GLFWwindow* win) = 0;
   virtual bool setSwapInterval(int interval) = 0;
+
+  // framebuffer methods
   virtual bool setFramebufferSize(int width, int height) = 0;
+  [[nodiscard]] int framebufferWidth() const { return _fbWidth; }
+  [[nodiscard]] int framebufferHeight() const { return _fbHeight; }
+  [[nodiscard]] std::pair<int,int> framebufferDimensions() const {
+    return {_fbWidth, _fbHeight}; }
 
   // texture methods
+  [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
   virtual TextureHandle newTexture(
     const Image& img, const TextureParams& params) = 0;
 
@@ -102,11 +109,6 @@ class gx::Renderer
 
   // general accessors
   [[nodiscard]] GLFWwindow* window() { return _window; }
-  [[nodiscard]] int framebufferWidth() const { return _fbWidth; }
-  [[nodiscard]] int framebufferHeight() const { return _fbHeight; }
-  [[nodiscard]] std::pair<int,int> framebufferDimensions() const {
-    return {_fbWidth, _fbHeight}; }
-  [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
   [[nodiscard]] int swapInterval() const { return _swapInterval; }
   [[nodiscard]] int frameRate() const { return _frameRate; }
 
