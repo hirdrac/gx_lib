@@ -1,6 +1,6 @@
 //
 // gx/OpenGLRenderer.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 // TODO: add blur transparency shader
@@ -118,6 +118,8 @@ namespace {
     while (d < dEnd) {
       const uint32_t cmd = d->uval;
       switch (cmd) {
+        case CMD_noop:         d += 1; break;
+        case CMD_framebuffer:  d += 2; break;
         case CMD_viewport:     d += 5; break;
         case CMD_viewportFull: d += 1; break;
         case CMD_color:        d += 2; break;
@@ -340,6 +342,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_light,         // <OP pos(x y z) ambient(r g b) diffuse(r g b)> (10)
 
     // set GL state
+    OP_framebuffer,   // <OP id> (2)
     OP_viewport,      // <OP x y w h> (5)
     OP_viewportFull,  // <OP> (1)
     OP_capabilities,  // <OP cap> (2)
@@ -698,6 +701,14 @@ void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
     for (const Value* d = data; d != data_end; ) {
       const uint32_t cmd = (d++)->uval;
       switch (cmd) {
+        case CMD_noop:
+          break;
+
+        case CMD_framebuffer:
+          addOp(OP_framebuffer, *d++);
+          // TODO: reset state with framebuffer change?
+          break;
+
         case CMD_viewport: {
           const Value* d0 = d; d += 4;
           addOpData(OP_viewport, d0, d);
@@ -1160,6 +1171,10 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         GX_GLCALL(glClearColor, c.r, c.g, c.b, c.a);
         break;
       }
+      case OP_framebuffer:
+        // TODO: implement framebuffer setting
+        ++d;
+        break;
       case OP_viewport: {
         const int32_t x = (d++)->ival;
         const int32_t y = (d++)->ival;

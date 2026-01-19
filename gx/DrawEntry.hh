@@ -1,6 +1,6 @@
 //
 // gx/DrawEntry.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #pragma once
@@ -18,7 +18,10 @@ namespace gx {
   };
 
   enum DrawCmd : uint32_t {
+    CMD_noop = 0,     // <cmd> (1)
+
     // state / control commands
+    CMD_framebuffer,  // <cmd id> (2)
     CMD_viewport,     // <cmd x y w h> (5)
     CMD_viewportFull, // <cmd> (1)
     CMD_color,        // <cmd c> (2)

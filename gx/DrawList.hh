@@ -1,6 +1,6 @@
 //
 // gx/DrawList.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #pragma once
@@ -40,6 +40,7 @@ class gx::DrawList
     _data.insert(_data.end(), dl._data.begin(), dl._data.end()); }
 
   // raw draw commands
+  void framebuffer(int32_t id) { add(CMD_framebuffer, id); }
   void viewport(int32_t x, int32_t y, int32_t w, int32_t h) {
     add(CMD_viewport, x, y, w, h); }
   void viewportFull() {
