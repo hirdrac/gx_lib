@@ -1,6 +1,6 @@
 //
 // gx/Logger.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #pragma once
@@ -16,14 +16,13 @@ namespace gx {
   class Logger;
   class LoggerImpl;
 
-  enum LogLevel {
-    LVL_TRACE,
-    LVL_INFO,
-    LVL_WARN,
-    LVL_ERROR,
-    LVL_FATAL,
-
-    LVL_DISABLED
+  enum class LogLevel {
+    trace,    // internal values just for developer debugging
+    info,     // general operational events
+    warn,     // events that could be an error
+    error,    // error events when the program can continue
+    fatal,    // error events when the program must terminate
+    disabled  // all logging disabled
   };
 }
 
@@ -39,17 +38,22 @@ class gx::Logger
 
   // members
   void setOStream(std::ostream& os);
+    // write log to stderr
   void setFile(std::string_view fileName);
-  void rotate();
+    // write log to a file
+  bool rotate();
+    // end current log file & start a new one
+    // returns false if log isn't being writen a file
 
   [[nodiscard]] LogLevel level() const { return _level; }
   void setLevel(LogLevel lvl) { _level = lvl; }
-  void disable() { _level = LVL_DISABLED; }
+  void disable() { _level = LogLevel::disabled; }
   void showMS(bool enable) { _showMS = enable; }
   void separateDate(bool enable) { _separateDate = enable; }
   void setSourcePrefix(std::string_view prefix) { _sourcePrefix = prefix; }
 
   // log method
+  // (calling directly will always log message - only macros check log level)
   template<class... Args>
   void log(LogLevel lvl, std::string_view file, int line, const Args&... args) {
     auto os = logStream(lvl);
@@ -61,7 +65,7 @@ class gx::Logger
   std::unique_ptr<LoggerImpl> _impl;
   std::string _sourcePrefix = "src/";
   int _lastDate = 0;
-  LogLevel _level = LVL_INFO;
+  LogLevel _level = LogLevel::info;
   bool _showMS = true;
   bool _separateDate = true;
 
@@ -90,13 +94,18 @@ namespace gx {
 
 
 // default logger instance logging macros
+//
+// NOTE: messages not logged because of current log level will not evaluate
+//   macro arguments.  Do not put code with side effects in macro arguments
+//   if the side effects are important.
+//
 #define GX_LOG_TRACE(...) \
-  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_TRACE,__VA_ARGS__)
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LogLevel::trace,__VA_ARGS__)
 #define GX_LOG_INFO(...) \
-  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_INFO,__VA_ARGS__)
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LogLevel::info,__VA_ARGS__)
 #define GX_LOG_WARN(...) \
-  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_WARN,__VA_ARGS__)
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LogLevel::warn,__VA_ARGS__)
 #define GX_LOG_ERROR(...) \
-  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_ERROR,__VA_ARGS__)
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LogLevel::error,__VA_ARGS__)
 #define GX_LOG_FATAL(...) \
-  GX_LOGGER_LOG(gx::defaultLogger(),gx::LVL_FATAL,__VA_ARGS__)
+  GX_LOGGER_LOG(gx::defaultLogger(),gx::LogLevel::fatal,__VA_ARGS__)

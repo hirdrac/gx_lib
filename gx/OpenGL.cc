@@ -1,6 +1,6 @@
 //
 // gx/OpenGL.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "OpenGL.hh"
@@ -63,9 +63,9 @@ static void GLCleanUp()
 {
   switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:
-    case GL_DEBUG_SEVERITY_MEDIUM: return LVL_ERROR;
-    case GL_DEBUG_SEVERITY_LOW:    return LVL_WARN;
-    default:                       return LVL_INFO;
+    case GL_DEBUG_SEVERITY_MEDIUM: return LogLevel::error;
+    case GL_DEBUG_SEVERITY_LOW:    return LogLevel::warn;
+    default:                       return LogLevel::info;
   }
 }
 
@@ -146,8 +146,8 @@ int gx::GLCheckErrors(std::string_view msg, std::string_view file, int line)
   int count = 0;
   GLenum error;
   while ((error = glGetError()) != GL_NO_ERROR) {
-    GX_LOGGER_LOG_FL(defaultLogger(), LVL_ERROR, file, line, msg, ": ",
-                     GLErrorStr(error));
+    GX_LOGGER_LOG_FL(defaultLogger(), LogLevel::error, file, line,
+                     msg, ": ", GLErrorStr(error));
     ++count;
   }
 

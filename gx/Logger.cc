@@ -1,6 +1,6 @@
 //
 // gx/Logger.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 // TODO: threaded support
@@ -49,12 +49,12 @@ using namespace gx;
 [[nodiscard]] static constexpr std::string_view levelStr(LogLevel l)
 {
   switch (l) {
-    case LVL_TRACE: return " [TRACE] ";
-    case LVL_INFO:  return " [INFO] ";
-    case LVL_WARN:  return " [WARN] ";
-    case LVL_ERROR: return " [ERROR] ";
-    case LVL_FATAL: return " [FATAL] ";
-    default:        return " [UNKNOWN] ";
+    case LogLevel::trace: return " [TRACE] ";
+    case LogLevel::info:  return " [INFO] ";
+    case LogLevel::warn:  return " [WARN] ";
+    case LogLevel::error: return " [ERROR] ";
+    case LogLevel::fatal: return " [FATAL] ";
+    default:              return " [UNKNOWN] ";
   }
 }
 
@@ -86,10 +86,10 @@ class gx::LoggerImpl
     _os->flush();
   }
 
-  void rotate()
+  bool rotate()
   {
     const std::lock_guard lg{_mutex};
-    if (!_fileStream) return;
+    if (!_fileStream) return false;
 
     const std::size_t x = _fileName.rfind('.');
     std::string nf = _fileName.substr(0,x) + fileTime();
@@ -100,6 +100,7 @@ class gx::LoggerImpl
     _fileStream.close();
     std::rename(_fileName.c_str(), nf.c_str());
     _fileStream = std::ofstream(_fileName, std::ios_base::app);
+    return true;
   }
 
  private:
@@ -127,9 +128,9 @@ void Logger::setFile(std::string_view fileName)
   _impl->setFile(fileName);
 }
 
-void Logger::rotate()
+bool Logger::rotate()
 {
-  _impl->rotate();
+  return _impl->rotate();
 }
 
 std::ostringstream Logger::logStream(LogLevel lvl)
