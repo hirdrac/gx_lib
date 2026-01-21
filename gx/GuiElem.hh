@@ -1,6 +1,6 @@
 //
 // gx/GuiElem.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #pragma once
@@ -69,7 +69,7 @@ class gx::GuiElem
   // shared properties
   std::vector<GuiElem> elems;  // child elements
   GuiElemType type;
-  AlignEnum align;
+  Align align;
   EventID eid;
 
   // layout margins
@@ -103,7 +103,7 @@ class gx::GuiElem
     float size; // width in characters
     uint32_t maxChars;
     EntryType type;
-    AlignEnum align; // alignment of entry text
+    Align align; // alignment of entry text
     float tx = 0; // cache last text x pos for mouse click cursor pos calc
   };
 
@@ -142,10 +142,9 @@ class gx::GuiElem
   bool _active = false;  // popup/menu activated
   bool _enabled = true;
 
-  GuiElem(GuiElemType t, AlignEnum a, EventID i)
+  GuiElem(GuiElemType t, Align a, EventID i)
     : type{t}, align{a}, eid{i} { }
-  GuiElem(GuiElemType t, AlignEnum a, EventID i,
-          std::initializer_list<GuiElem> x)
+  GuiElem(GuiElemType t, Align a, EventID i, std::initializer_list<GuiElem> x)
     : elems{x}, type{t}, align{a}, eid{i} { }
 
   [[nodiscard]] bool contains(float x, float y) const {

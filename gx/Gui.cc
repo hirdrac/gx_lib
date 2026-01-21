@@ -1,6 +1,6 @@
 //
 // gx/Gui.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "Gui.hh"
@@ -240,14 +240,14 @@ static void resizedElem(const GuiTheme& thm, GuiElem& def)
   switch (def.type) {
     case GUI_HFRAME:
       for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_VJUSTIFY) {
+        if (vjustified(e.align)) {
           e._h = def._h - e.marginH(); resizedElem(thm, e);
         }
       }
       break;
     case GUI_VFRAME:
       for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_HJUSTIFY) {
+        if (hjustified(e.align)) {
           e._w = def._w - e.marginW(); resizedElem(thm, e);
         }
       }
@@ -287,9 +287,9 @@ static void updateSize(GuiElem& def, const GuiTheme& thm)
       }
       float total_w = -thm.frameSpacing;
       for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_JUSTIFY) {
-          if (e.align & ALIGN_HJUSTIFY) { e._w = max_w - e.marginW(); }
-          if (e.align & ALIGN_VJUSTIFY) { e._h = max_h - e.marginH(); }
+        if (justified(e.align)) {
+          if (hjustified(e.align)) { e._w = max_w - e.marginW(); }
+          if (vjustified(e.align)) { e._h = max_h - e.marginH(); }
           resizedElem(thm, e);
         }
         total_w += e.layoutW() + thm.frameSpacing;
@@ -306,9 +306,9 @@ static void updateSize(GuiElem& def, const GuiTheme& thm)
       }
       float total_h = -thm.frameSpacing;
       for (GuiElem& e : def.elems) {
-        if (e.align & ALIGN_JUSTIFY) {
-          if (e.align & ALIGN_HJUSTIFY) { e._w = max_w - e.marginW(); }
-          if (e.align & ALIGN_VJUSTIFY) { e._h = max_h - e.marginH(); }
+        if (justified(e.align)) {
+          if (hjustified(e.align)) { e._w = max_w - e.marginW(); }
+          if (vjustified(e.align)) { e._h = max_h - e.marginH(); }
           resizedElem(thm, e);
         }
         total_h += e.layoutH() + thm.frameSpacing;
@@ -423,16 +423,16 @@ static void updatePos(GuiElem& def, const GuiTheme& thm,
   right  -= def.r_margin;
   bottom -= def.b_margin;
 
-  switch (HAlign(def.align)) {
-    case ALIGN_LEFT:  def._x = left; break;
-    case ALIGN_RIGHT: def._x = right - def._w; break;
+  switch (hAlign(def.align)) {
+    case Align::left:  def._x = left; break;
+    case Align::right: def._x = right - def._w; break;
     default: // hcenter
       def._x = std::floor((left + right - def._w) * .5f); break;
   }
 
-  switch (VAlign(def.align)) {
-    case ALIGN_TOP:    def._y = top; break;
-    case ALIGN_BOTTOM: def._y = bottom - def._h; break;
+  switch (vAlign(def.align)) {
+    case Align::top:    def._y = top; break;
+    case Align::bottom: def._y = bottom - def._h; break;
     default: // vcenter
       def._y = std::floor((top + bottom - def._h) * .5f + .5f); break;
   }
@@ -1233,7 +1233,7 @@ bool Gui::setItemNo(PanelID pid, EventID eid, int no)
   return true;
 }
 
-PanelID Gui::addPanel(PanelPtr ptr, float x, float y, AlignEnum align)
+PanelID Gui::addPanel(PanelPtr ptr, float x, float y, Align align)
 {
   initElem(ptr->root);
   layout(*ptr, x, y, align);
@@ -1250,13 +1250,13 @@ PanelID Gui::addPanel(PanelPtr ptr, float x, float y, AlignEnum align)
   return (*itr)->id;
 }
 
-void Gui::layout(Panel& p, float x, float y, AlignEnum align)
+void Gui::layout(Panel& p, float x, float y, Align align)
 {
   const GuiTheme& thm = *p.theme;
   GX_ASSERT(thm.font != nullptr);
   p.layout = {x,y,0,0};
-  if (HAlign(align) == ALIGN_RIGHT) { std::swap(p.layout.x, p.layout.w); }
-  if (VAlign(align) == ALIGN_BOTTOM) { std::swap(p.layout.y, p.layout.h); }
+  if (hAlign(align) == Align::right) { std::swap(p.layout.x, p.layout.w); }
+  if (vAlign(align) == Align::bottom) { std::swap(p.layout.y, p.layout.h); }
   p.needLayout = false;
   p.root.align = align;
   updateSize(p.root, thm);
@@ -1274,7 +1274,7 @@ void Gui::initElem(GuiElem& def)
       GuiElem& e0 = def.elems[0];
       const GuiElem& src = e->elems[0];
       e0.label().text = src.label().text;
-      e0.align = ALIGN_CENTER_LEFT;
+      e0.align = Align::center_left;
       e0.eid   = src.eid;
       def.item().no = e->item().no;
     }
@@ -1367,13 +1367,13 @@ bool Gui::drawElem(
     case GUI_LABEL:
       dc2.color(style->textColor);
       dc2.text({thm.font, float(thm.textSpacing)},
-               {ex, ey}, ALIGN_TOP_LEFT, def.label().text);
+               {ex, ey}, Align::top_left, def.label().text);
       break;
     case GUI_VLABEL:
       dc2.color(style->textColor);
       dc2.text(
         {thm.font, float(thm.textSpacing), 0, 0, {0,-1}, {1,0}, {0,-1}, {1,0}},
-        {ex, ey+eh}, ALIGN_TOP_LEFT, def.label().text);
+        {ex, ey+eh}, Align::top_left, def.label().text);
       break;
     case GUI_HLINE: {
       const float b = thm.lineBorder;
@@ -1396,7 +1396,7 @@ bool Gui::drawElem(
         dc2.color(style->textColor);
         dc2.glyph({thm.font, float(thm.textSpacing)},
                   {ex + b + thm.checkXOffset, ey + b + thm.checkYOffset},
-                  ALIGN_TOP_LEFT, thm.checkCode);
+                  Align::top_left, thm.checkCode);
       }
       break;
     }
@@ -1404,7 +1404,7 @@ bool Gui::drawElem(
       dc.shape({ex, ey, ew, eh}, *style);
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
-                {ex + ew, ey + thm.border}, ALIGN_TOP_RIGHT, thm.subMenuCode);
+                {ex + ew, ey + thm.border}, Align::top_right, thm.subMenuCode);
       break;
     case GUI_LISTSELECT: {
       dc.shape({ex, ey, ew, eh}, *style);
@@ -1413,7 +1413,7 @@ bool Gui::drawElem(
         ? thm.listSelectOpenCode : thm.listSelectCode;
       dc2.color(style->textColor);
       dc2.glyph({thm.font, float(thm.textSpacing)},
-                {ex + ew - b, ey + b}, ALIGN_TOP_RIGHT, code);
+                {ex + ew - b, ey + b}, Align::top_right, code);
       break;
     }
     case GUI_LISTSELECT_ITEM:
@@ -1424,7 +1424,7 @@ bool Gui::drawElem(
           const float b = thm.border;
           dc2.color(style->textColor);
           dc2.glyph({thm.font, float(thm.textSpacing)}, {ex + ew - b, ey + b},
-                    ALIGN_TOP_RIGHT, thm.listSelectItemCode);
+                    Align::top_right, thm.listSelectItemCode);
         }
       }
       break;
@@ -1443,9 +1443,9 @@ bool Gui::drawElem(
       const float rightEdge = leftEdge + maxWidth;
       float tx = leftEdge;
       if (sizeW <= maxWidth) {
-        if (HAlign(entry.align) == ALIGN_RIGHT) {
+        if (hAlign(entry.align) == Align::right) {
           tx = ex + ew - (sizeW + cw + thm.entryRightMargin);
-        } else if (HAlign(entry.align) != ALIGN_LEFT) { // HCENTER
+        } else if (hAlign(entry.align) != Align::left) { // HCENTER
           tx = ex + ((ew - sizeW) * .5f);
         }
       }
@@ -1473,7 +1473,7 @@ bool Gui::drawElem(
       dc2.color(style->textColor);
       // TODO: add gradient color if text is off left/right edges
       dc2.text(tf, {tx, ey + thm.entryTopMargin},
-               ALIGN_TOP_LEFT, txt, {ex, ey, ew, eh});
+               Align::top_left, txt, {ex, ey, ew, eh});
       if (def._id == _focusID) {
         const float cy = ey + float(std::max(int(thm.entryTopMargin), 1) - 1);
         const float ch = float(thm.font->size());

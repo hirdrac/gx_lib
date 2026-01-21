@@ -1,6 +1,6 @@
 //
 // demo_draw.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 // TODO: draw 3d cube w/ lighting
@@ -215,7 +215,7 @@ void draw_text1(gx::DrawContext& dc, float x, float y)
   dc.color(WHITE);
 
   for (int i = 0; i < 5; ++i) {
-    dc.text(tf, {x+60, y+55}, gx::ALIGN_CENTER_LEFT, "  abc ABC 123");
+    dc.text(tf, {x+60, y+55}, gx::Align::center_left, "  abc ABC 123");
     tf.rotate(gx::degToRad(22.5f));
   }
 }
@@ -346,7 +346,7 @@ int main(int argc, char** argv)
       x = y = 0;
       for (int i = start_gfx; i < end_gfx; ++i) {
         dc.color(WHITE);
-        dc.text(tf, {x+(ITEM_WIDTH/2), y+6}, gx::ALIGN_TOP_CENTER,
+        dc.text(tf, {x+(ITEM_WIDTH/2), y+6}, gx::Align::top_center,
                 gfxData[i].desc);
         x += ITEM_WIDTH;
         if (x > float(width - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
@@ -355,7 +355,7 @@ int main(int argc, char** argv)
       if (maxPage > 0) {
         dc.color(WHITE);
         dc.text(tf, {float(width-10), float(height-1)},
-                gx::ALIGN_BOTTOM_RIGHT,
+                gx::Align::bottom_right,
                 gx::concat("Page ", page+1, " of ", maxPage+1));
       }
 

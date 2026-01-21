@@ -1,6 +1,6 @@
 //
 // gx/DrawContext.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "DrawContext.hh"
@@ -307,7 +307,7 @@ void DrawContext::rectangle(
 }
 
 void DrawContext::glyph(
-  const TextFormat& tf, Vec2 pos, AlignEnum align, int code)
+  const TextFormat& tf, Vec2 pos, Align align, int code)
 {
   if (!checkColor()) { return; }
 
@@ -321,21 +321,21 @@ void DrawContext::glyph(
 
   if (!g->bitmap) { return; }
 
-  const AlignEnum v_align = VAlign(align);
-  if (v_align == ALIGN_TOP) {
+  const Align v_align = vAlign(align);
+  if (v_align == Align::top) {
     pos += tf.advY * f.ymax();
-  } else if (v_align == ALIGN_BOTTOM) {
+  } else if (v_align == Align::bottom) {
     const float lh = float(f.size()) + tf.lineSpacing;
     pos += tf.advY * (f.ymin() - lh);
-  } else if (v_align == ALIGN_VCENTER) {
+  } else if (v_align == Align::vcenter) {
     const float lh = float(f.size()) + tf.lineSpacing;
     pos += tf.advY * ((f.ymax() - lh) * .5f);
   } // otherwise, pos is baseline
 
-  const AlignEnum h_align = HAlign(align);
-  if (h_align != ALIGN_LEFT) {
+  const Align h_align = hAlign(align);
+  if (h_align != Align::left) {
     const float tw = f.glyphWidth(code);
-    pos -= tf.advX * ((h_align == ALIGN_RIGHT) ? tw : (tw * .5f));
+    pos -= tf.advX * ((h_align == Align::right) ? tw : (tw * .5f));
   }
 
   texture(f.atlas());
@@ -343,7 +343,7 @@ void DrawContext::glyph(
 }
 
 void DrawContext::_text(
-  const TextFormat& tf, Vec2 pos, AlignEnum align, std::string_view text,
+  const TextFormat& tf, Vec2 pos, Align align, std::string_view text,
   const Rect* clipPtr, bool fixedColor)
 {
   if (text.empty()) { return; }
@@ -351,16 +351,16 @@ void DrawContext::_text(
   GX_ASSERT(tf.font != nullptr);
   const Font& f = *tf.font;
   const float lh = float(f.size()) + tf.lineSpacing;
-  const AlignEnum h_align = HAlign(align);
-  const AlignEnum v_align = VAlign(align);
+  const Align h_align = hAlign(align);
+  const Align v_align = vAlign(align);
 
-  if (v_align == ALIGN_TOP) {
+  if (v_align == Align::top) {
     pos += tf.advY * f.ymax();
-  } else if (v_align == ALIGN_BOTTOM) {
+  } else if (v_align == Align::bottom) {
     int nl = 0;
     for (int ch : text) { nl += (ch == '\n'); }
     pos += tf.advY * (f.ymin() - (lh*float(nl)));
-  } else if (v_align == ALIGN_VCENTER) {
+  } else if (v_align == Align::vcenter) {
     int nl = 0;
     for (int ch : text) { nl += (ch == '\n'); }
     pos += tf.advY * ((f.ymax() - (lh*float(nl))) * .5f);
@@ -384,9 +384,9 @@ void DrawContext::_text(
 
     if (!line.empty()) {
       float offset = 0;
-      if (h_align != ALIGN_LEFT) {
+      if (h_align != Align::left) {
         const auto [sizeW,sizeH] = tf.calcSize(line);
-        offset = (h_align == ALIGN_RIGHT) ? sizeW : (sizeW * .5f);
+        offset = (h_align == Align::right) ? sizeW : (sizeW * .5f);
       }
 
       float len = 0;

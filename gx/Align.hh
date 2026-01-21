@@ -1,6 +1,6 @@
 //
 // gx/Align.hh
-// Copyright (C) 2020 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #pragma once
@@ -8,39 +8,48 @@
 
 namespace gx {
   // **** Types ****
-  enum AlignEnum {
-    ALIGN_UNSPECIFIED = 0,
+  enum class Align : int {
+    unspecified = 0,
 
     // vertical alignments
-    ALIGN_TOP = 1<<0,
-    ALIGN_BOTTOM = 1<<1,
-    ALIGN_VCENTER = ALIGN_TOP | ALIGN_BOTTOM,
-    ALIGN_VJUSTIFY = 1<<2,
+    top = 1<<0,
+    bottom = 1<<1,
+    vcenter = top | bottom,
+    vjustify = 1<<2,
 
     // horizontal alignments
-    ALIGN_LEFT = 1<<3,
-    ALIGN_RIGHT = 1<<4,
-    ALIGN_HCENTER = ALIGN_LEFT | ALIGN_RIGHT,
-    ALIGN_HJUSTIFY = 1<<5,
+    left = 1<<3,
+    right = 1<<4,
+    hcenter = left | right,
+    hjustify = 1<<5,
 
     // combined vertical & horizontal alignments
-    ALIGN_TOP_LEFT = ALIGN_TOP | ALIGN_LEFT,
-    ALIGN_TOP_RIGHT = ALIGN_TOP | ALIGN_RIGHT,
-    ALIGN_TOP_CENTER = ALIGN_TOP | ALIGN_HCENTER,
-    ALIGN_BOTTOM_LEFT = ALIGN_BOTTOM | ALIGN_LEFT,
-    ALIGN_BOTTOM_RIGHT = ALIGN_BOTTOM | ALIGN_RIGHT,
-    ALIGN_BOTTOM_CENTER = ALIGN_BOTTOM | ALIGN_HCENTER,
-    ALIGN_CENTER_LEFT = ALIGN_VCENTER | ALIGN_LEFT,
-    ALIGN_CENTER_RIGHT = ALIGN_VCENTER | ALIGN_RIGHT,
-    ALIGN_CENTER_CENTER = ALIGN_VCENTER | ALIGN_HCENTER,
-    ALIGN_CENTER = ALIGN_VCENTER | ALIGN_HCENTER,
-    ALIGN_JUSTIFY = ALIGN_VJUSTIFY | ALIGN_HJUSTIFY
+    top_left = top | left,
+    top_right = top | right,
+    top_center = top | hcenter,
+    bottom_left = bottom | left,
+    bottom_right = bottom | right,
+    bottom_center = bottom | hcenter,
+    center_left = vcenter | left,
+    center_right = vcenter | right,
+    center_center = vcenter | hcenter,
+    center = vcenter | hcenter,
+    justify = vjustify | hjustify,
   };
 
   // **** Functions ****
-  [[nodiscard]] constexpr AlignEnum VAlign(AlignEnum a) {
-    return AlignEnum(a & (ALIGN_TOP | ALIGN_BOTTOM | ALIGN_VJUSTIFY)); }
+  [[nodiscard]] constexpr Align vAlign(Align a) {
+    return Align(int(a) & (int(Align::top) | int(Align::bottom) | int(Align::vjustify))); }
 
-  [[nodiscard]] constexpr AlignEnum HAlign(AlignEnum a) {
-    return AlignEnum(a & (ALIGN_LEFT | ALIGN_RIGHT | ALIGN_HJUSTIFY)); }
+  [[nodiscard]] constexpr Align hAlign(Align a) {
+    return Align(int(a) & (int(Align::left) | int(Align::right) | int(Align::hjustify))); }
+
+  [[nodiscard]] constexpr bool hjustified(Align a) {
+    return int(a) & int(Align::hjustify); }
+
+  [[nodiscard]] constexpr bool vjustified(Align a) {
+    return int(a) & int(Align::vjustify); }
+
+  [[nodiscard]] constexpr bool justified(Align a) {
+    return int(a) & int(Align::justify); }
 }

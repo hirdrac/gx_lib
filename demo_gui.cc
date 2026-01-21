@@ -1,6 +1,6 @@
 //
 // demo_gui.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "gx/Window.hh"
@@ -36,28 +36,28 @@ int main(int argc, char* argv[])
   // button demo
   gx::Gui gui;
   gui.newPanel(
-    theme, 60, 80, gx::ALIGN_TOP_LEFT, gx::PANEL_FLOATING,
+    theme, 60, 80, gx::Align::top_left, gx::PANEL_FLOATING,
     gx::guiVFrame(
       gx::guiMargin(gx::guiTitleBar("BUTTONS"), 0,0,0,8),
       gx::guiHFrame(
         gx::guiButton(1, "B1\nline 2"),
-        gx::guiButton(2, gx::ALIGN_BOTTOM, "B2"),
-        gx::guiButton(3, gx::ALIGN_VCENTER, "B3"),
+        gx::guiButton(2, gx::Align::bottom, "B2"),
+        gx::guiButton(3, gx::Align::vcenter, "B3"),
         gx::guiButton(4, "B4"),
         gx::guiVLine(),
-        gx::guiButton(5, gx::ALIGN_VJUSTIFY, "B5")),
-      gx::guiLabel(gx::ALIGN_CENTER, "\nRepeating Buttons"),
+        gx::guiButton(5, gx::Align::vjustify, "B5")),
+      gx::guiLabel(gx::Align::center, "\nRepeating Buttons"),
       gx::guiHFrame(
-        gx::ALIGN_CENTER,
+        gx::Align::center,
         gx::guiButtonPress(77, -1, "ONCE"),
         gx::guiButtonPress(78, 400000, "SLOW"),
         gx::guiButtonPress(79, 1, "FAST")),
       gx::guiHLine(),
-      gx::guiButton(99, gx::ALIGN_RIGHT, " QUIT ")));
+      gx::guiButton(99, gx::Align::right, " QUIT ")));
 
   // pull-down menu demo
   gui.newPanel(
-    theme, 0, 0, gx::ALIGN_TOP_LEFT, 0,
+    theme, 0, 0, gx::Align::top_left, 0,
     gx::guiHFrame(
       gx::guiMenu(
         11, "File",
@@ -82,26 +82,26 @@ int main(int argc, char* argv[])
 
   // text entry demo
   gui.newPanel(
-    theme, 60, 400, gx::ALIGN_TOP_LEFT, gx::PANEL_FLOATING,
+    theme, 60, 400, gx::Align::top_left, gx::PANEL_FLOATING,
     gx::guiHFrame(
       gx::guiMargin(gx::guiVTitleBar("ENTRIES"), 0,0,4,0),
       gx::guiVFrame(
         gx::guiHFrame(
-          gx::guiLabel(gx::ALIGN_CENTER_LEFT, " R"),
+          gx::guiLabel(gx::Align::center_left, " R"),
           gx::guiCardinalEntry(31, 3.0f,3),
-          gx::guiLabel(gx::ALIGN_CENTER_LEFT, " G"),
+          gx::guiLabel(gx::Align::center_left, " G"),
           gx::guiCardinalEntry(32, 3.0f,3),
-          gx::guiLabel(gx::ALIGN_CENTER_LEFT, " B"),
+          gx::guiLabel(gx::Align::center_left, " B"),
           gx::guiCardinalEntry(33, 3.0f,3)),
         gx::guiTextEntry(34, 18.0f,100),
-        gx::guiTextEntry(35, 18.0f,100,gx::ALIGN_CENTER),
-        gx::guiTextEntry(36, 18.0f,100,gx::ALIGN_RIGHT),
+        gx::guiTextEntry(35, 18.0f,100,gx::Align::center),
+        gx::guiTextEntry(36, 18.0f,100,gx::Align::right),
         gx::guiIntegerEntry(37, 10.0f, 20),
         gx::guiFloatEntry(38, 10.0f, 20) )));
 
   // checkbox demo
   gui.newPanel(
-    theme, 400, 80, gx::ALIGN_TOP_LEFT, gx::PANEL_FLOATING,
+    theme, 400, 80, gx::Align::top_left, gx::PANEL_FLOATING,
     gx::guiVFrame(
       gx::guiMargin(gx::guiTitleBar(), 0,0,0,8),
       gx::guiCheckbox(51, true,  "Option 1"),
@@ -113,17 +113,17 @@ int main(int argc, char* argv[])
 
   // list select demo
   gui.newPanel(
-    theme, 600, 80, gx::ALIGN_TOP_LEFT, gx::PANEL_FLOATING,
+    theme, 600, 80, gx::Align::top_left, gx::PANEL_FLOATING,
     gx::guiVFrame(
       gx::guiMargin(gx::guiTitleBar("LIST SELECTORS"), 0,0,0,8),
       gx::guiHFrame(
         gx::guiListSelect(
-          60, gx::ALIGN_JUSTIFY,
+          60, gx::Align::justify,
           gx::guiListSelectItem(1, "item 1"),
           gx::guiListSelectItem(2, "item two"),
           gx::guiListSelectItem(3, "item three")),
         gx::guiListSelect(
-          61, gx::ALIGN_JUSTIFY,
+          61, gx::Align::justify,
           gx::guiListSelectItem(4, "item four"),
           gx::guiListSelectItem(5, "item 5"),
           gx::guiListSelectItem(6, "item six")) )));

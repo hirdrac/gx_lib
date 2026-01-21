@@ -1,6 +1,6 @@
 //
 // gx/Gui.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // Graphical user interface rendering & event handling
 //
@@ -45,7 +45,7 @@ class gx::Gui
  public:
   template<class ElemT>
   PanelID newPanel(const GuiTheme& theme, float x, float y,
-                   AlignEnum align, int flags, ElemT&& elems);
+                   Align align, int flags, ElemT&& elems);
 
   void clear();
   void deletePanel(PanelID id);
@@ -174,8 +174,8 @@ class gx::Gui
   bool _needRedraw = false;
   bool _textChanged = false;
 
-  PanelID addPanel(PanelPtr ptr, float x, float y, AlignEnum align);
-  void layout(Panel& p, float x, float y, AlignEnum align);
+  PanelID addPanel(PanelPtr ptr, float x, float y, Align align);
+  void layout(Panel& p, float x, float y, Align align);
   void processMouseEvent(Window& win, EventState& es);
   void processCharEvent(EventState& es);
   void addEntryChar(GuiElem& e, int32_t code);
@@ -206,11 +206,11 @@ class gx::Gui
 // **** Inline Implementations ****
 template<class ElemT>
 gx::PanelID gx::Gui::newPanel(
-  const GuiTheme& theme, float x, float y, AlignEnum align, int flags,
+  const GuiTheme& theme, float x, float y, Align align, int flags,
   ElemT&& elems)
 {
   PanelPtr ptr{new Panel{
-      {GUI_PANEL, ALIGN_TOP_LEFT, 0, {std::forward<ElemT>(elems)}},
+      {GUI_PANEL, Align::top_left, 0, {std::forward<ElemT>(elems)}},
       &theme, flags}};
   return addPanel(std::move(ptr), x, y, align);
 }

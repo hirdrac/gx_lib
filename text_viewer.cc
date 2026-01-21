@@ -1,6 +1,6 @@
 //
 // text_viewer.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // gx_lib example program for text rendering & basic event handling
 //
@@ -282,11 +282,11 @@ int main(int argc, char** argv)
         if (lineNo >= 0) {
           const std::string_view line = buffer[std::size_t(lineNo)];
           dc.color(gx::WHITE);
-          dc.text(tf, {0, ty}, gx::ALIGN_TOP_LEFT, line);
+          dc.text(tf, {0, ty}, gx::Align::top_left, line);
           const auto [sizeW,sizeH] = tf.calcSize(line);
           if (sizeW > win_w) {
             dc.color(1.0f,0,0);
-            dc.text(tf, {win_w+1, ty}, gx::ALIGN_TOP_RIGHT, "*");
+            dc.text(tf, {win_w+1, ty}, gx::Align::top_right, "*");
           }
         }
 

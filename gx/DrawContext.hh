@@ -1,6 +1,6 @@
 //
 // gx/DrawContext.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 // TODO: textured roundedRectangle()
@@ -162,19 +162,19 @@ class gx::DrawContext
 
   // Text drawing
   //   textFixedColor() functions ignore meta tag color changes
-  void text(const TextFormat& tf, Vec2 pos, AlignEnum align,
+  void text(const TextFormat& tf, Vec2 pos, Align align,
             std::string_view text) {
     _text(tf, pos, align, text, nullptr, false); }
-  void text(const TextFormat& tf, Vec2 pos, AlignEnum align,
+  void text(const TextFormat& tf, Vec2 pos, Align align,
             std::string_view text, const Rect& clip) {
     _text(tf, pos, align, text, &clip, false); }
-  void textFixedColor(const TextFormat& tf, Vec2 pos, AlignEnum align,
+  void textFixedColor(const TextFormat& tf, Vec2 pos, Align align,
                       std::string_view text) {
     _text(tf, pos, align, text, nullptr, true); }
-  void textFixedColor(const TextFormat& tf, Vec2 pos, AlignEnum align,
+  void textFixedColor(const TextFormat& tf, Vec2 pos, Align align,
                       std::string_view text, const Rect& clip) {
     _text(tf, pos, align, text, &clip, true); }
-  void glyph(const TextFormat& tf, Vec2 pos, AlignEnum align, int code);
+  void glyph(const TextFormat& tf, Vec2 pos, Align align, int code);
 
   // High-level constructed primitives
   void circleSector(
@@ -237,7 +237,7 @@ class gx::DrawContext
   }
 
   void _rectangle(float x, float y, float w, float h);
-  void _text(const TextFormat& tf, Vec2 pos, AlignEnum align,
+  void _text(const TextFormat& tf, Vec2 pos, Align align,
              std::string_view text, const Rect* clipPtr,
              bool fixedColor);
   void _glyph(const Glyph& g, const TextFormat& tf, Vec2 baseline,
