@@ -22,28 +22,28 @@ namespace gx {
   // Texture Types
   using TextureID = uint32_t;
 
-  enum FilterType {
-    FILTER_UNSPECIFIED = 0,
-    FILTER_LINEAR,
-    FILTER_NEAREST
+  enum class FilterType {
+    unspecified = 0,
+    linear,
+    nearest,
   };
 
-  enum WrapType {
-    WRAP_UNSPECIFIED = 0,
-    WRAP_CLAMP_TO_EDGE,
-    WRAP_CLAMP_TO_BORDER,
-    WRAP_MIRRORED_REPEAT,
-    WRAP_REPEAT,
-    WRAP_MIRROR_CLAMP_TO_EDGE,
+  enum class WrapType {
+    unspecified = 0,
+    clampToEdge,
+    clampToBorder,
+    mirroredRepeat,
+    repeat,
+    mirrorClampToEdge,
   };
 
   struct TextureParams {
     int levels = 1;
-    FilterType minFilter = FILTER_UNSPECIFIED;
-    FilterType magFilter = FILTER_UNSPECIFIED;
-    FilterType mipFilter = FILTER_UNSPECIFIED;
-    WrapType wrapS = WRAP_UNSPECIFIED;
-    WrapType wrapT = WRAP_UNSPECIFIED;
+    FilterType minFilter = FilterType::unspecified;
+    FilterType magFilter = FilterType::unspecified;
+    FilterType mipFilter = FilterType::unspecified;
+    WrapType wrapS = WrapType::unspecified;
+    WrapType wrapT = WrapType::unspecified;
   };
 
   class TextureHandle {

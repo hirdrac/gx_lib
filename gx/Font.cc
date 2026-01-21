@@ -1,6 +1,6 @@
 //
 // gx/Font.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 // TODO: investigate using stb_truetype.h
@@ -193,10 +193,10 @@ bool Font::makeAtlas(Renderer& ren)
   }
 
   TextureParams params;
-  params.minFilter = FILTER_LINEAR;
-  params.magFilter = FILTER_LINEAR;
-  params.wrapS = WRAP_CLAMP_TO_EDGE;
-  params.wrapT = WRAP_CLAMP_TO_EDGE;
+  params.minFilter = FilterType::linear;
+  params.magFilter = FilterType::linear;
+  params.wrapS = WrapType::clampToEdge;
+  params.wrapT = WrapType::clampToEdge;
 
   _atlas = ren.newTexture(img, params);
   _atlasWidth = img.width();

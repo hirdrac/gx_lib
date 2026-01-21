@@ -1,6 +1,6 @@
 //
 // image_viewer.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 // TODO: background loading of images after 1st image loaded
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 
   // command line processing
   bool startFullScreen = false;
-  gx::FilterType magFilter = gx::FILTER_NEAREST;
+  gx::FilterType magFilter = gx::FilterType::nearest;
   std::string val;
 
   std::vector<Entry> entries;
@@ -118,8 +118,8 @@ int main(int argc, char* argv[])
       } else if (p.option(0,"fullscreen")) {
         startFullScreen = true;
       } else if (p.option(0,"filter", val)) {
-        if (val == "nearest") { magFilter = gx::FILTER_NEAREST; }
-        else if (val == "linear") { magFilter = gx::FILTER_LINEAR; }
+        if (val == "nearest") { magFilter = gx::FilterType::nearest; }
+        else if (val == "linear") { magFilter = gx::FilterType::linear; }
         else {
           println_err("ERROR: unknown filter type '", val, "'");
           return errorUsage(argv);
@@ -169,9 +169,9 @@ int main(int argc, char* argv[])
 
   gx::TextureParams params;
   params.levels = 6;
-  params.minFilter = gx::FILTER_LINEAR;
+  params.minFilter = gx::FilterType::linear;
   params.magFilter = magFilter;
-  params.mipFilter = gx::FILTER_LINEAR;
+  params.mipFilter = gx::FilterType::linear;
 
   gx::Renderer& ren = win.renderer();
   int entryNo = 0;

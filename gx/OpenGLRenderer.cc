@@ -248,17 +248,17 @@ namespace {
   [[nodiscard]] GLint calcMinFilter(const TextureParams& p)
   {
     // GL_TEXTURE_MIN_FILTER
-    if (p.minFilter == FILTER_UNSPECIFIED) { return 0; }
+    if (p.minFilter == FilterType::unspecified) { return 0; }
 
     switch (p.mipFilter) {
-      case FILTER_LINEAR:
-        return (p.minFilter == FILTER_LINEAR)
+      case FilterType::linear:
+        return (p.minFilter == FilterType::linear)
           ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR_MIPMAP_NEAREST;
-      case FILTER_NEAREST:
-        return (p.minFilter == FILTER_LINEAR)
+      case FilterType::nearest:
+        return (p.minFilter == FilterType::linear)
           ? GL_NEAREST_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST;
       default:
-        return (p.minFilter == FILTER_LINEAR) ? GL_LINEAR : GL_NEAREST;
+        return (p.minFilter == FilterType::linear) ? GL_LINEAR : GL_NEAREST;
     }
   }
 
@@ -266,8 +266,8 @@ namespace {
   {
     // GL_TEXTURE_MAG_FILTER
     switch (p.magFilter) {
-      case FILTER_LINEAR:  return GL_LINEAR;
-      case FILTER_NEAREST: return GL_NEAREST;
+      case FilterType::linear:  return GL_LINEAR;
+      case FilterType::nearest: return GL_NEAREST;
       default:             return 0;
     }
   }
@@ -275,12 +275,12 @@ namespace {
   [[nodiscard]] GLint glWrapType(WrapType wt)
   {
     switch (wt) {
-      case WRAP_CLAMP_TO_EDGE:        return GL_CLAMP_TO_EDGE;
-      case WRAP_CLAMP_TO_BORDER:      return GL_CLAMP_TO_BORDER;
-      case WRAP_MIRRORED_REPEAT:      return GL_MIRRORED_REPEAT;
-      case WRAP_REPEAT:               return GL_REPEAT;
-      case WRAP_MIRROR_CLAMP_TO_EDGE: return GL_MIRROR_CLAMP_TO_EDGE;
-      default:                        return 0;
+      case WrapType::clampToEdge:       return GL_CLAMP_TO_EDGE;
+      case WrapType::clampToBorder:     return GL_CLAMP_TO_BORDER;
+      case WrapType::mirroredRepeat:    return GL_MIRRORED_REPEAT;
+      case WrapType::repeat:            return GL_REPEAT;
+      case WrapType::mirrorClampToEdge: return GL_MIRROR_CLAMP_TO_EDGE;
+      default:                          return 0;
     }
   }
 }
@@ -626,15 +626,15 @@ TextureHandle OpenGLRenderer<VER>::newTexture(
     }
   }
 
-  if (params.magFilter != FILTER_UNSPECIFIED) {
+  if (params.magFilter != FilterType::unspecified) {
     t.setParameter(GL_TEXTURE_MAG_FILTER, calcMagFilter(params));
   }
 
-  if (params.wrapS != WRAP_UNSPECIFIED) {
+  if (params.wrapS != WrapType::unspecified) {
     t.setParameter(GL_TEXTURE_WRAP_S, glWrapType(params.wrapS));
   }
 
-  if (params.wrapT != WRAP_UNSPECIFIED) {
+  if (params.wrapT != WrapType::unspecified) {
     t.setParameter(GL_TEXTURE_WRAP_T, glWrapType(params.wrapT));
   }
 
