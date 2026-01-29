@@ -301,7 +301,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool setFramebufferSize(int width, int height) override;
   TextureHandle newTexture(
     const Image& img, const TextureParams& params) override;
-  void freeTexture(TextureID id) override;
+  int addTextureRef(TextureID id) override;
+  int removeTextureRef(TextureID id) override;
   void draw(const DrawList* const* lists, std::size_t count) override;
   void renderFrame(int64_t usecTime) override;
 
@@ -329,6 +330,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     GLTexture2D<VER> tex;
     int channels = 0;
     int unit = -1;
+    int refCount = 1; // delete texture if refCount <= 0
   };
   std::unordered_map<TextureID,TextureEntry> _textures;
 
@@ -642,11 +644,33 @@ TextureHandle OpenGLRenderer<VER>::newTexture(
 }
 
 template<int VER>
-void OpenGLRenderer<VER>::freeTexture(TextureID id)
+int OpenGLRenderer<VER>::addTextureRef(TextureID id)
 {
   const std::lock_guard lg{_glMutex};
-  setCurrentContext(_window);
-  _textures.erase(id);
+  auto itr = _textures.find(id);
+  if (itr == _textures.end()) {
+    return 0; // shouldn't happen
+  }
+
+  TextureEntry& te = itr->second;
+  return ++te.refCount;
+}
+
+template<int VER>
+int OpenGLRenderer<VER>::removeTextureRef(TextureID id)
+{
+  const std::lock_guard lg{_glMutex};
+  auto itr = _textures.find(id);
+  if (itr == _textures.end()) { return 0; }
+
+  TextureEntry& te = itr->second;
+  if (--te.refCount <= 0) {
+    setCurrentContext(_window);
+    _textures.erase(itr);
+    return 0;
+  }
+
+  return te.refCount;
 }
 
 template<int VER>

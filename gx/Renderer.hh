@@ -50,19 +50,16 @@ namespace gx {
    public:
     TextureHandle() = default;
     explicit TextureHandle(TextureID id) : _id{id} { }
-    ~TextureHandle() { if (_id) cleanup(); }
+    ~TextureHandle() { cleanup(); }
 
-    // disable copy/assign
-    TextureHandle(const TextureHandle&) = delete;
-    TextureHandle& operator=(const TextureHandle&) = delete;
+    // copy/assign
+    TextureHandle(const TextureHandle& h);
+    TextureHandle& operator=(const TextureHandle& h);
 
     // enable move
     TextureHandle(TextureHandle&& h) noexcept : _id{std::exchange(h._id, 0)} { }
     TextureHandle& operator=(TextureHandle&& h) noexcept {
-      if (this != &h) {
-        if (_id) cleanup();
-        _id = std::exchange(h._id, 0);
-      }
+      if (this != &h) { cleanup(); _id = std::exchange(h._id, 0); }
       return *this;
     }
 
@@ -123,5 +120,9 @@ class gx::Renderer
   friend class TextureHandle;
 
   [[nodiscard]] TextureID newTextureID();
-  virtual void freeTexture(TextureID id) = 0;
+
+  virtual int addTextureRef(TextureID id) = 0;
+  virtual int removeTextureRef(TextureID id) = 0;
+    // add/remove reference to texture
+    // (if reference count goes to zero, texture is freed)
 };

@@ -1,6 +1,6 @@
 //
 // gx/Renderer.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "Renderer.hh"
@@ -34,13 +34,40 @@ namespace {
 
 
 // **** TextureHandle class ****
-void gx::TextureHandle::cleanup() noexcept
+gx::TextureHandle::TextureHandle(const TextureHandle& h) : _id{h._id}
 {
   const std::lock_guard lg{_textureMutex};
   const auto itr = _textureOwners.find(_id);
   if (itr != _textureOwners.end()) {
-    itr->second->freeTexture(_id);
-    _textureOwners.erase(itr);
+    itr->second->addTextureRef(_id);
+  }
+}
+
+gx::TextureHandle& gx::TextureHandle::operator=(const TextureHandle& h)
+{
+  if (this != &h) {
+    cleanup();
+    _id = h._id;
+
+    const std::lock_guard lg{_textureMutex};
+    const auto itr = _textureOwners.find(_id);
+    if (itr != _textureOwners.end()) {
+      itr->second->addTextureRef(_id);
+    }
+  }
+  return *this;
+}
+
+void gx::TextureHandle::cleanup() noexcept
+{
+  if (_id == 0) { return; }
+
+  const std::lock_guard lg{_textureMutex};
+  const auto itr = _textureOwners.find(_id);
+  if (itr != _textureOwners.end()) {
+    if (itr->second->removeTextureRef(_id) <= 0) {
+      _textureOwners.erase(itr);
+    }
   }
 }
 
@@ -57,8 +84,11 @@ Renderer::~Renderer()
 
 TextureID Renderer::newTextureID()
 {
-  const std::lock_guard lg{_textureMutex};
-  const TextureID tid = ++_lastTextureID;
-  _textureOwners.insert({tid,this});
+  TextureID tid;
+  {
+    const std::lock_guard lg{_textureMutex};
+    tid = ++_lastTextureID;
+    _textureOwners.insert({tid,this});
+  }
   return tid;
 }
