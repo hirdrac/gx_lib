@@ -10,65 +10,53 @@
 using namespace gx;
 
 
-// **** Texture Owner data/functions ****
+// **** Texture Owner/RefCount data ****
 namespace {
+  struct TextureInfo {
+    Renderer* owner;
+    int refCount = 1;
+  };
+
   std::mutex _textureMutex;
-  std::unordered_map<TextureID,Renderer*> _textureOwners;
+  std::unordered_map<TextureID,TextureInfo> _textures;
   TextureID _lastTextureID = 0;
-
-
-  void freeRenderer(Renderer* rPtr)
-  {
-    const std::lock_guard lg{_textureMutex};
-    auto itr = _textureOwners.begin();
-    auto end = _textureOwners.end();
-    while (itr != end) {
-      if (itr->second == rPtr) {
-        _textureOwners.erase(itr++);
-      } else {
-        ++itr;
-      }
-    }
-  }
 }
 
 
 // **** TextureHandle class ****
-gx::TextureHandle::TextureHandle(const TextureHandle& h) : _id{h._id}
+TextureHandle::TextureHandle(const TextureHandle& h) : _id{h._id}
 {
   const std::lock_guard lg{_textureMutex};
-  const auto itr = _textureOwners.find(_id);
-  if (itr != _textureOwners.end()) {
-    itr->second->addTextureRef(_id);
-  }
+  const auto itr = _textures.find(_id);
+  if (itr != _textures.end()) { ++itr->second.refCount; }
 }
 
-gx::TextureHandle& gx::TextureHandle::operator=(const TextureHandle& h)
+TextureHandle& TextureHandle::operator=(const TextureHandle& h)
 {
   if (_id != h._id) {
     cleanup();
     _id = h._id;
 
     const std::lock_guard lg{_textureMutex};
-    const auto itr = _textureOwners.find(_id);
-    if (itr != _textureOwners.end()) {
-      itr->second->addTextureRef(_id);
-    }
+    const auto itr = _textures.find(_id);
+    if (itr != _textures.end()) { ++itr->second.refCount; }
   }
   return *this;
 }
 
-void gx::TextureHandle::cleanup() noexcept
+void TextureHandle::cleanup() noexcept
 {
   if (_id == 0) { return; }
 
   const std::lock_guard lg{_textureMutex};
-  const auto itr = _textureOwners.find(_id);
-  if (itr != _textureOwners.end()) {
-    if (itr->second->removeTextureRef(_id) <= 0) {
-      _textureOwners.erase(itr);
-    }
-  }
+  const auto itr = _textures.find(_id);
+  if (itr == _textures.end()) { return; }
+
+  TextureInfo& info = itr->second;
+  if (--info.refCount > 0) { return; }
+
+  info.owner->freeTexture(_id);
+  _textures.erase(itr);
 }
 
 
@@ -79,16 +67,22 @@ Renderer::~Renderer()
     glfwDestroyWindow(_window);
   }
 
-  freeRenderer(this);
+  // remove all textures for this Renderer
+  const std::lock_guard lg{_textureMutex};
+  auto itr = _textures.begin();
+  while (itr != _textures.end()) {
+    if (itr->second.owner == this) {
+      _textures.erase(itr++);
+    } else {
+      ++itr;
+    }
+  }
 }
 
 TextureID Renderer::newTextureID()
 {
-  TextureID tid;
-  {
-    const std::lock_guard lg{_textureMutex};
-    tid = ++_lastTextureID;
-    _textureOwners.insert({tid,this});
-  }
+  const std::lock_guard lg{_textureMutex};
+  const TextureID tid = ++_lastTextureID;
+  _textures.insert({tid, TextureInfo{ .owner = this }});
   return tid;
 }

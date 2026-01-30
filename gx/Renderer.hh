@@ -120,9 +120,5 @@ class gx::Renderer
   friend class TextureHandle;
 
   [[nodiscard]] TextureID newTextureID();
-
-  virtual int addTextureRef(TextureID id) = 0;
-  virtual int removeTextureRef(TextureID id) = 0;
-    // add/remove reference to texture
-    // (if reference count goes to zero, texture is freed)
+  virtual void freeTexture(TextureID id) = 0;
 };
