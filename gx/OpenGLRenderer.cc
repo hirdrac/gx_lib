@@ -423,7 +423,7 @@ bool OpenGLRenderer<VER>::init(GLFWwindow* win)
   _orthoT = orthoProjection(_fbWidth, _fbHeight);
   //println("new window size: ", _fbWidth, " x ", _fbHeight);
 
-  _maxTextureSize = GLTexture2D<VER>::maxSize();
+  _maxTextureSize = GLTexture2D<VER>::getMaxSize();
   glfwSwapInterval(_swapInterval); // enable V-SYNC
 
   // NOTES:

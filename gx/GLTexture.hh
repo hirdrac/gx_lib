@@ -1,6 +1,6 @@
 //
 // gx/GLTexture.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // wrappers for OpenGL texture objects
 //
@@ -26,7 +26,7 @@ namespace gx {
   template<int VER, GLenum TARGET> class GLTexture3DT;
   template<int VER>                class GLTextureCubeMap;
   template<int VER>                class GLTextureBuffer;
-  template<int VER, GLenum TARGET> struct GLTextureHandle;
+  template<int VER, GLenum TARGET> class GLTextureHandle;
 
 
   // **** Helper type aliases ****
@@ -87,11 +87,11 @@ class gx::GLTexture1D
   using type = GLTexture1D<VER>;
 
   // operators
-  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
+  [[nodiscard]] explicit operator bool() const { return _tex; }
 
   // accessors
   [[nodiscard]] static constexpr GLenum target() { return GL_TEXTURE_1D; }
-  [[nodiscard]] GLuint id() const { return _tex.id; }
+  [[nodiscard]] GLuint id() const { return _tex.id(); }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
   [[nodiscard]] GLsizei levels() const { return _levels; }
   [[nodiscard]] GLsizei width() const { return _width; }
@@ -143,7 +143,7 @@ class gx::GLTexture1D
   void getParameterIv(GLenum pname, GLuint* params) {
     _tex.getParameterIuiv(pname, params); }
 
-  [[nodiscard]] static GLint maxSize() {
+  [[nodiscard]] static GLint getMaxSize() {
     GLint s = 0;
     GX_GLCALL(glGetIntegerv, GLTextureVals<target()>::pnameMaxSize, &s);
     return s;
@@ -164,11 +164,11 @@ class gx::GLTexture2DT
   using type = GLTexture2DT<VER,TARGET>;
 
   // operators
-  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
+  [[nodiscard]] explicit operator bool() const { return _tex; }
 
   // accessors
   [[nodiscard]] static constexpr GLenum target() { return TARGET; }
-  [[nodiscard]] GLuint id() const { return _tex.id; }
+  [[nodiscard]] GLuint id() const { return _tex.id(); }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
   [[nodiscard]] GLsizei levels() const { return _levels; }
   [[nodiscard]] GLsizei width() const { return _width; }
@@ -226,7 +226,7 @@ class gx::GLTexture2DT
   void getParameterIv(GLenum pname, GLuint* params) {
     _tex.getParameterIuiv(pname, params); }
 
-  [[nodiscard]] static GLint maxSize() {
+  [[nodiscard]] static GLint getMaxSize() {
     GLint s = 0;
     GX_GLCALL(glGetIntegerv, GLTextureVals<TARGET>::pnameMaxSize, &s);
     return s;
@@ -248,11 +248,11 @@ class gx::GLTexture3DT
   using type = GLTexture3DT<VER,TARGET>;
 
   // operators
-  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
+  [[nodiscard]] explicit operator bool() const { return _tex; }
 
   // accessors
   [[nodiscard]] static constexpr GLenum target() { return TARGET; }
-  [[nodiscard]] GLuint id() const { return _tex.id; }
+  [[nodiscard]] GLuint id() const { return _tex.id(); }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
   [[nodiscard]] GLsizei levels() const { return _levels; }
   [[nodiscard]] GLsizei width() const { return _width; }
@@ -313,7 +313,7 @@ class gx::GLTexture3DT
   void getParameterIv(GLenum pname, GLuint* params) {
     _tex.getParameterIuiv(pname, params); }
 
-  [[nodiscard]] static GLint maxSize() {
+  [[nodiscard]] static GLint getMaxSize() {
     GLint s = 0;
     GX_GLCALL(glGetIntegerv, GLTextureVals<TARGET>::pnameMaxSize, &s);
     return s;
@@ -336,11 +336,11 @@ class gx::GLTextureCubeMap
   using type = GLTextureCubeMap<VER>;
 
   // operators
-  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
+  [[nodiscard]] explicit operator bool() const { return _tex; }
 
   // accessors
   [[nodiscard]] static constexpr GLenum target() { return GL_TEXTURE_CUBE_MAP; }
-  [[nodiscard]] GLuint id() const { return _tex.id; }
+  [[nodiscard]] GLuint id() const { return _tex.id(); }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
   [[nodiscard]] GLsizei levels() const { return _levels; }
   [[nodiscard]] GLsizei size() const { return _size; } // width/height
@@ -396,7 +396,7 @@ class gx::GLTextureCubeMap
   void getParameterIv(GLenum pname, GLuint* params) {
     _tex.getParameterIuiv(pname, params); }
 
-  [[nodiscard]] static GLint maxSize() {
+  [[nodiscard]] static GLint getMaxSize() {
     GLint s = 0;
     GX_GLCALL(glGetIntegerv, GLTextureVals<target()>::pnameMaxSize, &s);
     return s;
@@ -417,11 +417,11 @@ class gx::GLTextureBuffer
   using type = GLTextureBuffer<VER>;
 
   // operators
-  [[nodiscard]] explicit operator bool() const { return _tex.id != 0; }
+  [[nodiscard]] explicit operator bool() const { return _tex; }
 
   // accessors
   [[nodiscard]] static constexpr GLenum target() { return GL_TEXTURE_BUFFER; }
-  [[nodiscard]] GLuint id() const { return _tex.id; }
+  [[nodiscard]] GLuint id() const { return _tex.id(); }
   [[nodiscard]] GLenum internalFormat() const { return _internalformat; }
 
   // methods
@@ -433,7 +433,7 @@ class gx::GLTextureBuffer
 
   void bindUnit(GLuint unit) const { _tex.bindUnit(unit); }
 
-  [[nodiscard]] static GLint maxSize() {
+  [[nodiscard]] static GLint getMaxSize() {
     GLint s = 0;
     GX_GLCALL(glGetIntegerv, GLTextureVals<target()>::pnameMaxSize, &s);
     return s;
@@ -468,7 +468,7 @@ GLuint gx::GLTexture1D<VER>::init(
   } else {
     GX_GLCALL(glTextureStorage1D, _tex, levels, internalformat, width);
   }
-  return _tex.id;
+  return _tex.id();
 }
 
 template<int VER>
@@ -480,7 +480,7 @@ void gx::GLTexture1D<VER>::setSubImage(
     _tex.bindCheck();
     GX_GLCALL(glTexSubImage1D, target(), level, xoffset, width, format, type, pixels);
   } else {
-    GX_GLCALL(glTextureSubImage1D, _tex.id, level, xoffset, width, format, type, pixels);
+    GX_GLCALL(glTextureSubImage1D, _tex.id(), level, xoffset, width, format, type, pixels);
   }
 }
 
@@ -496,7 +496,7 @@ void gx::GLTexture1D<VER>::clear(GLint level)
     const auto empty = std::make_unique<GLubyte[]>(_width * pixel_size);
     setSubImage(level, 0, _width, format, empty.get());
   } else {
-    GX_GLCALL(glClearTexImage, _tex.id, level, format, type, nullptr);
+    GX_GLCALL(glClearTexImage, _tex.id(), level, format, type, nullptr);
   }
 }
 
@@ -532,9 +532,9 @@ GLuint gx::GLTexture2DT<VER,TARGET>::init(
     _tex.bindCheck();
     GX_GLCALL(glTexStorage2D, TARGET, levels, internalformat, width, height);
   } else {
-    GX_GLCALL(glTextureStorage2D, _tex.id, levels, internalformat, width, height);
+    GX_GLCALL(glTextureStorage2D, _tex.id(), levels, internalformat, width, height);
   }
-  return _tex.id;
+  return _tex.id();
 }
 
 // TODO: init for GL_TEXTURE_2D_MULTISAMPLE
@@ -552,7 +552,7 @@ void gx::GLTexture2DT<VER,TARGET>::setSubImage(
     GX_GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
               width, height, format, type, pixels);
   } else {
-    GX_GLCALL(glTextureSubImage2D, _tex.id, level, xoffset, yoffset,
+    GX_GLCALL(glTextureSubImage2D, _tex.id(), level, xoffset, yoffset,
               width, height, format, type, pixels);
   }
 }
@@ -570,7 +570,7 @@ void gx::GLTexture2DT<VER,TARGET>::clear(GLint level)
       _width * _height * pixel_size);
     setSubImage(level, 0, 0, _width, _height, format, empty.get());
   } else {
-    GX_GLCALL(glClearTexImage, _tex.id, level, format, type, nullptr);
+    GX_GLCALL(glClearTexImage, _tex.id(), level, format, type, nullptr);
   }
 }
 
@@ -610,10 +610,10 @@ GLuint gx::GLTexture3DT<VER,TARGET>::init(
     GX_GLCALL(glTexStorage3D, TARGET, levels, internalformat,
               width, height, depth);
   } else {
-    GX_GLCALL(glTextureStorage3D, _tex.id, levels, internalformat,
+    GX_GLCALL(glTextureStorage3D, _tex.id(), levels, internalformat,
               width, height, depth);
   }
-  return _tex.id;
+  return _tex.id();
 }
 
 // TODO: init for GL_TEXTURE_2D_MULTISAMPLE_ARRAY
@@ -632,7 +632,7 @@ void gx::GLTexture3DT<VER,TARGET>::setSubImage(
     GX_GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
               width, height, depth, format, type, pixels);
   } else {
-    GX_GLCALL(glTextureSubImage3D, _tex.id, level, xoffset, yoffset, zoffset,
+    GX_GLCALL(glTextureSubImage3D, _tex.id(), level, xoffset, yoffset, zoffset,
               width, height, depth, format, type, pixels);
   }
 }
@@ -650,7 +650,7 @@ void gx::GLTexture3DT<VER,TARGET>::clear(GLint level)
       _width * _height * _depth * pixel_size);
     setSubImage(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
   } else {
-    GX_GLCALL(glClearTexImage, _tex.id, level, format, type, nullptr);
+    GX_GLCALL(glClearTexImage, _tex.id(), level, format, type, nullptr);
   }
 }
 
@@ -687,7 +687,7 @@ GLuint gx::GLTextureCubeMap<VER>::init(
                 internalformat, size, size);
     }
   }
-  return _tex.id;
+  return _tex.id();
 }
 
 template<int VER>
@@ -701,7 +701,7 @@ void gx::GLTextureCubeMap<VER>::setSubImage(
     GX_GLCALL(glTexSubImage2D, GLenum(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face),
               level, xoffset, yoffset, width, height, format, type, pixels);
   } else {
-    GX_GLCALL(glTextureSubImage3D, _tex.id, level, xoffset, yoffset, face,
+    GX_GLCALL(glTextureSubImage3D, _tex.id(), level, xoffset, yoffset, face,
               width, height, 1, format, type, pixels);
   }
 }
@@ -715,7 +715,7 @@ void gx::GLTextureCubeMap<VER>::getImage(
   if constexpr (VER < 45) {
     _tex.bindCheck();
   } else {
-    GX_GLCALL(glBindTexture, target(), _tex.id);
+    GX_GLCALL(glBindTexture, target(), _tex.id());
   }
 
   if constexpr (VER < 45) {
@@ -747,7 +747,7 @@ void gx::GLTextureCubeMap<VER>::clear(GLint level)
       setSubImage(level, 0, 0, f, _size, _size, format, empty.get());
     }
   } else {
-    GX_GLCALL(glClearTexImage, _tex.id, level, format, type, nullptr);
+    GX_GLCALL(glClearTexImage, _tex.id(), level, format, type, nullptr);
   }
 
   // TODO: clear single face
@@ -759,15 +759,15 @@ template<int VER>
 GLuint gx::GLTextureBuffer<VER>::attachBuffer(
   GLenum internalformat, GLuint buffer)
 {
-  if (!_tex.id) { _tex.init(); }
+  if (!_tex) { _tex.init(); }
   _internalformat = internalformat;
   if constexpr (VER < 45) {
     _tex.bindCheck();
     GX_GLCALL(glTexBuffer, target(), internalformat, buffer);
   } else {
-    GX_GLCALL(glTextureBuffer, _tex.id, internalformat, buffer);
+    GX_GLCALL(glTextureBuffer, _tex.id(), internalformat, buffer);
   }
-  return _tex.id;
+  return _tex.id();
 }
 
 template<int VER>
@@ -777,7 +777,7 @@ void gx::GLTextureBuffer<VER>::detachBuffer()
     _tex.bindCheck();
     GX_GLCALL(glTexBuffer, target(), _internalformat, 0);
   } else {
-    GX_GLCALL(glTextureBuffer, _tex.id, _internalformat, 0);
+    GX_GLCALL(glTextureBuffer, _tex.id(), _internalformat, 0);
   }
 }
 
@@ -785,11 +785,10 @@ void gx::GLTextureBuffer<VER>::detachBuffer()
 // **** GLTextureHandle definition & implementation ****
 // internal implementation class to minimize duplicate code
 template<int VER, GLenum TARGET>
-struct gx::GLTextureHandle
+class gx::GLTextureHandle
 {
+ public:
   using type = GLTextureHandle<VER,TARGET>;
-
-  GLuint id = 0;
 
   GLTextureHandle() = default;
   ~GLTextureHandle() { if (GLVersion != 0) cleanup(); }
@@ -799,33 +798,36 @@ struct gx::GLTextureHandle
   type& operator=(const type&) = delete;
 
   // allow move/move-assign
-  GLTextureHandle(type&& t) noexcept : id{t.release()} { }
+  GLTextureHandle(type&& t) noexcept : _id{t.release()} { }
   type& operator=(type&& t) noexcept {
     if (this != &t) {
       cleanup();
-      id = t.release();
+      _id = t.release();
     }
     return *this;
   }
 
+  [[nodiscard]] GLuint id() const { return _id; }
+  [[nodiscard]] explicit operator bool() const { return _id != 0; }
+
   GLuint init() {
     cleanup();
     if constexpr (VER < 45) {
-      GX_GLCALL(glGenTextures, 1, &id);
+      GX_GLCALL(glGenTextures, 1, &_id);
     } else {
-      GX_GLCALL(glCreateTextures, TARGET, 1, &id);
+      GX_GLCALL(glCreateTextures, TARGET, 1, &_id);
     }
-    return id;
+    return _id;
   }
 
-  GLuint release() noexcept { return std::exchange(id, 0); }
+  GLuint release() noexcept { return std::exchange(_id, 0); }
 
   void cleanup() noexcept {
-    if (id) {
+    if (_id != 0) {
       if constexpr (VER < 45) {
-        if (GLLastTextureBind == id) { GLLastTextureBind = 0; }
+        if (GLLastTextureBind == _id) { GLLastTextureBind = 0; }
       }
-      GX_GLCALL(glDeleteTextures, 1, &id);
+      GX_GLCALL(glDeleteTextures, 1, &_id);
     }
   }
 
@@ -839,15 +841,15 @@ struct gx::GLTextureHandle
     }
   }
 
-  void bindUnit(GLuint unit) const { bindUnit(unit, id); }
+  void bindUnit(GLuint unit) const { bindUnit(unit, _id); }
   static void unbindUnit(GLuint unit) { bindUnit(unit, 0); }
 
   void bindCheck() {
     // only called for VER < 45
-    if (GLLastTextureBind != id) {
+    if (GLLastTextureBind != _id) {
       // don't care which unit is active
-      GX_GLCALL(glBindTexture, TARGET, id);
-      GLLastTextureBind = id;
+      GX_GLCALL(glBindTexture, TARGET, _id);
+      GLLastTextureBind = _id;
     }
   }
 
@@ -858,7 +860,7 @@ struct gx::GLTextureHandle
       GX_GLCALL(glGetTexImage, TARGET, level, format, type, pixels);
       // FIXME: bufSize not used
     } else {
-      GX_GLCALL(glGetTextureImage, id, level, format, type, bufSize, pixels);
+      GX_GLCALL(glGetTextureImage, _id, level, format, type, bufSize, pixels);
     }
   }
 
@@ -867,7 +869,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glGenerateMipmap, TARGET);
     } else {
-      GX_GLCALL(glGenerateTextureMipmap, id);
+      GX_GLCALL(glGenerateTextureMipmap, _id);
     }
   }
 
@@ -876,7 +878,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glTexParameterf, TARGET, pname, param);
     } else {
-      GX_GLCALL(glTextureParameterf, id, pname, param);
+      GX_GLCALL(glTextureParameterf, _id, pname, param);
     }
   }
 
@@ -885,7 +887,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glTexParameteri, TARGET, pname, param);
     } else {
-      GX_GLCALL(glTextureParameteri, id, pname, param);
+      GX_GLCALL(glTextureParameteri, _id, pname, param);
     }
   }
 
@@ -894,7 +896,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glTexParameterfv, TARGET, pname, params);
     } else {
-      GX_GLCALL(glTextureParameterfv, id, pname, params);
+      GX_GLCALL(glTextureParameterfv, _id, pname, params);
     }
   }
 
@@ -903,7 +905,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glTexParameteriv, TARGET, pname, params);
     } else {
-      GX_GLCALL(glTextureParameteriv, id, pname, params);
+      GX_GLCALL(glTextureParameteriv, _id, pname, params);
     }
   }
 
@@ -912,7 +914,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glTexParameterIiv, TARGET, pname, params);
     } else {
-      GX_GLCALL(glTextureParameterIiv, id, pname, params);
+      GX_GLCALL(glTextureParameterIiv, _id, pname, params);
     }
   }
 
@@ -921,7 +923,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glTexParameterIuiv, TARGET, pname, params);
     } else {
-      GX_GLCALL(glTextureParameterIuiv, id, pname, params);
+      GX_GLCALL(glTextureParameterIuiv, _id, pname, params);
     }
   }
 
@@ -930,7 +932,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glGetTexParameterfv, TARGET, pname, params);
     } else {
-      GX_GLCALL(glGetTextureParameterfv, id, pname, params);
+      GX_GLCALL(glGetTextureParameterfv, _id, pname, params);
     }
   }
 
@@ -939,7 +941,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glGetTexParameteriv, TARGET, pname, params);
     } else {
-      GX_GLCALL(glGetTextureParameteriv, id, pname, params);
+      GX_GLCALL(glGetTextureParameteriv, _id, pname, params);
     }
   }
 
@@ -948,7 +950,7 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glGetTexParameterIiv, TARGET, pname, params);
     } else {
-      GX_GLCALL(glGetTextureParameterIiv, id, pname, params);
+      GX_GLCALL(glGetTextureParameterIiv, _id, pname, params);
     }
   }
 
@@ -957,7 +959,10 @@ struct gx::GLTextureHandle
       bindCheck();
       GX_GLCALL(glGetTexParameterIuiv, TARGET, pname, params);
     } else {
-      GX_GLCALL(glGetTextureParameterIuiv, id, pname, params);
+      GX_GLCALL(glGetTextureParameterIuiv, _id, pname, params);
     }
   }
+
+ private:
+  GLuint _id = 0;
 };
