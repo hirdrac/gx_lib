@@ -45,7 +45,7 @@ gx::TextureHandle::TextureHandle(const TextureHandle& h) : _id{h._id}
 
 gx::TextureHandle& gx::TextureHandle::operator=(const TextureHandle& h)
 {
-  if (this != &h) {
+  if (_id != h._id) {
     cleanup();
     _id = h._id;
 
