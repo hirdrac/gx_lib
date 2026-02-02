@@ -1,6 +1,6 @@
 //
 // gx/Window.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 // TODO: mouseIn can get lost with resize on Windows - auto set mouseIn for
@@ -347,8 +347,9 @@ struct gx::WindowImpl
     _renderer = makeOpenGLRenderer(win);
     if (!_renderer) { return false; }
 
-    _width = _renderer->framebufferWidth();
-    _height = _renderer->framebufferHeight();
+    const auto [fw,fh] = _renderer->framebufferDimensions();
+    _width = fw;
+    _height = fh;
 
     //glfwSetInputMode(win, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
     glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));

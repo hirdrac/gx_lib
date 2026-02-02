@@ -90,14 +90,12 @@ class gx::Renderer
 
   // framebuffer methods
   virtual bool setFramebufferSize(int width, int height) = 0;
-  [[nodiscard]] int framebufferWidth() const { return _fbWidth; }
-  [[nodiscard]] int framebufferHeight() const { return _fbHeight; }
   [[nodiscard]] std::pair<int,int> framebufferDimensions() const {
     return {_fbWidth, _fbHeight}; }
 
   // texture methods
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
-  virtual TextureHandle newTexture(
+  [[nodiscard]] virtual TextureHandle newTexture(
     const Image& img, const TextureParams& params) = 0;
 
   // draw methods
