@@ -176,7 +176,11 @@ int main(int argc, char* argv[])
   gx::Renderer& ren = win.renderer();
   int entryNo = 0;
   for (Entry& e : entries) {
-    e.tex = ren.newTexture(e.img, params);
+    params.width = e.img.width();
+    params.height = e.img.height();
+    params.channels = e.img.channels();
+    e.tex = ren.newTexture(params);
+    ren.setSubImage(e.tex.id(), 0, 0, e.img);
   }
 
   gx::DrawList dl;

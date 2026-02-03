@@ -181,8 +181,6 @@ bool Font::makeAtlas(Renderer& ren)
 
     if ((x+g.width) >= texW) { x = 1; y += maxH + 1; }
 
-    // texture coords not normalized with TEXTURE_RECTANGLE
-    // (y coord flipped to match GL coords)
     g.t0.x = float(x) / float(texW);
     g.t0.y = float(y) / float(texH);
     g.t1.x = float(x + g.width) / float(texW);
@@ -193,12 +191,16 @@ bool Font::makeAtlas(Renderer& ren)
   }
 
   TextureParams params;
+  params.width = img.width();
+  params.height = img.height();
+  params.channels = img.channels();
   params.minFilter = FilterType::linear;
   params.magFilter = FilterType::linear;
   params.wrapS = WrapType::clampToEdge;
   params.wrapT = WrapType::clampToEdge;
 
-  _atlas = ren.newTexture(img, params);
+  _atlas = ren.newTexture(params);
+  ren.setSubImage(_atlas.id(), 0, 0, img);
   _atlasWidth = img.width();
   _atlasHeight = img.height();
   return true;

@@ -299,8 +299,9 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool init(GLFWwindow* win) override;
   bool setSwapInterval(int interval) override;
   bool setFramebufferSize(int width, int height) override;
-  TextureHandle newTexture(
-    const Image& img, const TextureParams& params) override;
+  TextureHandle newTexture(const TextureParams& params) override;
+  bool setSubImage(
+    TextureID id, int offsetX, int offsetY, const Image& img) override;
   void freeTexture(TextureID id) override;
   void draw(const DrawList* const* lists, std::size_t count) override;
   void renderFrame(int64_t usecTime) override;
@@ -329,6 +330,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     GLTexture2D<VER> tex;
     int channels = 0;
     int unit = -1;
+    bool mipmap = false;
   };
   std::unordered_map<TextureID,TextureEntry> _textures;
 
@@ -592,15 +594,14 @@ bool OpenGLRenderer<VER>::setFramebufferSize(int width, int height)
 }
 
 template<int VER>
-TextureHandle OpenGLRenderer<VER>::newTexture(
-  const Image& img, const TextureParams& params)
+TextureHandle OpenGLRenderer<VER>::newTexture(const TextureParams& params)
 {
-  GLenum texformat, imgformat;
-  switch (img.channels()) {
-    case 1: texformat = GL_R8;    imgformat = GL_RED;  break;
-    case 2: texformat = GL_RG8;   imgformat = GL_RG;   break;
-    case 3: texformat = GL_RGB8;  imgformat = GL_RGB;  break;
-    case 4: texformat = GL_RGBA8; imgformat = GL_RGBA; break;
+  GLenum texformat;
+  switch (params.channels) {
+    case 1: texformat = GL_R8;    break;
+    case 2: texformat = GL_RG8;   break;
+    case 3: texformat = GL_RGB8;  break;
+    case 4: texformat = GL_RGBA8; break;
     default: return {};
   }
 
@@ -612,12 +613,8 @@ TextureHandle OpenGLRenderer<VER>::newTexture(
   setCurrentContext(_window);
 
   auto& t = te.tex;
-  t.init(std::max(1, params.levels), texformat, img.width(), img.height());
-  te.channels = img.channels();
-
-  t.setSubImage(
-    0, 0, 0, img.width(), img.height(), imgformat, img.data());
-  if (params.levels > 1) { t.generateMipmap(); }
+  t.init(std::max(1, params.levels), texformat, params.width, params.height);
+  te.channels = params.channels;
 
   {
     const GLint val = calcMinFilter(params);
@@ -638,15 +635,48 @@ TextureHandle OpenGLRenderer<VER>::newTexture(
     t.setParameter(GL_TEXTURE_WRAP_T, glWrapType(params.wrapT));
   }
 
+  if (params.clearTexture) {
+    t.clear(0);
+  }
+
   return TextureHandle{id};
+}
+
+template<int VER>
+bool OpenGLRenderer<VER>::setSubImage(
+  TextureID id, int offsetX, int offsetY, const Image& img)
+{
+  GLenum imgformat;
+  switch (img.channels()) {
+    case 1: imgformat = GL_RED;  break;
+    case 2: imgformat = GL_RG;   break;
+    case 3: imgformat = GL_RGB;  break;
+    case 4: imgformat = GL_RGBA; break;
+    default: return false;
+  }
+
+  const std::lock_guard lg{_glMutex};
+  const auto itr = _textures.find(id);
+  if (itr == _textures.end()) { return false; }
+
+  setCurrentContext(_window);
+
+  TextureEntry& te = itr->second;
+  te.tex.setSubImage(
+    0, offsetX, offsetY, img.width(), img.height(), imgformat, img.data());
+  te.mipmap = false;
+  return true;
 }
 
 template<int VER>
 void OpenGLRenderer<VER>::freeTexture(TextureID id)
 {
   const std::lock_guard lg{_glMutex};
-  setCurrentContext(_window);
-  _textures.erase(id);
+  const auto itr = _textures.find(id);
+  if (itr != _textures.end()) {
+    setCurrentContext(_window);
+    _textures.erase(itr);
+  }
 }
 
 template<int VER>
@@ -1122,8 +1152,15 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
   GX_GLCALL(glFrontFace, GL_CW);
 
-  // clear texture unit assignments
-  for (auto& t : _textures) { t.second.unit = -1; }
+  // setup textures
+  for (auto& t : _textures) {
+    TextureEntry& te = t.second;
+    te.unit = -1;
+    if (te.tex.levels() > 1 && !te.mipmap) {
+      te.tex.generateMipmap();
+      te.mipmap = true;
+    }
+  }
 
   _currentGLCap = -1; // force all capabilities to be set initially
   _uniformBuf.bindBase(GL_UNIFORM_BUFFER, 0);

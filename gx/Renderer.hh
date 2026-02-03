@@ -38,12 +38,16 @@ namespace gx {
   };
 
   struct TextureParams {
-    int levels = 1;
+    int width;
+    int height;
+    int channels;
+    int levels = 1; // >1 for mipsmap generation
     FilterType minFilter = FilterType::unspecified;
     FilterType magFilter = FilterType::unspecified;
     FilterType mipFilter = FilterType::unspecified;
     WrapType wrapS = WrapType::unspecified;
     WrapType wrapT = WrapType::unspecified;
+    bool clearTexture = false;
   };
 
   class TextureHandle {
@@ -96,7 +100,9 @@ class gx::Renderer
   // texture methods
   [[nodiscard]] int maxTextureSize() const { return _maxTextureSize; }
   [[nodiscard]] virtual TextureHandle newTexture(
-    const Image& img, const TextureParams& params) = 0;
+    const TextureParams& params) = 0;
+  virtual bool setSubImage(
+    TextureID id, int offsetX, int offsetY, const Image& img) = 0;
 
   // draw methods
   virtual void draw(const DrawList* const* lists, std::size_t count) = 0;
@@ -118,5 +124,6 @@ class gx::Renderer
   friend class TextureHandle;
 
   [[nodiscard]] TextureID newTextureID();
+
   virtual void freeTexture(TextureID id) = 0;
 };
