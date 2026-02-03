@@ -102,8 +102,9 @@ static void focusCB(GLFWwindow* win, int focused);
 
 
 // **** WindowImpl class ****
-struct gx::WindowImpl
+class gx::WindowImpl
 {
+ public:
   WindowImpl()
   {
     const std::lock_guard lg{allImplsMutex};

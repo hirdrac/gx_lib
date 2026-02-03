@@ -1,6 +1,6 @@
 //
 // gx/Window.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // encapsulation of OS specific window handling
 //
@@ -52,7 +52,7 @@ namespace gx {
 
 
   class Window;
-  struct WindowImpl;
+  class WindowImpl;
 }
 
 class gx::Window
