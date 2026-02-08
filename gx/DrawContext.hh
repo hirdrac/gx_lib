@@ -116,8 +116,7 @@ class gx::DrawContext
 
   template<class T1, class T2, class T3, class... Args>
   void lineLoop(const T1& p1, const T2& p2, const T3& p3, Args&&... args) {
-    line(p1, p2, p3, args..., p1);
-  }
+    line(p1, p2, p3, args..., p1); }
 
   // Poly drawing
   // Triangle  Quad  Rectangle
@@ -127,6 +126,8 @@ class gx::DrawContext
   //   C       C--D    +-W-+
   void triangle(Vec2 a, Vec2 b, Vec2 c);
   void triangle(const Vec3& a, const Vec3& b, const Vec3& c);
+  void triangle(const Vertex2T& a, const Vertex2T& b, const Vertex2T& c);
+  void triangle(const Vertex3T& a, const Vertex3T& b, const Vertex3T& c);
   void triangle(const Vertex2C& a, const Vertex2C& b, const Vertex2C& c) {
     _dl->triangle2C(a, b, c); }
   void triangle(const Vertex3C& a, const Vertex3C& b, const Vertex3C& c) {
@@ -140,6 +141,10 @@ class gx::DrawContext
 
   void quad(const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d);
   void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d);
+  void quad(const Vertex2T& a, const Vertex2T& b,
+            const Vertex2T& c, const Vertex2T& d);
+  void quad(const Vertex3T& a, const Vertex3T& b,
+            const Vertex3T& c, const Vertex3T& d);
   void quad(const Vertex2C& a, const Vertex2C& b,
             const Vertex2C& c, const Vertex2C& d) {
     _dl->quad2C(a, b, c, d); }
@@ -251,8 +256,19 @@ class gx::DrawContext
                   RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
   [[nodiscard]] RGBA8 gradientColor(float g) const;
-  [[nodiscard]] inline RGBA8 pointColor(Vec2 pt) const;
-  [[nodiscard]] inline RGBA8 pointColor(const Vec3& pt) const;
+
+  [[nodiscard]] RGBA8 pointColor(float x, float y) const {
+    switch (_colorMode) {
+      default:           return _color0;
+      case CM_HGRADIENT: return gradientColor(x);
+      case CM_VGRADIENT: return gradientColor(y);
+    }
+  }
+
+  template<class PointType>
+  [[nodiscard]] RGBA8 pointColor(const PointType& pt) const {
+    return pointColor(pt.x, pt.y); }
+
   inline void setColor();
   inline bool checkColor();
 };
@@ -325,24 +341,6 @@ void gx::DrawContext::texture(TextureID tid)
   if (tid != _lastTexID) {
     _lastTexID = tid;
     _dl->texture(tid);
-  }
-}
-
-gx::RGBA8 gx::DrawContext::pointColor(Vec2 pt) const
-{
-  switch (_colorMode) {
-    default:           return _color0;
-    case CM_HGRADIENT: return gradientColor(pt.x);
-    case CM_VGRADIENT: return gradientColor(pt.y);
-  }
-}
-
-gx::RGBA8 gx::DrawContext::pointColor(const Vec3& pt) const
-{
-  switch (_colorMode) {
-    default:           return _color0;
-    case CM_HGRADIENT: return gradientColor(pt.x);
-    case CM_VGRADIENT: return gradientColor(pt.y);
   }
 }
 

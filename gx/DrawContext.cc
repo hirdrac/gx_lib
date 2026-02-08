@@ -163,6 +163,34 @@ void DrawContext::triangle(const Vec3& a, const Vec3& b, const Vec3& c)
   }
 }
 
+void DrawContext::triangle(
+  const Vertex2T& a, const Vertex2T& b, const Vertex2T& c)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    _dl->triangle2T(a, b, c);
+  } else {
+    _dl->triangle2TC({a.x, a.y, a.s, a.t, pointColor(a)},
+                     {b.x, b.y, b.s, b.t, pointColor(b)},
+                     {c.x, c.y, c.s, c.t, pointColor(c)});
+  }
+}
+
+void DrawContext::triangle(
+  const Vertex3T& a, const Vertex3T& b, const Vertex3T& c)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    _dl->triangle3T(a, b, c);
+  } else {
+    _dl->triangle3TC({a.x, a.y, a.z, a.s, a.t, pointColor(a)},
+                     {b.x, b.y, b.z, b.s, b.t, pointColor(b)},
+                     {c.x, c.y, c.z, c.s, c.t, pointColor(c)});
+  }
+}
+
 void DrawContext::quad(
   const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d)
 {
@@ -190,6 +218,36 @@ void DrawContext::quad(
                 {b.x, b.y, b.z, pointColor(b)},
                 {c.x, c.y, c.z, pointColor(c)},
                 {d.x, d.y, d.z, pointColor(d)});
+  }
+}
+
+void DrawContext::quad(
+  const Vertex2T& a, const Vertex2T& b, const Vertex2T& c, const Vertex2T& d)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    _dl->quad2T(a, b, c, d);
+  } else {
+    _dl->quad2TC({a.x, a.y, a.s, a.t, pointColor(a)},
+                 {b.x, b.y, b.s, b.t, pointColor(b)},
+                 {c.x, c.y, c.s, c.t, pointColor(c)},
+                 {d.x, d.y, d.s, d.t, pointColor(d)});
+  }
+}
+
+void DrawContext::quad(
+  const Vertex3T& a, const Vertex3T& b, const Vertex3T& c, const Vertex3T& d)
+{
+  if ((_color0 | _color1) == 0) { return; }
+  if (_colorMode == CM_SOLID) {
+    setColor();
+    _dl->quad3T(a, b, c, d);
+  } else {
+    _dl->quad3TC({a.x, a.y, a.z, a.s, a.t, pointColor(a)},
+                 {b.x, b.y, b.z, b.s, b.t, pointColor(b)},
+                 {c.x, c.y, c.z, c.s, c.t, pointColor(c)},
+                 {d.x, d.y, d.z, d.s, d.t, pointColor(d)});
   }
 }
 
@@ -299,10 +357,10 @@ void DrawContext::rectangle(
     setColor();
     _dl->rectangleT({x0, y0, tx0, ty0}, {x1, y1, tx1, ty1});
   } else {
-    _dl->quad2TC({x0, y0, tx0, ty0, pointColor({x0,y0})},
-                 {x1, y0, tx1, ty0, pointColor({x1,y0})},
-                 {x0, y1, tx0, ty1, pointColor({x0,y1})},
-                 {x1, y1, tx1, ty1, pointColor({x1,y1})});
+    _dl->quad2TC({x0, y0, tx0, ty0, pointColor(x0, y0)},
+                 {x1, y0, tx1, ty0, pointColor(x1, y0)},
+                 {x0, y1, tx0, ty1, pointColor(x0, y1)},
+                 {x1, y1, tx1, ty1, pointColor(x1, y1)});
   }
 }
 
