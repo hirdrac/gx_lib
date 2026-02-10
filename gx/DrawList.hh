@@ -20,7 +20,6 @@ namespace gx {
   struct Vertex3C { float x, y, z; uint32_t c; };
   struct Vertex3T { float x, y, z, s, t; };
   struct Vertex3TC { float x, y, z, s, t; uint32_t c; };
-  struct Vertex3TCN { float x,y,z,s,t; uint32_t c, n; };
 }
 
 class gx::DrawList
@@ -128,10 +127,6 @@ class gx::DrawList
   void triangle3TC(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c) {
     add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
         b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
-  void triangle3TCN(const Vertex3TCN& a, const Vertex3TCN& b,
-                    const Vertex3TCN& c) {
-    add(CMD_triangle3TCN, a.x, a.y, a.z, a.s, a.t, a.c, a.n,
-        b.x, b.y, b.z, b.s, b.t, b.c, b.n, c.x, c.y, c.z, c.s, c.t, c.c, c.n); }
   void quad2(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
     add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
   void quad3(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) {
@@ -160,11 +155,6 @@ class gx::DrawList
                const Vertex3TC& d) {
     add(CMD_quad3TC, a.x, a.y, a.z, a.s, a.t, a.c, b.x, b.y, b.z, b.s, b.t, b.c,
         c.x, c.y, c.z, c.s, c.t, c.c, d.x, d.y, d.z, d.s, d.t, d.c); }
-  void quad3TCN(const Vertex3TCN& a, const Vertex3TCN& b, const Vertex3TCN& c,
-                const Vertex3TCN& d) {
-    add(CMD_quad3TCN, a.x, a.y, a.z, a.s, a.t, a.c, a.n,
-        b.x, b.y, b.z, b.s, b.t, b.c, b.n, c.x, c.y, c.z, c.s, c.t, c.c, c.n,
-        d.x, d.y, d.z, d.s, d.t, d.c, d.n); }
   void rectangle(Vec2 a, Vec2 b) {
     add(CMD_rectangle, a.x, a.y, b.x, b.y); }
   void rectangleT(const Vertex2T& a, const Vertex2T& b) {

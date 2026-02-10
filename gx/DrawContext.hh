@@ -136,8 +136,6 @@ class gx::DrawContext
     _dl->triangle2TC(a, b, c); }
   void triangle(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c) {
     _dl->triangle3TC(a, b, c); }
-  void triangle(const Vertex3TCN& a, const Vertex3TCN& b, const Vertex3TCN& c) {
-    _dl->triangle3TCN(a, b, c); }
 
   void quad(const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d);
   void quad(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d);
@@ -157,9 +155,6 @@ class gx::DrawContext
   void quad(const Vertex3TC& a, const Vertex3TC& b,
             const Vertex3TC& c, const Vertex3TC& d) {
     _dl->quad3TC(a, b, c, d); }
-  void quad(const Vertex3TCN& a, const Vertex3TCN& b,
-            const Vertex3TCN& c, const Vertex3TCN& d) {
-    _dl->quad3TCN(a, b, c, d); }
 
   void rectangle(const Rect& r);
   void rectangle(const Rect& r, Vec2 t0, Vec2 t1);

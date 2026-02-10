@@ -152,7 +152,6 @@ namespace {
         case CMD_triangle3C:   d += 13; vsize += 3; break;
         case CMD_triangle2TC:  d += 16; vsize += 3; break;
         case CMD_triangle3TC:  d += 19; vsize += 3; break;
-        case CMD_triangle3TCN: d += 22; vsize += 3; break;
         case CMD_quad2:        d += 9;  vsize += 6; break;
         case CMD_quad3:        d += 13; vsize += 6; break;
         case CMD_quad2T:       d += 17; vsize += 6; break;
@@ -161,7 +160,6 @@ namespace {
         case CMD_quad3C:       d += 17; vsize += 6; break;
         case CMD_quad2TC:      d += 21; vsize += 6; break;
         case CMD_quad3TC:      d += 25; vsize += 6; break;
-        case CMD_quad3TCN:     d += 29; vsize += 6; break;
         case CMD_rectangle:    d += 5;  vsize += 6; break;
         case CMD_rectangleT:   d += 9;  vsize += 6; break;
 
@@ -208,14 +206,6 @@ namespace {
       //  8-15  transform
       // 16-31  z texture coord
   };
-
-  Vertex vertex_val(const Value*& ptr) {
-    return {
-      fval(ptr), fval(ptr), fval(ptr), // x,y,z
-      uval(ptr),                       // color
-      fval(ptr), fval(ptr),            // s,t
-      uval(ptr), 0};                   // normal, mode
-  }
 
   // vertex output functions
   void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c) {
@@ -935,13 +925,6 @@ void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
           addTriangles(first, 3, tid);
           break;
         }
-        case CMD_triangle3TCN: {
-          *ptr++ = vertex_val(d);
-          *ptr++ = vertex_val(d);
-          *ptr++ = vertex_val(d);
-          addTriangles(first, 3, tid);
-          break;
-        }
         case CMD_quad2: {
           const Vec2 p0 = fval2(d), p1 = fval2(d);
           const Vec2 p2 = fval2(d), p3 = fval2(d);
@@ -1051,20 +1034,6 @@ void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
           vertex3d(ptr, p1, c1, t1, normal);
           vertex3d(ptr, p3, c3, t3, normal);
           vertex3d(ptr, p2, c2, t2, normal);
-          addTriangles(first, 6, tid);
-          break;
-        }
-        case CMD_quad3TCN: {
-          const Vertex v0 = vertex_val(d);
-          const Vertex v1 = vertex_val(d);
-          const Vertex v2 = vertex_val(d);
-          const Vertex v3 = vertex_val(d);
-          *ptr++ = v0;
-          *ptr++ = v1;
-          *ptr++ = v2;
-          *ptr++ = v1;
-          *ptr++ = v3;
-          *ptr++ = v2;
           addTriangles(first, 6, tid);
           break;
         }
