@@ -1,18 +1,18 @@
 //
 // MathUtilTest.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "gx/MathUtil.hh"
 #include <cassert>
 
 
-void test_sgn()
+void test_sign()
 {
   // static tests
-  static_assert(gx::sgn(0) == 0);
-  static_assert(gx::sgn(-99) == -1);
-  static_assert(gx::sgn(99) == 1);
+  static_assert(gx::sign(0) == 0);
+  static_assert(gx::sign(-99) == -1);
+  static_assert(gx::sign(99) == 1);
 }
 
 void test_abs()
@@ -25,7 +25,7 @@ void test_abs()
 
 int main(int argc, char** argv)
 {
-  test_sgn();
+  test_sign();
   test_abs();
   return 0;
 }

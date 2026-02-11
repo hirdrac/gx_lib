@@ -1,6 +1,6 @@
 //
 // gx/MathUtil.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // useful numeric constants and various numeric functions
 //
@@ -22,20 +22,6 @@ namespace gx {
   constexpr T PI = static_cast<T>(3.14159265358979323846);
 #else
   constexpr T PI = static_cast<T>(M_PI);
-#endif
-
-  template<class T>
-#ifndef M_PI_2
-  constexpr T PI_2 = static_cast<T>(1.57079632679489661923);
-#else
-  constexpr T PI_2 = static_cast<T>(M_PI_2);  // pi/2
-#endif
-
-  template<class T>
-#ifndef M_PI_4
-  constexpr T PI_4 = static_cast<T>(0.78539816339744830962);
-#else
-  constexpr T PI_4 = static_cast<T>(M_PI_4);  // pi/4
 #endif
 
   template<class T>
@@ -186,7 +172,7 @@ namespace gx {
   {
     if (y < 0) { return 0; }
 
-    numType val = static_cast<numType>(1);
+    numType val = 1;
     while (y) {
       if (y & 1) { val *= x; }
       y >>= 1;
@@ -197,12 +183,12 @@ namespace gx {
   }
 
   template<class numType>
-  [[nodiscard]] constexpr int sgn(numType x)
+  [[nodiscard]] constexpr int sign(numType x)
   {
     if constexpr (std::is_signed_v<numType>) {
-      return int{x > 0} - int{x < 0};
+      return int{isPos(x)} - int{isNeg(x)};
     } else {
-      return int{x > 0};
+      return int{isPos(x)};
     }
   }
 
