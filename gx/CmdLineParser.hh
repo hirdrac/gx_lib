@@ -1,6 +1,6 @@
 //
 // gx/CmdLineParser.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // Helper class for parsing command line arguments.
 //
@@ -60,6 +60,7 @@ class gx::CmdLineParser
   }
 
   [[nodiscard]] std::string_view arg() const { return _arg; }
+  [[nodiscard]] std::string_view operator*() const { return _arg; }
 
   template<class T>
   bool get(T& val) const { return convertVal(_arg, val); }
@@ -128,7 +129,7 @@ class gx::CmdLineParser
 
   int _current = 0;
   std::string_view _arg;
-  enum { OPTION_SHORT, OPTION_LONG, VALUE, ARGS_DONE } _argType = ARGS_DONE;
+  enum { ARGS_DONE, OPTION_SHORT, OPTION_LONG, VALUE } _argType;
   bool _optionsDone = false;
 
   template<class T>
