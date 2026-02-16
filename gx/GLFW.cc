@@ -1,6 +1,6 @@
 //
 // gx/GLFW.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "GLFW.hh"
@@ -16,39 +16,39 @@ Platform gx::initPlatform = Platform::unspecified;
 namespace {
   [[nodiscard]] std::string_view platformStr(int platform)
   {
-    #define PLATFORM_CASE(x) case GLFW_PLATFORM_##x: return #x;
+    #define GX_CASE(x) case GLFW_PLATFORM_##x: return #x;
     switch (platform) {
-      PLATFORM_CASE(WIN32);
-      PLATFORM_CASE(COCOA);
-      PLATFORM_CASE(WAYLAND);
-      PLATFORM_CASE(X11);
+      GX_CASE(WIN32);
+      GX_CASE(COCOA);
+      GX_CASE(WAYLAND);
+      GX_CASE(X11);
       default: return "unknown";
     }
-    #undef PLATFORM_CASE
+    #undef GX_CASE
   }
 
   [[nodiscard]] std::string_view errorStr(int error)
   {
-    #define ERROR_CASE(x) case GLFW_##x: return #x
+    #define GX_CASE(x) case GLFW_##x: return #x
     switch (error) {
-      ERROR_CASE(NO_ERROR);
-      ERROR_CASE(NOT_INITIALIZED);
-      ERROR_CASE(NO_CURRENT_CONTEXT);
-      ERROR_CASE(INVALID_ENUM);
-      ERROR_CASE(INVALID_VALUE);
-      ERROR_CASE(OUT_OF_MEMORY);
-      ERROR_CASE(API_UNAVAILABLE);
-      ERROR_CASE(VERSION_UNAVAILABLE);
-      ERROR_CASE(PLATFORM_ERROR);
-      ERROR_CASE(FORMAT_UNAVAILABLE);
-      ERROR_CASE(NO_WINDOW_CONTEXT);
-      ERROR_CASE(CURSOR_UNAVAILABLE);
-      ERROR_CASE(FEATURE_UNAVAILABLE);
-      ERROR_CASE(FEATURE_UNIMPLEMENTED);
-      ERROR_CASE(PLATFORM_UNAVAILABLE);
+      GX_CASE(NO_ERROR);
+      GX_CASE(NOT_INITIALIZED);
+      GX_CASE(NO_CURRENT_CONTEXT);
+      GX_CASE(INVALID_ENUM);
+      GX_CASE(INVALID_VALUE);
+      GX_CASE(OUT_OF_MEMORY);
+      GX_CASE(API_UNAVAILABLE);
+      GX_CASE(VERSION_UNAVAILABLE);
+      GX_CASE(PLATFORM_ERROR);
+      GX_CASE(FORMAT_UNAVAILABLE);
+      GX_CASE(NO_WINDOW_CONTEXT);
+      GX_CASE(CURSOR_UNAVAILABLE);
+      GX_CASE(FEATURE_UNAVAILABLE);
+      GX_CASE(FEATURE_UNIMPLEMENTED);
+      GX_CASE(PLATFORM_UNAVAILABLE);
       default: return "unknown";
     }
-    #undef ERROR_CASE
+    #undef GX_CASE
   }
 
   void errorCB(int error, const char* txt)

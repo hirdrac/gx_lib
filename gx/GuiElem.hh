@@ -122,17 +122,17 @@ class gx::GuiElem
     ImageProps     // IMAGE
     > props;
 
-#define GETTER(name,type)\
+#define GX_GETTER(name,type)\
   [[nodiscard]] type& name() { return std::get<type>(props); }\
   [[nodiscard]] const type& name() const { return std::get<type>(props); }
 
-  GETTER(label,LabelProps)
-  GETTER(button,ButtonProps)
-  GETTER(checkbox,CheckboxProps)
-  GETTER(item,ItemProps)
-  GETTER(entry,EntryProps)
-  GETTER(image,ImageProps)
-#undef GETTER
+  GX_GETTER(label,LabelProps)
+  GX_GETTER(button,ButtonProps)
+  GX_GETTER(checkbox,CheckboxProps)
+  GX_GETTER(item,ItemProps)
+  GX_GETTER(entry,EntryProps)
+  GX_GETTER(image,ImageProps)
+#undef GX_GETTER
 
   // layout state
   ElemID _id = 0;

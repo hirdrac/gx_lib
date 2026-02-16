@@ -1,6 +1,6 @@
 //
 // gx/OpenGL.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // OpenGL API include & utility functions
 //
@@ -27,25 +27,25 @@ inline GLuint GLLastRenderbufferBind = 0;
 
 
 // **** Functions ****
-bool GLSetupContext(GLADloadfunc loadProc);
+bool setupGLContext(GLADloadfunc loadProc);
   // call after GL context creation to setup context
   // returns true on success
 
-void GLClearState();
+void clearGLState();
   // call after every frame to reset GL state
 
-int GLCheckErrors(std::string_view msg, std::string_view file, int line);
+int checkGLErrors(std::string_view msg, std::string_view file, int line);
   // check for and log all OpenGL errors
   // returns number of errors found
 
-[[nodiscard]] std::string GLErrorStr(GLenum error);
+[[nodiscard]] std::string getGLErrorStr(GLenum error);
   // returns error string (return value of glGetError)
 
-void GLSetUnpackAlignment(GLsizei width, GLenum format, GLenum type);
+void setGLUnpackAlignment(GLsizei width, GLenum format, GLenum type);
   // calculate & set alignment requirements for the start of each pixel row
   // for glReadPixels/glTextureImage*/glTextureSubImage* functions
 
-[[nodiscard]] constexpr int GLTypeSize(GLenum type)
+[[nodiscard]] constexpr int getGLTypeSize(GLenum type)
 {
   switch (type) {
     case GL_BYTE:
@@ -83,9 +83,9 @@ void GLSetUnpackAlignment(GLsizei width, GLenum format, GLenum type);
   }
 }
 
-[[nodiscard]] constexpr int GLPixelSize(GLenum format, GLenum type)
+[[nodiscard]] constexpr int getGLPixelSize(GLenum format, GLenum type)
 {
-  int s = GLTypeSize(type);
+  int s = getGLTypeSize(type);
   if (type == GL_UNSIGNED_BYTE || type == GL_BYTE || type == GL_UNSIGNED_SHORT
       || type == GL_SHORT || type == GL_UNSIGNED_INT || type == GL_INT
       || type == GL_FLOAT)
@@ -110,7 +110,7 @@ void GLSetUnpackAlignment(GLsizei width, GLenum format, GLenum type);
   return s;
 }
 
-[[nodiscard]] constexpr GLenum GLFormat(int channels)
+[[nodiscard]] constexpr GLenum getGLFormat(int channels)
 {
   switch (channels) {
     case 1:  return GL_RED;
@@ -121,7 +121,7 @@ void GLSetUnpackAlignment(GLsizei width, GLenum format, GLenum type);
   }
 }
 
-[[nodiscard]] constexpr GLenum GLBaseFormat(GLenum internalformat)
+[[nodiscard]] constexpr GLenum getGLBaseFormat(GLenum internalformat)
 {
   switch (internalformat) {
     case GL_DEPTH_COMPONENT:
@@ -263,7 +263,7 @@ constexpr GLenum GLType_v = GLType<T>::value;
 
 
 // **** Macros ***
-#define GX_CHECK_GL_ERRORS(msg) gx::GLCheckErrors(msg,__FILE__,__LINE__)
+#define GX_CHECK_GL_ERRORS(msg) gx::checkGLErrors(msg,__FILE__,__LINE__)
 
 #ifdef GX_DEBUG_GL
 #define GX_GLCALL(fn,...) do { (fn)(__VA_ARGS__); GX_CHECK_GL_ERRORS(#fn); } while(0)

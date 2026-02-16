@@ -1278,7 +1278,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   // swap buffers & finish
   glfwSwapBuffers(_window);
   GX_CHECK_GL_ERRORS("GL error");
-  GLClearState();
+  clearGLState();
 
   // frame rate calculation
   ++_frames;
@@ -1343,7 +1343,7 @@ void OpenGLRenderer<VER>::setGLCapabilities(int32_t cap)
 std::unique_ptr<Renderer> gx::makeOpenGLRenderer(GLFWwindow* win)
 {
   setCurrentContext(win);
-  if (!GLSetupContext(reinterpret_cast<GLADloadfunc>(glfwGetProcAddress))) {
+  if (!setupGLContext(reinterpret_cast<GLADloadfunc>(glfwGetProcAddress))) {
     return {};
   }
 

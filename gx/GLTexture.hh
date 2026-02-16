@@ -475,7 +475,7 @@ template<int VER>
 void gx::GLTexture1D<VER>::setSubImage(
   GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const void* pixels)
 {
-  GLSetUnpackAlignment(width, format, type);
+  setGLUnpackAlignment(width, format, type);
   if constexpr (VER < 45) {
     _tex.bindCheck();
     GX_GLCALL(glTexSubImage1D, target(), level, xoffset, width, format, type, pixels);
@@ -487,12 +487,12 @@ void gx::GLTexture1D<VER>::setSubImage(
 template<int VER>
 void gx::GLTexture1D<VER>::clear(GLint level)
 {
-  const GLenum format = GLBaseFormat(_internalformat);
+  const GLenum format = getGLBaseFormat(_internalformat);
   const GLenum type = (format == GL_DEPTH_STENCIL)
     ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
 
   if constexpr (VER < 44) {
-    const int pixel_size = GLPixelSize(format, type);
+    const int pixel_size = getGLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(_width * pixel_size);
     setSubImage(level, 0, _width, format, empty.get());
   } else {
@@ -546,7 +546,7 @@ void gx::GLTexture2DT<VER,TARGET>::setSubImage(
   GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
   GLenum format, GLenum type, const void* pixels)
 {
-  GLSetUnpackAlignment(width, format, type);
+  setGLUnpackAlignment(width, format, type);
   if constexpr (VER < 45) {
     _tex.bindCheck();
     GX_GLCALL(glTexSubImage2D, TARGET, level, xoffset, yoffset,
@@ -560,12 +560,12 @@ void gx::GLTexture2DT<VER,TARGET>::setSubImage(
 template<int VER, GLenum TARGET>
 void gx::GLTexture2DT<VER,TARGET>::clear(GLint level)
 {
-  const GLenum format = GLBaseFormat(_internalformat);
+  const GLenum format = getGLBaseFormat(_internalformat);
   const GLenum type = (format == GL_DEPTH_STENCIL)
     ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
 
   if constexpr (VER < 44) {
-    const int pixel_size = GLPixelSize(format, type);
+    const int pixel_size = getGLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(
       _width * _height * pixel_size);
     setSubImage(level, 0, 0, _width, _height, format, empty.get());
@@ -626,7 +626,7 @@ void gx::GLTexture3DT<VER,TARGET>::setSubImage(
   GLsizei width, GLsizei height, GLsizei depth,
   GLenum format, GLenum type, const void* pixels)
 {
-  GLSetUnpackAlignment(width, format, type);
+  setGLUnpackAlignment(width, format, type);
   if constexpr (VER < 45) {
     _tex.bindCheck();
     GX_GLCALL(glTexSubImage3D, TARGET, level, xoffset, yoffset, zoffset,
@@ -640,12 +640,12 @@ void gx::GLTexture3DT<VER,TARGET>::setSubImage(
 template<int VER, GLenum TARGET>
 void gx::GLTexture3DT<VER,TARGET>::clear(GLint level)
 {
-  const GLenum format = GLBaseFormat(_internalformat);
+  const GLenum format = getGLBaseFormat(_internalformat);
   const GLenum type = (format == GL_DEPTH_STENCIL)
     ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
 
   if constexpr (VER < 44) {
-    const int pixel_size = GLPixelSize(format, type);
+    const int pixel_size = getGLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(
       _width * _height * _depth * pixel_size);
     setSubImage(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
@@ -695,7 +695,7 @@ void gx::GLTextureCubeMap<VER>::setSubImage(
   GLint level, GLint xoffset, GLint yoffset, GLuint face, GLsizei width,
   GLsizei height, GLenum format, GLenum type, const void* pixels)
 {
-  GLSetUnpackAlignment(width, format, type);
+  setGLUnpackAlignment(width, format, type);
   if constexpr (VER < 45) {
     _tex.bindCheck();
     GX_GLCALL(glTexSubImage2D, GLenum(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face),
@@ -735,12 +735,12 @@ void gx::GLTextureCubeMap<VER>::getImage(
 template<int VER>
 void gx::GLTextureCubeMap<VER>::clear(GLint level)
 {
-  const GLenum format = GLBaseFormat(_internalformat);
+  const GLenum format = getGLBaseFormat(_internalformat);
   const GLenum type = (format == GL_DEPTH_STENCIL)
     ? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
 
   if constexpr (VER < 44) {
-    const int pixel_size = GLPixelSize(format, type);
+    const int pixel_size = getGLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(
       _size * _size * pixel_size);
     for (unsigned int f = 0; f < 6; ++f) {

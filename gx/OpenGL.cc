@@ -10,46 +10,46 @@ using namespace gx;
 
 
 // **** Callbacks ****
-static void GLCleanUp()
+static void cleanUp()
 {
   // flag is checked by GL class destructors to prevent the calling of OpenGL
   // functions at process shutdown when a context no long exists
   GLVersion = 0;
 }
 
-[[nodiscard]] static constexpr const char* GLSourceStr(GLenum source)
+[[nodiscard]] static constexpr const char* getGLSourceStr(GLenum source)
 {
-  const char* sourceStr = "unknown";
-#define DEBUG_SOURCE_CASE(x) case GL_DEBUG_SOURCE_##x: sourceStr = #x; break
+  const char* str = "unknown";
+#define GX_CASE(x) case GL_DEBUG_SOURCE_##x: str = #x; break
   switch (source) {
-    DEBUG_SOURCE_CASE(API);
-    DEBUG_SOURCE_CASE(WINDOW_SYSTEM);
-    DEBUG_SOURCE_CASE(SHADER_COMPILER);
-    DEBUG_SOURCE_CASE(THIRD_PARTY);
-    DEBUG_SOURCE_CASE(APPLICATION);
-    DEBUG_SOURCE_CASE(OTHER);
+    GX_CASE(API);
+    GX_CASE(WINDOW_SYSTEM);
+    GX_CASE(SHADER_COMPILER);
+    GX_CASE(THIRD_PARTY);
+    GX_CASE(APPLICATION);
+    GX_CASE(OTHER);
   }
-#undef DEBUG_SOURCE_CASE
-  return sourceStr;
+#undef GX_CASE
+  return str;
 }
 
-[[nodiscard]] static constexpr const char* GLTypeStr(GLenum type)
+[[nodiscard]] static constexpr const char* getGLTypeStr(GLenum type)
 {
-  const char* typeStr = "unknown";
-#define DEBUG_TYPE_CASE(x) case GL_DEBUG_TYPE_##x: typeStr = #x; break
+  const char* str = "unknown";
+#define GX_CASE(x) case GL_DEBUG_TYPE_##x: str = #x; break
   switch (type) {
-    DEBUG_TYPE_CASE(ERROR);
-    DEBUG_TYPE_CASE(DEPRECATED_BEHAVIOR);
-    DEBUG_TYPE_CASE(UNDEFINED_BEHAVIOR);
-    DEBUG_TYPE_CASE(PORTABILITY);
-    DEBUG_TYPE_CASE(PERFORMANCE);
-    DEBUG_TYPE_CASE(OTHER);
+    GX_CASE(ERROR);
+    GX_CASE(DEPRECATED_BEHAVIOR);
+    GX_CASE(UNDEFINED_BEHAVIOR);
+    GX_CASE(PORTABILITY);
+    GX_CASE(PERFORMANCE);
+    GX_CASE(OTHER);
   }
-#undef DEBUG_TYPE_CASE
-  return typeStr;
+#undef GX_CASE
+  return str;
 }
 
-[[nodiscard]] static constexpr const char* GLSeverityStr(GLenum severity)
+[[nodiscard]] static constexpr const char* getGLSeverityStr(GLenum severity)
 {
   switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:   return " severity=HIGH";
@@ -59,7 +59,7 @@ static void GLCleanUp()
   }
 }
 
-[[nodiscard]] static constexpr LogLevel GLSeverityLogLevel(GLenum severity)
+[[nodiscard]] static constexpr LogLevel getGLSeverityLogLevel(GLenum severity)
 {
   switch (severity) {
     case GL_DEBUG_SEVERITY_HIGH:
@@ -69,19 +69,19 @@ static void GLCleanUp()
   }
 }
 
-static void GLDebugCB(
+static void debugCB(
   GLenum source, GLenum type, GLuint id, GLenum severity,
   GLsizei length, const GLchar* message, const void* userParam)
 {
   GX_LOGGER_LOG(
-    defaultLogger(), GLSeverityLogLevel(severity),
-    "GLDebug: source=", GLSourceStr(source), " type=", GLTypeStr(type),
-    " id=", id, GLSeverityStr(severity), " message=[", message, ']');
+    defaultLogger(), getGLSeverityLogLevel(severity),
+    "GLDebug: source=", getGLSourceStr(source), " type=", getGLTypeStr(type),
+    " id=", id, getGLSeverityStr(severity), " message=[", message, ']');
 }
 
 
 // **** Functions ****
-bool gx::GLSetupContext(GLADloadfunc loadProc)
+bool gx::setupGLContext(GLADloadfunc loadProc)
 {
   if (GLVersion == 0) {
     GLVersion = gladLoadGL(loadProc);
@@ -90,7 +90,7 @@ bool gx::GLSetupContext(GLADloadfunc loadProc)
       return false;
     }
 
-    std::atexit(GLCleanUp);
+    std::atexit(cleanUp);
   }
 
   GLint flags = 0;
@@ -100,7 +100,7 @@ bool gx::GLSetupContext(GLADloadfunc loadProc)
     GX_LOG_INFO("OpenGL debug context enabled");
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(GLDebugCB, nullptr);
+    glDebugMessageCallback(debugCB, nullptr);
     glDebugMessageControl(
       GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
   }
@@ -108,7 +108,7 @@ bool gx::GLSetupContext(GLADloadfunc loadProc)
   return true;
 }
 
-void gx::GLClearState()
+void gx::clearGLState()
 {
   // clear GL state
   glUseProgram(0);
@@ -124,39 +124,39 @@ void gx::GLClearState()
   GLLastFramebufferBind = 0;
 }
 
-std::string gx::GLErrorStr(GLenum error)
+std::string gx::getGLErrorStr(GLenum error)
 {
   switch (error) {
-#define ERROR_CASE(x) case GL_##x: return #x
-    ERROR_CASE(NO_ERROR);
-    ERROR_CASE(INVALID_ENUM);
-    ERROR_CASE(INVALID_VALUE);
-    ERROR_CASE(INVALID_OPERATION);
-    ERROR_CASE(INVALID_FRAMEBUFFER_OPERATION);
-    ERROR_CASE(OUT_OF_MEMORY);
-    ERROR_CASE(STACK_UNDERFLOW);
-    ERROR_CASE(STACK_OVERFLOW);
-#undef ERROR_CASE
+#define GX_CASE(x) case GL_##x: return #x
+    GX_CASE(NO_ERROR);
+    GX_CASE(INVALID_ENUM);
+    GX_CASE(INVALID_VALUE);
+    GX_CASE(INVALID_OPERATION);
+    GX_CASE(INVALID_FRAMEBUFFER_OPERATION);
+    GX_CASE(OUT_OF_MEMORY);
+    GX_CASE(STACK_UNDERFLOW);
+    GX_CASE(STACK_OVERFLOW);
+#undef GX_CASE
     default: return std::to_string(error);
   }
 }
 
-int gx::GLCheckErrors(std::string_view msg, std::string_view file, int line)
+int gx::checkGLErrors(std::string_view msg, std::string_view file, int line)
 {
   int count = 0;
   GLenum error;
   while ((error = glGetError()) != GL_NO_ERROR) {
     GX_LOGGER_LOG_FL(defaultLogger(), LogLevel::error, file, line,
-                     msg, ": ", GLErrorStr(error));
+                     msg, ": ", getGLErrorStr(error));
     ++count;
   }
 
   return count;
 }
 
-void gx::GLSetUnpackAlignment(GLsizei width, GLenum format, GLenum type)
+void gx::setGLUnpackAlignment(GLsizei width, GLenum format, GLenum type)
 {
-  const int x = width * GLPixelSize(format, type);
+  const int x = width * getGLPixelSize(format, type);
   int align = 8;
   if (x & 1) { align = 1; }
   else if (x & 2) { align = 2; }
