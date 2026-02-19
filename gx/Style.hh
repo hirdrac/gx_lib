@@ -1,7 +1,10 @@
 //
 // gx/Style.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
+
+// TODO: add top/bottom/left/right texture coords
+// TODO: add texture FillType
 
 #pragma once
 #include "Color.hh"
