@@ -567,7 +567,7 @@ void gx::GLTexture2DT<VER,TARGET>::clear(GLint level)
   if constexpr (VER < 44) {
     const int pixel_size = getGLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(
-      _width * _height * pixel_size);
+      std::size_t(_width * _height * pixel_size));
     setSubImage(level, 0, 0, _width, _height, format, empty.get());
   } else {
     GX_GLCALL(glClearTexImage, _tex.id(), level, format, type, nullptr);
