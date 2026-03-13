@@ -10,6 +10,7 @@
 // TODO: init param to determine which shaders to create
 // TODO: SDF glyph shader
 // TODO: combine viewT & projT for CMD_camera?
+// TODO: support glPolygonOffset() ?
 
 #include "OpenGLRenderer.hh"
 #include "DrawList.hh"
@@ -199,12 +200,11 @@ namespace {
     float x, y, z;  // pos
     uint32_t c;     // color (packed 8-bit RGBA)
     float s, t;     // tex coords
-    uint32_t n;     // normal (packed 10-bit XYZ)
+    uint32_t n;     // normal (packed 10-bit XYZ, 2 bits unused)
     uint32_t m;     // mode (currently unused)
       // TODO: possible mode values:
-      //  0-7   color
-      //  8-15  transform
-      // 16-31  z texture coord
+      // 16 bits  Z texture coord for texture arrays/3d textures
+      //  8 bits  transform function ID
   };
 
   // vertex output functions
@@ -1115,7 +1115,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   GX_GLCALL(glViewport, 0, 0, _fbWidth, _fbHeight);
   GX_GLCALL(glClearDepth, 1.0);
   GX_GLCALL(glDepthMask, GL_TRUE);
-  GX_GLCALL(glDepthFunc, GL_LESS);
+  GX_GLCALL(glDepthFunc, GL_LEQUAL);
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GX_GLCALL(glLineWidth, 1.0f);
   GX_GLCALL(glEnable, GL_LINE_SMOOTH);
