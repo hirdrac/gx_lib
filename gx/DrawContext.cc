@@ -854,14 +854,16 @@ void DrawContext::roundedRectangle(
   const float cr = min3(curveRadius, half_w, half_h);
 
   // corners
-  constexpr float a90  = degToRad(90.0f);
-  constexpr float a180 = degToRad(180.0f);
-  constexpr float a270 = degToRad(270.0f);
-  constexpr float a360 = degToRad(360.0f);
-  _circleSector({x+cr,y+cr}, cr, a270, a360, curveSegments);    // top/left
-  _circleSector({x+w-cr,y+cr}, cr, 0, a90, curveSegments);      // top/right
-  _circleSector({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments); // bottom/right
-  _circleSector({x+cr,y+h-cr}, cr, a180, a270, curveSegments);  // bottom/left
+  if (curveSegments >= 1) {
+    constexpr float a90  = degToRad(90.0f);
+    constexpr float a180 = degToRad(180.0f);
+    constexpr float a270 = degToRad(270.0f);
+    constexpr float a360 = degToRad(360.0f);
+    _circleSector({x+cr,y+cr}, cr, a270, a360, curveSegments);    // top/left
+    _circleSector({x+w-cr,y+cr}, cr, 0, a90, curveSegments);      // top/right
+    _circleSector({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments); // bottom/right
+    _circleSector({x+cr,y+h-cr}, cr, a180, a270, curveSegments);  // bottom/left
+  }
 
   // borders/center
   const float cr2 = cr * 2.0f;
@@ -965,14 +967,20 @@ void DrawContext::roundedBorder(
   const float cr = min3(curveRadius, half_w, half_h);
 
   // corners
-  constexpr float a90  = degToRad(90.0f);
-  constexpr float a180 = degToRad(180.0f);
-  constexpr float a270 = degToRad(270.0f);
-  constexpr float a360 = degToRad(360.0f);
-  _arc({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth);    // top/left
-  _arc({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth);      // top/right
-  _arc({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth); // bottom/right
-  _arc({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth);  // bottom/left
+  if (curveSegments >= 1) {
+    constexpr float a90  = degToRad(90.0f);
+    constexpr float a180 = degToRad(180.0f);
+    constexpr float a270 = degToRad(270.0f);
+    constexpr float a360 = degToRad(360.0f);
+    // top/left
+    _arc({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth);
+    // top/right
+    _arc({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth);
+    // bottom/right
+    _arc({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth);
+    // bottom/left
+    _arc({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth);
+  }
 
   // borders/center
   if (cr < half_w) {
@@ -1002,18 +1010,20 @@ void DrawContext::roundedBorderShaded(
   const float cr = min3(curveRadius, half_w, half_h);
 
   // corners
-  constexpr float a90  = degToRad(90.0f);
-  constexpr float a180 = degToRad(180.0f);
-  constexpr float a270 = degToRad(270.0f);
-  constexpr float a360 = degToRad(360.0f);
-  _arcShaded({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth,
-             innerColor, outerColor, fillColor); // top/left
-  _arcShaded({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth,
-             innerColor, outerColor, fillColor); // top/right
-  _arcShaded({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth,
-             innerColor, outerColor, fillColor); // bottom/right
-  _arcShaded({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth,
-             innerColor, outerColor, fillColor); // bottom/left
+  if (curveSegments >= 1) {
+    constexpr float a90  = degToRad(90.0f);
+    constexpr float a180 = degToRad(180.0f);
+    constexpr float a270 = degToRad(270.0f);
+    constexpr float a360 = degToRad(360.0f);
+    _arcShaded({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth,
+               innerColor, outerColor, fillColor); // top/left
+    _arcShaded({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth,
+               innerColor, outerColor, fillColor); // top/right
+    _arcShaded({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth,
+               innerColor, outerColor, fillColor); // bottom/right
+    _arcShaded({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth,
+               innerColor, outerColor, fillColor); // bottom/left
+  }
 
   // borders/center
   if (cr < half_w) {
