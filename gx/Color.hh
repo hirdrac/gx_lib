@@ -1,6 +1,6 @@
 //
 // gx/Color.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // Color types & utility functions
 //
@@ -66,5 +66,10 @@ namespace gx {
   [[nodiscard]] constexpr Vec4 unpackRGBA8(RGBA8 c) {
     return {unpackRGBA8Red(c), unpackRGBA8Green(c),
       unpackRGBA8Blue(c), unpackRGBA8Alpha(c)};
+  }
+
+  [[nodiscard]] constexpr RGBA8 repackRGBA8Alpha(RGBA8 c, float a) {
+    return (c & ~0xff000000)
+      | (RGBA8(std::clamp(a, 0.0f, 1.0f) * 255.0f + .5f) << 24);
   }
 }
