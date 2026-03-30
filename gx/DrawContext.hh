@@ -47,6 +47,9 @@ class gx::DrawContext
   inline void vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1);
   inline void vgradient(float y0, const Color& c0, float y1, const Color& c1);
 
+  inline void changeAlpha(float a);
+    // change alpha value of current solid/gradient color
+
   void normal(float x, float y, float z) { normal(packNormal(x,y,z)); }
   void normal(const Vec3& n) { normal(packNormal(n)); }
   inline void normal(uint32_t n);
@@ -321,6 +324,20 @@ void gx::DrawContext::vgradient(
   _g1 = y1;
   _color1 = packRGBA8(c1);
   _fullcolor1 = c1;
+}
+
+void gx::DrawContext::changeAlpha(float a)
+{
+  const RGBA8 val = RGBA8(std::clamp(a, 0.0f, 1.0f) * 255.0f + .5f) << 24;
+  switch (_colorMode) {
+    case CM_HGRADIENT:
+    case CM_VGRADIENT:
+      _color1 = (_color1 & ~0xff000000) | val;
+      [[fallthrough]];
+    default:
+      _color0 = (_color0 & ~0xff000000) | val;
+      break;
+  }
 }
 
 void gx::DrawContext::normal(uint32_t n)
