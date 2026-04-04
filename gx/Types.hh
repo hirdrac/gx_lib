@@ -1,6 +1,6 @@
 //
 // gx/Types.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #pragma once
@@ -37,6 +37,10 @@ namespace gx {
 
     [[nodiscard]] constexpr bool contains(Vec2 pt) const {
       return (pt.x >= x) && (pt.x < (x+w)) && (pt.y >= y) && (pt.y < (y+h)); }
+
+#if __cplusplus >= 202002L
+    [[nodiscard]] bool operator==(const Rect&) const = default;
+#endif
   };
 
   class Value {
