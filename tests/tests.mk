@@ -1,12 +1,13 @@
 FLAGS_TEST = -UNDEBUG
 INCLUDE_TEST = .
 LIBS_TEST = LIB_gx
+SOURCE_DIR_TEST = tests
 
-TEST_CmdLineParser.SRC = tests/CmdLineParserTest.cc
-TEST_Color.SRC = tests/ColorTest.cc
-TEST_GuiBuilder.SRC = tests/GuiBuilderTest.cc
-TEST_MathUtil.SRC = tests/MathUtilTest.cc
-TEST_Normal.SRC = tests/NormalTest.cc
-TEST_StringUtil.SRC = tests/StringUtilTest.cc
-TEST_Unicode.SRC = tests/UnicodeTest.cc
-TEST_Vector3D.SRC = tests/Vector3DTest.cc
+TEST_CmdLineParser.SRC = CmdLineParserTest.cc
+TEST_Color.SRC = ColorTest.cc
+TEST_GuiBuilder.SRC = GuiBuilderTest.cc
+TEST_MathUtil.SRC = MathUtilTest.cc
+TEST_Normal.SRC = NormalTest.cc
+TEST_StringUtil.SRC = StringUtilTest.cc
+TEST_Unicode.SRC = UnicodeTest.cc
+TEST_Vector3D.SRC = Vector3DTest.cc

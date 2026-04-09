@@ -1,6 +1,6 @@
 #
-# Makefile.mk - revision 60 (2024/7/3)
-# Copyright (C) 2024 Richard Bradley
+# Makefile.mk - revision 61 (2026/4/7)
+# Copyright (C) 2026 Richard Bradley
 #
 # Additional contributions from:
 #   Stafford Horne (github:stffrdhrn)
@@ -146,6 +146,7 @@
 #  SYMLINKS        symlinks to create for building
 #                  (list of <name> OR <name>=<target>; default target is '.')
 #  SOURCE_DIR      source files base directory
+#  SOURCE_DIR_TEST source directory for all tests
 #  EXCLUDE_TARGETS labels/files not built by default (wildcard '*' allowed)
 #
 #  Settings STANDARD/OPT_LEVEL/OPT_LEVEL_DEBUG/SUBSYSTEM/PACKAGES/INCLUDE/
@@ -589,6 +590,9 @@ override _output_lib_dir = $(patsubst %/,%,$(or $(strip $(OUTPUT_LIB_DIR)),$(str
 $(eval $(call _check_dir,SOURCE_DIR))
 override _source_dir = $(if $(SOURCE_DIR),$(filter-out ./,$(SOURCE_DIR:%/=%)/))
 
+$(eval $(call _check_dir,SOURCE_DIR_TEST))
+override _source_dir_test = $(if $(SOURCE_DIR_TEST),$(filter-out ./,$(SOURCE_DIR_TEST:%/=%)/),$(_source_dir))
+
 override _symlink_name = $(word 1,$(subst =, ,$1))
 override _symlink_target = $(or $(word 2,$(subst =, ,$1)),.)
 override _symlinks := $(sort $(SYMLINKS))
@@ -776,11 +780,11 @@ else ifneq ($(_build_env),)
 
   ifneq ($(_test_labels),)
     override _test_xflags := $(if $(_pkgs_test),$(call _get_pkg_flags,$(sort $(_pkgs) $(_pkgs_test))),$(_pkg_flags)) $(FLAGS_$(_$(ENV)_uc)) $(FLAGS) $(FLAGS_TEST)
-    override _cxxflags_$(ENV)-tests := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_op_test_cxx_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_cxx_flags) $(_op_test_cxx_flags) $(_test_xflags))
-    override _cflags_$(ENV)-tests := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
-    override _asflags_$(ENV)-tests := $(strip $(_$(ENV)_opt) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
-    override _rcflags_$(ENV)-tests := $(filter -D% -U% -I%,$(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
-    override _src_path_$(ENV)-tests := $(_src_path_$(ENV))
+    override _cxxflags_$(ENV)_test := $(strip $(_cxx_std) $(_$(ENV)_opt) $(_warn_cxx) $(_op_cxx_warn) $(_op_test_cxx_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_cxx_flags) $(_op_test_cxx_flags) $(_test_xflags))
+    override _cflags_$(ENV)_test := $(strip $(_c_std) $(_$(ENV)_opt) $(_warn_c) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
+    override _asflags_$(ENV)_test := $(strip $(_$(ENV)_opt) $(_op_warn) $(_op_test_warn) $(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
+    override _rcflags_$(ENV)_test := $(filter -D% -U% -I%,$(_define) $(_define_test) $(_include) $(_include_test) $(_op_flags) $(_op_test_flags) $(_test_xflags))
+    override _src_path_$(ENV)_test := $(_source_dir_test)
   endif
 
   ## entry name & alias target assignment
@@ -821,8 +825,7 @@ else ifneq ($(_build_env),)
   override define _build_entry1  # <1:label> <2:test flag>
     ifneq ($$(strip $$($1.SOURCE_DIR)),-)
       $$(eval $$(call _check_dir,$1.SOURCE_DIR))
-      override _$1_source_dir := $$(if $$($1.SOURCE_DIR),$$(filter-out ./,$$($1.SOURCE_DIR:%/=%)/))
-      override _src_path_$$(ENV)-$1 := $$(or $$(_$1_source_dir),$$(_src_path_$$(ENV)))
+      override _src_path_$$(ENV)-$1 := $$(or $$(if $$($1.SOURCE_DIR),$$(filter-out ./,$$($1.SOURCE_DIR:%/=%)/)),$$(_src_path_$$(ENV)$(if $2,_test)))
     endif
 
     override _$1_src := $$(strip $$(filter-out $(_src_filter),$$(foreach x,$$($1.SRC),$$(call _do_wildcard,$$x,$$(_src_path_$$(ENV)-$1)))))
@@ -967,14 +970,16 @@ else ifneq ($(_build_env),)
     override _rcflags_$$(ENV)-$1 := $$(filter -D% -U% -I%,$$(_$1_define) $$(_$1_include) $$(_$1_op_flags) $$(_$1_xflags))
 
     override _$1_build := $$(ENV)-$1
-    ifeq ($$(_src_path_$$(ENV)-$1),$$(_src_path_$$(ENV)))
-      ifeq ($$(_$1_xdeps),)
-        # if compile flags match then use a shared build path
-        ifeq ($$(_cxxflags_$$(ENV)-$1),$$(_cxxflags_$$(ENV)-tests))
-          ifeq ($$(_cflags_$$(ENV)-$1),$$(_cflags_$$(ENV)-tests))
-            override _$1_build := $$(ENV)-tests
+    ifeq ($$(_$1_xdeps),)
+      # if compile flags and base source path match then use a shared build path
+      ifeq ($$(_src_path_$$(ENV)-$1),$$(_src_path_$$(ENV)_test))
+        ifeq ($$(_cxxflags_$$(ENV)-$1),$$(_cxxflags_$$(ENV)_test))
+          ifeq ($$(_cflags_$$(ENV)-$1),$$(_cflags_$$(ENV)_test))
+            override _$1_build := $$(ENV)_test
           endif
         endif
+      endif
+      ifeq ($$(_src_path_$$(ENV)-$1),$$(_src_path_$$(ENV)))
         ifeq ($$(_cxxflags_$$(ENV)-$1),$$(_cxxflags_$$(ENV)))
           ifeq ($$(_cflags_$$(ENV)-$1),$$(_cflags_$$(ENV)))
             override _$1_build := $$(ENV)
@@ -1116,7 +1121,7 @@ endif
 
 
 #### Unknown Target Handling ####
-override _all_src_files = $(foreach x,$(_src_labels),$(addprefix $(or $(_$x_source_dir),$(_source_dir)),$(_$x_src)) $(_$x_src2))
+override _all_src_files = $(foreach x,$(_src_labels),$(addprefix $(_src_path_$(ENV)-$x),$(_$x_src)) $(_$x_src2))
 .SUFFIXES:
 .DEFAULT: ; $(error $(_msgErr)$(if $(filter $<,$(_all_src_files)),Missing source file '$<','$<' unknown)$(_end))
 
@@ -1348,7 +1353,7 @@ ifneq ($(_build_env),)
       $(eval $(call _rebuild_check,$(_build_dir)/.pkg_$p_ver,$(shell $(PKGCONF) $p --modversion))))
 
     override _triggers_$(ENV) := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_pkgs),$(_build_dir)/.pkg_$p_ver)
-    override _triggers_$(ENV)-tests := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_pkgs) $(_pkgs_test),$(_build_dir)/.pkg_$p_ver)
+    override _triggers_$(ENV)_test := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_pkgs) $(_pkgs_test),$(_build_dir)/.pkg_$p_ver)
     $(foreach x,$(_src_labels),\
       $(eval override _triggers_$(ENV)-$x := $(_build_dir)/.$(_compiler)_ver $(foreach p,$(_$x_xpkgs),$(_build_dir)/.pkg_$p_ver)))
 
