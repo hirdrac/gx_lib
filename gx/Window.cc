@@ -15,6 +15,7 @@
 #include "ThreadID.hh"
 #include "GLFW.hh"
 #include "Time.hh"
+#include "Unicode.hh"
 #include <mutex>
 #include <vector>
 #include <algorithm>
@@ -435,7 +436,7 @@ class gx::WindowImpl
   {
     _eventState.events = 0;
     _eventState.scrollPt.set(0,0);
-    _eventState.chars.clear();
+    _eventState.text.clear();
     resetInputStates(_eventState.keyStates);
     resetInputStates(_eventState.buttonStates);
 
@@ -649,8 +650,8 @@ static void charCB(GLFWwindow* win, unsigned int codepoint)
 
   //println("char event: ", codepoint);
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
-  es.events |= EVENT_CHAR;
-  es.chars.push_back(int32_t(codepoint));
+  es.events |= EVENT_TEXT;
+  es.text.append(toUTF8(codepoint));
 }
 
 static void cursorEnterCB(GLFWwindow* win, int entered)

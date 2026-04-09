@@ -604,7 +604,7 @@ bool Gui::update(Window& win, EventState& es)
 
   // entry input handling & cursor update
   if (_focusID != 0) {
-    if (es.events & (EVENT_CHAR | EVENT_KEY)) { processCharEvent(es); }
+    if (es.events & (EVENT_TEXT | EVENT_KEY)) { processTextEvent(es); }
 
     if (_focusCursorPos == _focusRangeStart && _cursorBlinkTime > 0) {
       // check for cursor blink
@@ -875,7 +875,7 @@ void Gui::processMouseEvent(Window& win, EventState& es)
   }
 }
 
-void Gui::processCharEvent(EventState& es)
+void Gui::processTextEvent(EventState& es)
 {
   const auto [panelP,elemP] = findElem(_focusID);
   if (!elemP) { return; }
@@ -887,10 +887,9 @@ void Gui::processCharEvent(EventState& es)
   const int64_t now = es.lastPollTime;
   bool usedEvent = false;
 
-  for (int32_t ch : es.chars) {
+  if (!es.text.empty()) {
     usedEvent = true;
-    addEntryChar(e, ch);
-    // TODO: flash 'error' color if char isn't added
+    addEntryText(e, es.text);
   }
 
   for (const InputState& in : es.keyStates) {
@@ -933,10 +932,7 @@ void Gui::processCharEvent(EventState& es)
     } else if (in.value == KEY_V && es.mods == MODIFIER_CTRL) {
       // (CTRL-V) paste first line of clipboard
       usedEvent = true;
-      const std::string cb = getClipboardFirstLine();
-      for (UTF8Iterator itr{cb}; itr; ++itr) {
-        addEntryChar(e, *itr);
-      }
+      addEntryText(e, getClipboardFirstLine());
     } else if (in.value == KEY_C && es.mods == MODIFIER_CTRL) {
       // (CTRL-C) copy selected text
       usedEvent = true;
@@ -1024,7 +1020,7 @@ void Gui::processCharEvent(EventState& es)
   }
 
   if (usedEvent) {
-    es.removeCharEvent();
+    es.removeTextEvent();
     es.removeKeyEvent();
     if (_focusCursorPos == _focusRangeStart) {
       // reset cursor blink state
@@ -1035,11 +1031,18 @@ void Gui::processCharEvent(EventState& es)
   }
 }
 
-void Gui::addEntryChar(GuiElem& e, int32_t code)
+void Gui::addEntryText(GuiElem& e, std::string_view text)
 {
   GX_ASSERT(e.type == GUI_ENTRY);
-  auto& entry = e.entry();
 
+  for (UTF8Iterator itr{text}; itr; ++itr) {
+    addEntryChar(e.entry(), *itr);
+    // TODO: flash 'error' color if char isn't added
+  }
+}
+
+void Gui::addEntryChar(GuiElem::EntryProps& entry, int32_t code)
+{
   // valid character check
   switch (entry.type) {
     default: // ENTRY_TEXT, ENTRY_PASSWORD

@@ -1,6 +1,6 @@
 //
 // gx/EventState.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // state of Window events & user input
 //
@@ -8,6 +8,7 @@
 #pragma once
 #include "Types.hh"
 #include <vector>
+#include <string>
 
 
 namespace gx {
@@ -19,9 +20,9 @@ namespace gx {
     EVENT_ICONIFY      = 1<<2,
     EVENT_FOCUS        = 1<<3,
 
-    // key/char events
+    // keyboard events
     EVENT_KEY          = 1<<4,
-    EVENT_CHAR         = 1<<5,
+    EVENT_TEXT         = 1<<5,
 
     // mouse events
     EVENT_MOUSE_BUTTON = 1<<6,
@@ -40,6 +41,7 @@ namespace gx {
   enum InputEnum {
     // key values (adapted from glfw3.h)
     KEY_UNKNOWN = -1,
+
     KEY_SPACE = 32, KEY_APOSTROPHE = 39, KEY_COMMA = 44,
     KEY_MINUS = 45, KEY_PERIOD = 46, KEY_FWD_SLASH = 47,
     KEY_0 = 48, KEY_1 = 49, KEY_2 = 50, KEY_3 = 51, KEY_4 = 52,
@@ -51,6 +53,7 @@ namespace gx {
     KEY_S = 83, KEY_T = 84, KEY_U = 85, KEY_V = 86, KEY_W = 87, KEY_X = 88,
     KEY_Y = 89, KEY_Z = 90,
     KEY_LBRACKET = 91, KEY_BACK_SLASH = 92, KEY_RBRACKET = 93, KEY_TILDA = 96,
+
     KEY_WORLD_1 = 161, KEY_WORLD_2 = 162,
     KEY_ESCAPE = 256, KEY_ENTER = 257, KEY_TAB = 258,
     KEY_BACKSPACE = 259, KEY_INSERT = 260, KEY_DELETE = 261,
@@ -109,7 +112,7 @@ struct gx::EventState
 {
   int64_t lastPollTime;
   std::vector<InputState> keyStates, buttonStates;
-  std::vector<int32_t> chars;
+  std::string text;  // UTF8 encoded
   Vec2 mousePt, scrollPt;
   int events, mods, shiftCount, controlCount, altCount, superCount;
   bool mouseIn, iconified, focused;
@@ -178,9 +181,9 @@ struct gx::EventState
     keyStates.clear();
   }
 
-  void removeCharEvent() {
-    removeEvent(EVENT_CHAR);
-    chars.clear();
+  void removeTextEvent() {
+    removeEvent(EVENT_TEXT);
+    text.clear();
   }
 
   void removeMouseButtonEvent() {

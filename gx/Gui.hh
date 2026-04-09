@@ -177,8 +177,9 @@ class gx::Gui
   PanelID addPanel(PanelPtr ptr, float x, float y, Align align);
   void layout(Panel& p, float x, float y, Align align);
   void processMouseEvent(Window& win, EventState& es);
-  void processCharEvent(EventState& es);
-  void addEntryChar(GuiElem& e, int32_t code);
+  void processTextEvent(EventState& es);
+  void addEntryText(GuiElem& e, std::string_view text);
+  void addEntryChar(GuiElem::EntryProps& entry, int32_t code);
   void setFocus(const GuiElem* e, int64_t now);
   void initElem(GuiElem& def);
   void deactivatePopups();
