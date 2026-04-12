@@ -227,19 +227,19 @@ int main(int argc, char** argv)
     gx::Window::pollEvents();
     const gx::EventState& es = win.eventState();
 
-    if (es.events & gx::EVENT_SIZE) { redraw = true; }
-    if (es.events & gx::EVENT_CLOSE) { running = false; }
+    if (es.resized()) { redraw = true; }
+    if (es.closed()) { running = false; }
 
     const auto [width,height] = win.dimensions();
     const int maxLines = height / lineHeight;
     const int endLine = std::max(int(buffer.lines()) - maxLines, 0);
     const int lastTop = topLine;
 
-    if (es.events & gx::EVENT_KEY) {
-      for (const auto& in : es.keyStates) {
-        if (!in.pressCount && !in.repeatCount) { continue; }
+    if (es.keyEvent()) {
+      for (const gx::KeyState& ks : es.keyStates) {
+        if (!ks.pressCount && !ks.repeatCount) { continue; }
 
-        switch (in.value) {
+        switch (ks.key) {
           case gx::KEY_ESCAPE:    running = false; break;
           case gx::KEY_UP:        --topLine; break;
           case gx::KEY_DOWN:      ++topLine; break;
@@ -249,7 +249,7 @@ int main(int argc, char** argv)
           case gx::KEY_END:       topLine = endLine; break;
 
           case gx::KEY_F11:
-            if (in.pressCount) {
+            if (ks.pressCount) {
               if (win.fullScreen()) {
                 win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
               } else {

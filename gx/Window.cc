@@ -419,26 +419,34 @@ class gx::WindowImpl
     }
   }
 
-  static void resetInputStates(std::vector<InputState>& states)
-  {
-    for (auto i = states.begin(); i != states.end(); ) {
-      if (i->held) {
-        i->pressCount = 0;
-        i->repeatCount = 0;
-        ++i;
-      } else {
-        i = states.erase(i);
-      }
-    }
-  }
-
   void resetEventState()
   {
     _eventState.events = 0;
     _eventState.scrollPt.set(0,0);
     _eventState.text.clear();
-    resetInputStates(_eventState.keyStates);
-    resetInputStates(_eventState.buttonStates);
+
+    // reset key states
+    for (auto i = _eventState.keyStates.begin();
+         i != _eventState.keyStates.end(); ) {
+      if (i->held) {
+        i->pressCount = 0;
+        i->repeatCount = 0;
+        ++i;
+      } else {
+        i = _eventState.keyStates.erase(i);
+      }
+    }
+
+    // reset button states
+    for (auto i = _eventState.buttonStates.begin();
+         i != _eventState.buttonStates.end(); ) {
+      if (i->held) {
+        i->pressCount = 0;
+        ++i;
+      } else {
+        i = _eventState.buttonStates.erase(i);
+      }
+    }
 
     // work-around for Windows where glfwSetWindowMonitor() isn't
     // triggering EVENT_SIZE
@@ -581,7 +589,7 @@ static void sizeCB(GLFWwindow* win, int width, int height)
   if (impl->_renderer) { impl->_renderer->setFramebufferSize(width, height); }
 }
 
-static constexpr InputEnum translateGLFWKey(int key)
+static constexpr KeyEnum translateGLFWKey(int key)
 {
   switch (key) {
     default: return KEY_UNKNOWN;
@@ -709,7 +717,7 @@ static constexpr InputEnum translateGLFWKey(int key)
     case GLFW_KEY_KP_ADD:        return KEY_KP_ADD;
     case GLFW_KEY_KP_ENTER:      return KEY_KP_ENTER;
     case GLFW_KEY_KP_EQUAL:      return KEY_KP_EQUAL;
-  }  
+  }
 }
 
 static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
@@ -724,19 +732,18 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
   es.events |= EVENT_KEY;
 
-  InputEnum val = translateGLFWKey(key);
+  const KeyEnum val = translateGLFWKey(key);
   auto& states = es.keyStates;
   auto itr = std::find_if(states.begin(), states.end(),
-			  [val](auto& in){ return in.value == val; });
+			  [val](auto& ks){ return ks.key == val; });
   if (itr == states.end()) {
-    itr = states.insert(
-      states.end(), {val,int16_t(scancode),0,0,false});
+    itr = states.insert(states.end(), {val,int16_t(scancode),0,0,false});
   }
 
-  InputState& in = *itr;
+  KeyState& ks = *itr;
   if (action == GLFW_PRESS) {
-    ++in.pressCount;
-    in.held = true;
+    ++ks.pressCount;
+    ks.held = true;
     switch (val) {
       default: break;
       case KEY_LSHIFT:   case KEY_RSHIFT:
@@ -749,7 +756,7 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
         es.mods |= MODIFIER_SUPER;   ++es.superCount; break;
     }
   } else if (action == GLFW_RELEASE) {
-    in.held = false;
+    ks.held = false;
     switch (val) {
       default: break;
       case KEY_LSHIFT:   case KEY_RSHIFT:
@@ -770,7 +777,7 @@ static void keyCB(GLFWwindow* win, int key, int scancode, int action, int mods)
         break;
     }
   } else if (action == GLFW_REPEAT) {
-    ++in.repeatCount;
+    ++ks.repeatCount;
   }
 }
 
@@ -833,20 +840,20 @@ static void mouseButtonCB(GLFWwindow* win, int button, int action, int mods)
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;;
   es.events |= EVENT_MOUSE_BUTTON;
 
-  const int bVal = BUTTON_1 + button;
+  const int16_t bVal = int16_t(button) + 1;
   auto& states = es.buttonStates;
   auto itr = std::find_if(states.begin(), states.end(),
-			  [bVal](auto& in){ return in.value == bVal; });
+			  [bVal](auto& bs){ return bs.button == bVal; });
   if (itr == states.end()) {
-    itr = states.insert(states.end(), {InputEnum(bVal),0,0,0,false});
+    itr = states.insert(states.end(), {bVal,0,false});
   }
 
-  InputState& in = *itr;
+  ButtonState& bs = *itr;
   if (action == GLFW_PRESS) {
-    ++in.pressCount;
-    in.held = true;
+    ++bs.pressCount;
+    bs.held = true;
   } else if (action == GLFW_RELEASE) {
-    in.held = false;
+    bs.held = false;
   }
 }
 

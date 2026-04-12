@@ -9,6 +9,7 @@
 #include "Types.hh"
 #include <vector>
 #include <string>
+#include <algorithm>
 
 
 namespace gx {
@@ -38,7 +39,7 @@ namespace gx {
     MODIFIER_SUPER = 1<<3,
   };
 
-  enum InputEnum : int16_t {
+  enum KeyEnum : int16_t {
     // key values
     KEY_UNKNOWN = -1,
 
@@ -82,34 +83,21 @@ namespace gx {
     KEY_KP_DECIMAL = 330, KEY_KP_DIVIDE = 331, KEY_KP_MULTIPLY = 332,
     KEY_KP_SUBTRACT = 333, KEY_KP_ADD = 334,
     KEY_KP_ENTER = 335, KEY_KP_EQUAL = 336,
-
-    // mouse buttons
-    BUTTON_1 = 1001,  // left mouse button
-    BUTTON_2 = 1002,  // right mouse button
-    BUTTON_3 = 1003,  // middle mouse button
-    BUTTON_4 = 1004,
-    BUTTON_5 = 1005,
-    BUTTON_6 = 1006,
-    BUTTON_7 = 1007,
-    BUTTON_8 = 1008,
   };
 
-  constexpr bool isButtonInput(InputEnum val) {
-    return (val >= BUTTON_1) && (val <= BUTTON_8);
-  }
-
-  constexpr bool isKeyInput(InputEnum val) {
-    return !isButtonInput(val);
-  }
-
-  struct InputState {
-    InputEnum value;     // InputEnum value
+  struct KeyState {
+    KeyEnum key;         // InputEnum value
     int16_t scancode;    // platform-specific key value
     int8_t pressCount;   // number of press events since pollEvents
     int8_t repeatCount;  // number of repeat events since pollEvents
     int8_t held;         // key is currently held
   };
-  static_assert(sizeof(InputState) == 8);
+
+  struct ButtonState {
+    int16_t button;      // 1 left button, 2 right button, 3 middle button
+    int8_t  pressCount;  // number of press events since pollEvents
+    int8_t  held;        // button is currently held
+  };
 
   struct EventState;
 }
@@ -117,68 +105,92 @@ namespace gx {
 struct gx::EventState
 {
   int64_t lastPollTime;
-  std::vector<InputState> keyStates, buttonStates;
+  std::vector<KeyState> keyStates;
+  std::vector<ButtonState> buttonStates;
   std::string text;  // UTF8 encoded
   Vec2 mousePt, scrollPt;
   int events, mods, shiftCount, controlCount, altCount, superCount;
   bool mouseIn, iconified, focused;
 
   // helper functions
-  [[nodiscard]] bool resized() const { return events & EVENT_SIZE; }
   [[nodiscard]] bool closed() const { return events & EVENT_CLOSE; }
-  [[nodiscard]] bool mouseMove() const { return events & EVENT_MOUSE_MOVE; }
-  [[nodiscard]] bool mouseScroll() const {
-    return events & EVENT_MOUSE_SCROLL; }
-  [[nodiscard]] bool buttonEvent() const { return events & EVENT_MOUSE_BUTTON; }
+  [[nodiscard]] bool resized() const { return events & EVENT_SIZE; }
+  [[nodiscard]] bool iconfifyEvent() const { return events & EVENT_ICONIFY; }
+  [[nodiscard]] bool focusEvent() const { return events & EVENT_FOCUS; }
   [[nodiscard]] bool keyEvent() const { return events & EVENT_KEY; }
+  [[nodiscard]] bool textEvent() const { return events & EVENT_TEXT; }
+  [[nodiscard]] bool buttonEvent() const { return events & EVENT_MOUSE_BUTTON; }
+  [[nodiscard]] bool mouseInEvent() const { return events & EVENT_MOUSE_ENTER; }
+  [[nodiscard]] bool mouseMove() const { return events & EVENT_MOUSE_MOVE; }
+  [[nodiscard]] bool mouseScroll() const { return events & EVENT_MOUSE_SCROLL; }
 
-  [[nodiscard]] const InputState* getInputState(InputEnum value) const {
-    auto& states = isButtonInput(value) ? buttonStates : keyStates;
-    for (const InputState& in : states) {
-      if (in.value == value) { return &in; }
+  // key state
+  [[nodiscard]] const KeyState* getKeyState(KeyEnum key) const {
+    for (const KeyState& ks : keyStates) {
+      if (ks.key == key) { return &ks; }
     }
     return nullptr;
   }
 
-  [[nodiscard]] bool inputHeld(InputEnum value) const {
-    const InputState* in = getInputState(value);
-    return in && (in->held || (in->pressCount > 0));
+  [[nodiscard]] bool keyHeld(KeyEnum key) const {
+    const KeyState* ks = getKeyState(key);
+    return ks && (ks->held || (ks->pressCount > 0));
   }
 
-  [[nodiscard]] int inputPressCount(
-    InputEnum value, bool includeRepeat = false) const {
-    const InputState* in = getInputState(value);
-    if (in && (in->value == value)) {
-      return in->pressCount + (int(includeRepeat) * in->repeatCount);
-    } else {
-      return 0;
+  [[nodiscard]] int keyPressCount(
+    KeyEnum key, bool includeRepeat = false) const {
+    const KeyState* ks = getKeyState(key);
+    return ks ? (ks->pressCount + (int(includeRepeat) * ks->repeatCount)) : 0;
+  }
+
+  [[nodiscard]] bool keyPress(
+    KeyEnum key, bool includeRepeat = false) const {
+    return keyPressCount(key, includeRepeat) > 0;
+  }
+
+  [[nodiscard]] bool keyRelease(KeyEnum key) const {
+    const KeyState* ks = getKeyState(key);
+    return ks && !ks->held;
+  }
+
+  // button state
+  [[nodiscard]] const ButtonState* getButtonState(int16_t button) const {
+    for (const ButtonState& bs : buttonStates) {
+      if (bs.button == button) { return &bs; }
     }
+    return nullptr;
   }
 
-  [[nodiscard]] bool inputPress(
-    InputEnum value, bool includeRepeat = false) const {
-    return inputPressCount(value, includeRepeat) > 0;
+  [[nodiscard]] bool buttonHeld(int16_t button) const {
+    const ButtonState* bs = getButtonState(button);
+    return bs && (bs->held || (bs->pressCount > 0));
   }
 
-  [[nodiscard]] bool inputRelease(InputEnum value) const {
-    const InputState* in = getInputState(value);
-    return in && !in->held;
+  [[nodiscard]] int buttonPressCount(int16_t button) const {
+    const ButtonState* bs = getButtonState(button);
+    return bs ? bs->pressCount : 0;
   }
 
-  [[nodiscard]] bool inputDrag(InputEnum value) const {
-    return mouseMove() && inputHeld(value); }
+  [[nodiscard]] bool buttonPress(int16_t button) const {
+    return buttonPressCount(button) > 0;
+  }
+
+  [[nodiscard]] bool buttonRelease(int16_t button) const {
+    const ButtonState* bs = getButtonState(button);
+    return bs && !bs->held;
+  }
+
+  [[nodiscard]] bool buttonDrag(int16_t button) const {
+    return mouseMove() && buttonHeld(button);
+  }
 
   // remove/consume events
-  void removeInputEvent(InputEnum value) {
-    const bool bv = isButtonInput(value);
-    auto& states = bv ? buttonStates : keyStates;
-    for (auto itr = states.begin(), end = states.end(); itr != end; ++itr) {
-      if (itr->value == value) {
-        states.erase(itr);
-        if (states.empty()) {
-          removeEvent(bv ? EVENT_MOUSE_BUTTON : EVENT_KEY);
-        }
-      }
+  void removeKeyEvent(KeyEnum key) {
+    auto itr = std::find_if(keyStates.begin(), keyStates.end(),
+                            [key](auto& ks){ return ks.key == key; });
+    if (itr != keyStates.end()) {
+      keyStates.erase(itr);
+      if (keyStates.empty()) { removeEvent(EVENT_KEY); }
     }
   }
 
@@ -187,14 +199,23 @@ struct gx::EventState
     keyStates.clear();
   }
 
+  void removeButtonEvent(int16_t button) {
+    auto itr = std::find_if(buttonStates.begin(), buttonStates.end(),
+                            [button](auto& bs){ return bs.button == button; });
+    if (itr != buttonStates.end()) {
+      buttonStates.erase(itr);
+      if (buttonStates.empty()) { removeEvent(EVENT_MOUSE_BUTTON); }
+    }
+  }
+
+  void removeButtonEvent() {
+    removeEvent(EVENT_MOUSE_BUTTON);
+    buttonStates.clear();
+  }
+
   void removeTextEvent() {
     removeEvent(EVENT_TEXT);
     text.clear();
-  }
-
-  void removeMouseButtonEvent() {
-    removeEvent(EVENT_MOUSE_BUTTON);
-    buttonStates.clear();
   }
 
   void removeEvent(int eventMask) {

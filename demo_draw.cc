@@ -285,15 +285,15 @@ int main(int argc, char** argv)
     gx::Window::pollEvents();
     const gx::EventState& es = win.eventState();
 
-    if (es.events & gx::EVENT_CLOSE) { running = false; }
-    if (es.events & gx::EVENT_SIZE) { gfxPerPage = 0; redraw = true; }
+    if (es.closed()) { running = false; }
+    if (es.resized()) { gfxPerPage = 0; redraw = true; }
 
-    if (es.events & gx::EVENT_KEY) {
+    if (es.keyEvent()) {
       int newPage = page;
-      for (const auto& in : es.keyStates) {
-        if (!in.pressCount && !in.repeatCount) { continue; }
+      for (const gx::KeyState& ks : es.keyStates) {
+        if (!ks.pressCount && !ks.repeatCount) { continue; }
 
-        switch (in.value) {
+        switch (ks.key) {
           case gx::KEY_ESCAPE:
             running = false; break;
           case gx::KEY_LEFT: case gx::KEY_UP: case gx::KEY_PAGE_UP:
@@ -301,7 +301,7 @@ int main(int argc, char** argv)
           case gx::KEY_RIGHT: case gx::KEY_DOWN: case gx::KEY_PAGE_DOWN:
             ++newPage; break;
           case gx::KEY_F11:
-            if (in.pressCount) {
+            if (ks.pressCount) {
               gfxPerPage = 0;
               redraw = true;
               if (win.fullScreen()) {

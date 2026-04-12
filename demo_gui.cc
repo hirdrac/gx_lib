@@ -149,11 +149,11 @@ int main(int argc, char* argv[])
     gx::Window::pollEvents();
     gx::EventState es = win.eventState();
 
-    if (es.events & gx::EVENT_CLOSE) { running = false; }
-    if (es.events & gx::EVENT_SIZE) { redraw = true; }
-    if (es.events & gx::EVENT_KEY) {
-      if (es.inputPress(gx::KEY_ESCAPE)) { running = false; }
-      if (es.inputPress(gx::KEY_F11)) {
+    if (es.closed()) { running = false; }
+    if (es.resized()) { redraw = true; }
+    if (es.keyEvent()) {
+      if (es.keyPress(gx::KEY_ESCAPE)) { running = false; }
+      if (es.keyPress(gx::KEY_F11)) {
         if (win.fullScreen()) {
           win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
         } else {

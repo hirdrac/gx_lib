@@ -1,6 +1,6 @@
 //
 // font_viewer.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // displays font atlas texture
 //
@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     // handle events
     gx::Window::pollEvents();
     if (es.resized()) { redraw = true; }
-    if (es.closed() || es.inputPress(gx::KEY_ESCAPE)) { break; }
+    if (es.closed() || es.keyPress(gx::KEY_ESCAPE)) { break; }
 
     if (es.mouseIn && es.mouseMove()) {
       const auto [width,height] = win.dimensions();
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
       }
     }
 
-    if (es.inputPress(gx::KEY_F11)) {
+    if (es.keyPress(gx::KEY_F11)) {
       redraw = true;
       if (win.fullScreen()) {
         win.setSize(fnt.atlasWidth(), fnt.atlasHeight(), false);

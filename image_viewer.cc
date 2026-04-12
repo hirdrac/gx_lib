@@ -195,30 +195,30 @@ int main(int argc, char* argv[])
     gx::Window::pollEvents();
     const gx::EventState& es = win.eventState();
 
-    if (es.events & gx::EVENT_SIZE) { redraw = true; }
-    if (es.events & gx::EVENT_CLOSE) { running = false; }
+    if (es.resized()) { redraw = true; }
+    if (es.closed()) { running = false; }
 
-    if (es.events & gx::EVENT_KEY) {
+    if (es.keyEvent()) {
       int no = entryNo;
       const bool last_entry = (no == lastNo);
       const bool first_entry = (no == 0);
 
-      for (const auto& in : es.keyStates) {
-        if (!in.pressCount && !in.repeatCount) { continue; }
+      for (const gx::KeyState& ks : es.keyStates) {
+        if (!ks.pressCount && !ks.repeatCount) { continue; }
 
-        switch (in.value) {
+        switch (ks.key) {
           case gx::KEY_LEFT: case gx::KEY_BACKSPACE:
-            if ((in.pressCount || !first_entry) && --no < 0) { no = lastNo; }
+            if ((ks.pressCount || !first_entry) && --no < 0) { no = lastNo; }
             break;
           case gx::KEY_RIGHT: case gx::KEY_SPACE:
-            if ((in.pressCount || !last_entry) && ++no > lastNo) { no = 0; }
+            if ((ks.pressCount || !last_entry) && ++no > lastNo) { no = 0; }
             break;
           case gx::KEY_HOME: no = 0; break;
           case gx::KEY_END: no = lastNo; break;
 
           case gx::KEY_ESCAPE: running = false; break;
           case gx::KEY_F11:
-            if (in.pressCount) {
+            if (ks.pressCount) {
               redraw = true;
               zoom = 100;
               imgScale = 1.0f;
@@ -258,9 +258,9 @@ int main(int argc, char* argv[])
         }
       }
 
-      if (es.inputPress(gx::BUTTON_1)) {
+      if (es.buttonPress(1)) {
         pressPos = es.mousePt;
-      } else if (es.inputDrag(gx::BUTTON_1)) {
+      } else if (es.buttonDrag(1)) {
         const auto pt = es.mousePt;
         imgOffset += (pt - pressPos);
         pressPos = pt;
