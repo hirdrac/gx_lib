@@ -1,6 +1,6 @@
 //
 // gx/Matrix3D.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // 4x4 matrix template type/functions for 3D calculations
 //
@@ -376,19 +376,19 @@ constexpr void gx::Matrix4x4<T,MOT>::setRotation_sc(
   const T ys = axis[1] * sinVal;
   const T zs = axis[2] * sinVal;
 
-  _val[0]  = (Sqr(axis[0]) * cinv) + cosVal;
+  _val[0]  = (sqr(axis[0]) * cinv) + cosVal;
   _val[1]  = xyc + zs;
   _val[2]  = xzc - ys;
   _val[3]  = 0;
 
   _val[4]  = xyc - zs;
-  _val[5]  = (Sqr(axis[1]) * cinv) + cosVal;
+  _val[5]  = (sqr(axis[1]) * cinv) + cosVal;
   _val[6]  = yzc + xs;
   _val[7]  = 0;
 
   _val[8]  = xzc + ys;
   _val[9]  = yzc - xs;
-  _val[10] = (Sqr(axis[2]) * cinv) + cosVal;
+  _val[10] = (sqr(axis[2]) * cinv) + cosVal;
   _val[11] = 0;
 
   _val[12] = 0;
@@ -409,9 +409,9 @@ constexpr void gx::Matrix4x4<T,MOT>::rotate_sc(
   // [      0             0             0       1]
 
   const T cinv = T{1} - cosVal;
-  const T xxc = (Sqr(axis[0]) * cinv) + cosVal;
-  const T yyc = (Sqr(axis[1]) * cinv) + cosVal;
-  const T zzc = (Sqr(axis[2]) * cinv) + cosVal;
+  const T xxc = (sqr(axis[0]) * cinv) + cosVal;
+  const T yyc = (sqr(axis[1]) * cinv) + cosVal;
+  const T zzc = (sqr(axis[2]) * cinv) + cosVal;
   const T xy = axis[0] * axis[1] * cinv;
   const T xz = axis[0] * axis[2] * cinv;
   const T yz = axis[1] * axis[2] * cinv;
