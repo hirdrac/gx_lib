@@ -10,6 +10,7 @@
 #include "MathUtil.hh"
 #include "InitType.hh"
 #include <ostream>
+#include <cmath>
 
 
 namespace gx {
@@ -22,10 +23,10 @@ namespace gx {
     //   [ 8  9 10 11]  |   [ 2  6 10 14]
     //   [12 13 14 15]  |   [ 3  7 11 15]
 
-  template<class T, MatrixOrderType> class Matrix4x4;
+  template<NumType T, MatrixOrderType> class Matrix4x4;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 class gx::Matrix4x4
 {
  public:
@@ -119,7 +120,7 @@ class gx::Matrix4x4
 
 namespace gx {
   // **** Binary operators ****
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Matrix4x4<T,ROW_MAJOR> operator*(
     const Matrix4x4<T,ROW_MAJOR>& a, const Matrix4x4<T,ROW_MAJOR>& b)
   {
@@ -140,7 +141,7 @@ namespace gx {
     return m;
   }
 
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Matrix4x4<T,COLUMN_MAJOR> operator*(
     const Matrix4x4<T,COLUMN_MAJOR>& a, const Matrix4x4<T,COLUMN_MAJOR>& b)
   {
@@ -161,7 +162,7 @@ namespace gx {
     return m;
   }
 
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Vector4<T> operator*(
     const Vector4<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
@@ -171,7 +172,7 @@ namespace gx {
             (v[0]*m[3]) + (v[1]*m[7]) + (v[2]*m[11]) + (v[3]*m[15])};
   }
 
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Vector4<T> operator*(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector4<T>& v)
   {
@@ -183,7 +184,7 @@ namespace gx {
 
 
   // **** Template Stream Operators ****
-  template<class T>
+  template<gx::NumType T>
   std::ostream& operator<<(std::ostream& os, const Matrix4x4<T,ROW_MAJOR>& m)
   {
     for (unsigned int i = 0; i != 16; i += 4) {
@@ -194,7 +195,7 @@ namespace gx {
     return os;
   }
 
-  template<class T>
+  template<gx::NumType T>
   std::ostream& operator<<(std::ostream& os, const Matrix4x4<T,COLUMN_MAJOR>& m)
   {
     for (unsigned int i = 0; i != 4; ++i) {
@@ -208,7 +209,7 @@ namespace gx {
 
 
 // **** Inline Implementations ****
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::setTranslation(T tx, T ty, T tz)
 {
   // Translation Matrix:
@@ -223,7 +224,7 @@ constexpr void gx::Matrix4x4<T,MOT>::setTranslation(T tx, T ty, T tz)
   _val[12] = tx; _val[13] = ty; _val[14] = tz; _val[15] = 1;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::translate(T tx, T ty, T tz)
 {
   // Translation applied to another matrix (optimized):
@@ -253,7 +254,7 @@ constexpr void gx::Matrix4x4<T,MOT>::translate(T tx, T ty, T tz)
   }
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 void gx::Matrix4x4<T,MOT>::translateOptimized(T tx, T ty, T tz)
 {
   // Translation further optimized for non-projection matrix
@@ -268,7 +269,7 @@ void gx::Matrix4x4<T,MOT>::translateOptimized(T tx, T ty, T tz)
   _val[14] += tz;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::setRotationX_sc(T sinVal, T cosVal)
 {
   // X Axis Rotation Matrix:
@@ -283,7 +284,7 @@ constexpr void gx::Matrix4x4<T,MOT>::setRotationX_sc(T sinVal, T cosVal)
   _val[12] = 0; _val[13] = 0;       _val[14] = 0;      _val[15] = 1;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::rotateX_sc(T sinVal, T cosVal)
 {
   // X axis rotation applied to matrix (optimized):
@@ -300,7 +301,7 @@ constexpr void gx::Matrix4x4<T,MOT>::rotateX_sc(T sinVal, T cosVal)
   }
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::setRotationY_sc(T sinVal, T cosVal)
 {
   // Y Axis Rotation Matrix:
@@ -315,7 +316,7 @@ constexpr void gx::Matrix4x4<T,MOT>::setRotationY_sc(T sinVal, T cosVal)
   _val[12] = 0;      _val[13] = 0; _val[14] = 0;       _val[15] = 1;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::rotateY_sc(T sinVal, T cosVal)
 {
   // Y axis rotation applied to matrix (optimized):
@@ -332,7 +333,7 @@ constexpr void gx::Matrix4x4<T,MOT>::rotateY_sc(T sinVal, T cosVal)
   }
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::setRotationZ_sc(T sinVal, T cosVal)
 {
   // Z Axis Rotation Matrix:
@@ -347,7 +348,7 @@ constexpr void gx::Matrix4x4<T,MOT>::setRotationZ_sc(T sinVal, T cosVal)
   _val[12] = 0;       _val[13] = 0;      _val[14] = 0; _val[15] = 1;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::rotateZ_sc(T sinVal, T cosVal)
 {
   // Z axis rotation applied to matrix (optimized):
@@ -364,7 +365,7 @@ constexpr void gx::Matrix4x4<T,MOT>::rotateZ_sc(T sinVal, T cosVal)
   }
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::setRotation_sc(
   const Vector3<T>& axis, T sinVal, T cosVal)
 {
@@ -397,7 +398,7 @@ constexpr void gx::Matrix4x4<T,MOT>::setRotation_sc(
   _val[15] = 1;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::rotate_sc(
   const Vector3<T>& axis, T sinVal, T cosVal)
 {
@@ -430,7 +431,7 @@ constexpr void gx::Matrix4x4<T,MOT>::rotate_sc(
   }
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::setScaling(T sx, T sy, T sz)
 {
   // Scaling Matrix:
@@ -445,7 +446,7 @@ constexpr void gx::Matrix4x4<T,MOT>::setScaling(T sx, T sy, T sz)
   _val[12] = 0;  _val[13] = 0;  _val[14] = 0;  _val[15] = 1;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::scale(T sx, T sy, T sz)
 {
   // Scaling applied to matrix (optimized):
@@ -460,7 +461,7 @@ constexpr void gx::Matrix4x4<T,MOT>::scale(T sx, T sy, T sz)
   _val[12] *= sx; _val[13] *= sy; _val[14] *= sz;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::scaleX(T sx)
 {
   _val[0]  *= sx;
@@ -469,7 +470,7 @@ constexpr void gx::Matrix4x4<T,MOT>::scaleX(T sx)
   _val[12] *= sx;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::scaleY(T sy)
 {
   _val[1]  *= sy;
@@ -478,7 +479,7 @@ constexpr void gx::Matrix4x4<T,MOT>::scaleY(T sy)
   _val[13] *= sy;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::scaleZ(T sz)
 {
   _val[2]  *= sz;
@@ -487,7 +488,7 @@ constexpr void gx::Matrix4x4<T,MOT>::scaleZ(T sz)
   _val[14] *= sz;
 }
 
-template<class T, gx::MatrixOrderType MOT>
+template<gx::NumType T, gx::MatrixOrderType MOT>
 constexpr void gx::Matrix4x4<T,MOT>::transpose()
 {
   // Transposition
@@ -496,28 +497,19 @@ constexpr void gx::Matrix4x4<T,MOT>::transpose()
   // [c0 c1 c2 c3]    [a2 b2 c2 d2]
   // [d0 d1 d2 d3]    [a3 b3 c3 d3]
 
-  // std::swap not constexpr until C++20
-  //std::swap(_val[1],  _val[4]);
-  //std::swap(_val[2],  _val[8]);
-  //std::swap(_val[3],  _val[12]);
-  //std::swap(_val[6],  _val[9]);
-  //std::swap(_val[7],  _val[13]);
-  //std::swap(_val[11], _val[14]);
-
-  T tmp;
-  tmp = _val[1];  _val[1]  = _val[4];  _val[4]  = tmp;
-  tmp = _val[2];  _val[2]  = _val[8];  _val[8]  = tmp;
-  tmp = _val[3];  _val[3]  = _val[12]; _val[12] = tmp;
-  tmp = _val[6];  _val[6]  = _val[9];  _val[9]  = tmp;
-  tmp = _val[7];  _val[7]  = _val[13]; _val[13] = tmp;
-  tmp = _val[11]; _val[11] = _val[14]; _val[14] = tmp;
+  std::swap(_val[1],  _val[4]);
+  std::swap(_val[2],  _val[8]);
+  std::swap(_val[3],  _val[12]);
+  std::swap(_val[6],  _val[9]);
+  std::swap(_val[7],  _val[13]);
+  std::swap(_val[11], _val[14]);
 }
 
 
 namespace gx {
   // **** Template Functions ****
   // multPoint() - row vector * row major matrix
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Vector3<T> multPoint(
     const Vector3<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
@@ -528,7 +520,7 @@ namespace gx {
   }
 
   // multPoint() - column major matrix * column vector
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Vector3<T> multPoint(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector3<T>& v)
   {
@@ -539,7 +531,7 @@ namespace gx {
   }
 
   // multVector() - row vector * row major matrix
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Vector3<T> multVector(
     const Vector3<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
@@ -550,7 +542,7 @@ namespace gx {
   }
 
   // multVector() - column major matrix * column vector
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Vector3<T> multVector(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector3<T>& v)
   {
@@ -561,7 +553,7 @@ namespace gx {
   }
 
   // multVectorTrans - row vector * transpose(row major matrix)
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Vector3<T> multVectorTrans(
     const Vector3<T>& v, const Matrix4x4<T,ROW_MAJOR>& m)
   {
@@ -572,7 +564,7 @@ namespace gx {
   }
 
   // multVectorTrans() - transpose(column major matrix) * column vector
-  template<class T>
+  template<gx::NumType T>
   [[nodiscard]] constexpr Vector3<T> multVectorTrans(
     const Matrix4x4<T,COLUMN_MAJOR>& m, const Vector3<T>& v)
   {
@@ -583,7 +575,7 @@ namespace gx {
   }
 
   // Matrix Inversion
-  template<class T, MatrixOrderType MOT>
+  template<gx::NumType T, MatrixOrderType MOT>
   int invertMatrix(const Matrix4x4<T,MOT>& m, Matrix4x4<T,MOT>& dst)
   {
     // based off 'Streaming SIMD Extensions - Inverse of 4x4 Matrix'

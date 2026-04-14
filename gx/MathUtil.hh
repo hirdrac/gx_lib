@@ -7,7 +7,8 @@
 
 #pragma once
 #include <type_traits>
-#include <cmath>
+#include <concepts>
+#include <numbers>
 
 // basic type assumptions
 static_assert(sizeof(char) == 1);
@@ -16,163 +17,134 @@ static_assert(sizeof(int) == 4);
 
 
 namespace gx {
-  // **** Constants ****
+  // **** Concepts ****
   template<class T>
-#ifndef M_PI
-  constexpr T PI = static_cast<T>(3.14159265358979323846);
-#else
-  constexpr T PI = static_cast<T>(M_PI);
-#endif
+  concept NumType = std::integral<T> || std::floating_point<T>;
 
-  template<class T>
+
+  // **** Constants ****
+  template<std::floating_point T>
+  constexpr T PI = std::numbers::pi_v<T>;
+
+  template<std::floating_point T>
   constexpr T DEG_TO_RAD = PI<T> / T{180};
 
-  template<class T>
+  template<std::floating_point T>
   constexpr T RAD_TO_DEG = T{180} / PI<T>;
 
-  template<class T>
+  template<std::floating_point T>
   constexpr T VERY_SMALL = static_cast<T>(1.0e-12);
-
   template<>
   inline constexpr float VERY_SMALL<float> = 1.0e-7f;
 
 
   // **** Functions ****
-  template<class fltType>
-  [[nodiscard]] constexpr fltType degToRad(fltType deg)
-  {
-    static_assert(std::is_floating_point_v<fltType>);
-    return deg * DEG_TO_RAD<fltType>;
+  template<std::floating_point T>
+  [[nodiscard]] constexpr T degToRad(T deg) {
+    return deg * DEG_TO_RAD<T>;
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr fltType radToDeg(fltType rad)
-  {
-    static_assert(std::is_floating_point_v<fltType>);
-    return rad * RAD_TO_DEG<fltType>;
+  template<std::floating_point T>
+  [[nodiscard]] constexpr T radToDeg(T rad) {
+    return rad * RAD_TO_DEG<T>;
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr bool isZero(numType x)
-  {
-    if constexpr (std::is_floating_point_v<numType>) {
-      return (x > -VERY_SMALL<numType>) && (x < VERY_SMALL<numType>);
-    } else {
-      return (x == 0);
-    }
+  template<std::floating_point T>
+  [[nodiscard]] constexpr bool isZero(T x) {
+    return (x > -VERY_SMALL<T>) && (x < VERY_SMALL<T>);
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr bool isOne(numType x)
-  {
-    if constexpr (std::is_floating_point_v<numType>) {
-      return (x > (numType{1} - VERY_SMALL<numType>))
-        && (x < (numType{1} + VERY_SMALL<numType>));
-    } else {
-      return (x == 1);
-    }
+  template<std::integral T>
+  [[nodiscard]] constexpr bool isZero(T x) {
+    return x == 0;
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr bool isPos(numType x)
-  {
-    if constexpr (std::is_floating_point_v<numType>) {
-      return (x >= VERY_SMALL<numType>);
-    } else {
-      return (x > 0);
-    }
+  template<std::floating_point T>
+  [[nodiscard]] constexpr bool isOne(T x) {
+    return (x > (T{1} - VERY_SMALL<T>)) && (x < (T{1} + VERY_SMALL<T>));
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr bool isNeg(numType x)
-  {
-    if constexpr (std::is_floating_point_v<numType>) {
-      return (x <= -VERY_SMALL<numType>);
-    } else {
-      return (x < 0);
-    }
+  template<std::integral T>
+  [[nodiscard]] constexpr bool isOne(T x) {
+    return x == 1;
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr bool isEq(numType x, numType y)
-  {
-    if constexpr (std::is_floating_point_v<numType>) {
-      return isZero(x-y);
-    } else {
-      return (x == y);
-    }
+  template<std::floating_point T>
+  [[nodiscard]] constexpr bool isPos(T x) {
+    return (x >= VERY_SMALL<T>);
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr bool isLT(numType x, numType y)
-  {
-    if constexpr (std::is_floating_point_v<numType>) {
-      return isNeg(x-y);
-    } else {
-      return (x < y);
-    }
+  template<std::integral T>
+  [[nodiscard]] constexpr bool isPos(T x) {
+    return x > 0;
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr bool isLTE(numType x, numType y)
-  {
-    if constexpr (std::is_floating_point_v<numType>) {
-      return !isPos(x-y);
-    } else {
-      return (x <= y);
-    }
+  template<std::floating_point T>
+  [[nodiscard]] constexpr bool isNeg(T x) {
+    return x <= -VERY_SMALL<T>;
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr bool isGT(numType x, numType y)
-  {
-    if constexpr (std::is_floating_point_v<numType>) {
-      return isPos(x-y);
-    } else {
-      return (x > y);
-    }
+  template<std::integral T>
+  [[nodiscard]] constexpr bool isNeg(T x) {
+    return x < 0;
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr bool isGTE(numType x, numType y)
-  {
-    if constexpr (std::is_floating_point_v<numType>) {
-      return !isNeg(x-y);
-    } else {
-      return (x >= y);
-    }
+  template<std::floating_point T>
+  [[nodiscard]] constexpr bool isEq(T x, T y) {
+    return isZero(x-y);
   }
 
-  template<class intType>
-  [[nodiscard]] constexpr bool isPowerOf2(intType x)
-  {
-    static_assert(std::is_integral_v<intType>);
+  template<std::integral T>
+  [[nodiscard]] constexpr bool isEq(T x, T y) {
+    return x == y;
+  }
+
+  template<NumType T>
+  [[nodiscard]] constexpr bool isLT(T x, T y) {
+    return isNeg(x-y);
+  }
+
+  template<NumType T>
+  [[nodiscard]] constexpr bool isLTE(T x, T y) {
+    return !isPos(x-y);
+  }
+
+  template<NumType T>
+  [[nodiscard]] constexpr bool isGT(T x, T y) {
+    return isPos(x-y);
+  }
+
+  template<NumType T>
+  [[nodiscard]] constexpr bool isGTE(T x, T y) {
+    return !isNeg(x-y);
+  }
+
+  template<std::integral T>
+  [[nodiscard]] constexpr bool isPowerOf2(T x) {
     return (x & (x - 1)) == 0;
   }
 
-  template<class fltType>
-  [[nodiscard]] constexpr fltType lerp(fltType a, fltType b, fltType s)
+  template<std::floating_point T>
+  [[nodiscard]] constexpr T lerp(T a, T b, T x)
   {
-    // use std::lerp() for C++20
-    static_assert(std::is_floating_point_v<fltType>);
-    if (s <= 0) {
+    if (x <= 0) {
       return a;
-    } else if (s >= static_cast<fltType>(1)) {
+    } else if (x >= T{1}) {
       return b;
     } else {
-      return a + ((b - a) * s);
+      return a + ((b - a) * x);
     }
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr numType sqr(numType x) { return x * x; }
+  template<NumType T>
+  [[nodiscard]] constexpr T sqr(T x) { return x * x; }
 
-  template<class numType>
-  [[nodiscard]] constexpr numType ipow(numType x, int y)
+  template<NumType T>
+  [[nodiscard]] constexpr T ipow(T x, int y)
   {
     if (y < 0) { return 0; }
 
-    numType val = 1;
+    T val = 1;
     while (y) {
       if (y & 1) { val *= x; }
       y >>= 1;
@@ -182,10 +154,10 @@ namespace gx {
     return val;
   }
 
-  template<class numType>
-  [[nodiscard]] constexpr int sign(numType x)
+  template<NumType T>
+  [[nodiscard]] constexpr int sign(T x)
   {
-    if constexpr (std::is_signed_v<numType>) {
+    if constexpr (std::is_signed_v<T>) {
       return int{isPos(x)} - int{isNeg(x)};
     } else {
       return int{isPos(x)};
@@ -199,11 +171,11 @@ namespace gx {
   [[nodiscard]] constexpr int abs(short x) {
     return (x < 0) ? -int{x} : int{x}; }
 
-  //   template for all other types
-  template<class numType>
-  [[nodiscard]] constexpr numType abs(numType x)
+  // template for all other types
+  template<NumType T>
+  [[nodiscard]] constexpr T abs(T x)
   {
-    if constexpr (std::is_signed_v<numType>) {
+    if constexpr (std::is_signed_v<T>) {
       // NOTE: abs(-MAX_INT) is undefined
       return (x < 0) ? -x : x;
     } else {

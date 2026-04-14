@@ -1,5 +1,5 @@
 # gx_lib project makefile
-# Copyright (C) 2025 Richard Bradley
+# Copyright (C) 2026 Richard Bradley
 
 include gx/LIB_gx.mk
 LIB_gx.SOURCE_DIR = gx
@@ -48,7 +48,7 @@ BIN11.OBJS = LIB_gx
 include tests/tests.mk
 
 
-STANDARD = c++17
+STANDARD = c++20
 OPTIONS = lto modern_c++
 
 # Add extra error checks for OpenGL calls
