@@ -33,22 +33,23 @@ class gx::WindowImpl
 
   // window states settings
   int _width = 0, _height = 0;
-  int _fsWidth = 0, _fsHeight = 0;
-  int _minWidth = -1, _minHeight = -1;
-  int _maxWidth = -1, _maxHeight = -1;
-  int _samples = 4; // for MSAA, 0 disables multi-sampling
   std::string _title;
   MouseModeEnum _mouseMode = MOUSEMODE_NORMAL;
   MouseShapeEnum _mouseShape = MOUSESHAPE_ARROW;
-  bool _sizeSet = false;
   bool _fullScreen = false;
-  bool _fixedAspectRatio = false;
-  bool _genSizeEvent = false;
 
   // event state
   EventState _eventState{};
 
  private:
+  int _fsWidth = 0, _fsHeight = 0;
+  int _minWidth = -1, _minHeight = -1;
+  int _maxWidth = -1, _maxHeight = -1;
+  int _samples = 4; // for MSAA, 0 disables multi-sampling
+  bool _sizeSet = false;
+  bool _fixedAspectRatio = false;
+  bool _genSizeEvent = false;
+
   void showWindow(GLFWwindow* w);
   void updateMouseState(GLFWwindow* w);
 
