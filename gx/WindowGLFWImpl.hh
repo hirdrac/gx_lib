@@ -10,6 +10,8 @@
 #include <memory>
 #include <string>
 
+struct GLFWwindow;
+namespace gx { class WindowImpl; }
 
 class gx::WindowImpl
 {
@@ -41,7 +43,15 @@ class gx::WindowImpl
   // event state
   EventState _eventState{};
 
+  // OpenGL handling
+  bool setupGLContext();
+  void getGLFrameBufferSize(int& width, int& height);
+  void setGLSwapInterval(int interval);
+  void setCurrentGLContext();
+  void swapGLBuffers();
+
  private:
+  GLFWwindow* _window = nullptr;
   int _fsWidth = 0, _fsHeight = 0;
   int _minWidth = -1, _minHeight = -1;
   int _maxWidth = -1, _maxHeight = -1;
@@ -50,8 +60,8 @@ class gx::WindowImpl
   bool _fixedAspectRatio = false;
   bool _genSizeEvent = false;
 
-  void showWindow(GLFWwindow* w);
-  void updateMouseState(GLFWwindow* w);
+  void showWindow();
+  void updateMouseState();
 
   static void closeCB(GLFWwindow* win);
   static void sizeCB(GLFWwindow* win, int width, int height);

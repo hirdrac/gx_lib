@@ -4,7 +4,6 @@
 //
 
 #include "Renderer.hh"
-#include "GLFW.hh"
 #include <mutex>
 #include <unordered_map>
 using namespace gx;
@@ -63,10 +62,6 @@ void TextureHandle::cleanup() noexcept
 // **** Renderer class ****
 Renderer::~Renderer()
 {
-  if (_window && glfwInitStatus()) {
-    glfwDestroyWindow(_window);
-  }
-
   // remove all textures for this Renderer
   const std::lock_guard lg{_textureMutex};
   auto itr = _textures.begin();

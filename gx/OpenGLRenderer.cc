@@ -13,6 +13,7 @@
 // TODO: support glPolygonOffset() ?
 
 #include "OpenGLRenderer.hh"
+#include "WindowGLFWImpl.hh"
 #include "DrawList.hh"
 #include "DrawEntry.hh"
 #include "Image.hh"
@@ -28,7 +29,6 @@
 #include "OpenGL.hh"
 #include "Assert.hh"
 #include "Print.hh"
-#include "GLFW.hh"
 #include "Time.hh"
 #include <vector>
 #include <unordered_map>
@@ -39,19 +39,6 @@ using namespace gx;
 
 namespace {
   // **** Helper Functions ****
-  void setCurrentContext(GLFWwindow* win)
-  {
-    // TODO: add lastThreadID check in debug
-    // - if window hasn't changed, it must always be the same thread
-    // - if window changes and threadID changes, call
-    //   glfwMakeContextCurrent(nullptr) first to flush last context
-    static GLFWwindow* lastWin = nullptr;
-    if (lastWin != win) {
-      lastWin = win;
-      glfwMakeContextCurrent(win);
-    }
-  }
-
   [[nodiscard]] const char* getGLString(GLenum name)
   {
     const char* val = reinterpret_cast<const char*>(glGetString(name));
@@ -286,7 +273,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   OpenGLRenderer() { _opData.reserve(256); }
 
   // gx::Renderer methods
-  bool init(GLFWwindow* win) override;
+  bool init(WindowImpl* impl) override;
   bool setSwapInterval(int interval) override;
   bool setFramebufferSize(int width, int height) override;
   TextureHandle newTexture(const TextureParams& params) override;
@@ -404,19 +391,19 @@ class gx::OpenGLRenderer final : public gx::Renderer
 };
 
 template<int VER>
-bool OpenGLRenderer<VER>::init(GLFWwindow* win)
+bool OpenGLRenderer<VER>::init(WindowImpl* impl)
 {
-  GX_ASSERT(win != nullptr);
+  GX_ASSERT(impl != nullptr);
 
   const std::lock_guard lg{_glMutex};
-  _window = win;
 
-  glfwGetFramebufferSize(win, &_fbWidth, &_fbHeight);
+  _impl = impl;
+  _impl->getGLFrameBufferSize(_fbWidth, _fbHeight);
   _orthoT = orthoProjection(_fbWidth, _fbHeight);
   //println("new window size: ", _fbWidth, " x ", _fbHeight);
 
   _maxTextureSize = GLTexture2D<VER>::getMaxSize();
-  glfwSwapInterval(_swapInterval); // enable V-SYNC
+  _impl->setGLSwapInterval(_swapInterval); // enable V-SYNC
 
   // NOTES:
   // - matrices in GLSL are column major: P*V*M*v
@@ -569,7 +556,7 @@ bool OpenGLRenderer<VER>::setSwapInterval(int interval)
 {
   const std::lock_guard lg{_glMutex};
   _swapInterval = std::clamp(interval, 0, 60);
-  glfwSwapInterval(_swapInterval);
+  _impl->setGLSwapInterval(_swapInterval);
   return true;
 }
 
@@ -600,7 +587,7 @@ TextureHandle OpenGLRenderer<VER>::newTexture(const TextureParams& params)
   const std::lock_guard lg{_glMutex};
   TextureEntry& te = _textures[id];
 
-  setCurrentContext(_window);
+  _impl->setCurrentGLContext();
 
   auto& t = te.tex;
   t.init(std::max(1, params.levels), texformat, params.width, params.height);
@@ -649,7 +636,7 @@ bool OpenGLRenderer<VER>::setSubImage(
   const auto itr = _textures.find(id);
   if (itr == _textures.end()) { return false; }
 
-  setCurrentContext(_window);
+  _impl->setCurrentGLContext();
 
   TextureEntry& te = itr->second;
   te.tex.setSubImage(
@@ -664,7 +651,7 @@ void OpenGLRenderer<VER>::freeTexture(TextureID id)
   const std::lock_guard lg{_glMutex};
   const auto itr = _textures.find(id);
   if (itr != _textures.end()) {
-    setCurrentContext(_window);
+    _impl->setCurrentGLContext();
     _textures.erase(itr);
   }
 }
@@ -682,7 +669,7 @@ void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
   }
 
   const std::lock_guard lg{_glMutex};
-  setCurrentContext(_window);
+  _impl->setCurrentGLContext();
 
   _opData.clear();
   _lastOp = OP_null;
@@ -1109,7 +1096,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   const std::lock_guard lg{_glMutex};
   if (_opData.empty()) { return; }
 
-  setCurrentContext(_window);
+  _impl->setCurrentGLContext();
 
   // set default GL state
   GX_GLCALL(glViewport, 0, 0, _fbWidth, _fbHeight);
@@ -1276,7 +1263,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   }
 
   // swap buffers & finish
-  glfwSwapBuffers(_window);
+  _impl->swapGLBuffers();
   GX_CHECK_GL_ERRORS("GL error");
   clearGLState();
 
@@ -1340,10 +1327,9 @@ void OpenGLRenderer<VER>::setGLCapabilities(int32_t cap)
 
 
 // **** Functions ****
-std::unique_ptr<Renderer> gx::makeOpenGLRenderer(GLFWwindow* win)
+std::unique_ptr<Renderer> gx::makeOpenGLRenderer(WindowImpl* impl)
 {
-  setCurrentContext(win);
-  if (!setupGLContext(reinterpret_cast<GLADloadfunc>(glfwGetProcAddress))) {
+  if (!impl->setupGLContext()) {
     return {};
   }
 
@@ -1382,7 +1368,7 @@ std::unique_ptr<Renderer> gx::makeOpenGLRenderer(GLFWwindow* win)
     ren = std::make_unique<OpenGLRenderer<33>>();
   }
 
-  if (!ren->init(win)) {
+  if (!ren->init(impl)) {
     GX_LOG_ERROR("OpenGLRenderer::init() failed");
     return {};
   }

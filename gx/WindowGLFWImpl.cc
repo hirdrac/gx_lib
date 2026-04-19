@@ -10,6 +10,7 @@
 #include "WindowGLFWImpl.hh"
 #include "EventState.hh"
 #include "OpenGLRenderer.hh"
+#include "OpenGL.hh"
 #include "Logger.hh"
 #include "ThreadID.hh"
 #include "GLFW.hh"
@@ -93,10 +94,9 @@ WindowImpl::WindowImpl()
 
 WindowImpl::~WindowImpl()
 {
-  if (_renderer && glfwInitStatus()) {
+  if (_window && glfwInitStatus()) {
     GX_ASSERT(isMainThread());
-    glfwHideWindow(_renderer->window());
-    // window destroyed in Renderer destructor
+    glfwDestroyWindow(_window);
   }
 }
 
@@ -105,7 +105,7 @@ void WindowImpl::setTitle(std::string_view title)
   _title = title;
   if (_renderer) {
     GX_ASSERT(isMainThread());
-    glfwSetWindowTitle(_renderer->window(), _title.c_str());
+    glfwSetWindowTitle(_window, _title.c_str());
   }
 }
 
@@ -130,8 +130,7 @@ void WindowImpl::setSize(int width, int height, bool fullScreen)
 
   if (_renderer) {
     GX_ASSERT(isMainThread());
-    GLFWwindow* win = _renderer->window();
-    //GLFWmonitor* monitor = glfwGetWindowMonitor(win);
+    //GLFWmonitor* monitor = glfwGetWindowMonitor(_window);
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
     int wx = 0, wy = 0;
@@ -145,25 +144,25 @@ void WindowImpl::setSize(int width, int height, bool fullScreen)
     }
 
     glfwSetWindowMonitor(
-      win, monitor, wx, wy, width, height, mode->refreshRate);
+      _window, monitor, wx, wy, width, height, mode->refreshRate);
     _width = width;
     _height = height;
     _renderer->setFramebufferSize(width, height);
     _genSizeEvent = true;
     if (!_sizeSet) {
-      showWindow(win);
+      showWindow();
     } else {
       // ** WORK-AROUND **
       // (needed for version 3.3.4, recheck for newer versions)
       // extra restore/setWindow are to work around a bug where if the window
       // starts out fullscreen then is changed to windowed mode, it will
       // always be maximized
-      glfwRestoreWindow(win);
+      glfwRestoreWindow(_window);
       glfwSetWindowMonitor(
-        win, monitor, wx, wy, width, height, mode->refreshRate);
+        _window, monitor, wx, wy, width, height, mode->refreshRate);
     }
 
-    if (_fixedAspectRatio) { glfwSetWindowAspectRatio(win, width, height); }
+    if (_fixedAspectRatio) { glfwSetWindowAspectRatio(_window, width, height); }
   } else {
     _width = width;
     _height = height;
@@ -183,8 +182,8 @@ void WindowImpl::setSizeLimits(
   _maxHeight = (maxHeight < 0) ? -1 : maxHeight;
   if (_renderer) {
     GX_ASSERT(isMainThread());
-    glfwSetWindowSizeLimits(_renderer->window(), _minWidth, _minHeight,
-                            _maxWidth, _maxHeight);
+    glfwSetWindowSizeLimits(
+      _window, _minWidth, _minHeight, _maxWidth, _maxHeight);
   }
 }
 
@@ -199,7 +198,7 @@ void WindowImpl::setMouseMode(MouseModeEnum mode)
   _mouseMode = mode;
   if (_renderer) {
     GX_ASSERT(isMainThread());
-    glfwSetInputMode(_renderer->window(), GLFW_CURSOR, val);
+    glfwSetInputMode(_window, GLFW_CURSOR, val);
   }
 }
 
@@ -208,7 +207,7 @@ void WindowImpl::setMouseShape(MouseShapeEnum shape)
   _mouseShape = shape;
   if (_renderer) {
     GX_ASSERT(isMainThread());
-    glfwSetCursor(_renderer->window(), getCursorInstance(shape));
+    glfwSetCursor(_window, getCursorInstance(shape));
   }
 }
 
@@ -217,7 +216,7 @@ void WindowImpl::setMousePos(Vec2 pos)
   _eventState.mousePt = pos;
   if (_renderer) {
     GX_ASSERT(isMainThread());
-    glfwSetCursorPos(_renderer->window(), double(pos.x), double(pos.y));
+    glfwSetCursorPos(_window, double(pos.x), double(pos.y));
   }
 }
 
@@ -308,7 +307,8 @@ bool WindowImpl::open(int flags)
   }
 #endif
 
-  _renderer = makeOpenGLRenderer(win);
+  _window = win;
+  _renderer = makeOpenGLRenderer(this);
   if (!_renderer) { return false; }
 
   const auto [fw,fh] = _renderer->framebufferDimensions();
@@ -347,7 +347,7 @@ bool WindowImpl::open(int flags)
   glfwSetScrollCallback(win, scrollCB);
   glfwSetWindowIconifyCallback(win, iconifyCB);
   glfwSetWindowFocusCallback(win, focusCB);
-  if (_sizeSet) { showWindow(win); }
+  if (_sizeSet) { showWindow(); }
   return true;
 }
 
@@ -358,30 +358,30 @@ void WindowImpl::pollEvents()
     // callbacks will set event values
 }
 
-void WindowImpl::showWindow(GLFWwindow* w)
+void WindowImpl::showWindow()
 {
-  glfwShowWindow(w);
+  glfwShowWindow(_window);
 
   // unmaximize if window started out maximized
   // (glfwShowWindow() does this if window is too large to fit on screen)
-  glfwRestoreWindow(w);
+  glfwRestoreWindow(_window);
 
   // set initial mouse event state
   // (initial button state not supported by GLFW)
-  updateMouseState(w);
+  updateMouseState();
 }
 
-void WindowImpl::updateMouseState(GLFWwindow* w)
+void WindowImpl::updateMouseState()
 {
   double mx = 0, my = 0;
-  glfwGetCursorPos(w, &mx, &my);
+  glfwGetCursorPos(_window, &mx, &my);
   const Vec2 mousePt{float(mx), float(my)};
   if (mousePt != _eventState.mousePt) {
     _eventState.events |= EVENT_MOUSE_MOVE;
     _eventState.mousePt = mousePt;
   }
 
-  const bool mouseIn = (glfwGetWindowAttrib(w, GLFW_HOVERED) != 0);
+  const bool mouseIn = (glfwGetWindowAttrib(_window, GLFW_HOVERED) != 0);
   if (mouseIn != _eventState.mouseIn) {
     _eventState.events |= EVENT_MOUSE_ENTER;
     _eventState.mouseIn = mouseIn;
@@ -421,9 +421,43 @@ void WindowImpl::resetEventState()
   // triggering EVENT_SIZE
   if (_genSizeEvent) {
     _eventState.events |= EVENT_SIZE;
-    updateMouseState(_renderer->window());
+    updateMouseState();
     _genSizeEvent = false;
   }
+}
+
+bool WindowImpl::setupGLContext()
+{
+  setCurrentGLContext();
+  return gx::setupGLContext(reinterpret_cast<GLADloadfunc>(glfwGetProcAddress));
+}
+
+void WindowImpl::getGLFrameBufferSize(int& width, int& height)
+{
+  glfwGetFramebufferSize(_window, &width, &height);
+}
+
+void WindowImpl::setGLSwapInterval(int interval)
+{
+  glfwSwapInterval(interval);
+}
+
+void WindowImpl::setCurrentGLContext()
+{
+  // TODO: add lastThreadID check in debug
+  // - if window hasn't changed, it must always be the same thread
+  // - if window changes and threadID changes, call
+  //   glfwMakeContextCurrent(nullptr) first to flush last context
+  static GLFWwindow* lastWin = nullptr;
+  if (lastWin != _window) {
+    lastWin = _window;
+    glfwMakeContextCurrent(_window);
+  }
+}
+
+void WindowImpl::swapGLBuffers()
+{
+  glfwSwapBuffers(_window);
 }
 
 // GLFW event callbacks
@@ -452,7 +486,7 @@ void WindowImpl::sizeCB(GLFWwindow* win, int width, int height)
 
   //println("size event: ", width, ' ', height);
   auto impl = static_cast<WindowImpl*>(uPtr);
-  impl->updateMouseState(win);
+  impl->updateMouseState();
   if (width == impl->_width && height == impl->_height) { return; }
 
   impl->_eventState.events |= EVENT_SIZE;

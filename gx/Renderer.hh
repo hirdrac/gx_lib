@@ -7,16 +7,14 @@
 // TODO: additional mem stats (textures, combined texture size)
 
 #pragma once
-#include "DrawList.hh"
 #include "Types.hh"
 #include <utility>
 #include <cstdint>
 
 
-struct GLFWwindow;
-
 namespace gx {
   class Renderer;
+  class WindowImpl;
 
 
   // Texture Types
@@ -89,7 +87,7 @@ class gx::Renderer
   Renderer& operator=(const Renderer&) = delete;
 
   // setup methods
-  virtual bool init(GLFWwindow* win) = 0;
+  virtual bool init(WindowImpl* impl) = 0;
   virtual bool setSwapInterval(int interval) = 0;
 
   // framebuffer methods
@@ -109,12 +107,11 @@ class gx::Renderer
   virtual void renderFrame(int64_t usecTime) = 0;
 
   // general accessors
-  [[nodiscard]] GLFWwindow* window() { return _window; }
   [[nodiscard]] int swapInterval() const { return _swapInterval; }
   [[nodiscard]] int frameRate() const { return _frameRate; }
 
  protected:
-  GLFWwindow* _window = nullptr;
+  WindowImpl* _impl = nullptr;
   int _fbWidth = 0;
   int _fbHeight = 0;
   int _maxTextureSize = 0;
