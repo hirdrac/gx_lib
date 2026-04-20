@@ -390,32 +390,7 @@ void WindowImpl::updateMouseState()
 
 void WindowImpl::resetEventState()
 {
-  _eventState.events = 0;
-  _eventState.scrollPt.set(0,0);
-  _eventState.text.clear();
-
-  // reset key states
-  for (auto i = _eventState.keyStates.begin();
-       i != _eventState.keyStates.end(); ) {
-    if (i->held) {
-      i->pressCount = 0;
-      i->repeatCount = 0;
-      ++i;
-    } else {
-      i = _eventState.keyStates.erase(i);
-    }
-  }
-
-  // reset button states
-  for (auto i = _eventState.buttonStates.begin();
-       i != _eventState.buttonStates.end(); ) {
-    if (i->held) {
-      i->pressCount = 0;
-      ++i;
-    } else {
-      i = _eventState.buttonStates.erase(i);
-    }
-  }
+  _eventState.reset();
 
   // work-around for Windows where glfwSetWindowMonitor() isn't
   // triggering EVENT_SIZE

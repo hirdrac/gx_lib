@@ -221,4 +221,29 @@ struct gx::EventState
   void removeEvent(int eventMask) {
     events &= ~(events & eventMask);
   }
+
+  void reset() {
+    events = 0;
+    scrollPt.set(0,0);
+    text.clear();
+
+    for (auto i = keyStates.begin(); i != keyStates.end(); ) {
+      if (i->held) {
+        i->pressCount = 0;
+        i->repeatCount = 0;
+        ++i;
+      } else {
+        i = keyStates.erase(i);
+      }
+    }
+
+    for (auto i = buttonStates.begin(); i != buttonStates.end(); ) {
+      if (i->held) {
+        i->pressCount = 0;
+        ++i;
+      } else {
+        i = buttonStates.erase(i);
+      }
+    }
+  }
 };
