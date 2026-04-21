@@ -1,6 +1,6 @@
 //
 // gx/Unicode.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // Unicode/UTF-8 utilities
 //
@@ -43,6 +43,11 @@ namespace gx
     std::string_view sv, int32_t code, std::size_t start = 0);
     // returns index of first occurence of character in UTF-8 encoded string
     // (search begins at 'start' byte position)
+
+  [[nodiscard]] bool isSpace(int32_t code);
+  [[nodiscard]] inline bool isSpace(uint32_t code) {
+    return isSpace(int32_t(code)); }
+    // isspace() for unicode
 
   class UTF8Iterator;
 }

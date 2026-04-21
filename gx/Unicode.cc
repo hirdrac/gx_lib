@@ -1,6 +1,6 @@
 //
 // gx/Unicode.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // REFERENCES:
 //   https://en.wikipedia.org/wiki/UTF-8
@@ -113,6 +113,43 @@ std::size_t gx::findUTF8(std::string_view sv, int32_t code, std::size_t start)
     if (*itr == code) { return itr.pos() + start; }
   }
   return NPOS;
+}
+
+bool gx::isSpace(int32_t code)
+{
+  // from https://cppreference.com/cpp/string/wide/iswspace:
+  // ISO 30112 defines POSIX space characters as Unicode characters
+  //   U+0009..U+000D, U+0020, U+1680, U+180E, U+2000..U+2006,
+  //   U+2008..U+200A, U+2028, U+2029, U+205F, and U+3000.
+
+  switch (code) {
+    case 0x0009: // horizontal tab
+    case 0x000a: // line feed
+    case 0x000b: // vertical tab
+    case 0x000c: // form feed
+    case 0x000d: // carriage return
+    case 0x0020: // space
+    case 0x1680:
+    case 0x180e:
+    case 0x2000:
+    case 0x2001:
+    case 0x2002:
+    case 0x2003:
+    case 0x2004:
+    case 0x2005:
+    case 0x2006:
+    case 0x2008:
+    case 0x2009:
+    case 0x200a:
+    case 0x2028:
+    case 0x2029:
+    case 0x205f:
+    case 0x3000:
+      return true;
+
+    default:
+      return false;
+  }
 }
 
 
