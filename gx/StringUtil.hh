@@ -1,6 +1,6 @@
 //
 // gx/StringUtil.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #pragma once
@@ -11,10 +11,12 @@
 #include <type_traits>
 #include <cstdint>
 #include <cctype>
+#include <algorithm>
 
 
 namespace gx
 {
+  // Functions
   template<class... Args>
   [[nodiscard]] std::string concat(const Args&... args)
   {
@@ -133,4 +135,30 @@ namespace gx
     for (char& c : s) { c = char(std::tolower(static_cast<unsigned char>(c))); }
     return s;
   }
+
+  class LineIterator;
 }
+
+
+// Types
+class gx::LineIterator
+{
+ public:
+  LineIterator(std::string_view sv)
+    : _itr{sv.begin()}, _end{sv.end()} { setLineEnd(); }
+
+  // operators
+  [[nodiscard]] explicit operator bool() const { return _itr != _end; }
+  [[nodiscard]] std::string_view operator*() const { return {_itr, _lineEnd}; }
+
+  LineIterator& operator++() {
+    _itr = _lineEnd;
+    if (_itr != _end) { ++_itr; setLineEnd(); }
+    return *this;
+  }
+
+ private:
+  std::string_view::iterator _itr, _end, _lineEnd;
+
+  void setLineEnd() { _lineEnd = std::find(_itr, _end, '\n'); }
+};

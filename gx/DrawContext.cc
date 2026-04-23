@@ -9,6 +9,7 @@
 #include "TextMetaState.hh"
 #include "Unicode.hh"
 #include "MathUtil.hh"
+#include "StringUtil.hh"
 #include "Assert.hh"
 using namespace gx;
 
@@ -428,104 +429,94 @@ void DrawContext::_text(
   if (_colorMode == CM_SOLID) { setColor(); }
 
   TextMetaState ts;
-  std::size_t lineStart = 0;
   RGBA8 initColor = _color0; // TODO: track initial gradients
 
   Vec2 ulPos;
   float ulLen = 0;
   bool underline = false;
 
-  for (;;) {
-    const std::size_t i = text.find('\n', lineStart);
-    const std::string_view line = text.substr(
-      lineStart, (i != std::string_view::npos) ? (i - lineStart) : i);
+  for (LineIterator lineItr{text}; lineItr; ++lineItr, pos += tf.advY * lh) {
+    const auto line = *lineItr;
+    if (line.empty()) { continue; }
 
-    if (!line.empty()) {
-      float offset = 0;
-      if (h_align != Align::left) {
-        const auto [sizeW,sizeH] = tf.calcSize(line);
-        offset = (h_align == Align::right) ? sizeW : (sizeW * .5f);
+    float offset = 0;
+    if (h_align != Align::left) {
+      const auto [sizeW,sizeH] = tf.calcSize(line);
+      offset = (h_align == Align::right) ? sizeW : (sizeW * .5f);
+    }
+
+    float len = 0;
+    enum { UL_noop, UL_start, UL_end} ulOp = UL_noop;
+    for (UTF8Iterator itr{line}; itr; ++itr) {
+      if (ulOp == UL_end) {
+        const Glyph* g = f.findGlyph('_');
+        if (g) { _glyph(*g, tf, ulPos, clipPtr, ulLen - tf.glyphSpacing); }
+        underline = false;
+        ulOp = UL_noop;
       }
 
-      float len = 0;
-      enum { UL_noop, UL_start, UL_end} ulOp = UL_noop;
-      for (UTF8Iterator itr{line}; itr; ++itr) {
-        if (ulOp == UL_end) {
-          const Glyph* g = f.findGlyph('_');
-          if (g) { _glyph(*g, tf, ulPos, clipPtr, ulLen - tf.glyphSpacing); }
-          underline = false;
-          ulOp = UL_noop;
-        }
-
-        int ch = *itr;
-        if (ch == tf.startTag && tf.startTag != 0) {
-          const std::size_t startPos = itr.nextPos();
-          const std::size_t endPos = findUTF8(line, tf.endTag, startPos);
-          if (endPos != std::string_view::npos) {
-            const auto tag = line.substr(startPos, endPos - startPos);
-            const auto tagType = ts.parseTag(tag);
-            if (tagType != TAG_unknown) {
-              if (tagType == TAG_color) {
-                if (!fixedColor) {
-                  // TODO: support restoring gradients
-                  color((ts.colorCount() > 0) ? ts.color() : initColor);
-                  setColor();
-                }
-              } else if (tagType == TAG_underline) {
-                if (!underline && ts.underline()) {
-                  ulOp = UL_start;
-                } else if (underline && !ts.underline()) {
-                  ulOp = UL_end;
-                }
+      int ch = *itr;
+      if (ch == tf.startTag && tf.startTag != 0) {
+        const std::size_t startPos = itr.nextPos();
+        const std::size_t endPos = findUTF8(line, tf.endTag, startPos);
+        if (endPos != std::string_view::npos) {
+          const auto tag = line.substr(startPos, endPos - startPos);
+          const auto tagType = ts.parseTag(tag);
+          if (tagType != TAG_unknown) {
+            if (tagType == TAG_color) {
+              if (!fixedColor) {
+                // TODO: support restoring gradients
+                color((ts.colorCount() > 0) ? ts.color() : initColor);
+                setColor();
               }
-
-              itr.setPos(endPos);
-              continue;
+            } else if (tagType == TAG_underline) {
+              if (!underline && ts.underline()) {
+                ulOp = UL_start;
+              } else if (underline && !ts.underline()) {
+                ulOp = UL_end;
+              }
             }
-          }
-        } else if (ch == '\t') {
-          if (tf.tabWidth <= 0) {
-            ch = ' ';
-          } else {
-            len = (std::floor(len / tf.tabWidth) + 1.0f) * tf.tabWidth;
+
+            itr.setPos(endPos);
             continue;
           }
         }
-
-        const Glyph* g = f.findGlyph(ch);
-        if (!g) {
-          g = f.findGlyph(f.unknownCode());
-          GX_ASSERT(g != nullptr);
-        }
-
-        const Vec2 p = pos + (tf.advX * (len - offset));
-        if (g->bitmap) { _glyph(*g, tf, p, clipPtr); }
-        len += g->advX + tf.glyphSpacing;
-
-        if (ulOp == UL_start) {
-          ulPos = p; ulLen = 0;
-          underline = true; ulOp = UL_noop;
-        }
-
-        if (underline) {
-          ulLen += g->advX + tf.glyphSpacing;
+      } else if (ch == '\t') {
+        if (tf.tabWidth <= 0) {
+          ch = ' ';
+        } else {
+          len = (std::floor(len / tf.tabWidth) + 1.0f) * tf.tabWidth;
+          continue;
         }
       }
 
-      // finish end-of-line underline
+      const Glyph* g = f.findGlyph(ch);
+      if (!g) {
+        g = f.findGlyph(f.unknownCode());
+        GX_ASSERT(g != nullptr);
+      }
+
+      const Vec2 p = pos + (tf.advX * (len - offset));
+      if (g->bitmap) { _glyph(*g, tf, p, clipPtr); }
+      len += g->advX + tf.glyphSpacing;
+
+      if (ulOp == UL_start) {
+        ulPos = p; ulLen = 0;
+        underline = true; ulOp = UL_noop;
+      }
+
       if (underline) {
-        const Glyph* ulg = f.findGlyph('_');
-        if (ulg) { _glyph(*ulg, tf, ulPos, clipPtr, ulLen - tf.glyphSpacing); }
-        underline = false;
-        ulOp = (ulOp == UL_end) ? UL_noop : UL_start;
+        ulLen += g->advX + tf.glyphSpacing;
       }
     }
 
-    if (i == std::string_view::npos) { break; }
-
-    // move to start of next line
-    lineStart = i + 1;
-    pos += tf.advY * lh;
+    // finish end-of-line underline
+    if (underline) {
+      const Glyph* ulg = f.findGlyph('_');
+      if (ulg) { _glyph(*ulg, tf, ulPos, clipPtr, ulLen - tf.glyphSpacing); }
+      underline = false;
+      ulOp = (ulOp == UL_end) ? UL_noop : UL_start;
+    }
   }
 }
 

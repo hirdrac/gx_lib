@@ -1,12 +1,13 @@
 //
 // gx/TextFormat.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 // TODO: use advX,advY,glyphX,glyphY for calcSize(),fixText()
 
 #include "TextFormat.hh"
 #include "TextMetaState.hh"
+#include "StringUtil.hh"
 #include "Font.hh"
 #include "Unicode.hh"
 #include "Assert.hh"
@@ -18,16 +19,10 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
   GX_ASSERT(font != nullptr);
 
   TextMetaState ts;
-  std::size_t lineStart = 0;
   float maxWidth = 0, height = -lineSpacing;
 
-  while (lineStart < text.size()) {
-    auto nlPos = text.find('\n', lineStart);
-    if (nlPos == std::string_view::npos) { nlPos = text.size(); }
-
-    auto line = text.substr(lineStart, nlPos - lineStart);
-    //while (!line.empty() && (line.back() == ' ' || line.back() == '\t')) {
-    //  line.remove_suffix(1); }
+  for (LineIterator lineItr{text}; lineItr; ++lineItr) {
+    const auto line = *lineItr;
 
     float width = 0;
     for (UTF8Iterator itr{line}; itr; ++itr) {
@@ -62,7 +57,6 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
 
     maxWidth = std::max(maxWidth, width - glyphSpacing);
     height += float(font->size()) + lineSpacing;
-    lineStart = nlPos + 1;
   }
 
   return {maxWidth, std::max(height, 0.0f)};
@@ -74,9 +68,8 @@ std::string_view TextFormat::fitText(
   GX_ASSERT(font != nullptr);
   maxWidth += glyphSpacing;
 
-  const auto nlPos = text.find('\n');
-  const auto line = (nlPos == std::string_view::npos)
-    ? text : text.substr(0, nlPos);
+  // first line only
+  const auto line = text.substr(0, text.find('\n'));
 
   TextMetaState ts;
   float width = 0;

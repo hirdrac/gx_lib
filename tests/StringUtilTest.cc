@@ -1,11 +1,12 @@
 //
 // StringUtilTest.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "gx/StringUtil.hh"
 #include <limits>
 #include <cassert>
+using namespace gx;
 
 #ifdef NDEBUG
 #error "can't run test with NDEBUG"
@@ -14,8 +15,6 @@
 
 void test_formatInt()
 {
-  using gx::formatInt;
-
   assert(formatInt(1) == "1");
   assert(formatInt(12) == "12");
   assert(formatInt(123) == "123");
@@ -51,8 +50,18 @@ void test_formatInt()
   assert(formatInt(std::numeric_limits<int64_t>::min()) == "-9,223,372,036,854,775,808");
 }
 
+void test_LineIterator()
+{
+  LineIterator itr{"line 1\n\nline 3"};
+  assert(itr && *itr == "line 1"); ++itr;
+  assert(itr && *itr == ""); ++itr;
+  assert(itr && *itr == "line 3"); ++itr;
+  assert(!itr);
+}
+
 int main(int argc, char** argv)
 {
   test_formatInt();
+  test_LineIterator();
   return 0;
 }
