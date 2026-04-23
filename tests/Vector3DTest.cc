@@ -5,12 +5,12 @@
 
 #include "gx/Vector3D.hh"
 #include <cassert>
+using namespace gx;
 
 #ifdef NDEBUG
 #error "can't run test with NDEBUG"
 #endif
 
-using namespace gx;
 
 using Vec2 = Vector2<float>;
 using Vec3 = Vector3<float>;

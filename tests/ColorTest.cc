@@ -1,19 +1,15 @@
 //
 // ColorTest.cc
-// Copyright (C) 2021 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "gx/Color.hh"
 #include <cassert>
+using namespace gx;
 
 #ifdef NDEBUG
 #error "can't run test with NDEBUG"
 #endif
-
-using gx::Color;
-using gx::RGBA8;
-using gx::packRGBA8;
-using gx::unpackRGBA8;
 
 
 void check(RGBA8 c, uint32_t r, uint32_t g, uint32_t b, uint32_t a)

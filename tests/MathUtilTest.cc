@@ -6,6 +6,10 @@
 #include "gx/MathUtil.hh"
 #include <cassert>
 
+#ifdef NDEBUG
+#error "can't run test with NDEBUG"
+#endif
+
 
 void test_sign()
 {

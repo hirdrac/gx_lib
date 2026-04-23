@@ -1,11 +1,16 @@
 //
 // CmdLineParserTest.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "gx/CmdLineParser.hh"
 #include <cassert>
 using namespace gx;
+
+#ifdef NDEBUG
+#error "can't run test with NDEBUG"
+#endif
+
 
 int main(int argc, char** argv)
 {

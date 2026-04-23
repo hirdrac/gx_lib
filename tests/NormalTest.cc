@@ -1,17 +1,16 @@
 //
 // NormalTest.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "gx/Normal.hh"
 #include "gx/Print.hh"
 #include <cassert>
+using namespace gx;
 
 #ifdef NDEBUG
 #error "can't run test with NDEBUG"
 #endif
-
-using namespace gx;
 
 
 void test_pack_unpack(const Vec3& n)
