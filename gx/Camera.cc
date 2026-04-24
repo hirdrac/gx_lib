@@ -145,15 +145,19 @@ Vec3 Camera::dirToScreenPt(Vec2 mousePt) const
     vtopL *= height / width;
   }
 
-  const Vec3 vx = _vside * vsideL;
-  const Vec3 vy = _vtop * vtopL;
-  const float cx = _screenWidth * .5f;
-  const float cy = _screenHeight * .5f;
-
-  // FIXME: finish support for viewport
+  const float cx = width * .5f;
+  const float cy = height * .5f;
+  float mx, my;
+  if (_vpSet) {
+    mx = (mousePt.x - _viewport.x - cx) / cx;
+    my = (mousePt.y - _viewport.y - cy) / cy;
+  } else {
+    mx = (mousePt.x - cx) / cx;
+    my = (mousePt.y - cy) / cy;
+  }
 
   // since we are calculating a direction, just assume eye is at origin
   // and view plane center is just 1 away from eye (in direction of vnormal)
   return unitVec(
-    _vnormal + (vx * ((mousePt.x - cx) / cx)) + (vy * -((mousePt.y - cy) / cy)));
+    _vnormal + (_vside * (vsideL * mx)) + (_vtop * -(vtopL * my)));
 }
