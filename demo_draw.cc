@@ -38,24 +38,24 @@ gx::Font TheFont{FONT_SIZE};
 void draw_circle1(gx::DrawContext& dc, float x, float y)
 {
   dc.color(GRAY50);
-  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 16);
+  dc.circle({x + 200, y + 180}, 150, 16);
 }
 
 void draw_circle2(gx::DrawContext& dc, float x, float y)
 {
   dc.hgradient(x+50, BLACK, x+350, WHITE);
-  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32);
+  dc.circle({x + 200, y + 180}, 150, 32);
 }
 
 void draw_circle3(gx::DrawContext& dc, float x, float y)
 {
   dc.vgradient(y+20, BLACK, y+330, WHITE);
-  dc.circleSector({x + 200, y + 180}, 150, 0, 0, 32);
+  dc.circle({x + 200, y + 180}, 150, 32);
 }
 
 void draw_circle4(gx::DrawContext& dc, float x, float y)
 {
-  dc.circleSectorShaded({x + 200, y + 180}, 150, 0, 0, 32, RED, WHITE);
+  dc.circleShaded({x + 200, y + 180}, 150, 32, RED, WHITE);
 }
 
 void draw_circle5(gx::DrawContext& dc, float x, float y)

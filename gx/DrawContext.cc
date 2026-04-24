@@ -70,10 +70,71 @@ DrawContext::DrawContext(DrawList* dl) : _dl{dl}
   init();
 }
 
+
+void DrawContext::hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1)
+{
+  _colorMode = ColorMode::hgradient;
+  _g0 = x0;
+  _color0 = c0;
+  _fullcolor0 = unpackRGBA8(c0);
+  _g1 = x1;
+  _color1 = c1;
+  _fullcolor1 = unpackRGBA8(c1);
+}
+
+void DrawContext::hgradient(
+  float x0, const Color& c0, float x1, const Color& c1)
+{
+  _colorMode = ColorMode::hgradient;
+  _g0 = x0;
+  _color0 = packRGBA8(c0);
+  _fullcolor0 = c0;
+  _g1 = x1;
+  _color1 = packRGBA8(c1);
+  _fullcolor1 = c1;
+}
+
+void DrawContext::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
+{
+  _colorMode = ColorMode::vgradient;
+  _g0 = y0;
+  _color0 = c0;
+  _fullcolor0 = unpackRGBA8(c0);
+  _g1 = y1;
+  _color1 = c1;
+  _fullcolor1 = unpackRGBA8(c1);
+}
+
+void DrawContext::vgradient(
+  float y0, const Color& c0, float y1, const Color& c1)
+{
+  _colorMode = ColorMode::vgradient;
+  _g0 = y0;
+  _color0 = packRGBA8(c0);
+  _fullcolor0 = c0;
+  _g1 = y1;
+  _color1 = packRGBA8(c1);
+  _fullcolor1 = c1;
+}
+
+void DrawContext::changeAlpha(float a)
+{
+  const RGBA8 val = RGBA8(std::clamp(a, 0.0f, 1.0f) * 255.0f + .5f) << 24;
+  switch (_colorMode) {
+    case ColorMode::hgradient:
+    case ColorMode::vgradient:
+      _color1 = (_color1 & ~0xff000000) | val;
+      [[fallthrough]];
+    default:
+      _color0 = (_color0 & ~0xff000000) | val;
+      break;
+  }
+}
+
 void DrawContext::line(Vec2 a, Vec2 b)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->line2(a, b);
   } else {
@@ -85,7 +146,7 @@ void DrawContext::line(Vec2 a, Vec2 b)
 void DrawContext::line(const Vec3& a, const Vec3& b)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->line3(a, b);
   } else {
@@ -97,7 +158,7 @@ void DrawContext::line(const Vec3& a, const Vec3& b)
 void DrawContext::lineStart(Vec2 a)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->lineStart2(a);
   } else {
@@ -108,7 +169,7 @@ void DrawContext::lineStart(Vec2 a)
 void DrawContext::lineTo(Vec2 a)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->lineTo2(a);
   } else {
@@ -119,7 +180,7 @@ void DrawContext::lineTo(Vec2 a)
 void DrawContext::lineStart(const Vec3& a)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->lineStart3(a);
   } else {
@@ -130,7 +191,7 @@ void DrawContext::lineStart(const Vec3& a)
 void DrawContext::lineTo(const Vec3& a)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->lineTo3(a);
   } else {
@@ -141,7 +202,7 @@ void DrawContext::lineTo(const Vec3& a)
 void DrawContext::triangle(Vec2 a, Vec2 b, Vec2 c)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->triangle2(a, b, c);
   } else {
@@ -154,7 +215,7 @@ void DrawContext::triangle(Vec2 a, Vec2 b, Vec2 c)
 void DrawContext::triangle(const Vec3& a, const Vec3& b, const Vec3& c)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->triangle3(a, b, c);
   } else {
@@ -168,7 +229,7 @@ void DrawContext::triangle(
   const Vertex2T& a, const Vertex2T& b, const Vertex2T& c)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->triangle2T(a, b, c);
   } else {
@@ -182,7 +243,7 @@ void DrawContext::triangle(
   const Vertex3T& a, const Vertex3T& b, const Vertex3T& c)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->triangle3T(a, b, c);
   } else {
@@ -196,7 +257,7 @@ void DrawContext::quad(
   const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->quad2(a, b, c, d);
   } else {
@@ -211,7 +272,7 @@ void DrawContext::quad(
   const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->quad3(a, b, c, d);
   } else {
@@ -226,7 +287,7 @@ void DrawContext::quad(
   const Vertex2T& a, const Vertex2T& b, const Vertex2T& c, const Vertex2T& d)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->quad2T(a, b, c, d);
   } else {
@@ -241,7 +302,7 @@ void DrawContext::quad(
   const Vertex3T& a, const Vertex3T& b, const Vertex3T& c, const Vertex3T& d)
 {
   if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->quad3T(a, b, c, d);
   } else {
@@ -262,13 +323,13 @@ void DrawContext::_rectangle(float x, float y, float w, float h)
   const float x1 = x + w;
   const float y1 = y + h;
   switch (_colorMode) {
-    case CM_HGRADIENT: {
+    case ColorMode::hgradient: {
       const RGBA8 c0 = gradientColor(x);
       const RGBA8 c1 = gradientColor(x1);
       _dl->quad2C({x, y, c0}, {x1, y, c1}, {x, y1, c0}, {x1, y1, c1});
       break;
     }
-    case CM_VGRADIENT: {
+    case ColorMode::vgradient: {
       const RGBA8 c0 = gradientColor(y);
       const RGBA8 c1 = gradientColor(y1);
       _dl->quad2C({x, y, c0}, {x1, y, c0}, {x, y1, c1}, {x1, y1, c1});
@@ -289,7 +350,7 @@ void DrawContext::rectangle(const Rect& r, Vec2 t0, Vec2 t1)
   const float x1 = x0 + r.w;
   const float y1 = y0 + r.h;
   switch (_colorMode) {
-    case CM_HGRADIENT: {
+    case ColorMode::hgradient: {
       const RGBA8 c0 = gradientColor(x0);
       const RGBA8 c1 = gradientColor(x1);
       _dl->quad2TC({x0, y0, t0.x, t0.y, c0},
@@ -298,7 +359,7 @@ void DrawContext::rectangle(const Rect& r, Vec2 t0, Vec2 t1)
                    {x1, y1, t1.x, t1.y, c1});
       break;
     }
-    case CM_VGRADIENT: {
+    case ColorMode::vgradient: {
       const RGBA8 c0 = gradientColor(y0);
       const RGBA8 c1 = gradientColor(y1);
       _dl->quad2TC({x0, y0, t0.x, t0.y, c0},
@@ -354,7 +415,7 @@ void DrawContext::rectangle(
     y1 = cy1;
   }
 
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->rectangleT({x0, y0, tx0, ty0}, {x1, y1, tx1, ty1});
   } else {
@@ -426,7 +487,7 @@ void DrawContext::_text(
   } // otherwise, pos is baseline of 1st line
 
   texture(f.atlas());
-  if (_colorMode == CM_SOLID) { setColor(); }
+  if (_colorMode == ColorMode::solid) { setColor(); }
 
   TextMetaState ts;
   RGBA8 initColor = _color0; // TODO: track initial gradients
@@ -618,7 +679,7 @@ void DrawContext::_glyph(
     At = newAt; Bt = newBt; Ct = newCt; Dt = newDt;
   }
 
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     _dl->quad2T({A.x, A.y, At.x, At.y},
                 {B.x, B.y, Bt.x, Bt.y},
                 {C.x, C.y, Ct.x, Ct.y},
@@ -659,7 +720,7 @@ void DrawContext::_circleSector(
       center.x + (radius * std::sin(a)),
       center.y - (radius * std::cos(a))};
 
-    if (_colorMode == CM_SOLID) {
+    if (_colorMode == ColorMode::solid) {
       _dl->triangle2(v0, v1, v2);
     } else {
       _dl->triangle2C({v0.x, v0.y, pointColor(v0)},
@@ -738,7 +799,7 @@ void DrawContext::_arc(
     const Vec2 v2{center.x + (radius * sa), center.y - (radius * ca)};
     const Vec2 v3{center.x + (innerR * sa), center.y - (innerR * ca)};
 
-    if (_colorMode == CM_SOLID) {
+    if (_colorMode == ColorMode::solid) {
       _dl->quad2(v0, v1, v2, v3);
     } else {
       _dl->quad2C({v0.x, v0.y, pointColor(v0)},
@@ -888,7 +949,7 @@ void DrawContext::border(const Rect& r, float borderWidth)
   const Vec2 iC{x+borderWidth,y+h-borderWidth};
   const Vec2 iD{x+w-borderWidth,y+h-borderWidth};
 
-  if (_colorMode == CM_SOLID) {
+  if (_colorMode == ColorMode::solid) {
     setColor();
     _dl->quad2(A,B,iA,iB); // top
     _dl->quad2(iC,iD,C,D); // bottom

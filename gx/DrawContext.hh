@@ -8,6 +8,7 @@
 //   - any width supported
 //   - multi-line corner types: squared, angled, rounded
 // TODO: gradient function instead of set gradient/color points
+// TODO: arc with line segments
 
 #pragma once
 #include "DrawList.hh"
@@ -40,22 +41,25 @@ class gx::DrawContext
     color(packRGBA8(r, g, b, a)); }
   void color(const Vec3& c, float a = 1.0f) { color(packRGBA8(c, a)); }
   void color(const Vec4& c) { color(packRGBA8(c)); }
-  inline void color(RGBA8 c);
+  void color(RGBA8 c) {
+    _colorMode = ColorMode::solid; _color0 = c; _color1 = 0; }
 
-  inline void hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1);
-  inline void hgradient(float x0, const Color& c0, float x1, const Color& c1);
-  inline void vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1);
-  inline void vgradient(float y0, const Color& c0, float y1, const Color& c1);
+  void hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1);
+  void hgradient(float x0, const Color& c0, float x1, const Color& c1);
+  void vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1);
+  void vgradient(float y0, const Color& c0, float y1, const Color& c1);
 
-  inline void changeAlpha(float a);
+  void changeAlpha(float a);
     // change alpha value of current solid/gradient color
 
   void normal(float x, float y, float z) { normal(packNormal(x,y,z)); }
   void normal(const Vec3& n) { normal(packNormal(n)); }
-  inline void normal(uint32_t n);
+  void normal(uint32_t n) {
+    if (n != _lastNormal) { _lastNormal = n; _dl->normal(n); } }
 
-  inline void texture(TextureID tid);
   void texture(const TextureHandle& h) { texture(h.id()); }
+  void texture(TextureID tid) {
+    if (tid != _lastTexID) { _lastTexID = tid; _dl->texture(tid); } }
 
   // Render state change (persists across different DrawLists)
   void lineWidth(float w) { _dl->lineWidth(w); }
@@ -196,6 +200,14 @@ class gx::DrawContext
     //  * angles are in degrees
     //    angle 0 is (0, -radius) from center, 90 is (radius, 0) from center
 
+  void circle(Vec2 center, float radius, int segments) {
+    return circleSector(center, radius, 0, 0, segments); }
+  void circleShaded(
+    Vec2 center, float radius, int segments,
+    RGBA8 innerColor, RGBA8 outerColor) {
+    return circleSectorShaded(
+      center, radius, 0, 0, segments, innerColor, outerColor); }
+
   void roundedRectangle(const Rect& r, float curveRadius, int curveSegments);
 
   void border(const Rect& r, float borderWidth);
@@ -227,7 +239,7 @@ class gx::DrawContext
   Color _fullcolor1{INIT_NONE};
   RGBA8 _color0, _color1;         // current colors
   RGBA8 _dataColor;               // last color set in data
-  enum ColorMode { CM_SOLID, CM_HGRADIENT, CM_VGRADIENT };
+  enum class ColorMode { solid, hgradient, vgradient };
   ColorMode _colorMode;
 
   void init() {
@@ -236,7 +248,7 @@ class gx::DrawContext
     _color0 = 0;
     _color1 = 0;
     _dataColor = 0;
-    _colorMode = CM_SOLID;
+    _colorMode = ColorMode::solid;
   }
 
   void _rectangle(float x, float y, float w, float h);
@@ -257,9 +269,9 @@ class gx::DrawContext
 
   [[nodiscard]] RGBA8 pointColor(float x, float y) const {
     switch (_colorMode) {
-      default:           return _color0;
-      case CM_HGRADIENT: return gradientColor(x);
-      case CM_VGRADIENT: return gradientColor(y);
+      default:                   return _color0;
+      case ColorMode::hgradient: return gradientColor(x);
+      case ColorMode::vgradient: return gradientColor(y);
     }
   }
 
@@ -267,106 +279,16 @@ class gx::DrawContext
   [[nodiscard]] RGBA8 pointColor(const PointType& pt) const {
     return pointColor(pt.x, pt.y); }
 
-  inline void setColor();
-  inline bool checkColor();
+  void setColor() {
+    if (_dataColor != _color0) {
+      _dataColor = _color0;
+      _dl->color(_color0);
+    }
+  }
+
+  bool checkColor() {
+    if ((_color0 | _color1) == 0) { return false; }
+    if (_colorMode == ColorMode::solid) { setColor(); }
+    return true; // proceed with draw
+  }
 };
-
-
-// **** Inline Implementations ****
-void gx::DrawContext::color(RGBA8 c)
-{
-  _colorMode = CM_SOLID;
-  _color0 = c;
-  _color1 = 0;
-}
-
-void gx::DrawContext::hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1)
-{
-  _colorMode = CM_HGRADIENT;
-  _g0 = x0;
-  _color0 = c0;
-  _fullcolor0 = unpackRGBA8(c0);
-  _g1 = x1;
-  _color1 = c1;
-  _fullcolor1 = unpackRGBA8(c1);
-}
-
-void gx::DrawContext::hgradient(
-  float x0, const Color& c0, float x1, const Color& c1)
-{
-  _colorMode = CM_HGRADIENT;
-  _g0 = x0;
-  _color0 = packRGBA8(c0);
-  _fullcolor0 = c0;
-  _g1 = x1;
-  _color1 = packRGBA8(c1);
-  _fullcolor1 = c1;
-}
-
-void gx::DrawContext::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
-{
-  _colorMode = CM_VGRADIENT;
-  _g0 = y0;
-  _color0 = c0;
-  _fullcolor0 = unpackRGBA8(c0);
-  _g1 = y1;
-  _color1 = c1;
-  _fullcolor1 = unpackRGBA8(c1);
-}
-
-void gx::DrawContext::vgradient(
-  float y0, const Color& c0, float y1, const Color& c1)
-{
-  _colorMode = CM_VGRADIENT;
-  _g0 = y0;
-  _color0 = packRGBA8(c0);
-  _fullcolor0 = c0;
-  _g1 = y1;
-  _color1 = packRGBA8(c1);
-  _fullcolor1 = c1;
-}
-
-void gx::DrawContext::changeAlpha(float a)
-{
-  const RGBA8 val = RGBA8(std::clamp(a, 0.0f, 1.0f) * 255.0f + .5f) << 24;
-  switch (_colorMode) {
-    case CM_HGRADIENT:
-    case CM_VGRADIENT:
-      _color1 = (_color1 & ~0xff000000) | val;
-      [[fallthrough]];
-    default:
-      _color0 = (_color0 & ~0xff000000) | val;
-      break;
-  }
-}
-
-void gx::DrawContext::normal(uint32_t n)
-{
-  if (n != _lastNormal) {
-    _lastNormal = n;
-    _dl->normal(n);
-  }
-}
-
-void gx::DrawContext::texture(TextureID tid)
-{
-  if (tid != _lastTexID) {
-    _lastTexID = tid;
-    _dl->texture(tid);
-  }
-}
-
-void gx::DrawContext::setColor()
-{
-  if (_dataColor != _color0) {
-    _dataColor = _color0;
-    _dl->color(_color0);
-  }
-}
-
-bool gx::DrawContext::checkColor()
-{
-  if ((_color0 | _color1) == 0) { return false; }
-  if (_colorMode == CM_SOLID) { setColor(); }
-  return true; // proceed with draw
-}
