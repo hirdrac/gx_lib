@@ -1,6 +1,6 @@
 //
 // gx/Camera.cc
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "Camera.hh"
@@ -88,7 +88,7 @@ bool Camera::calcProjection(Mat4& result) const
 {
   float width, height;
   if (_vpSet) {
-    width = _vpWidth; height = _vpHeight;
+    width = _viewport.w; height = _viewport.h;
   } else {
     width = _screenWidth; height = _screenHeight;
   }
@@ -103,10 +103,10 @@ bool Camera::calcProjection(Mat4& result) const
 
   float offsetX = 0, offsetY = 0;
   if (_vpSet) {
-    offsetX = (_vpX / _screenWidth) * 2.0f;
-    offsetY = (_vpY / _screenHeight) * 2.0f;
-    vsideL *= ((_screenWidth - _vpWidth) / _screenWidth);
-    vtopL *= ((_screenHeight - _vpHeight) / _screenHeight);
+    offsetX = (_viewport.x / _screenWidth) * 2.0f;
+    offsetY = (_viewport.y / _screenHeight) * 2.0f;
+    vsideL *= ((_screenWidth - _viewport.w) / _screenWidth);
+    vtopL *= ((_screenHeight - _viewport.h) / _screenHeight);
   }
 
   const float clipLen = _farClip - _nearClip;
@@ -132,7 +132,7 @@ Vec3 Camera::dirToScreenPt(Vec2 mousePt) const
 {
   float width, height;
   if (_vpSet) {
-    width = _vpWidth; height = _vpHeight;
+    width = _viewport.w; height = _viewport.h;
   } else {
     width = _screenWidth; height = _screenHeight;
   }
