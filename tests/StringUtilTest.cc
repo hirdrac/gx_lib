@@ -50,6 +50,14 @@ void test_formatInt()
   assert(formatInt(std::numeric_limits<int64_t>::min()) == "-9,223,372,036,854,775,808");
 }
 
+void test_trimSpaces()
+{
+  static_assert(trimSpaces("TEST 1") == "TEST 1");
+  static_assert(trimSpaces("  TEST 2") == "TEST 2");
+  static_assert(trimSpaces("TEST 3  ") == "TEST 3");
+  static_assert(trimSpaces("  TEST 4  ") == "TEST 4");
+}
+
 void test_LineIterator()
 {
   LineIterator itr{"line 1\n\nline 3"};
@@ -62,6 +70,7 @@ void test_LineIterator()
 int main(int argc, char** argv)
 {
   test_formatInt();
+  test_trimSpaces();
   test_LineIterator();
   return 0;
 }
