@@ -27,6 +27,7 @@ class gx::WindowImpl
   void setMousePos(Vec2 pos);
   void setSamples(int samples);
   bool open(int flags);
+  void focus();
 
   static void pollEvents();
   void resetEventState();

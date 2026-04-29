@@ -51,6 +51,8 @@ void Window::setSamples(int samples) {
   _impl->setSamples(samples); }
 bool Window::open(int flags) {
   return _impl->open(flags); }
+void Window::focus() {
+  _impl->focus(); }
 bool Window::isOpen() const {
   return _impl->_renderer != nullptr; }
 int Window::width() const {

@@ -103,7 +103,7 @@ WindowImpl::~WindowImpl()
 void WindowImpl::setTitle(std::string_view title)
 {
   _title = title;
-  if (_renderer) {
+  if (_window) {
     GX_ASSERT(isMainThread());
     glfwSetWindowTitle(_window, _title.c_str());
   }
@@ -128,7 +128,7 @@ void WindowImpl::setSize(int width, int height, bool fullScreen)
     }
   }
 
-  if (_renderer) {
+  if (_window) {
     GX_ASSERT(isMainThread());
     //GLFWmonitor* monitor = glfwGetWindowMonitor(_window);
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -147,7 +147,7 @@ void WindowImpl::setSize(int width, int height, bool fullScreen)
       _window, monitor, wx, wy, width, height, mode->refreshRate);
     _width = width;
     _height = height;
-    _renderer->setFramebufferSize(width, height);
+    if (_renderer) { _renderer->setFramebufferSize(width, height); }
     _genSizeEvent = true;
     if (!_sizeSet) {
       showWindow();
@@ -180,7 +180,7 @@ void WindowImpl::setSizeLimits(
   _minHeight = (minHeight < 0) ? -1 : minHeight;
   _maxWidth = (maxWidth < 0) ? -1 : maxWidth;
   _maxHeight = (maxHeight < 0) ? -1 : maxHeight;
-  if (_renderer) {
+  if (_window) {
     GX_ASSERT(isMainThread());
     glfwSetWindowSizeLimits(
       _window, _minWidth, _minHeight, _maxWidth, _maxHeight);
@@ -196,7 +196,7 @@ void WindowImpl::setMouseMode(MouseModeEnum mode)
   }
 
   _mouseMode = mode;
-  if (_renderer) {
+  if (_window) {
     GX_ASSERT(isMainThread());
     glfwSetInputMode(_window, GLFW_CURSOR, val);
   }
@@ -205,7 +205,7 @@ void WindowImpl::setMouseMode(MouseModeEnum mode)
 void WindowImpl::setMouseShape(MouseShapeEnum shape)
 {
   _mouseShape = shape;
-  if (_renderer) {
+  if (_window) {
     GX_ASSERT(isMainThread());
     glfwSetCursor(_window, getCursorInstance(shape));
   }
@@ -214,7 +214,7 @@ void WindowImpl::setMouseShape(MouseShapeEnum shape)
 void WindowImpl::setMousePos(Vec2 pos)
 {
   _eventState.mousePt = pos;
-  if (_renderer) {
+  if (_window) {
     GX_ASSERT(isMainThread());
     glfwSetCursorPos(_window, double(pos.x), double(pos.y));
   }
@@ -349,6 +349,14 @@ bool WindowImpl::open(int flags)
   glfwSetWindowFocusCallback(win, focusCB);
   if (_sizeSet) { showWindow(); }
   return true;
+}
+
+void WindowImpl::focus()
+{
+  if (_window) {
+    GX_ASSERT(isMainThread());
+    glfwFocusWindow(_window);
+  }
 }
 
 void WindowImpl::pollEvents()

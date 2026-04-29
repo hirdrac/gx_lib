@@ -82,6 +82,7 @@ class gx::Window
   bool open(int flags = WINDOW_RESIZABLE);
   [[nodiscard]] bool isOpen() const;
   [[nodiscard]] explicit operator bool() const { return isOpen(); }
+  void focus();
 
   [[nodiscard]] int width() const;
   [[nodiscard]] int height() const;
