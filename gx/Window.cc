@@ -41,9 +41,9 @@ void Window::setSize(int width, int height, bool fullScreen) {
 void Window::setSizeLimits(
   int minWidth, int minHeight, int maxWidth, int maxHeight) {
   _impl->setSizeLimits(minWidth, minHeight, maxWidth, maxHeight); }
-void Window::setMouseMode(MouseModeEnum mode) {
+void Window::setMouseMode(MouseMode mode) {
   _impl->setMouseMode(mode); }
-void Window::setMouseShape(MouseShapeEnum shape) {
+void Window::setMouseShape(MouseShape shape) {
   _impl->setMouseShape(shape); }
 void Window::setMousePos(Vec2 pos) {
   _impl->setMousePos(pos); }
@@ -65,9 +65,9 @@ const std::string& Window::title() const {
   return _impl->_title; }
 bool Window::fullScreen() const {
   return _impl->_fullScreen; }
-MouseModeEnum Window::mouseMode() const {
+MouseMode Window::mouseMode() const {
   return _impl->_mouseMode; }
-MouseShapeEnum Window::mouseShape() const {
+MouseShape Window::mouseShape() const {
   return _impl->_mouseShape; }
 const gx::EventState& Window::eventState() const {
   return _impl->_eventState; }

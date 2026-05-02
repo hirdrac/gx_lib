@@ -34,20 +34,20 @@ namespace gx {
       // enable OpenGL debug context
   };
 
-  enum MouseModeEnum {
-    MOUSEMODE_NORMAL,  // mouse cursor visible and behaves normally
-    MOUSEMODE_HIDE,    // hides mouse cursor when it is over display window
-    MOUSEMODE_DISABLE, // hides & grabs mouse cursor and all movement events
-                       //   are relative position changes
+  enum class MouseMode {
+    normal,  // mouse cursor visible and behaves normally
+    hide,    // hides mouse cursor when it is over display window
+    disable, // hides & grabs mouse cursor and all movement events
+             //   are relative position changes
   };
 
-  enum MouseShapeEnum {
-    MOUSESHAPE_ARROW = 0,
-    MOUSESHAPE_IBEAM,
-    MOUSESHAPE_CROSSHAIR,
-    MOUSESHAPE_HAND,
-    MOUSESHAPE_HRESIZE,
-    MOUSESHAPE_VRESIZE,
+  enum class MouseShape {
+    arrow = 0,
+    ibeam,
+    crosshair,
+    hand,
+    hresize,
+    vresize,
   };
 
 
@@ -74,8 +74,8 @@ class gx::Window
   void setTitle(std::string_view title);
   void setSize(int width, int height, bool fullScreen);
   void setSizeLimits(int minWidth, int minHeight, int maxWidth, int maxHeight);
-  void setMouseMode(MouseModeEnum mode);
-  void setMouseShape(MouseShapeEnum shape);
+  void setMouseMode(MouseMode mode);
+  void setMouseShape(MouseShape shape);
   void setMousePos(Vec2 pos);
   void setSamples(int samples);
 
@@ -89,8 +89,8 @@ class gx::Window
   [[nodiscard]] std::pair<int,int> dimensions() const;
   [[nodiscard]] const std::string& title() const;
   [[nodiscard]] bool fullScreen() const;
-  [[nodiscard]] MouseModeEnum mouseMode() const;
-  [[nodiscard]] MouseShapeEnum mouseShape() const;
+  [[nodiscard]] MouseMode mouseMode() const;
+  [[nodiscard]] MouseShape mouseShape() const;
 
 
   //// Event Handling ////

@@ -22,8 +22,8 @@ class gx::WindowImpl
   void setTitle(std::string_view title);
   void setSize(int width, int height, bool fullScreen);
   void setSizeLimits(int minWidth, int minHeight, int maxWidth, int maxHeight);
-  void setMouseMode(MouseModeEnum mode);
-  void setMouseShape(MouseShapeEnum shape);
+  void setMouseMode(MouseMode mode);
+  void setMouseShape(MouseShape shape);
   void setMousePos(Vec2 pos);
   void setSamples(int samples);
   bool open(int flags);
@@ -37,8 +37,8 @@ class gx::WindowImpl
   // window states settings
   int _width = 0, _height = 0;
   std::string _title;
-  MouseModeEnum _mouseMode = MOUSEMODE_NORMAL;
-  MouseShapeEnum _mouseShape = MOUSESHAPE_ARROW;
+  MouseMode _mouseMode = MouseMode::normal;
+  MouseShape _mouseShape = MouseShape::arrow;
   bool _fullScreen = false;
 
   // event state

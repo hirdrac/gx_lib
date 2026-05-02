@@ -55,16 +55,16 @@ namespace {
   static_assert(GLFW_MOUSE_BUTTON_8 == 7);
 
   // **** Helper Functions ****
-  [[nodiscard]] constexpr int cursorInputModeVal(MouseModeEnum mode) {
+  [[nodiscard]] constexpr int cursorInputModeVal(MouseMode mode) {
     switch (mode) {
-      case MOUSEMODE_NORMAL:  return GLFW_CURSOR_NORMAL;
-      case MOUSEMODE_HIDE:    return GLFW_CURSOR_HIDDEN;
-      case MOUSEMODE_DISABLE: return GLFW_CURSOR_DISABLED;
-      default:                return -1;
+      case MouseMode::normal:  return GLFW_CURSOR_NORMAL;
+      case MouseMode::hide:    return GLFW_CURSOR_HIDDEN;
+      case MouseMode::disable: return GLFW_CURSOR_DISABLED;
+      default:                 return -1;
     }
   }
 
-  [[nodiscard]] GLFWcursor* getCursorInstance(MouseShapeEnum shape) {
+  [[nodiscard]] GLFWcursor* getCursorInstance(MouseShape shape) {
     constexpr int cursorID[6] {
       GLFW_ARROW_CURSOR, GLFW_IBEAM_CURSOR, GLFW_CROSSHAIR_CURSOR,
       GLFW_HAND_CURSOR, GLFW_HRESIZE_CURSOR, GLFW_VRESIZE_CURSOR};
@@ -72,8 +72,8 @@ namespace {
       // cursors are freed with glfwTerminate()
 
     const int i = int(shape);
-    if (i <= 0 || i > MOUSESHAPE_VRESIZE) {
-      return nullptr; // MOUSESHAPE_ARROW
+    if (i <= 0 || i > int(MouseShape::vresize)) {
+      return nullptr; // MouseShape::arrow;
     }
 
     if (!cursor[i]) {
@@ -187,7 +187,7 @@ void WindowImpl::setSizeLimits(
   }
 }
 
-void WindowImpl::setMouseMode(MouseModeEnum mode)
+void WindowImpl::setMouseMode(MouseMode mode)
 {
   const int val = cursorInputModeVal(mode);
   if (val < 0) {
@@ -202,7 +202,7 @@ void WindowImpl::setMouseMode(MouseModeEnum mode)
   }
 }
 
-void WindowImpl::setMouseShape(MouseShapeEnum shape)
+void WindowImpl::setMouseShape(MouseShape shape)
 {
   _mouseShape = shape;
   if (_window) {
