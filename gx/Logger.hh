@@ -32,13 +32,15 @@ class gx::Logger
   Logger();
   ~Logger();
 
-  // disable copy/assignment/move
+  // disable copy/assignment but allow move
   Logger(const Logger&) = delete;
   Logger& operator=(const Logger&) = delete;
+  Logger(Logger&&) noexcept = default;
+  Logger& operator=(Logger&&) noexcept = default;
 
   // members
   void setOStream(std::ostream& os);
-    // write log to stderr
+    // write log to specified ostream
   void setFile(std::string_view fileName);
     // write log to a file
   bool rotate();
@@ -48,16 +50,23 @@ class gx::Logger
   [[nodiscard]] LogLevel level() const { return _level; }
   void setLevel(LogLevel lvl) { _level = lvl; }
   void disable() { _level = LogLevel::disabled; }
+    // loglevel accessor & setters
+
   void showMS(bool enable) { _showMS = enable; }
+    // show milliseconds in timestamps
+
   void separateDate(bool enable) { _separateDate = enable; }
+    // show date once as separate line instead in every timestamp
+
   void setSourcePrefix(std::string_view prefix) { _sourcePrefix = prefix; }
+    // prefix removed from logged file names
 
   // log method
   // (calling directly will always log message - only macros check log level)
   template<class... Args>
-  void log(LogLevel lvl, std::string_view file, int line, const Args&... args) {
+  void log(LogLevel lvl, std::string_view file, int line, Args&&... args) {
     auto os = logStream(lvl);
-    ((os << args), ...);
+    (logVal(os, args), ...);
     logMsg(os, file, line);
   }
 
@@ -68,6 +77,16 @@ class gx::Logger
   LogLevel _level = LogLevel::info;
   bool _showMS = true;
   bool _separateDate = true;
+
+  template<class T>
+  static void logVal(std::ostream& os, T&& val) {
+    using type = std::remove_reference_t<T>;
+    if constexpr (std::is_enum_v<type>) {
+      os << static_cast<std::underlying_type_t<type>>(val);
+    } else {
+      os << val;
+    }
+  }
 
   // methods
   [[nodiscard]] std::ostringstream logStream(LogLevel lvl);
