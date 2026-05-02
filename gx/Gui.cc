@@ -737,7 +737,7 @@ void Gui::processMouseEvent(Window& win, EventState& es)
   }
 
   // element specific behavior
-  MouseShapeEnum shape = MOUSESHAPE_ARROW;
+  MouseShape shape = MouseShape::arrow;
   if (_heldType == GUI_TITLEBAR) {
     if (lbuttonDown && es.mouseMove()) {
       if (_heldID != id) {
@@ -758,7 +758,7 @@ void Gui::processMouseEvent(Window& win, EventState& es)
       _needRender = true;
     }
   } else if (type == GUI_ENTRY) {
-    shape = MOUSESHAPE_IBEAM;
+    shape = MouseShape::ibeam;
     const GuiTheme& thm = *(pPtr->theme);
     const TextFormat tf{
       .font = thm.font, .lineSpacing = float(thm.textSpacing)};
