@@ -9,3 +9,9 @@ BIN_embed.FLAGS = -
 BIN_embed.RPATH = -
 BIN_embed.LINK_FLAGS = -
 BIN_embed.OPTIONS = modern_c++
+
+ifeq ($(GX_LIB_PATH),)
+  BIN_embed.SOURCE_DIR = gx
+else
+  BIN_embed.SOURCE_DIR = $(GX_LIB_PATH)/gx
+endif

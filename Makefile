@@ -1,11 +1,8 @@
 # gx_lib project makefile
 # Copyright (C) 2026 Richard Bradley
 
-include gx/LIB_gx.mk
-LIB_gx.SOURCE_DIR = gx
-
-include gx/BIN_embed.mk
-BIN_embed.SOURCE_DIR = gx
+include LIB_gx.mk
+include BIN_embed.mk
 
 
 # embeded font data generation
