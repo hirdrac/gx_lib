@@ -26,15 +26,23 @@ namespace gx {
 class gx::DrawList
 {
  public:
+  using storage_type = std::vector<Value>;
+
+  // vector-like types & functions
+  using const_iterator = storage_type::const_iterator;
+  using size_type = storage_type::size_type;
+
+  [[nodiscard]] const_iterator begin() const { return _data.begin(); }
+  [[nodiscard]] const_iterator end() const { return _data.end(); }
+
   [[nodiscard]] const Value* data() const { return _data.data(); }
+  [[nodiscard]] size_type size() const { return _data.size(); }
 
   [[nodiscard]] bool empty() const { return _data.empty(); }
-  [[nodiscard]] std::size_t size() const { return _data.size(); }
-
-  void reserve(std::size_t cap) { _data.reserve(cap); }
-  [[nodiscard]] std::size_t capacity() const { return _data.capacity(); }
-
   void clear() { _data.clear(); }
+
+  [[nodiscard]] size_type capacity() const { return _data.capacity(); }
+  void reserve(size_type cap) { _data.reserve(cap); }
 
   void append(const DrawList& dl) {
     _data.insert(_data.end(), dl._data.begin(), dl._data.end()); }
@@ -162,7 +170,7 @@ class gx::DrawList
     add(CMD_rectangleT, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t); }
 
  private:
-  std::vector<Value> _data;
+  storage_type _data;
 
   void add(DrawCmd cmd, const Mat4& m1, const Mat4& m2) {
     _data.push_back(cmd);
