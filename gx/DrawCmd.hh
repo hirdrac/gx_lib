@@ -1,5 +1,5 @@
 //
-// gx/DrawEntry.hh
+// gx/DrawCmd.hh
 // Copyright (C) 2026 Richard Bradley
 //
 

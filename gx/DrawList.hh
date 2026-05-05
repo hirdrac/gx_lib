@@ -4,11 +4,12 @@
 //
 
 #pragma once
-#include "DrawEntry.hh"
+#include "DrawCmd.hh"
 #include "Color.hh"
 #include "Normal.hh"
 #include "Types.hh"
 #include <vector>
+
 
 namespace gx {
   class DrawList;

@@ -15,7 +15,6 @@
 #include "OpenGLRenderer.hh"
 #include "WindowGLFWImpl.hh"
 #include "DrawList.hh"
-#include "DrawEntry.hh"
 #include "Image.hh"
 #include "Color.hh"
 #include "Logger.hh"
