@@ -45,7 +45,7 @@ class gx::DrawList
   void reserve(size_type cap) { _data.reserve(cap); }
 
   void append(const DrawList& dl) {
-    _data.insert(_data.end(), dl._data.begin(), dl._data.end()); }
+    _data.insert(_data.end(), dl.begin(), dl.end()); }
 
   // raw draw commands
   void framebuffer(int32_t id) { add(CMD_framebuffer, id); }
