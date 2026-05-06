@@ -1,5 +1,5 @@
 //
-// gx/GLFW.cc
+// gx/glfw/GLFW.cc
 // Copyright (C) 2026 Richard Bradley
 //
 
