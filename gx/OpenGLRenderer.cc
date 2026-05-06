@@ -13,7 +13,7 @@
 // TODO: support glPolygonOffset() ?
 
 #include "OpenGLRenderer.hh"
-#include "WindowGLFWImpl.hh"
+#include "WindowImpl.hh"
 #include "DrawList.hh"
 #include "Image.hh"
 #include "Color.hh"

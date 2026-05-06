@@ -1,5 +1,5 @@
 //
-// gx/WindowGLFWImpl.cc
+// gx/glfw/WindowImpl.cc
 // Copyright (C) 2026 Richard Bradley
 //
 
@@ -7,7 +7,7 @@
 //   valid mouseMove events?
 // TODO: check if mouseIn even works for Windows
 
-#include "WindowGLFWImpl.hh"
+#include "WindowImpl.hh"
 #include "EventState.hh"
 #include "OpenGLRenderer.hh"
 #include "OpenGL.hh"
@@ -171,7 +171,6 @@ void WindowImpl::setSize(int width, int height, bool fullScreen)
   _sizeSet = true;
   _fullScreen = fullScreen;
 }
-
 
 void WindowImpl::setSizeLimits(
   int minWidth, int minHeight, int maxWidth, int maxHeight)

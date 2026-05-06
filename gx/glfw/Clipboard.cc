@@ -1,6 +1,6 @@
 //
-// gx/Clipboard.cc
-// Copyright (C) 2025 Richard Bradley
+// gx/glfw/Clipboard.cc
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "Clipboard.hh"

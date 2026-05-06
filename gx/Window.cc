@@ -4,7 +4,7 @@
 //
 
 #include "Window.hh"
-#include "WindowGLFWImpl.hh"
+#include "WindowImpl.hh"
 #include "EventState.hh"
 #include "Time.hh"
 #include "Assert.hh"

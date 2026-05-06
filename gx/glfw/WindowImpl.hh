@@ -1,5 +1,5 @@
 //
-// gx/WindowGLFWImpl.hh
+// gx/glfw/WindowImpl.hh
 // Copyright (C) 2026 Richard Bradley
 //
 // GLFW specific implementation

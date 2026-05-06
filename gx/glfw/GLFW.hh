@@ -1,6 +1,6 @@
 //
-// gx/GLFW.hh
-// Copyright (C) 2025 Richard Bradley
+// gx/glfw/GLFW.hh
+// Copyright (C) 2026 Richard Bradley
 //
 // GLFW library init & support functions
 //
