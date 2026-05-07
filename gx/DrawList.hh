@@ -21,6 +21,20 @@ namespace gx {
   struct Vertex3C { float x, y, z; uint32_t c; };
   struct Vertex3T { float x, y, z, s, t; };
   struct Vertex3TC { float x, y, z, s, t; uint32_t c; };
+
+  class Value {
+   public:
+    union {
+      int32_t  ival;
+      uint32_t uval;
+      float    fval;
+    };
+
+    Value(int32_t i) : ival{i} { }
+    Value(uint32_t u) : uval{u} { }
+    Value(float f) : fval{f} { }
+  };
+  static_assert(sizeof(Value) == 4);
 }
 
 class gx::DrawList

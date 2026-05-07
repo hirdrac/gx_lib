@@ -40,18 +40,4 @@ namespace gx {
 
     [[nodiscard]] bool operator==(const Rect&) const = default;
   };
-
-  class Value {
-   public:
-    union {
-      int32_t  ival;
-      uint32_t uval;
-      float    fval;
-    };
-
-    Value(int32_t i) : ival{i} { }
-    Value(uint32_t u) : uval{u} { }
-    Value(float f) : fval{f} { }
-  };
-  static_assert(sizeof(Value) == 4);
 }
