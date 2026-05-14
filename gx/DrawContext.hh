@@ -169,18 +169,15 @@ class gx::DrawContext
 
   // Text drawing
   //   textFixedColor() functions ignore meta tag color changes
-  void text(const TextFormat& tf, Vec2 pos, Align align,
-            std::string_view text) {
-    _text(tf, pos, align, text, nullptr, false); }
-  void text(const TextFormat& tf, Vec2 pos, Align align,
-            std::string_view text, const Rect& clip) {
-    _text(tf, pos, align, text, &clip, false); }
-  void textFixedColor(const TextFormat& tf, Vec2 pos, Align align,
-                      std::string_view text) {
-    _text(tf, pos, align, text, nullptr, true); }
-  void textFixedColor(const TextFormat& tf, Vec2 pos, Align align,
-                      std::string_view text, const Rect& clip) {
-    _text(tf, pos, align, text, &clip, true); }
+  void setTextClip(const Rect& clip) { _clip = clip; _useClip = true; }
+  void clearTextClip() { _useClip = false; }
+
+  void text(
+    const TextFormat& tf, Vec2 pos, Align align, std::string_view text) {
+    _text(tf, pos, align, text, false); }
+  void textFixedColor(
+    const TextFormat& tf, Vec2 pos, Align align, std::string_view text) {
+    _text(tf, pos, align, text, true); }
   void glyph(const TextFormat& tf, Vec2 pos, Align align, int code);
 
   // High-level constructed primitives
@@ -242,6 +239,10 @@ class gx::DrawContext
   enum class ColorMode { solid, hgradient, vgradient };
   ColorMode _colorMode;
 
+  // clipping
+  Rect _clip;
+  bool _useClip;
+
   void init() {
     _lastTexID = 0;
     _lastNormal = 0;
@@ -249,14 +250,14 @@ class gx::DrawContext
     _color1 = 0;
     _dataColor = 0;
     _colorMode = ColorMode::solid;
+    _useClip = false;
   }
 
   void _rectangle(float x, float y, float w, float h);
   void _text(const TextFormat& tf, Vec2 pos, Align align,
-             std::string_view text, const Rect* clipPtr,
-             bool fixedColor);
+             std::string_view text, bool fixedColor);
   void _glyph(const Glyph& g, const TextFormat& tf, Vec2 baseline,
-              const Rect* clipPtr, float altWidth = 0);
+              float altWidth = 0);
   void _circleSector(
     Vec2 center, float radius, float angle0, float angle1, int segments);
   void _arc(Vec2 center, float radius, float angle0, float angle1,

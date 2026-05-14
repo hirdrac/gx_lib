@@ -459,12 +459,12 @@ void DrawContext::glyph(
   }
 
   texture(f.atlas());
-  _glyph(*g, tf, pos, nullptr);
+  _glyph(*g, tf, pos);
 }
 
 void DrawContext::_text(
   const TextFormat& tf, Vec2 pos, Align align, std::string_view text,
-  const Rect* clipPtr, bool fixedColor)
+  bool fixedColor)
 {
   if (text.empty()) { return; }
 
@@ -511,7 +511,7 @@ void DrawContext::_text(
     for (UTF8Iterator itr{line}; itr; ++itr) {
       if (ulOp == UL_end) {
         const Glyph* g = f.findGlyph('_');
-        if (g) { _glyph(*g, tf, ulPos, clipPtr, ulLen - tf.glyphSpacing); }
+        if (g) { _glyph(*g, tf, ulPos, ulLen - tf.glyphSpacing); }
         underline = false;
         ulOp = UL_noop;
       }
@@ -558,7 +558,7 @@ void DrawContext::_text(
       }
 
       const Vec2 p = pos + (tf.advX * (len - offset));
-      if (g->bitmap) { _glyph(*g, tf, p, clipPtr); }
+      if (g->bitmap) { _glyph(*g, tf, p); }
       len += g->advX + tf.glyphSpacing;
 
       if (ulOp == UL_start) {
@@ -574,7 +574,7 @@ void DrawContext::_text(
     // finish end-of-line underline
     if (underline) {
       const Glyph* ulg = f.findGlyph('_');
-      if (ulg) { _glyph(*ulg, tf, ulPos, clipPtr, ulLen - tf.glyphSpacing); }
+      if (ulg) { _glyph(*ulg, tf, ulPos, ulLen - tf.glyphSpacing); }
       underline = false;
       ulOp = (ulOp == UL_end) ? UL_noop : UL_start;
     }
@@ -582,8 +582,7 @@ void DrawContext::_text(
 }
 
 void DrawContext::_glyph(
-  const Glyph& g, const TextFormat& tf, Vec2 baseline,
-  const Rect* clipPtr, float altWidth)
+  const Glyph& g, const TextFormat& tf, Vec2 baseline, float altWidth)
 {
   const Vec2 gx = tf.glyphX * (altWidth > 0 ? altWidth : float(g.width));
   const Vec2 gy = tf.glyphY * float(g.height);
@@ -602,11 +601,11 @@ void DrawContext::_glyph(
   Vec2 Ct{g.t0.x, g.t1.y};
   Vec2 Dt{g.t1.x, g.t1.y};
 
-  if (clipPtr) {
-    const float cx0 = clipPtr->x;
-    const float cy0 = clipPtr->y;
-    const float cx1 = cx0 + clipPtr->w;
-    const float cy1 = cy0 + clipPtr->h;
+  if (_useClip) {
+    const float cx0 = _clip.x;
+    const float cy0 = _clip.y;
+    const float cx1 = cx0 + _clip.w;
+    const float cy1 = cy0 + _clip.h;
 
     // discard check
     if (max4(A.x, B.x, C.x, D.x) <= cx0
