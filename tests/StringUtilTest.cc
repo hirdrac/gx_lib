@@ -58,6 +58,21 @@ void test_trimSpaces()
   static_assert(trimSpaces("  TEST 4  ") == "TEST 4");
 }
 
+void test_lineCount()
+{
+  assert(lineCount("") == 0);
+  assert(lineCount("\n") == 1);
+  assert(lineCount("line 1") == 1);
+  assert(lineCount("line 1\n") == 1);
+  assert(lineCount("\n\n") == 2);
+  assert(lineCount("line 1\n\n") == 2);
+  assert(lineCount("line 1\n\nline 3") == 3);
+
+  //int lines = 0;
+  //for (LineIterator itr{"\n\n"}; itr; ++itr) { ++lines; }
+  //assert(lines == 2);
+}
+
 void test_LineIterator()
 {
   LineIterator itr{"line 1\n\nline 3"};
@@ -71,6 +86,7 @@ int main(int argc, char** argv)
 {
   test_formatInt();
   test_trimSpaces();
+  test_lineCount();
   test_LineIterator();
   return 0;
 }

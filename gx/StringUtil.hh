@@ -136,6 +136,16 @@ namespace gx
     return s;
   }
 
+  [[nodiscard]] constexpr int lineCount(std::string_view sv)
+  {
+    // logic handling trailing newlines matches LineIterator below
+    if (sv.empty()) { return 0; }
+    if (sv.back() == '\n') { sv.remove_suffix(1); }
+    int lines = 1;
+    for (int ch : sv) { lines += (ch == '\n'); }
+    return lines;
+  }
+
   class LineIterator;
 }
 
