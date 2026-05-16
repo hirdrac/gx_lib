@@ -445,11 +445,9 @@ void DrawContext::glyph(
   if (v_align == Align::top) {
     pos += tf.advY * f.ymax();
   } else if (v_align == Align::bottom) {
-    const float lh = float(f.size()) + tf.lineSpacing;
-    pos += tf.advY * (f.ymin() - lh);
+    pos += tf.advY * f.ymin();
   } else if (v_align == Align::vcenter) {
-    const float lh = float(f.size()) + tf.lineSpacing;
-    pos += tf.advY * ((f.ymax() - lh) * .5f);
+    pos += tf.advY * (f.ymax() * .5f);
   } // otherwise, pos is baseline
 
   const Align h_align = hAlign(align);
@@ -477,13 +475,9 @@ void DrawContext::_text(
   if (v_align == Align::top) {
     pos += tf.advY * f.ymax();
   } else if (v_align == Align::bottom) {
-    int nl = 0;
-    for (int ch : text) { nl += (ch == '\n'); }
-    pos += tf.advY * (f.ymin() - (lh*float(nl)));
+    pos += tf.advY * (f.ymin() - (lh * float(lineCount(text) - 1)));
   } else if (v_align == Align::vcenter) {
-    int nl = 0;
-    for (int ch : text) { nl += (ch == '\n'); }
-    pos += tf.advY * ((f.ymax() - (lh*float(nl))) * .5f);
+    pos += tf.advY * ((f.ymax() - (lh * float(lineCount(text) - 1))) * .5f);
   } // otherwise, pos is baseline of 1st line
 
   texture(f.atlas());
