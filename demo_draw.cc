@@ -15,6 +15,7 @@
 #include "gx/StringUtil.hh"
 
 using gx::println_err;
+using gx::Vec2;
 
 
 // **** Constants ****
@@ -220,6 +221,60 @@ void draw_text1(gx::DrawContext& dc, float x, float y)
   }
 }
 
+void draw_text2(gx::DrawContext& dc, float x, float y)
+{
+  float cx = x + (ITEM_WIDTH / 2);
+  float cy = y + (ITEM_HEIGHT / 2);
+
+  dc.color(BLACK);
+  dc.rectangle({x+4, y+24, ITEM_WIDTH-8, ITEM_HEIGHT-24});
+  dc.color(WHITE);
+  dc.line(Vec2{x+4, cy}, Vec2{x+ITEM_WIDTH-8, cy});
+  dc.line(Vec2{cx, y+24}, Vec2{cx, y+ITEM_HEIGHT});
+
+  gx::TextFormat tf{.font = &TheFont};
+  tf.scale(2.0f);
+  dc.color(RED);
+  dc.text(tf, {cx,cy}, gx::Align::top_left, "ABC\nDEF");
+  //dc.glyph(tf, {cx,cy}, gx::Align::top_left, 'A');
+}
+
+void draw_text3(gx::DrawContext& dc, float x, float y)
+{
+  float cx = x + (ITEM_WIDTH / 2);
+  float cy = y + (ITEM_HEIGHT / 2);
+
+  dc.color(BLACK);
+  dc.rectangle({x+4, y+24, ITEM_WIDTH-8, ITEM_HEIGHT-24});
+  dc.color(WHITE);
+  dc.line(Vec2{x+4, cy}, Vec2{x+ITEM_WIDTH-8, cy});
+  dc.line(Vec2{cx, y+24}, Vec2{cx, y+ITEM_HEIGHT});
+
+  gx::TextFormat tf{.font = &TheFont};
+  tf.scale(2.0f);
+  dc.color(RED);
+  dc.text(tf, {cx,cy}, gx::Align::center, "ABC\nDEF");
+  //dc.glyph(tf, {cx,cy}, gx::Align::center, 'A');
+}
+
+void draw_text4(gx::DrawContext& dc, float x, float y)
+{
+  float cx = x + (ITEM_WIDTH / 2);
+  float cy = y + (ITEM_HEIGHT / 2);
+
+  dc.color(BLACK);
+  dc.rectangle({x+4, y+24, ITEM_WIDTH-8, ITEM_HEIGHT-24});
+  dc.color(WHITE);
+  dc.line(Vec2{x+4, cy}, Vec2{x+ITEM_WIDTH-8, cy});
+  dc.line(Vec2{cx, y+24}, Vec2{cx, y+ITEM_HEIGHT});
+
+  gx::TextFormat tf{.font = &TheFont};
+  tf.scale(2.0f);
+  dc.color(RED);
+  dc.text(tf, {cx,cy}, gx::Align::bottom_right, "ABC\nDEF");
+  //dc.glyph(tf, {cx,cy}, gx::Align::bottom_right, 'A');
+}
+
 
 struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   gfxData[] = {
@@ -251,6 +306,9 @@ struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
   {"Lines", draw_lines1},
   {"Colored Lines", draw_lines2},
   {"Scaled/Rotated Text", draw_text1},
+  {"Text Alignment Top/Left", draw_text2},
+  {"Text Alignment Center", draw_text3},
+  {"Text Alignment Bottom/Right", draw_text4},
 };
 
 
