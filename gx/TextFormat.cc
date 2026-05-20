@@ -20,6 +20,7 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
 
   TextMetaState ts;
   float maxWidth = 0, height = -lineSpacing;
+  const float lh = float(font->size()) + lineSpacing;
 
   for (LineIterator lineItr{text}; lineItr; ++lineItr) {
     const auto line = *lineItr;
@@ -56,7 +57,7 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
     }
 
     maxWidth = std::max(maxWidth, width - glyphSpacing);
-    height += float(font->size()) + lineSpacing;
+    height += lh;
   }
 
   return {maxWidth, std::max(height, 0.0f)};

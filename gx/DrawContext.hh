@@ -28,9 +28,7 @@ namespace gx {
 class gx::DrawContext
 {
  public:
-  DrawContext(std::nullptr_t) = delete;
-  explicit DrawContext(DrawList* dl);
-  explicit DrawContext(DrawList& dl) : DrawContext{&dl} { }
+  explicit DrawContext(DrawList& dl) : _dl{&dl} { init(); }
 
   // Low-level data entry
   void clearList() { init(); _dl->clear(); }
@@ -172,13 +170,8 @@ class gx::DrawContext
   void setTextClip(const Rect& clip) { _clip = clip; _useClip = true; }
   void clearTextClip() { _useClip = false; }
 
-  void text(
-    const TextFormat& tf, Vec2 pos, Align align, std::string_view text) {
-    _text(tf, pos, align, text, false); }
-  void textFixedColor(
-    const TextFormat& tf, Vec2 pos, Align align, std::string_view text) {
-    _text(tf, pos, align, text, true); }
   void glyph(const TextFormat& tf, Vec2 pos, Align align, int code);
+  void text(const TextFormat& tf, Vec2 pos, Align align, std::string_view text);
 
   // High-level constructed primitives
   void circleSector(
@@ -254,8 +247,6 @@ class gx::DrawContext
   }
 
   void _rectangle(float x, float y, float w, float h);
-  void _text(const TextFormat& tf, Vec2 pos, Align align,
-             std::string_view text, bool fixedColor);
   void _glyph(const Glyph& g, const TextFormat& tf, Vec2 baseline,
               float altWidth = 0);
   void _circleSector(

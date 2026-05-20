@@ -1,6 +1,6 @@
 //
 // gx/TextFormat.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // Text rendering attributes
 //
@@ -17,16 +17,17 @@ namespace gx {
 struct gx::TextFormat
 {
   const Font* font = nullptr;
-  float lineSpacing = 0;  // extra spacing between lines
-  float glyphSpacing = 0; // extra spacing between glyphs
-  float tabWidth = 0;     // pixel width of tabs
-  Vec2 advX{1,0};         // dir of next glyph
-  Vec2 advY{0,1};         // dir of next line
-  Vec2 glyphX{1,0};       // glyph quad sides
+  float lineSpacing = 0;    // extra spacing between lines
+  float glyphSpacing = 0;   // extra spacing between glyphs
+  float tabWidth = 0;       // pixel width of tabs
+  Vec2 advX{1,0};           // dir of next glyph
+  Vec2 advY{0,1};           // dir of next line
+  Vec2 glyphX{1,0};         // glyph quad sides
   Vec2 glyphY{0,1};
 
-  int32_t startTag = '<'; // meta-tag start char (set to '\0' to disable tags)
-  int32_t endTag = '>';   // meta-tag end char
+  int32_t startTag = '<';   // meta-tag start char (set to '\0' to disable tags)
+  int32_t endTag = '>';     // meta-tag end char
+  bool ignoreColor = false; // ignore color meta-tags for drawing
 
   // transforms
   void scaleX(float s) { advX *= s; glyphX *= s; }

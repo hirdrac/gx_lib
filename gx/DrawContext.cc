@@ -64,13 +64,6 @@ namespace {
 }
 
 
-DrawContext::DrawContext(DrawList* dl) : _dl{dl}
-{
-  GX_ASSERT(_dl != nullptr);
-  init();
-}
-
-
 void DrawContext::hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1)
 {
   _colorMode = ColorMode::hgradient;
@@ -460,9 +453,8 @@ void DrawContext::glyph(
   _glyph(*g, tf, pos);
 }
 
-void DrawContext::_text(
-  const TextFormat& tf, Vec2 pos, Align align, std::string_view text,
-  bool fixedColor)
+void DrawContext::text(
+  const TextFormat& tf, Vec2 pos, Align align, std::string_view text)
 {
   if (text.empty()) { return; }
 
@@ -519,7 +511,7 @@ void DrawContext::_text(
           const auto tagType = ts.parseTag(tag);
           if (tagType != TAG_unknown) {
             if (tagType == TAG_color) {
-              if (!fixedColor) {
+              if (!tf.ignoreColor) {
                 // TODO: support restoring gradients
                 color((ts.colorCount() > 0) ? ts.color() : initColor);
                 setColor();
