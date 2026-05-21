@@ -308,7 +308,7 @@ void DrawContext::quad(
 
 void DrawContext::rectangle(const Rect& r)
 {
-  if (checkColor()) { _rectangle(r.x, r.y, r.w, r.h); }
+  if (r && checkColor()) { _rectangle(r.x, r.y, r.w, r.h); }
 }
 
 void DrawContext::_rectangle(float x, float y, float w, float h)
@@ -336,7 +336,7 @@ void DrawContext::_rectangle(float x, float y, float w, float h)
 
 void DrawContext::rectangle(const Rect& r, Vec2 t0, Vec2 t1)
 {
-  if ((_color0 | _color1) == 0) { return; }
+  if (!r || (_color0 | _color1) == 0) { return; }
 
   const float x0 = r.x;
   const float y0 = r.y;
@@ -371,7 +371,7 @@ void DrawContext::rectangle(const Rect& r, Vec2 t0, Vec2 t1)
 void DrawContext::rectangle(
   const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip)
 {
-  if ((_color0 | _color1) == 0) { return; }
+  if (!r || (_color0 | _color1) == 0) { return; }
 
   float x0 = r.x;
   float y0 = r.y;
@@ -883,7 +883,7 @@ void DrawContext::arcShaded(
 void DrawContext::roundedRectangle(
   const Rect& r, float curveRadius, int curveSegments)
 {
-  if (!checkColor()) { return; }
+  if (!r || !checkColor()) { return; }
 
   const auto [x,y,w,h] = r;
   const float half_w = w * .5f;
@@ -921,7 +921,7 @@ void DrawContext::roundedRectangle(
 
 void DrawContext::border(const Rect& r, float borderWidth)
 {
-  if ((_color0 | _color1) == 0) { return; }
+  if (!r || (_color0 | _color1) == 0) { return; }
 
   const auto [x,y,w,h] = r;
   const Vec2 A{x,y};
@@ -962,7 +962,7 @@ void DrawContext::borderShaded(
   const Rect& r, float borderWidth,
   RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
-  if ((innerColor | outerColor | fillColor) == 0) { return; }
+  if (!r || (innerColor | outerColor | fillColor) == 0) { return; }
 
   float x0 = r.x, y0 = r.y, x1 = r.x+r.w, y1 = r.y+r.h;
   const Vertex2C v_A{x0, y0, outerColor};
@@ -996,7 +996,7 @@ void DrawContext::borderShaded(
 void DrawContext::roundedBorder(
   const Rect& r, float curveRadius, int curveSegments, float borderWidth)
 {
-  if (!checkColor()) { return; }
+  if (!r || !checkColor()) { return; }
 
   const auto [x,y,w,h] = r;
   const float half_w = w * .5f;
@@ -1039,7 +1039,7 @@ void DrawContext::roundedBorderShaded(
   const Rect& r, float curveRadius, int curveSegments, float borderWidth,
   RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
-  if ((innerColor | outerColor | fillColor) == 0) { return; }
+  if (!r || (innerColor | outerColor | fillColor) == 0) { return; }
 
   const auto [x,y,w,h] = r;
   const float half_w = w * .5f;
