@@ -9,11 +9,9 @@
 #pragma once
 #include "Types.hh"
 #include <utility>
-#include <cstdint>
 
 
 namespace gx {
-  class Renderer;
   class WindowImpl;
 
 
