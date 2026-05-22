@@ -17,13 +17,10 @@
 #include "Normal.hh"
 #include "Align.hh"
 #include "Style.hh"
+#include "Rect.hh"
 #include "Types.hh"
 #include <string_view>
 
-
-namespace gx {
-  class DrawContext;
-}
 
 class gx::DrawContext
 {

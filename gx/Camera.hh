@@ -4,12 +4,11 @@
 //
 
 #pragma once
+#include "Rect.hh"
 #include "Types.hh"
 
 
 namespace gx {
-  class Camera;
-
   // enumerations
   enum CoordSystemType { LEFT_HANDED, RIGHT_HANDED };
     // LEFT_HANDED   RIGHT_HANDED

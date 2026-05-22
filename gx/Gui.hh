@@ -10,6 +10,7 @@
 #include "GuiTheme.hh"
 #include "DrawList.hh"
 #include "Align.hh"
+#include "Rect.hh"
 #include "Types.hh"
 #include <string>
 #include <string_view>
