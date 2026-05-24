@@ -20,6 +20,17 @@ struct gx::Rect
   [[nodiscard]] constexpr bool contains(Vec2 pt) const {
     return (pt.x >= x) && (pt.x < (x+w)) && (pt.y >= y) && (pt.y < (y+h)); }
 
+  [[nodiscard]] constexpr float lEdge() const { return x; }
+  [[nodiscard]] constexpr float rEdge() const { return x + w; }
+  [[nodiscard]] constexpr float tEdge() const { return y; }
+  [[nodiscard]] constexpr float bEdge() const { return y + h; }
+
+  [[nodiscard]] constexpr float centerX() const { return x + (w * .5f); }
+  [[nodiscard]] constexpr float centerY() const { return y + (h * .5f); }
+
+  [[nodiscard]] constexpr Vec2 centerPt() const {
+    return {centerX(), centerY()}; }
+
   [[nodiscard]] float alignX(Align align) const {
     switch (hAlign(align)) {
       case Align::left:      return x;
@@ -58,7 +69,7 @@ struct gx::Rect
   [[nodiscard]] Rect alignRect(Align align, float rw, float rh) const {
     return {alignX(align, rw), alignY(align, rh), rw, rh}; }
 
-  [[nodiscard]] Rect clip(const Rect& r) const {
+  [[nodiscard]] constexpr Rect clip(const Rect& r) const {
     const float x0 = std::max(x, r.x);
     const float x1 = std::min(x + w, r.x + r.w);
     const float y0 = std::max(y, r.y);
