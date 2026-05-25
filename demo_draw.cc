@@ -36,156 +36,157 @@ gx::Font TheFont{FONT_SIZE};
 
 
 // **** Draw Functions ****
-void draw_circle1(gx::DrawContext& dc, float x, float y)
+void draw_circle1(gx::DrawContext& dc, const gx::Rect& r)
 {
   dc.color(GRAY50);
-  dc.circle({x + 200, y + 180}, 150, 16);
+  dc.circle(r.centerPt(), 150, 16);
 }
 
-void draw_circle2(gx::DrawContext& dc, float x, float y)
+void draw_circle2(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.hgradient(x+50, BLACK, x+350, WHITE);
-  dc.circle({x + 200, y + 180}, 150, 32);
+  dc.hgradient(r.x+50, BLACK, r.x+350, WHITE);
+  dc.circle(r.centerPt(), 150, 32);
 }
 
-void draw_circle3(gx::DrawContext& dc, float x, float y)
+void draw_circle3(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.vgradient(y+20, BLACK, y+330, WHITE);
-  dc.circle({x + 200, y + 180}, 150, 32);
+  dc.vgradient(r.y+20, BLACK, r.y+330, WHITE);
+  dc.circle(r.centerPt(), 150, 32);
 }
 
-void draw_circle4(gx::DrawContext& dc, float x, float y)
+void draw_circle4(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.circleShaded({x + 200, y + 180}, 150, 32, RED, WHITE);
+  dc.circleShaded(r.centerPt(), 150, 32, RED, WHITE);
 }
 
-void draw_circle5(gx::DrawContext& dc, float x, float y)
-{
-  dc.color(GRAY50);
-  dc.circleSector({x + 200, y + 180}, 150, 20, 270, 16);
-}
-
-void draw_circle6(gx::DrawContext& dc, float x, float y)
-{
-  dc.circleSectorShaded({x + 200, y + 180}, 150, 20, 270, 32, BLACK, WHITE);
-}
-
-void draw_rrect1(gx::DrawContext& dc, float x, float y)
+void draw_circle5(gx::DrawContext& dc, const gx::Rect& r)
 {
   dc.color(GRAY50);
-  dc.roundedRectangle({x+20, y+30, 360, 300}, 60, 4);
+  dc.circleSector(r.centerPt(), 150, 20, 270, 16);
 }
 
-void draw_rrect2(gx::DrawContext& dc, float x, float y)
+void draw_circle6(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.hgradient(x+20, WHITE, x+380, BLACK);
-  dc.roundedRectangle({x+20, y+30, 360, 300}, 60, 4);
+  dc.circleSectorShaded(r.centerPt(), 150, 20, 270, 32, BLACK, WHITE);
 }
 
-void draw_rrect3(gx::DrawContext& dc, float x, float y)
-{
-  dc.vgradient(y+30, WHITE, y+330, BLACK);
-  dc.roundedRectangle({x+20, y+30, 360, 300}, 60, 4);
-}
-
-void draw_rrect4(gx::DrawContext& dc, float x, float y)
-{
-  dc.color(WHITE);
-  dc.roundedRectangle({x+150, y+30, 100, 300}, 60, 4);
-}
-
-void draw_rrect5(gx::DrawContext& dc, float x, float y)
-{
-  dc.color(WHITE);
-  dc.roundedRectangle({x+20, y+130, 360, 100}, 60, 4);
-}
-
-void draw_rrect6(gx::DrawContext& dc, float x, float y)
-{
-  dc.color(WHITE);
-  dc.roundedRectangle({x+150, y+130, 100, 100}, 60, 4);
-}
-
-void draw_arc1(gx::DrawContext& dc, float x, float y)
-{
-  dc.color(WHITE);
-  dc.arc({x + 200, y + 180}, 150, 0, 0, 32, 1);
-}
-
-void draw_arc2(gx::DrawContext& dc, float x, float y)
-{
-  dc.color(WHITE);
-  dc.arc({x + 200, y + 180}, 150, 20, 270, 32, 16);
-}
-
-void draw_arc3(gx::DrawContext& dc, float x, float y)
-{
-  dc.arcShaded({x + 200, y + 180}, 150, 20, 270, 32, 32, BLACK, WHITE);
-}
-
-void draw_border1(gx::DrawContext& dc, float x, float y)
+void draw_rrect1(gx::DrawContext& dc, const gx::Rect& r)
 {
   dc.color(GRAY50);
-  dc.border({x+20, y+30, 360, 300}, 4.0f);
+  dc.roundedRectangle({r.x+20, r.y+30, 360, 300}, 60, 4);
 }
 
-void draw_border2(gx::DrawContext& dc, float x, float y)
+void draw_rrect2(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.hgradient(x+20, BLACK, x+380, WHITE);
-  dc.border({x+20, y+30, 360, 300}, 8.0f);
+  dc.hgradient(r.x+20, WHITE, r.x+380, BLACK);
+  dc.roundedRectangle({r.x+20, r.y+30, 360, 300}, 60, 4);
 }
 
-void draw_border3(gx::DrawContext& dc, float x, float y)
+void draw_rrect3(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.vgradient(y+30, BLACK, y+330, WHITE);
-  dc.border({x+20, y+30, 360, 300}, 8.0f);
+  dc.vgradient(r.y+30, WHITE, r.y+330, BLACK);
+  dc.roundedRectangle({r.x+20, r.y+30, 360, 300}, 60, 4);
 }
 
-void draw_border4(gx::DrawContext& dc, float x, float y)
+void draw_rrect4(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.borderShaded(
-    {x+20, y+30, 360, 300}, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
+  dc.color(WHITE);
+  dc.roundedRectangle({r.x+150, r.y+30, 100, 300}, 60, 4);
 }
 
-void draw_border5(gx::DrawContext& dc, float x, float y)
+void draw_rrect5(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.borderShaded(
-    {x+20, y+30, 360, 300}, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
+  dc.color(WHITE);
+  dc.roundedRectangle({r.x+20, r.y+130, 360, 100}, 60, 4);
 }
 
-void draw_rborder1(gx::DrawContext& dc, float x, float y)
+void draw_rrect6(gx::DrawContext& dc, const gx::Rect& r)
+{
+  dc.color(WHITE);
+  dc.roundedRectangle({r.x+150, r.y+130, 100, 100}, 60, 4);
+}
+
+void draw_arc1(gx::DrawContext& dc, const gx::Rect& r)
+{
+  dc.color(WHITE);
+  dc.arc({r.x + 200, r.y + 180}, 150, 0, 0, 32, 1);
+}
+
+void draw_arc2(gx::DrawContext& dc, const gx::Rect& r)
+{
+  dc.color(WHITE);
+  dc.arc({r.x + 200, r.y + 180}, 150, 20, 270, 32, 16);
+}
+
+void draw_arc3(gx::DrawContext& dc, const gx::Rect& r)
+{
+  dc.arcShaded({r.x + 200, r.y + 180}, 150, 20, 270, 32, 32, BLACK, WHITE);
+}
+
+void draw_border1(gx::DrawContext& dc, const gx::Rect& r)
 {
   dc.color(GRAY50);
-  dc.roundedBorder({x+20, y+30, 360, 300}, 40, 4, 4.0f);
+  dc.border({r.x + 20, r.y + 30, 360, 300}, 4.0f);
 }
 
-void draw_rborder2(gx::DrawContext& dc, float x, float y)
+void draw_border2(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.hgradient(x+20, WHITE, x+380, BLACK);
-  dc.roundedBorder({x+20, y+30, 360, 300}, 40, 4, 8.0f);
+  dc.hgradient(r.x + 20, BLACK, r.x + 380, WHITE);
+  dc.border({r.x + 20, r.y + 30, 360, 300}, 8.0f);
 }
 
-void draw_rborder3(gx::DrawContext& dc, float x, float y)
+void draw_border3(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.vgradient(y+30, WHITE, y+330, BLACK);
-  dc.roundedBorder({x+20, y+30, 360, 300}, 40, 4, 8.0f);
+  dc.vgradient(r.y + 30, BLACK, r.y + 330, WHITE);
+  dc.border({r.x + 20, r.y + 30, 360, 300}, 8.0f);
 }
 
-void draw_rborder4(gx::DrawContext& dc, float x, float y)
+void draw_border4(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.roundedBorderShaded(
-    {x+20, y+30, 360, 300}, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
+  dc.borderShaded({r.x + 20, r.y + 30, 360, 300},
+                  32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
 }
 
-void draw_rborder5(gx::DrawContext& dc, float x, float y)
+void draw_border5(gx::DrawContext& dc, const gx::Rect& r)
 {
-  dc.roundedBorderShaded(
-    {x+20, y+30, 360, 300}, 48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
+  dc.borderShaded({r.x + 20, r.y + 30, 360, 300},
+                  32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
 }
 
-void draw_lines1(gx::DrawContext& dc, float x, float y)
+void draw_rborder1(gx::DrawContext& dc, const gx::Rect& r)
 {
-  x += .5f; y += .5f;
+  dc.color(GRAY50);
+  dc.roundedBorder({r.x + 20, r.y + 30, 360, 300}, 40, 4, 4.0f);
+}
+
+void draw_rborder2(gx::DrawContext& dc, const gx::Rect& r)
+{
+  dc.hgradient(r.x + 20, WHITE, r.x + 380, BLACK);
+  dc.roundedBorder({r.x + 20, r.y + 30, 360, 300}, 40, 4, 8.0f);
+}
+
+void draw_rborder3(gx::DrawContext& dc, const gx::Rect& r)
+{
+  dc.vgradient(r.y + 30, WHITE, r.y + 330, BLACK);
+  dc.roundedBorder({r.x + 20, r.y + 30, 360, 300}, 40, 4, 8.0f);
+}
+
+void draw_rborder4(gx::DrawContext& dc, const gx::Rect& r)
+{
+  dc.roundedBorderShaded({r.x + 20, r.y + 30, 360, 300},
+                         48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), 0);
+}
+
+void draw_rborder5(gx::DrawContext& dc, const gx::Rect& r)
+{
+  dc.roundedBorderShaded({r.x + 20, r.y + 30, 360, 300},
+                         48, 4, 32.0f, WHITE, gx::packRGBA8(1,1,1,0), RED);
+}
+
+void draw_lines1(gx::DrawContext& dc, const gx::Rect& r)
+{
+  const float x = r.x + .5f;
+  const float y = r.y + .5f;
   const gx::Vec2 origin{x+20,y+30};
 
   dc.color(WHITE);
@@ -197,9 +198,10 @@ void draw_lines1(gx::DrawContext& dc, float x, float y)
   dc.line(origin, gx::Vec2{x+20,y+329});
 }
 
-void draw_lines2(gx::DrawContext& dc, float x, float y)
+void draw_lines2(gx::DrawContext& dc, const gx::Rect& r)
 {
-  x += .5f; y += .5f;
+  const float x = r.x + .5f;
+  const float y = r.y + .5f;
   const gx::Vertex2C origin{x+20,y+30,RED};
 
   dc.line(origin, gx::Vertex2C{x+379,y+30,WHITE});
@@ -209,28 +211,28 @@ void draw_lines2(gx::DrawContext& dc, float x, float y)
   dc.line(origin, gx::Vertex2C{x+20,y+329,WHITE});
 }
 
-void draw_text1(gx::DrawContext& dc, float x, float y)
+void draw_text1(gx::DrawContext& dc, const gx::Rect& r)
 {
   gx::TextFormat tf{.font = &TheFont};
   tf.scale(2.0f);
   dc.color(WHITE);
 
   for (int i = 0; i < 5; ++i) {
-    dc.text(tf, {x+60, y+55}, gx::Align::center_left, "  abc ABC 123");
+    dc.text(tf, {r.x+60, r.y+55}, gx::Align::center_left, "  abc ABC 123");
     tf.rotate(gx::degToRad(22.5f));
   }
 }
 
-void draw_text2(gx::DrawContext& dc, float x, float y)
+void draw_text2(gx::DrawContext& dc, const gx::Rect& r)
 {
-  float cx = x + (ITEM_WIDTH / 2);
-  float cy = y + (ITEM_HEIGHT / 2);
+  const float cx = r.centerX();
+  const float cy = r.centerY();
 
   dc.color(BLACK);
-  dc.rectangle({x+4, y+24, ITEM_WIDTH-8, ITEM_HEIGHT-24});
+  dc.rectangle({r.x+4, r.y+24, r.w-8, r.h-24});
   dc.color(WHITE);
-  dc.line(Vec2{x+4, cy}, Vec2{x+ITEM_WIDTH-8, cy});
-  dc.line(Vec2{cx, y+24}, Vec2{cx, y+ITEM_HEIGHT});
+  dc.line(Vec2{r.x+4, cy}, Vec2{r.x+r.w-8, cy});
+  dc.line(Vec2{cx, r.y+24}, Vec2{cx, r.y+r.h});
 
   gx::TextFormat tf{.font = &TheFont};
   tf.scale(2.0f);
@@ -239,16 +241,16 @@ void draw_text2(gx::DrawContext& dc, float x, float y)
   //dc.glyph(tf, {cx,cy}, gx::Align::top_left, 'A');
 }
 
-void draw_text3(gx::DrawContext& dc, float x, float y)
+void draw_text3(gx::DrawContext& dc, const gx::Rect& r)
 {
-  float cx = x + (ITEM_WIDTH / 2);
-  float cy = y + (ITEM_HEIGHT / 2);
+  const float cx = r.centerX();
+  const float cy = r.centerY();
 
   dc.color(BLACK);
-  dc.rectangle({x+4, y+24, ITEM_WIDTH-8, ITEM_HEIGHT-24});
+  dc.rectangle({r.x+4, r.y+24, r.w-8, r.h-24});
   dc.color(WHITE);
-  dc.line(Vec2{x+4, cy}, Vec2{x+ITEM_WIDTH-8, cy});
-  dc.line(Vec2{cx, y+24}, Vec2{cx, y+ITEM_HEIGHT});
+  dc.line(Vec2{r.x+4, cy}, Vec2{r.x+r.w-8, cy});
+  dc.line(Vec2{cx, r.y+24}, Vec2{cx, r.y+r.h});
 
   gx::TextFormat tf{.font = &TheFont};
   tf.scale(2.0f);
@@ -257,16 +259,16 @@ void draw_text3(gx::DrawContext& dc, float x, float y)
   //dc.glyph(tf, {cx,cy}, gx::Align::center, 'A');
 }
 
-void draw_text4(gx::DrawContext& dc, float x, float y)
+void draw_text4(gx::DrawContext& dc, const gx::Rect& r)
 {
-  float cx = x + (ITEM_WIDTH / 2);
-  float cy = y + (ITEM_HEIGHT / 2);
+  const float cx = r.centerX();
+  const float cy = r.centerY();
 
   dc.color(BLACK);
-  dc.rectangle({x+4, y+24, ITEM_WIDTH-8, ITEM_HEIGHT-24});
+  dc.rectangle({r.x+4, r.y+24, r.w-8, r.h-24});
   dc.color(WHITE);
-  dc.line(Vec2{x+4, cy}, Vec2{x+ITEM_WIDTH-8, cy});
-  dc.line(Vec2{cx, y+24}, Vec2{cx, y+ITEM_HEIGHT});
+  dc.line(Vec2{r.x+4, cy}, Vec2{r.x+r.w-8, cy});
+  dc.line(Vec2{cx, r.y+24}, Vec2{cx, r.y+r.h});
 
   gx::TextFormat tf{.font = &TheFont};
   tf.scale(2.0f);
@@ -276,7 +278,7 @@ void draw_text4(gx::DrawContext& dc, float x, float y)
 }
 
 
-struct { const char* desc; void(*fn)(gx::DrawContext&,float,float); }
+struct { const char* desc; void(*fn)(gx::DrawContext&,const gx::Rect&); }
   gfxData[] = {
   {"Circle", draw_circle1},
   {"HGradient Circle", draw_circle2},
@@ -397,7 +399,7 @@ int main(int argc, char** argv)
       // draw function & text split to reduce draw calls
       float x = 0, y = 0;
       for (int i = start_gfx; i < end_gfx; ++i) {
-        gfxData[i].fn(dc, x, y);
+        gfxData[i].fn(dc, gx::Rect{x, y, ITEM_WIDTH, ITEM_HEIGHT});
         x += ITEM_WIDTH;
         if (x > float(width - ITEM_WIDTH)) { x = 0; y += ITEM_HEIGHT; }
       }
