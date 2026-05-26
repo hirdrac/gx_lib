@@ -250,11 +250,11 @@ bool WindowImpl::open(int flags)
     }
   }
 
-  const bool decorated = flags & (WINDOW_DECORATED | WINDOW_RESIZABLE);
-  const bool resizable = flags & WINDOW_RESIZABLE;
+  const bool decorated = flags & (Window::decorated | Window::resizable);
+  const bool resizable = flags & Window::resizable;
   const bool doubleBuffer = true;
-  const bool fixedAspectRatio = flags & WINDOW_FIXED_ASPECT_RATIO;
-  const bool debug = flags & WINDOW_DEBUG;
+  const bool fixedAspectRatio = flags & Window::fixedAspectRatio;
+  const bool debug = flags & Window::debug;
 
   // general window hints
   glfwDefaultWindowHints();
@@ -318,11 +318,11 @@ bool WindowImpl::open(int flags)
   glfwSetInputMode(win, GLFW_CURSOR, cursorInputModeVal(_mouseMode));
   glfwSetCursor(win, getCursorInstance(_mouseShape));
   if (resizable) {
-    if (flags & WINDOW_LIMIT_MIN_SIZE) {
+    if (flags & Window::limitMinSize) {
       _minWidth = width;
       _minHeight = height;
     }
-    if (flags & WINDOW_LIMIT_MAX_SIZE) {
+    if (flags & Window::limitMaxSize) {
       _maxWidth = width;
       _maxHeight = height;
     }

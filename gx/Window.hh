@@ -14,26 +14,6 @@
 
 
 namespace gx {
-  // Window Setting Values
-  enum WindowFlagEnum {
-    WINDOW_DECORATED = 1,
-      // use decorations when not fullscreen
-
-    // resizing flags
-    WINDOW_RESIZABLE = 2,
-      // can be resized when not fullscreen (decorated implied)
-    WINDOW_FIXED_ASPECT_RATIO = 4,
-      // set resize aspect ratio based on initial size
-    WINDOW_LIMIT_MIN_SIZE = 8,
-      // use initial size as min resize limit
-    WINDOW_LIMIT_MAX_SIZE = 16,
-      // use initial size as max resize limit
-
-    // context flags
-    WINDOW_DEBUG = 32,
-      // enable OpenGL debug context
-  };
-
   enum class MouseMode {
     normal,  // mouse cursor visible and behaves normally
     hide,    // hides mouse cursor when it is over display window
@@ -58,6 +38,25 @@ namespace gx {
 class gx::Window
 {
  public:
+  enum Flags {
+    decorated = 1,
+      // use decorations when not fullscreen
+
+    // resizing flags
+    resizable = 2,
+      // can be resized when not fullscreen (decorated implied)
+    fixedAspectRatio = 4,
+      // set resize aspect ratio based on initial size
+    limitMinSize = 8,
+      // use initial size as min resize limit
+    limitMaxSize = 16,
+      // use initial size as max resize limit
+
+    // context flags
+    debug = 32,
+      // enable OpenGL debug context
+  };
+
   Window();
   ~Window();
 
@@ -79,7 +78,7 @@ class gx::Window
   void setMousePos(Vec2 pos);
   void setSamples(int samples);
 
-  bool open(int flags = WINDOW_RESIZABLE);
+  bool open(int flags = resizable);
   [[nodiscard]] bool isOpen() const;
   [[nodiscard]] explicit operator bool() const { return isOpen(); }
   void focus();

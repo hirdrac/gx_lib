@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     setWinSize(win, entries[0].img);
   }
 
-  if (!win.open(gx::WINDOW_RESIZABLE | gx::WINDOW_FIXED_ASPECT_RATIO)) {
+  if (!win.open(gx::Window::resizable | gx::Window::fixedAspectRatio)) {
     println_err("Failed to open window");
     return -1;
   }
