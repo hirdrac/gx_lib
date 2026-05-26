@@ -176,11 +176,16 @@ namespace {
   }
 
   // Value iterator reading helper functions
-  int32_t ival(const Value*& ptr) { return (ptr++)->ival; }
-  uint32_t uval(const Value*& ptr) { return (ptr++)->uval; }
-  float fval(const Value*& ptr) { return (ptr++)->fval; }
-  Vec2 fval2(const Value*& ptr) { return {fval(ptr), fval(ptr)}; }
-  Vec3 fval3(const Value*& ptr) { return {fval(ptr), fval(ptr), fval(ptr)}; }
+  [[nodiscard]] int32_t ival(const Value*& ptr) {
+    return (ptr++)->ival; }
+  [[nodiscard]] uint32_t uval(const Value*& ptr) {
+    return (ptr++)->uval; }
+  [[nodiscard]] float fval(const Value*& ptr) {
+    return (ptr++)->fval; }
+  [[nodiscard]] Vec2 fval2(const Value*& ptr) {
+    return {fval(ptr), fval(ptr)}; }
+  [[nodiscard]] Vec3 fval3(const Value*& ptr) {
+    return {fval(ptr), fval(ptr), fval(ptr)}; }
 
   struct Vertex {
     float x, y, z;  // pos
@@ -279,7 +284,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   bool setSubImage(
     TextureID id, int offsetX, int offsetY, const Image& img) override;
   void freeTexture(TextureID id) override;
-  void draw(const DrawList* const* lists, std::size_t count) override;
+  void draw(std::span<const DrawList*> lists) override;
   void renderFrame(int64_t usecTime) override;
 
  private:
@@ -656,15 +661,12 @@ void OpenGLRenderer<VER>::freeTexture(TextureID id)
 }
 
 template<int VER>
-void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
+void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
 {
-  GX_ASSERT(lists != nullptr);
-  const DrawList* const* listsEnd = lists + count;
-
   std::size_t vsize = 0; // vertices needed for all layers
-  for (const DrawList* const* dlPtr = lists; dlPtr != listsEnd; ++dlPtr) {
-    GX_ASSERT(*dlPtr != nullptr);
-    vsize += calcVSize(**dlPtr);
+  for (const DrawList* dlPtr : lists) {
+    GX_ASSERT(dlPtr != nullptr);
+    vsize += calcVSize(*dlPtr);
   }
 
   const std::lock_guard lg{_glMutex};
@@ -694,8 +696,8 @@ void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
   int32_t first = 0;
   int32_t cap = -1;
 
-  for (const DrawList* const* dlPtr = lists; dlPtr != listsEnd; ++dlPtr) {
-    const DrawList& dl = **dlPtr;
+  for (const DrawList* dlPtr : lists) {
+    const DrawList& dl = *dlPtr;
     uint32_t color = 0;
     TextureID tid = 0;
     uint32_t normal = 0;
@@ -1081,9 +1083,7 @@ void OpenGLRenderer<VER>::draw(const DrawList* const* lists, std::size_t count)
 
 #if 0
   std::size_t dsize = 0;
-  for (const DrawList* const* dlPtr = lists; dlPtr != listsEnd; ++dlPtr) {
-    dsize += (*dlPtr)->size();
-  }
+  for (const DrawList* dlPtr : lists) { dsize += dlPtr->size(); }
   println_err("entries:", dsize, "  vertices:", vsize,
               "  opData:", _opData.size());
 #endif

@@ -9,6 +9,7 @@
 #pragma once
 #include "Types.hh"
 #include <utility>
+#include <span>
 
 
 namespace gx {
@@ -101,7 +102,7 @@ class gx::Renderer
     TextureID id, int offsetX, int offsetY, const Image& img) = 0;
 
   // draw methods
-  virtual void draw(const DrawList* const* lists, std::size_t count) = 0;
+  virtual void draw(std::span<const DrawList*> lists) = 0;
   virtual void renderFrame(int64_t usecTime) = 0;
 
   // general accessors
