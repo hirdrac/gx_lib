@@ -1,8 +1,13 @@
 //
 // gx/TextMetaState.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // Text meta tag parsing & tag state handling
+//
+// supported tags:
+//   <color=X></color>  named color or hex color value
+//   <ul></ul>          underline text
+//   <id=X></id>        specify selectable text w/ ID number
 //
 
 #pragma once
@@ -15,6 +20,7 @@ namespace gx {
     TAG_unknown = 0,
     TAG_color = 1,
     TAG_underline = 2,
+    TAG_id = 3,
   };
 
   class TextMetaState;
@@ -53,8 +59,12 @@ class gx::TextMetaState
   TextMetaTagType parseTag(std::string_view tag);
     // returns type of text meta tag & updates state
 
+  [[nodiscard]] uint64_t activeID() const { return _id; }
+    // current value of id tag
+
  private:
   std::array<RGBA8,6> _colorStack;
   uint32_t _colors = 0;
   uint32_t _underline = 0;
+  uint64_t _id = 0;
 };
