@@ -212,7 +212,7 @@ int main(int argc, char** argv)
   int topLine = 0;
 
   gx::DrawList dl;
-  gx::DrawContext dc{dl};
+  gx::DrawContext2D dc{dl};
   const gx::TextFormat tf{
     .font = &fnt,
     .glyphSpacing = float(args.glyphSpacing),

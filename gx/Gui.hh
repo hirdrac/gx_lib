@@ -185,9 +185,9 @@ class gx::Gui
   void initElem(GuiElem& def);
   void deactivatePopups();
   void activatePopup(Panel& p, const GuiElem& def);
-  bool drawElem(Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  bool drawElem(Panel& p, GuiElem& def, DrawContext2D& dc, DrawContext2D& dc2,
                 const Style* style);
-  bool drawPopup(Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2);
+  bool drawPopup(Panel& p, GuiElem& def, DrawContext2D& dc, DrawContext2D& dc2);
 
   [[nodiscard]] std::pair<Panel*,GuiElem*> findElem(ElemID id);
   [[nodiscard]] GuiElem* findEventElem(PanelID pid, EventID eid);

@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
   }
 
   gx::DrawList dl;
-  gx::DrawContext dc{dl};
+  gx::DrawContext2D dc{dl};
   bool redraw = true, running = true;
   constexpr float border = 8.0f;
   setTitle(win, entries[0]);

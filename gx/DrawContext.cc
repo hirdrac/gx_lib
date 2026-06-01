@@ -64,7 +64,8 @@ namespace {
 }
 
 
-void DrawContext::hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1)
+// DrawContext2D class
+void DrawContext2D::hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1)
 {
   _colorMode = ColorMode::hgradient;
   _g0 = x0;
@@ -75,7 +76,7 @@ void DrawContext::hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1)
   _fullcolor1 = unpackRGBA8(c1);
 }
 
-void DrawContext::hgradient(
+void DrawContext2D::hgradient(
   float x0, const Color& c0, float x1, const Color& c1)
 {
   _colorMode = ColorMode::hgradient;
@@ -87,7 +88,7 @@ void DrawContext::hgradient(
   _fullcolor1 = c1;
 }
 
-void DrawContext::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
+void DrawContext2D::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
 {
   _colorMode = ColorMode::vgradient;
   _g0 = y0;
@@ -98,7 +99,7 @@ void DrawContext::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
   _fullcolor1 = unpackRGBA8(c1);
 }
 
-void DrawContext::vgradient(
+void DrawContext2D::vgradient(
   float y0, const Color& c0, float y1, const Color& c1)
 {
   _colorMode = ColorMode::vgradient;
@@ -110,7 +111,7 @@ void DrawContext::vgradient(
   _fullcolor1 = c1;
 }
 
-void DrawContext::changeAlpha(float a)
+void DrawContext2D::changeAlpha(float a)
 {
   const RGBA8 val = RGBA8(std::clamp(a, 0.0f, 1.0f) * 255.0f + .5f) << 24;
   switch (_colorMode) {
@@ -124,7 +125,7 @@ void DrawContext::changeAlpha(float a)
   }
 }
 
-void DrawContext::line(Vec2 a, Vec2 b)
+void DrawContext2D::line(Vec2 a, Vec2 b)
 {
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == ColorMode::solid) {
@@ -136,19 +137,7 @@ void DrawContext::line(Vec2 a, Vec2 b)
   }
 }
 
-void DrawContext::line(const Vec3& a, const Vec3& b)
-{
-  if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == ColorMode::solid) {
-    setColor();
-    _dl->line3(a, b);
-  } else {
-    _dl->line3C({a.x, a.y, a.z, pointColor(a)},
-                {b.x, b.y, b.z, pointColor(b)});
-  }
-}
-
-void DrawContext::lineStart(Vec2 a)
+void DrawContext2D::lineStart(Vec2 a)
 {
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == ColorMode::solid) {
@@ -159,7 +148,7 @@ void DrawContext::lineStart(Vec2 a)
   }
 }
 
-void DrawContext::lineTo(Vec2 a)
+void DrawContext2D::lineTo(Vec2 a)
 {
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == ColorMode::solid) {
@@ -170,29 +159,7 @@ void DrawContext::lineTo(Vec2 a)
   }
 }
 
-void DrawContext::lineStart(const Vec3& a)
-{
-  if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == ColorMode::solid) {
-    setColor();
-    _dl->lineStart3(a);
-  } else {
-    _dl->lineStart3C({a.x, a.y, a.z, pointColor(a)});
-  }
-}
-
-void DrawContext::lineTo(const Vec3& a)
-{
-  if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == ColorMode::solid) {
-    setColor();
-    _dl->lineTo3(a);
-  } else {
-    _dl->lineTo3C({a.x, a.y, a.z, pointColor(a)});
-  }
-}
-
-void DrawContext::triangle(Vec2 a, Vec2 b, Vec2 c)
+void DrawContext2D::triangle(Vec2 a, Vec2 b, Vec2 c)
 {
   if ((_color0 | _color1) == 0) { return; }
   if (_colorMode == ColorMode::solid) {
@@ -205,20 +172,7 @@ void DrawContext::triangle(Vec2 a, Vec2 b, Vec2 c)
   }
 }
 
-void DrawContext::triangle(const Vec3& a, const Vec3& b, const Vec3& c)
-{
-  if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == ColorMode::solid) {
-    setColor();
-    _dl->triangle3(a, b, c);
-  } else {
-    _dl->triangle3C({a.x, a.y, a.z, pointColor(a)},
-                    {b.x, b.y, b.z, pointColor(b)},
-                    {c.x, c.y, c.z, pointColor(c)});
-  }
-}
-
-void DrawContext::triangle(
+void DrawContext2D::triangle(
   const Vertex2T& a, const Vertex2T& b, const Vertex2T& c)
 {
   if ((_color0 | _color1) == 0) { return; }
@@ -232,21 +186,7 @@ void DrawContext::triangle(
   }
 }
 
-void DrawContext::triangle(
-  const Vertex3T& a, const Vertex3T& b, const Vertex3T& c)
-{
-  if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == ColorMode::solid) {
-    setColor();
-    _dl->triangle3T(a, b, c);
-  } else {
-    _dl->triangle3TC({a.x, a.y, a.z, a.s, a.t, pointColor(a)},
-                     {b.x, b.y, b.z, b.s, b.t, pointColor(b)},
-                     {c.x, c.y, c.z, c.s, c.t, pointColor(c)});
-  }
-}
-
-void DrawContext::quad(
+void DrawContext2D::quad(
   const Vec2& a, const Vec2& b, const Vec2& c, const Vec2& d)
 {
   if ((_color0 | _color1) == 0) { return; }
@@ -261,22 +201,7 @@ void DrawContext::quad(
   }
 }
 
-void DrawContext::quad(
-  const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d)
-{
-  if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == ColorMode::solid) {
-    setColor();
-    _dl->quad3(a, b, c, d);
-  } else {
-    _dl->quad3C({a.x, a.y, a.z, pointColor(a)},
-                {b.x, b.y, b.z, pointColor(b)},
-                {c.x, c.y, c.z, pointColor(c)},
-                {d.x, d.y, d.z, pointColor(d)});
-  }
-}
-
-void DrawContext::quad(
+void DrawContext2D::quad(
   const Vertex2T& a, const Vertex2T& b, const Vertex2T& c, const Vertex2T& d)
 {
   if ((_color0 | _color1) == 0) { return; }
@@ -291,27 +216,12 @@ void DrawContext::quad(
   }
 }
 
-void DrawContext::quad(
-  const Vertex3T& a, const Vertex3T& b, const Vertex3T& c, const Vertex3T& d)
-{
-  if ((_color0 | _color1) == 0) { return; }
-  if (_colorMode == ColorMode::solid) {
-    setColor();
-    _dl->quad3T(a, b, c, d);
-  } else {
-    _dl->quad3TC({a.x, a.y, a.z, a.s, a.t, pointColor(a)},
-                 {b.x, b.y, b.z, b.s, b.t, pointColor(b)},
-                 {c.x, c.y, c.z, c.s, c.t, pointColor(c)},
-                 {d.x, d.y, d.z, d.s, d.t, pointColor(d)});
-  }
-}
-
-void DrawContext::rectangle(const Rect& r)
+void DrawContext2D::rectangle(const Rect& r)
 {
   if (r && checkColor()) { _rectangle(r.x, r.y, r.w, r.h); }
 }
 
-void DrawContext::_rectangle(float x, float y, float w, float h)
+void DrawContext2D::_rectangle(float x, float y, float w, float h)
 {
   const float x1 = x + w;
   const float y1 = y + h;
@@ -334,7 +244,7 @@ void DrawContext::_rectangle(float x, float y, float w, float h)
   }
 }
 
-void DrawContext::rectangle(const Rect& r, Vec2 t0, Vec2 t1)
+void DrawContext2D::rectangle(const Rect& r, Vec2 t0, Vec2 t1)
 {
   if (!r || (_color0 | _color1) == 0) { return; }
 
@@ -368,7 +278,7 @@ void DrawContext::rectangle(const Rect& r, Vec2 t0, Vec2 t1)
   }
 }
 
-void DrawContext::rectangle(
+void DrawContext2D::rectangle(
   const Rect& r, Vec2 t0, Vec2 t1, const Rect& clip)
 {
   if (!r || (_color0 | _color1) == 0) { return; }
@@ -419,7 +329,7 @@ void DrawContext::rectangle(
   }
 }
 
-void DrawContext::glyph(
+void DrawContext2D::glyph(
   const TextFormat& tf, Vec2 pos, Align align, int code)
 {
   if (!checkColor()) { return; }
@@ -453,7 +363,7 @@ void DrawContext::glyph(
   _glyph(*g, tf, pos);
 }
 
-void DrawContext::text(
+void DrawContext2D::text(
   const TextFormat& tf, Vec2 pos, Align align, std::string_view text)
 {
   if (text.empty()) { return; }
@@ -567,7 +477,7 @@ void DrawContext::text(
   }
 }
 
-void DrawContext::_glyph(
+void DrawContext2D::_glyph(
   const Glyph& g, const TextFormat& tf, Vec2 baseline, float altWidth)
 {
   const Vec2 gx = tf.glyphX * (altWidth > 0 ? altWidth : float(g.width));
@@ -677,7 +587,7 @@ void DrawContext::_glyph(
   }
 }
 
-void DrawContext::circleSector(
+void DrawContext2D::circleSector(
   Vec2 center, float radius, float startAngle, float endAngle, int segments)
 {
   if (!checkColor()) { return; }
@@ -687,7 +597,7 @@ void DrawContext::circleSector(
     center, radius, degToRad(startAngle), degToRad(endAngle), segments);
 }
 
-void DrawContext::_circleSector(
+void DrawContext2D::_circleSector(
   Vec2 center, float radius, float angle0, float angle1, int segments)
 {
   const float segmentAngle = (angle1 - angle0) / float(segments);
@@ -718,7 +628,7 @@ void DrawContext::_circleSector(
   }
 }
 
-void DrawContext::circleSectorShaded(
+void DrawContext2D::circleSectorShaded(
   Vec2 center, float radius, float startAngle, float endAngle, int segments,
   RGBA8 innerColor, RGBA8 outerColor)
 {
@@ -754,7 +664,7 @@ void DrawContext::circleSectorShaded(
   }
 }
 
-void DrawContext::arc(
+void DrawContext2D::arc(
   Vec2 center, float radius, float startAngle, float endAngle,
   int segments, float arcWidth)
 {
@@ -765,7 +675,7 @@ void DrawContext::arc(
        segments, arcWidth);
 }
 
-void DrawContext::_arc(
+void DrawContext2D::_arc(
   Vec2 center, float radius, float angle0, float angle1,
   int segments, float arcWidth)
 {
@@ -799,7 +709,7 @@ void DrawContext::_arc(
   }
 }
 
-void DrawContext::_arcShaded(
+void DrawContext2D::_arcShaded(
   Vec2 center, float radius, float angle0, float angle1, int segments,
   float arcWidth, RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
@@ -837,7 +747,7 @@ void DrawContext::_arcShaded(
   }
 }
 
-void DrawContext::arcShaded(
+void DrawContext2D::arcShaded(
   Vec2 center, float radius, float startAngle, float endAngle,
   int segments, float arcWidth, RGBA8 startColor, RGBA8 endColor)
 {
@@ -880,7 +790,7 @@ void DrawContext::arcShaded(
   }
 }
 
-void DrawContext::roundedRectangle(
+void DrawContext2D::roundedRectangle(
   const Rect& r, float curveRadius, int curveSegments)
 {
   if (!r || !checkColor()) { return; }
@@ -919,7 +829,7 @@ void DrawContext::roundedRectangle(
   }
 }
 
-void DrawContext::border(const Rect& r, float borderWidth)
+void DrawContext2D::border(const Rect& r, float borderWidth)
 {
   if (!r || (_color0 | _color1) == 0) { return; }
 
@@ -958,7 +868,7 @@ void DrawContext::border(const Rect& r, float borderWidth)
   }
 }
 
-void DrawContext::borderShaded(
+void DrawContext2D::borderShaded(
   const Rect& r, float borderWidth,
   RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
@@ -993,7 +903,7 @@ void DrawContext::borderShaded(
   }
 }
 
-void DrawContext::roundedBorder(
+void DrawContext2D::roundedBorder(
   const Rect& r, float curveRadius, int curveSegments, float borderWidth)
 {
   if (!r || !checkColor()) { return; }
@@ -1035,7 +945,7 @@ void DrawContext::roundedBorder(
   }
 }
 
-void DrawContext::roundedBorderShaded(
+void DrawContext2D::roundedBorderShaded(
   const Rect& r, float curveRadius, int curveSegments, float borderWidth,
   RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor)
 {
@@ -1123,7 +1033,7 @@ void DrawContext::roundedBorderShaded(
   }
 }
 
-void DrawContext::shape(const Rect& r, const Style& style)
+void DrawContext2D::shape(const Rect& r, const Style& style)
 {
   if (style.fill != Style::no_fill) {
     switch (style.fill) {
@@ -1197,11 +1107,57 @@ void DrawContext::shape(const Rect& r, const Style& style)
   }
 }
 
-RGBA8 DrawContext::gradientColor(float g) const
+RGBA8 DrawContext2D::gradientColor(float g) const
 {
   if (g <= _g0) { return _color0; }
   else if (g >= _g1) { return _color1; }
 
   const float t = (g - _g0) / (_g1 - _g0);
   return packRGBA8((_fullcolor0 * (1.0f-t)) + (_fullcolor1 * t));
+}
+
+
+// DrawContext3D class
+void DrawContext3D::changeAlpha(float a)
+{
+  const RGBA8 val = RGBA8(std::clamp(a, 0.0f, 1.0f) * 255.0f + .5f) << 24;
+  _color0 = (_color0 & ~0xff000000) | val;
+}
+
+void DrawContext3D::line(const Vec3& a, const Vec3& b)
+{
+  if (checkColor()) { _dl->line3(a, b); }
+}
+
+void DrawContext3D::lineStart(const Vec3& a)
+{
+  if (checkColor()) { _dl->lineStart3(a); }
+}
+
+void DrawContext3D::lineTo(const Vec3& a)
+{
+  if (checkColor()) { _dl->lineTo3(a); }
+}
+
+void DrawContext3D::triangle(const Vec3& a, const Vec3& b, const Vec3& c)
+{
+  if (checkColor()) { _dl->triangle3(a, b, c); }
+}
+
+void DrawContext3D::triangle(
+  const Vertex3T& a, const Vertex3T& b, const Vertex3T& c)
+{
+  if (checkColor()) { _dl->triangle3T(a, b, c); }
+}
+
+void DrawContext3D::quad(
+  const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d)
+{
+  if (checkColor()) { _dl->quad3(a, b, c, d); }
+}
+
+void DrawContext3D::quad(
+  const Vertex3T& a, const Vertex3T& b, const Vertex3T& c, const Vertex3T& d)
+{
+  if (checkColor()) { _dl->quad3T(a, b, c, d); }
 }

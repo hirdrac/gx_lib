@@ -623,7 +623,7 @@ bool Gui::update(Window& win, EventState& es)
   if (_needRender) {
     _data.clear();
     DrawList tmp;
-    DrawContext dc{_data}, dc2{tmp};
+    DrawContext2D dc{_data}, dc2{tmp};
     if (_bgColor != 0) { dc.clearView(_bgColor); }
     _needRender = false;
 
@@ -1286,7 +1286,7 @@ void Gui::initElem(GuiElem& def)
 }
 
 bool Gui::drawElem(
-  Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2,
+  Panel& p, GuiElem& def, DrawContext2D& dc, DrawContext2D& dc2,
   const Style* style)
 {
   const GuiTheme& thm = *p.theme;
@@ -1522,7 +1522,8 @@ bool Gui::drawElem(
   return needRedraw;
 }
 
-bool Gui::drawPopup(Panel& p, GuiElem& def, DrawContext& dc, DrawContext& dc2)
+bool Gui::drawPopup(
+  Panel& p, GuiElem& def, DrawContext2D& dc, DrawContext2D& dc2)
 {
   bool needRedraw = false; // use for anim trigger later
   for (GuiElem& e : def.elems) {

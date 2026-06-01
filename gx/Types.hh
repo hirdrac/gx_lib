@@ -17,7 +17,8 @@ namespace gx {
 
   // forward declare major types
   class Camera;
-  class DrawContext;
+  class DrawContext2D;
+  class DrawContext3D;
   class DrawList;
   struct EventState;
   class Font;

@@ -49,7 +49,7 @@ int main(int argc, char** argv)
   win.setSize(fnt.atlasWidth(), fnt.atlasHeight(), false);
 
   gx::DrawList dl;
-  gx::DrawContext dc{dl};
+  gx::DrawContext2D dc{dl};
   int lastCode = 0;
   bool redraw = true;
 
