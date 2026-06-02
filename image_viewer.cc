@@ -14,7 +14,7 @@
 #include "gx/Logger.hh"
 #include "gx/Window.hh"
 #include "gx/EventState.hh"
-#include "gx/DrawContext.hh"
+#include "gx/DrawContext2D.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
 #include "gx/CmdLineParser.hh"

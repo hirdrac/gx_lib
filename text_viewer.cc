@@ -20,7 +20,7 @@
 
 #include "gx/Window.hh"
 #include "gx/EventState.hh"
-#include "gx/DrawContext.hh"
+#include "gx/DrawContext2D.hh"
 #include "gx/Font.hh"
 #include "gx/TextFormat.hh"
 #include "gx/Logger.hh"

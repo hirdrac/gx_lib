@@ -6,7 +6,7 @@
 #include "Gui.hh"
 #include "Window.hh"
 #include "EventState.hh"
-#include "DrawContext.hh"
+#include "DrawContext2D.hh"
 #include "Font.hh"
 #include "TextFormat.hh"
 #include "Unicode.hh"
