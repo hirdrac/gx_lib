@@ -14,7 +14,7 @@ struct gx::Rect
 
   [[nodiscard]] bool operator==(const Rect&) const = default;
 
-  [[nodiscard]] explicit operator bool() const { return w > 0 && y > 0; }
+  [[nodiscard]] explicit operator bool() const { return w > 0 && h > 0; }
     // valid Rect must have width/height greater than zero
 
   [[nodiscard]] constexpr bool contains(Vec2 pt) const {
