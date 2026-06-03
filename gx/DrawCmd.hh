@@ -26,49 +26,46 @@ namespace gx {
     CMD_viewportFull, // <cmd> (1)
     CMD_color,        // <cmd c> (2)
     CMD_texture,      // <cmd id> (2)
-    CMD_lineWidth,    // <cmd w> (2)
     CMD_normal,       // <cmd n> (2)
+    CMD_lineWidth,    // <cmd w> (2)
     CMD_modColor,     // <cmd c> (2)
     CMD_capabilities, // <cmd c> (2)
-
-    // camera
     CMD_camera,       // <cmd val*32> <33>
-    CMD_cameraReset,  // <cmd> (1)
-
-    // lighting
     CMD_light,        // <cmd x y z ar ag ab dr dg db> (10)
-
-    // drawing commands
     CMD_clearView,    // <cmd c> (2)
+
+    // 2D drawing
     CMD_line2,        // <cmd (x y)x2> (5)
-    CMD_line3,        // <cmd (x y z)x2> (7)
     CMD_line2C,       // <cmd (x y c)x2> (7)
-    CMD_line3C,       // <cmd (x y z c)x2> (9)
     CMD_lineStart2,   // <cmd x y> (3)
     CMD_lineTo2,      // <cmd x y> (3)
-    CMD_lineStart3,   // <cmd x y z> (4)
-    CMD_lineTo3,      // <cmd x y z> (4)
     CMD_lineStart2C,  // <cmd x y c> (4)
     CMD_lineTo2C,     // <cmd x y c> (4)
-    CMD_lineStart3C,  // <cmd x y z c> (5)
-    CMD_lineTo3C,     // <cmd x y z c> (5)
     CMD_triangle2,    // <cmd (x y)x3> (7)
-    CMD_triangle3,    // <cmd (x y z)x3> (10)
     CMD_triangle2T,   // <cmd (x y s t)x3> (13)
-    CMD_triangle3T,   // <cmd (x y z s t)x3> (16)
     CMD_triangle2C,   // <cmd (x y c)x3> (10)
-    CMD_triangle3C,   // <cmd (x y z c)x3> (13)
     CMD_triangle2TC,  // <cmd (x y s t c)x3> (16)
-    CMD_triangle3TC,  // <cmd (x y z s t c)x3> (19)
     CMD_quad2,        // <cmd (x y)x4> (9)
-    CMD_quad3,        // <cmd (x y z)x4> (13)
     CMD_quad2T,       // <cmd (x y s t)x4> (17)
-    CMD_quad3T,       // <cmd (x y z s t)x4> (21)
     CMD_quad2C,       // <cmd (x y c)x4> (13)
-    CMD_quad3C,       // <cmd (x y z c)x4> (17)
     CMD_quad2TC,      // <cmd (x y s t c)x4> (21)
-    CMD_quad3TC,      // <cmd (x y z s t c)x4> (25)
     CMD_rectangle,    // <cmd (x y)x2> (5)
     CMD_rectangleT,   // <cmd (x y s t)x2> (9)
+
+    // 3D drawing
+    CMD_line3,        // <cmd (x y z)x2> (7)
+    CMD_line3C,       // <cmd (x y z c)x2> (9)
+    CMD_lineStart3,   // <cmd x y z> (4)
+    CMD_lineTo3,      // <cmd x y z> (4)
+    CMD_lineStart3C,  // <cmd x y z c> (5)
+    CMD_lineTo3C,     // <cmd x y z c> (5)
+    CMD_triangle3,    // <cmd (x y z)x3> (10)
+    CMD_triangle3T,   // <cmd (x y z s t)x3> (16)
+    CMD_triangle3C,   // <cmd (x y z c)x3> (13)
+    CMD_triangle3TC,  // <cmd (x y z s t c)x3> (19)
+    CMD_quad3,        // <cmd (x y z)x4> (13)
+    CMD_quad3T,       // <cmd (x y z s t)x4> (21)
+    CMD_quad3C,       // <cmd (x y z c)x4> (17)
+    CMD_quad3TC,      // <cmd (x y z s t c)x4> (25)
   };
 }

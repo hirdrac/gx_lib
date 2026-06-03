@@ -61,9 +61,6 @@ class gx::DrawContext2D
 
   void capabilities(int32_t c) { _dl->capabilities(c); }
 
-  // Camera
-  void cameraReset() { _dl->cameraReset(); }
-
   // View
   void viewport(int x, int y, int w, int h) {
     _dl->viewport(x, y, w, h); }
