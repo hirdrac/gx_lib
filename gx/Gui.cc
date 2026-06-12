@@ -679,17 +679,15 @@ void Gui::processMouseEvent(Window& win, EventState& es)
   const ButtonState* b2 = es.getButtonState(2);
 
   const bool lbuttonDown = b1 && b1->held;
-  const bool buttonEvent = es.events & EVENT_MOUSE_BUTTON;
-  const bool lpressEvent = buttonEvent && b1 && (b1->pressCount > 0);
-  const bool rpressEvent = buttonEvent && b2 && (b2->pressCount > 0);
+  const bool lpressEvent = b1 && (b1->pressCount > 0);
+  const bool rpressEvent = b2 && (b2->pressCount > 0);
 
   const bool lbuttonEvent = // pressed or released
-    buttonEvent && b1 && (b1->pressCount > 0 || !b1->held);
+    b1 && (b1->pressCount > 0 || !b1->held);
   const bool rbuttonEvent = // pressed or released
-    buttonEvent && b2 && (b2->pressCount > 0 || !b2->held);
+    b2 && (b2->pressCount > 0 || !b2->held);
 
-  const bool anyButtonPressEvent =
-    (b1 && (b1->pressCount > 0)) || (b2 && (b2->pressCount > 0));
+  const bool anyButtonPressEvent = lpressEvent || rpressEvent;
   const bool moveEvent = allEvents & EVENT_MOUSE_MOVE;
 
   // get elem at mouse pointer
