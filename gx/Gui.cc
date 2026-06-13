@@ -700,7 +700,7 @@ void Gui::processMouseEvent(Window& win, EventState& es)
       const Vec2 pt = es.mousePt - Vec2{p->layout.x, p->layout.y};
       if (!(ePtr = findElemByXY(p->root, pt.x, pt.y, _popupType))) { continue; }
 
-      es.removeButtonEvent();
+      es.removeButtonEvents();
       if (ePtr->_enabled) {
         id = ePtr->_id;
         type = ePtr->type;
@@ -1019,7 +1019,7 @@ void Gui::processTextEvent(EventState& es)
 
   if (usedEvent) {
     es.removeTextEvent();
-    es.removeKeyEvent();
+    es.removeKeyEvents();
     if (_focusCursorPos == _focusRangeStart) {
       // reset cursor blink state
       _needRender |= !_cursorState;

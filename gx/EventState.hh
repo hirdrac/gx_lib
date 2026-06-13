@@ -109,7 +109,7 @@ struct gx::EventState
   std::vector<ButtonState> buttonStates;
   std::string text;  // UTF8 encoded
   Vec2 mousePt, scrollPt;
-  int events, mods, shiftCount, controlCount, altCount, superCount;
+  int events, mods;
   bool mouseIn, iconified, focused;
 
   // helper functions
@@ -126,9 +126,12 @@ struct gx::EventState
 
   // key state
   [[nodiscard]] const KeyState* getKeyState(KeyEnum key) const {
-    for (const KeyState& ks : keyStates) {
-      if (ks.key == key) { return &ks; }
-    }
+    for (const KeyState& s : keyStates) { if (s.key == key) return &s; }
+    return nullptr;
+  }
+
+  [[nodiscard]] KeyState* getKeyState(KeyEnum key) {
+    for (KeyState& s : keyStates) { if (s.key == key) return &s; }
     return nullptr;
   }
 
@@ -153,10 +156,38 @@ struct gx::EventState
     return ks && !ks->held;
   }
 
+  void addKeyPress(KeyEnum key, int scancode) {
+    KeyState* ks = getKeyState(key);
+    if (ks) {
+      ++ks->pressCount;
+      ks->held = true;
+    } else {
+      keyStates.insert(keyStates.end(), {key,int16_t(scancode),1,0,1});
+    }
+    updateMod();
+  }
+
+  void addKeyRepeat(KeyEnum key) {
+    KeyState* ks = getKeyState(key);
+    if (ks) { ++ks->repeatCount; }
+  }
+
+  void addKeyRelease(KeyEnum key) {
+    KeyState* ks = getKeyState(key);
+    if (ks) { ks->held = false; updateMod(); }
+  }
+
   // button state
   [[nodiscard]] const ButtonState* getButtonState(int16_t button) const {
-    for (const ButtonState& bs : buttonStates) {
-      if (bs.button == button) { return &bs; }
+    for (const ButtonState& s : buttonStates) {
+      if (s.button == button) { return &s; }
+    }
+    return nullptr;
+  }
+
+  [[nodiscard]] ButtonState* getButtonState(int16_t button) {
+    for (ButtonState& s : buttonStates) {
+      if (s.button == button) { return &s; }
     }
     return nullptr;
   }
@@ -184,31 +215,47 @@ struct gx::EventState
     return mouseMove() && buttonHeld(button);
   }
 
+  void addButtonPress(int16_t button) {
+    ButtonState* bs = getButtonState(button);
+    if (bs) {
+      ++bs->pressCount;
+      bs->held = true;
+    } else {
+      buttonStates.insert(buttonStates.end(), {button,1,1});
+    }
+  }
+
+  void addButtonRelease(int16_t button) {
+    ButtonState* bs = getButtonState(button);
+    if (bs) { bs->held = false; }
+  }
+
   // remove/consume events
   void removeKeyEvent(KeyEnum key) {
     auto itr = std::find_if(keyStates.begin(), keyStates.end(),
-                            [key](auto& ks){ return ks.key == key; });
+                            [key](auto& s){ return s.key == key; });
     if (itr != keyStates.end()) {
       keyStates.erase(itr);
       if (keyStates.empty()) { removeEvent(EVENT_KEY); }
     }
   }
 
-  void removeKeyEvent() {
+  void removeKeyEvents() {
     removeEvent(EVENT_KEY);
     keyStates.clear();
+    mods = 0;
   }
 
   void removeButtonEvent(int16_t button) {
     auto itr = std::find_if(buttonStates.begin(), buttonStates.end(),
-                            [button](auto& bs){ return bs.button == button; });
+                            [button](auto& s){ return s.button == button; });
     if (itr != buttonStates.end()) {
       buttonStates.erase(itr);
       if (buttonStates.empty()) { removeEvent(EVENT_MOUSE_BUTTON); }
     }
   }
 
-  void removeButtonEvent() {
+  void removeButtonEvents() {
     removeEvent(EVENT_MOUSE_BUTTON);
     buttonStates.clear();
   }
@@ -243,6 +290,22 @@ struct gx::EventState
         ++i;
       } else {
         i = buttonStates.erase(i);
+      }
+    }
+
+    updateMod();
+  }
+
+  void updateMod() {
+    mods = 0;
+    for (KeyState& s : keyStates) {
+      if (!s.held) { continue; }
+      switch (s.key) {
+        default: break;
+        case KEY_LSHIFT:   case KEY_RSHIFT:   mods |= MODIFIER_SHIFT; break;
+        case KEY_LCONTROL: case KEY_RCONTROL: mods |= MODIFIER_CTRL; break;
+        case KEY_LALT:     case KEY_RALT:     mods |= MODIFIER_ALT; break;
+        case KEY_LSUPER:   case KEY_RSUPER:   mods |= MODIFIER_SUPER; break;
       }
     }
   }

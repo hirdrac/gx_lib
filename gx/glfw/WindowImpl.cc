@@ -15,7 +15,6 @@
 #include "ThreadID.hh"
 #include "GLFW.hh"
 #include "Unicode.hh"
-#include <algorithm>
 #ifdef _WIN32
 #  define GLFW_EXPOSE_NATIVE_WIN32
 #  include <GLFW/glfw3native.h>
@@ -622,51 +621,12 @@ void WindowImpl::keyCB(
   es.events |= EVENT_KEY;
 
   const KeyEnum val = translateGLFWKey(key);
-  auto& states = es.keyStates;
-  auto itr = std::find_if(states.begin(), states.end(),
-			  [val](auto& ks){ return ks.key == val; });
-  if (itr == states.end()) {
-    itr = states.insert(states.end(), {val,int16_t(scancode),0,0,false});
-  }
-
-  KeyState& ks = *itr;
   if (action == GLFW_PRESS) {
-    ++ks.pressCount;
-    ks.held = true;
-    switch (val) {
-      default: break;
-      case KEY_LSHIFT:   case KEY_RSHIFT:
-        es.mods |= MODIFIER_SHIFT;   ++es.shiftCount; break;
-      case KEY_LCONTROL: case KEY_RCONTROL:
-        es.mods |= MODIFIER_CTRL; ++es.controlCount; break;
-      case KEY_LALT:     case KEY_RALT:
-        es.mods |= MODIFIER_ALT;     ++es.altCount; break;
-      case KEY_LSUPER:   case KEY_RSUPER:
-        es.mods |= MODIFIER_SUPER;   ++es.superCount; break;
-    }
+    es.addKeyPress(val, scancode);
   } else if (action == GLFW_RELEASE) {
-    ks.held = false;
-    switch (val) {
-      default: break;
-      case KEY_LSHIFT:   case KEY_RSHIFT:
-        if (--es.shiftCount <= 0) {
-          es.shiftCount = 0; es.mods &= ~MODIFIER_SHIFT; }
-        break;
-      case KEY_LCONTROL: case KEY_RCONTROL:
-        if (--es.controlCount <= 0) {
-          es.controlCount = 0; es.mods &= ~MODIFIER_CTRL; }
-        break;
-      case KEY_LALT:     case KEY_RALT:
-        if (--es.altCount <= 0) {
-          es.altCount = 0; es.mods &= ~MODIFIER_ALT; }
-        break;
-      case KEY_LSUPER:   case KEY_RSUPER:
-        if (--es.superCount <= 0) {
-          es.superCount = 0; es.mods &= ~MODIFIER_SUPER; }
-        break;
-    }
+    es.addKeyRelease(val);
   } else if (action == GLFW_REPEAT) {
-    ++ks.repeatCount;
+    es.addKeyRepeat(val);
   }
 }
 
@@ -727,23 +687,14 @@ void WindowImpl::mouseButtonCB(
     return;
   }
 
-  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;;
+  EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
   es.events |= EVENT_MOUSE_BUTTON;
 
-  const int16_t bVal = int16_t(button) + 1;
-  auto& states = es.buttonStates;
-  auto itr = std::find_if(states.begin(), states.end(),
-			  [bVal](auto& bs){ return bs.button == bVal; });
-  if (itr == states.end()) {
-    itr = states.insert(states.end(), {bVal,0,false});
-  }
-
-  ButtonState& bs = *itr;
+  const int16_t val = int16_t(button + 1);
   if (action == GLFW_PRESS) {
-    ++bs.pressCount;
-    bs.held = true;
+    es.addButtonPress(val);
   } else if (action == GLFW_RELEASE) {
-    bs.held = false;
+    es.addButtonRelease(val);
   }
 }
 
