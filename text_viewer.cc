@@ -235,11 +235,11 @@ int main(int argc, char** argv)
     const int endLine = std::max(int(buffer.lines()) - maxLines, 0);
     const int lastTop = topLine;
 
-    if (es.keyEvent()) {
-      for (const gx::KeyState& ks : es.keyStates) {
+    if (es.inputEvent()) {
+      for (const gx::InputState& ks : es.inputStates) {
         if (!ks.pressCount && !ks.repeatCount) { continue; }
 
-        switch (ks.key) {
+        switch (ks.val) {
           case gx::KEY_ESCAPE:    running = false; break;
           case gx::KEY_UP:        --topLine; break;
           case gx::KEY_DOWN:      ++topLine; break;

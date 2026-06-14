@@ -198,15 +198,15 @@ int main(int argc, char* argv[])
     if (es.resized()) { redraw = true; }
     if (es.closed()) { running = false; }
 
-    if (es.keyEvent()) {
+    if (es.inputEvent()) {
       int no = entryNo;
       const bool last_entry = (no == lastNo);
       const bool first_entry = (no == 0);
 
-      for (const gx::KeyState& ks : es.keyStates) {
+      for (const gx::InputState& ks : es.inputStates) {
         if (!ks.pressCount && !ks.repeatCount) { continue; }
 
-        switch (ks.key) {
+        switch (ks.val) {
           case gx::KEY_LEFT: case gx::KEY_BACKSPACE:
             if ((ks.pressCount || !first_entry) && --no < 0) { no = lastNo; }
             break;
@@ -258,9 +258,9 @@ int main(int argc, char* argv[])
         }
       }
 
-      if (es.buttonPress(1)) {
+      if (es.inputPress(gx::BUTTON_1)) {
         pressPos = es.mousePt;
-      } else if (es.buttonDrag(1)) {
+      } else if (es.inputDrag(gx::BUTTON_1)) {
         const auto pt = es.mousePt;
         imgOffset += (pt - pressPos);
         pressPos = pt;

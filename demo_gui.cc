@@ -151,14 +151,12 @@ int main(int argc, char* argv[])
 
     if (es.closed()) { running = false; }
     if (es.resized()) { redraw = true; }
-    if (es.keyEvent()) {
-      if (es.keyPress(gx::KEY_ESCAPE)) { running = false; }
-      if (es.keyPress(gx::KEY_F11)) {
-        if (win.fullScreen()) {
-          win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
-        } else {
-          win.setSize(0, 0, true);
-        }
+    if (es.inputPress(gx::KEY_ESCAPE)) { running = false; }
+    if (es.inputPress(gx::KEY_F11)) {
+      if (win.fullScreen()) {
+        win.setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT, false);
+      } else {
+        win.setSize(0, 0, true);
       }
     }
 

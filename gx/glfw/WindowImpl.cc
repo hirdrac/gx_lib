@@ -476,7 +476,7 @@ void WindowImpl::sizeCB(GLFWwindow* win, int width, int height)
   if (impl->_renderer) { impl->_renderer->setFramebufferSize(width, height); }
 }
 
-static constexpr KeyEnum translateGLFWKey(int key)
+static constexpr InputEnum translateGLFWKey(int key)
 {
   switch (key) {
     default: return KEY_UNKNOWN;
@@ -618,15 +618,15 @@ void WindowImpl::keyCB(
 
   //println("key event: ", key, ' ', scancode, ' ', action, ' ', mods);
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
-  es.events |= EVENT_KEY;
+  es.events |= EVENT_INPUT;
 
-  const KeyEnum val = translateGLFWKey(key);
+  const InputEnum val = translateGLFWKey(key);
   if (action == GLFW_PRESS) {
-    es.addKeyPress(val, scancode);
+    es.addInputPress(val, scancode);
   } else if (action == GLFW_RELEASE) {
-    es.addKeyRelease(val);
+    es.addInputRelease(val);
   } else if (action == GLFW_REPEAT) {
-    es.addKeyRepeat(val);
+    es.addInputRepeat(val);
   }
 }
 
@@ -688,13 +688,13 @@ void WindowImpl::mouseButtonCB(
   }
 
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
-  es.events |= EVENT_MOUSE_BUTTON;
+  es.events |= EVENT_INPUT;
 
-  const int16_t val = int16_t(button + 1);
+  const InputEnum val = InputEnum(BUTTON_1 + button);
   if (action == GLFW_PRESS) {
-    es.addButtonPress(val);
+    es.addInputPress(val);
   } else if (action == GLFW_RELEASE) {
-    es.addButtonRelease(val);
+    es.addInputRelease(val);
   }
 }
 

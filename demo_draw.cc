@@ -348,12 +348,12 @@ int main(int argc, char** argv)
     if (es.closed()) { running = false; }
     if (es.resized()) { gfxPerPage = 0; redraw = true; }
 
-    if (es.keyEvent()) {
+    if (es.inputEvent()) {
       int newPage = page;
-      for (const gx::KeyState& ks : es.keyStates) {
+      for (const gx::InputState& ks : es.inputStates) {
         if (!ks.pressCount && !ks.repeatCount) { continue; }
 
-        switch (ks.key) {
+        switch (ks.val) {
           case gx::KEY_ESCAPE:
             running = false; break;
           case gx::KEY_LEFT: case gx::KEY_UP: case gx::KEY_PAGE_UP:
