@@ -93,16 +93,17 @@ namespace gx {
   };
 
   struct InputState {
-    InputEnum val;       // InputEnum value
-    int16_t scancode;    // platform-specific input key value
-    int8_t pressCount;   // number of press events since pollEvents
-    int8_t repeatCount;  // number of repeat events since pollEvents
-    int8_t held;         // input is currently held
+    InputEnum val;        // InputEnum value
+    int16_t scancode;     // platform-specific input key value
+    uint8_t pressCount;   // number of press events since pollEvents
+    uint8_t repeatCount;  // number of repeat events since pollEvents
+    bool held;            // input is currently held
 
     [[nodiscard]] bool event() const {
       return (pressCount > 0) || (repeatCount > 0) || !held;
     }
   };
+  static_assert(sizeof(InputState) == 8);
 
   struct EventState;
 }
@@ -174,7 +175,7 @@ struct gx::EventState
       ++s->pressCount;
       s->held = true;
     } else {
-      inputStates.insert(inputStates.end(), {val,int16_t(scancode),1,0,1});
+      inputStates.insert(inputStates.end(), {val,int16_t(scancode),1,0,true});
     }
     updateMod();
   }
