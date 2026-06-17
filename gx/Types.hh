@@ -23,6 +23,7 @@ namespace gx {
   struct EventState;
   class Font;
   struct Glyph;
+  class IDRegionList;
   class Image;
   struct Rect;
   class Renderer;

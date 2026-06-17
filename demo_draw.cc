@@ -10,6 +10,7 @@
 #include "gx/EventState.hh"
 #include "gx/Font.hh"
 #include "gx/TextFormat.hh"
+#include "gx/IDRegion.hh"
 #include "gx/DrawContext2D.hh"
 #include "gx/Print.hh"
 #include "gx/StringUtil.hh"
@@ -29,6 +30,7 @@ constexpr auto WHITE = gx::packRGBA8(gx::WHITE);
 constexpr auto GRAY50 = gx::packRGBA8(gx::GRAY50);
 constexpr auto BLACK = gx::packRGBA8(gx::BLACK);
 constexpr auto RED = gx::packRGBA8(gx::RED);
+constexpr auto GREEN = gx::packRGBA8(gx::GREEN);
 
 
 // **** Globals ****
@@ -277,6 +279,28 @@ void draw_text4(gx::DrawContext2D& dc, const gx::Rect& r)
   //dc.glyph(tf, {cx,cy}, gx::Align::bottom_right, 'A');
 }
 
+void draw_text5(gx::DrawContext2D& dc, const gx::Rect& r)
+{
+  const float cx = r.centerX();
+  const float cy = r.centerY();
+
+  dc.color(BLACK);
+  dc.rectangle({r.x+4, r.y+24, r.w-8, r.h-24});
+
+  const char text[] = "Options\n<id=1>OP1</id> <id=2>OP2</id> <id=3>OP3</id>\n"
+    "<id=4>OP4</id> <id=5>OP5";
+  gx::TextFormat tf{.font = &TheFont};
+  tf.scale(2.0f);
+
+  gx::IDRegionList regions;
+  tf.calcSizeAndRegions({cx,cy}, gx::Align::center, text, regions);
+  dc.color(GREEN);
+  for (const gx::IDRegion& x : regions) { dc.rectangle(x.region); }
+
+  dc.color(WHITE);
+  dc.text(tf, {cx,cy}, gx::Align::center, text);
+}
+
 
 struct { const char* desc; void(*fn)(gx::DrawContext2D&,const gx::Rect&); }
   gfxData[] = {
@@ -311,6 +335,7 @@ struct { const char* desc; void(*fn)(gx::DrawContext2D&,const gx::Rect&); }
   {"Text Alignment Top/Left", draw_text2},
   {"Text Alignment Center", draw_text3},
   {"Text Alignment Bottom/Right", draw_text4},
+  {"Text ID Regions", draw_text5},
 };
 
 

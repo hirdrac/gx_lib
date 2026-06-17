@@ -6,6 +6,7 @@
 //
 
 #pragma once
+#include "Align.hh"
 #include "Types.hh"
 #include <string_view>
 
@@ -43,6 +44,9 @@ struct gx::TextFormat
 
   [[nodiscard]] std::pair<float,float> calcSize(std::string_view text) const;
     // returns pixel width,height of input text
+
+  std::pair<float,float> calcSizeAndRegions(
+    Vec2 pos, Align align, std::string_view text, IDRegionList& regions) const;
 
   [[nodiscard]] std::string_view fitText(
     std::string_view text, float maxWidth) const;
