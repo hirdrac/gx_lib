@@ -286,6 +286,9 @@ void draw_text5(gx::DrawContext2D& dc, const gx::Rect& r)
 
   dc.color(BLACK);
   dc.rectangle({r.x+4, r.y+24, r.w-8, r.h-24});
+  dc.selectedID(3);
+  dc.selectedColor(RED);
+  dc.selectedUnderline(true);
 
   const char text[] = "Options\n<id=1>OP1</id> <id=2>OP2</id> <id=3>OP3</id>\n"
     "<id=4>OP4</id> <id=5>OP5";

@@ -1473,7 +1473,7 @@ bool Gui::drawElem(
       entry.tx = tx;
       dc2.color(style->textColor);
       // TODO: add gradient color if text is off left/right edges
-      dc2.setTextClip({ex, ey, ew, eh});
+      dc2.textClip({ex, ey, ew, eh});
       dc2.text(tf, {tx, ey + thm.entryTopMargin}, Align::top_left, txt);
       dc2.clearTextClip();
       if (def._id == _focusID) {

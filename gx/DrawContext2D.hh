@@ -125,8 +125,12 @@ class gx::DrawContext2D
 
   // Text drawing
   //   textFixedColor() functions ignore meta tag color changes
-  void setTextClip(const Rect& clip) { _clip = clip; _useClip = true; }
+  void textClip(const Rect& clip) { _clip = clip; _useClip = true; }
   void clearTextClip() { _useClip = false; }
+
+  void selectedID(uint64_t id) { _selectedID = id; }
+  void selectedColor(RGBA8 c) { _selectedColor = c; }
+  void selectedUnderline(bool v) { _selectedUL = v; }
 
   void glyph(const TextFormat& tf, Vec2 pos, Align align, int code);
   void text(const TextFormat& tf, Vec2 pos, Align align, std::string_view text);
@@ -189,9 +193,11 @@ class gx::DrawContext2D
   enum class ColorMode { solid, hgradient, vgradient };
   ColorMode _colorMode;
 
-  // clipping
+  // text properties
+  uint64_t _selectedID;
+  RGBA8 _selectedColor;
   Rect _clip;
-  bool _useClip;
+  bool _selectedUL, _useClip;
 
   void init() {
     _lastTexID = 0;
@@ -199,6 +205,9 @@ class gx::DrawContext2D
     _color1 = 0;
     _dataColor = 0;
     _colorMode = ColorMode::solid;
+    _selectedID = 0;
+    _selectedColor = 0;
+    _selectedUL = false;
     _useClip = false;
   }
 

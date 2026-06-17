@@ -390,6 +390,7 @@ void DrawContext2D::text(
   Vec2 ulPos;
   float ulLen = 0;
   bool underline = false;
+  uint64_t activeID = 0;
 
   for (LineIterator lineItr{text}; lineItr; ++lineItr, pos += tf.advY * lh) {
     const auto line = *lineItr;
@@ -410,6 +411,7 @@ void DrawContext2D::text(
         underline = false;
         ulOp = UL_noop;
       }
+      setColor();
 
       int ch = *itr;
       if (ch == tf.startTag && tf.startTag != 0) {
@@ -423,7 +425,6 @@ void DrawContext2D::text(
               if (!tf.ignoreColor) {
                 // TODO: support restoring gradients
                 color((ts.colorCount() > 0) ? ts.color() : initColor);
-                setColor();
               }
             } else if (tagType == TAG_underline) {
               if (!underline && ts.underline()) {
@@ -431,6 +432,31 @@ void DrawContext2D::text(
               } else if (underline && !ts.underline()) {
                 ulOp = UL_end;
               }
+            } else if (tagType == TAG_id) {
+              const uint64_t id = ts.activeID();
+              if (activeID != 0 && _selectedID == activeID) {
+                // end region
+                if (_selectedColor != 0) {
+                  ts.popColor();
+                  color((ts.colorCount() > 0) ? ts.color() : initColor);
+                }
+                if (_selectedUL) {
+                  ts.popUnderline();
+                  if (!ts.underline()) { ulOp = UL_end; }
+                }
+              }
+              if (id != 0 && _selectedID == id) {
+                // start region
+                if (_selectedColor != 0) {
+                  ts.pushColor(_selectedColor);
+                  color(_selectedColor);
+                }
+                if (_selectedUL) {
+                  ts.pushUnderline();
+                  if (!underline) { ulOp = UL_start; }
+                }
+              }
+              activeID = id;
             }
 
             itr.setPos(endPos);
@@ -473,6 +499,7 @@ void DrawContext2D::text(
       underline = false;
       ulOp = (ulOp == UL_end) ? UL_noop : UL_start;
     }
+    setColor();
   }
 }
 
