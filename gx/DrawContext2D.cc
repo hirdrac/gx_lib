@@ -390,7 +390,7 @@ void DrawContext2D::text(
   Vec2 ulPos;
   float ulLen = 0;
   bool underline = false;
-  uint64_t activeID = 0;
+  int64_t activeID = 0;
 
   for (LineIterator lineItr{text}; lineItr; ++lineItr, pos += tf.advY * lh) {
     const auto line = *lineItr;
@@ -433,7 +433,7 @@ void DrawContext2D::text(
                 ulOp = UL_end;
               }
             } else if (tagType == TAG_id) {
-              const uint64_t id = ts.activeID();
+              const int64_t id = ts.activeID();
               if (activeID != 0 && _selectedID == activeID) {
                 // end region
                 if (_selectedColor != 0) {

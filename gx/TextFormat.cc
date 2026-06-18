@@ -89,7 +89,7 @@ std::pair<float,float> TextFormat::calcSizeAndRegions(
 
   TextMetaState ts;
   float width = 0, height = -lineSpacing;
-  uint64_t activeID = 0;
+  int64_t activeID = 0;
 
   for (LineIterator lineItr{text}; lineItr; ++lineItr, pos += advY * lh) {
     const auto line = *lineItr;
@@ -112,7 +112,7 @@ std::pair<float,float> TextFormat::calcSizeAndRegions(
           const auto tagType = ts.parseTag(tag);
           if (tagType != TAG_unknown) {
             if (tagType == TAG_id) {
-              const uint64_t id = ts.activeID();
+              const int64_t id = ts.activeID();
               if (activeID != 0) {
                 // end region
                 const Vec2 s = pos + (advX * (regionStart - offset));

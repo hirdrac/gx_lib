@@ -76,7 +76,7 @@ TextMetaTagType TextMetaState::parseTag(std::string_view tag)
       return TAG_unknown;
     }
   } else if (tagLC.substr(0, 3) == "id=") {
-    _id = toNumber<uint64_t>(tagLC.substr(3));
+    _id = toNumber<int64_t>(tagLC.substr(3));
     return (_id == 0) ? TAG_unknown : TAG_id;
   }
 

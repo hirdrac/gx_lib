@@ -128,7 +128,7 @@ class gx::DrawContext2D
   void textClip(const Rect& clip) { _clip = clip; _useClip = true; }
   void clearTextClip() { _useClip = false; }
 
-  void selectedID(uint64_t id) { _selectedID = id; }
+  void selectedID(int64_t id) { _selectedID = id; }
   void selectedColor(RGBA8 c) { _selectedColor = c; }
   void selectedUnderline(bool v) { _selectedUL = v; }
 
@@ -194,7 +194,7 @@ class gx::DrawContext2D
   ColorMode _colorMode;
 
   // text properties
-  uint64_t _selectedID;
+  int64_t _selectedID;
   RGBA8 _selectedColor;
   Rect _clip;
   bool _selectedUL, _useClip;

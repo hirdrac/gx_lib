@@ -13,7 +13,7 @@
 
 namespace gx {
   struct IDRegion {
-    uint64_t id;
+    int64_t id;
     Rect region;
   };
 }
@@ -40,21 +40,28 @@ class gx::IDRegionList
   void reserve(size_type cap) { _data.reserve(cap); }
 
   // methods
-  void add(uint64_t id, const Rect& region) {
+  void add(int64_t id, const Rect& region) {
     _data.push_back({id, region});
   }
 
-  void add(uint64_t id, Vec2 a, Vec2 b) {
+  void add(int64_t id, Vec2 a, Vec2 b) {
     _data.push_back(
       {id, std::min(a.x, b.x), std::min(a.y, b.y),
        abs(a.x - b.x), abs(a.y - b.y)});
   }
 
-  [[nodiscard]] uint64_t selected(Vec2 pt) const {
+  [[nodiscard]] int64_t selected(Vec2 pt) const {
     for (auto& e : _data) {
       if (e.region.contains(pt)) { return e.id; }
     }
     return 0;
+  }
+
+  [[nodiscard]] Rect getRegion(int64_t id) const {
+    for (const IDRegion& r : _data) {
+      if (r.id == id) { return r.region; }
+    }
+    return {};
   }
 
  private:
