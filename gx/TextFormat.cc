@@ -65,12 +65,12 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
   return {width, std::max(height, 0.0f)};
 }
 
-std::pair<float,float> TextFormat::calcSizeAndRegions(
+int TextFormat::calcRegions(
   Vec2 pos, Align align, std::string_view text, IDRegionList& regions) const
 {
   // TODO: adjust region height by lineSpacing
 
-  if (text.empty()) { return {0,0}; }
+  if (text.empty()) { return 0; }
 
   GX_ASSERT(font != nullptr);
   const float fs = float(font->size());
@@ -88,8 +88,8 @@ std::pair<float,float> TextFormat::calcSizeAndRegions(
   }
 
   TextMetaState ts;
-  float width = 0, height = -lineSpacing;
   int64_t activeID = 0;
+  int count = 0;
 
   for (LineIterator lineItr{text}; lineItr; ++lineItr, pos += advY * lh) {
     const auto line = *lineItr;
@@ -118,6 +118,7 @@ std::pair<float,float> TextFormat::calcSizeAndRegions(
                 const Vec2 s = pos + (advX * (regionStart - offset));
                 const Vec2 e = pos + (advX * (len - offset)) + (advY * fs);
                 regions.add(activeID, s, e);
+                ++count;
               }
               if (id != 0) {
                 // start region
@@ -148,18 +149,16 @@ std::pair<float,float> TextFormat::calcSizeAndRegions(
       len += g->advX + glyphSpacing;
     }
 
-    width = std::max(width, len - glyphSpacing);
-    height += lh;
-
     if (activeID != 0) {
       // end region
       const Vec2 s = pos + (advX * (regionStart - offset));
       const Vec2 e = pos + (advX * (len - offset)) + (advY * fs);
       regions.add(activeID, s, e);
+      ++count;
     }
   }
 
-  return {width, std::max(height, 0.0f)};
+  return count;
 }
 
 std::string_view TextFormat::fitText(

@@ -45,8 +45,9 @@ struct gx::TextFormat
   [[nodiscard]] std::pair<float,float> calcSize(std::string_view text) const;
     // returns pixel width,height of input text
 
-  std::pair<float,float> calcSizeAndRegions(
+  int calcRegions(
     Vec2 pos, Align align, std::string_view text, IDRegionList& regions) const;
+    // adds ID regions to list, returns number of regions added
 
   [[nodiscard]] std::string_view fitText(
     std::string_view text, float maxWidth) const;

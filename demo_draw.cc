@@ -296,7 +296,7 @@ void draw_text5(gx::DrawContext2D& dc, const gx::Rect& r)
   tf.scale(2.0f);
 
   gx::IDRegionList regions;
-  tf.calcSizeAndRegions({cx,cy}, gx::Align::center, text, regions);
+  tf.calcRegions({cx,cy}, gx::Align::center, text, regions);
   dc.color(GREEN);
   for (const gx::IDRegion& x : regions) { dc.rectangle(x.region); }
 
