@@ -12,6 +12,12 @@
 
 namespace gx {
   struct TextFormat;
+
+  struct TextProperties {
+    float width;
+    float height;
+    int idCount;
+  };
 }
 
 
@@ -42,8 +48,8 @@ struct gx::TextFormat
     glyphY = gx::rotate(glyphY, rad);
   }
 
-  [[nodiscard]] std::pair<float,float> calcSize(std::string_view text) const;
-    // returns pixel width,height of input text
+  [[nodiscard]] TextProperties calcProperties(std::string_view text) const;
+    // returns pixel width/height and id tag count of input text
 
   int calcRegions(
     Vec2 pos, Align align, std::string_view text, IDRegionList& regions) const;

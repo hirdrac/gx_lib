@@ -15,14 +15,15 @@
 using namespace gx;
 
 
-std::pair<float,float> TextFormat::calcSize(std::string_view text) const
+gx::TextProperties TextFormat::calcProperties(std::string_view text) const
 {
-  if (text.empty()) { return {0,0}; }
+  if (text.empty()) { return {}; }
 
   GX_ASSERT(font != nullptr);
+  const float lh = float(font->size()) + lineSpacing;
   TextMetaState ts;
   float width = 0, height = -lineSpacing;
-  const float lh = float(font->size()) + lineSpacing;
+  int idCount = 0;
 
   for (LineIterator lineItr{text}; lineItr; ++lineItr) {
     const auto line = *lineItr;
@@ -35,7 +36,9 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
         const std::size_t tagEnd = findUTF8(line, endTag, tagStart);
         if (tagEnd != std::string_view::npos) {
           const auto tag = line.substr(tagStart, tagEnd - tagStart);
-          if (ts.parseTag(tag) != TAG_unknown) {
+          const auto tagType = ts.parseTag(tag);
+          if (tagType != TAG_unknown) {
+            if (tagType == TAG_id && ts.activeID() != 0) { ++idCount; }
             itr.setPos(tagEnd);
             continue;
           }
@@ -62,7 +65,7 @@ std::pair<float,float> TextFormat::calcSize(std::string_view text) const
     height += lh;
   }
 
-  return {width, std::max(height, 0.0f)};
+  return {width, std::max(height, 0.0f), idCount};
 }
 
 int TextFormat::calcRegions(
@@ -97,8 +100,8 @@ int TextFormat::calcRegions(
 
     float offset = 0;
     if (h_align != Align::left) {
-      const auto [sizeW,sizeH] = calcSize(line);
-      offset = (h_align == Align::right) ? sizeW : (sizeW * .5f);
+      const auto p = calcProperties(line);
+      offset = (h_align == Align::right) ? p.width : (p.width * .5f);
     }
 
     float regionStart = 0, len = 0;

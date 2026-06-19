@@ -322,9 +322,9 @@ static void updateSize(GuiElem& def, const GuiTheme& thm)
       const float minHeight = float((label.minLines * (thm.font->size() + thm.textSpacing)) - thm.textSpacing);
       const TextFormat tf{
         .font = thm.font, .lineSpacing = float(thm.textSpacing)};
-      const auto [sizeW,sizeH] = tf.calcSize(label.text);
-      def._w = std::max(sizeW, label.minLength);
-      def._h = std::max(std::max(sizeH, minHeight) - 1.0f, 0.0f);
+      const auto props = tf.calcProperties(label.text);
+      def._w = std::max(props.width, label.minLength);
+      def._h = std::max(std::max(props.height, minHeight) - 1.0f, 0.0f);
       break;
     }
     case GUI_VLABEL: {
@@ -332,9 +332,9 @@ static void updateSize(GuiElem& def, const GuiTheme& thm)
       const float minHeight = float((label.minLines * (thm.font->size() + thm.textSpacing)) - thm.textSpacing);
       const TextFormat tf{
         .font = thm.font, .lineSpacing = float(thm.textSpacing)};
-      const auto [sizeW,sizeH] = tf.calcSize(label.text);
-      def._w = std::max(std::max(sizeH, minHeight) - 1.0f, 0.0f);
-      def._h = std::max(sizeW, label.minLength);
+      const auto props = tf.calcProperties(label.text);
+      def._w = std::max(std::max(props.height, minHeight) - 1.0f, 0.0f);
+      def._h = std::max(props.width, label.minLength);
       break;
     }
     case GUI_HLINE:
@@ -1437,32 +1437,31 @@ bool Gui::drawElem(
       const std::string txt = (entry.type == ENTRY_PASSWORD)
         ? passwordStr(thm.passwordCode, lengthUTF8(entry.text)) : entry.text;
       const float cw = thm.cursorWidth;
-      const auto [sizeW,sizeH] = tf.calcSize(txt);
+      const auto props = tf.calcProperties(txt);
       const float maxWidth = ew - thm.entryLeftMargin
         - thm.entryRightMargin - cw;
       const float leftEdge = ex + thm.entryLeftMargin;
       const float rightEdge = leftEdge + maxWidth;
       float tx = leftEdge;
-      if (sizeW <= maxWidth) {
+      if (props.width <= maxWidth) {
         if (hAlign(entry.align) == Align::right) {
-          tx = ex + ew - (sizeW + cw + thm.entryRightMargin);
+          tx = ex + ew - (props.width + cw + thm.entryRightMargin);
         } else if (hAlign(entry.align) != Align::left) { // HCENTER
-          tx = ex + ((ew - sizeW) * .5f);
+          tx = ex + ((ew - props.width) * .5f);
         }
       }
       float cx = 0;
       if (def._id == _focusID) {
-        if (sizeW <= maxWidth) { _focusEntryOffset = 0; }
-        const auto [sizeW2,sizeH2] =
-          tf.calcSize(substrUTF8(txt, 0, _focusCursorPos));
-        cx = tx + _focusEntryOffset + sizeW2;
+        if (props.width <= maxWidth) { _focusEntryOffset = 0; }
+        const auto p2 = tf.calcProperties(substrUTF8(txt, 0, _focusCursorPos));
+        cx = tx + _focusEntryOffset + p2.width;
         if (cx < leftEdge) {
           _focusEntryOffset += leftEdge - cx; cx = leftEdge;
         } else if (cx > rightEdge) {
           _focusEntryOffset -= cx - rightEdge; cx = rightEdge;
-        } else if (sizeW > maxWidth) {
+        } else if (props.width > maxWidth) {
           // special case to keep max amount of entry text visible
-          const float tEnd = tx + _focusEntryOffset + sizeW;
+          const float tEnd = tx + _focusEntryOffset + props.width;
           if (tEnd < rightEdge) {
             _focusEntryOffset += rightEdge - tEnd;
             cx += rightEdge - tEnd;
@@ -1481,9 +1480,9 @@ bool Gui::drawElem(
         const float ch = float(thm.font->size());
         if (_focusCursorPos != _focusRangeStart) {
           // draw selected text background
-          const auto [sizeW2,sizeH2] =
-            tf.calcSize(substrUTF8(txt, 0, _focusRangeStart));
-          const float cx2 = tx + sizeW2;
+          const auto p2 =
+            tf.calcProperties(substrUTF8(txt, 0, _focusRangeStart));
+          const float cx2 = tx + p2.width;
           const float x0 = std::max(std::min(cx,cx2)-1, ex);
           const float x1 = std::min(std::max(cx,cx2)+1, ex+ew);
           dc.color(thm.textSelectColor);

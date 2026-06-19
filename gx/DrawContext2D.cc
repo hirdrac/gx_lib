@@ -398,8 +398,8 @@ void DrawContext2D::text(
 
     float offset = 0;
     if (h_align != Align::left) {
-      const auto [sizeW,sizeH] = tf.calcSize(line);
-      offset = (h_align == Align::right) ? sizeW : (sizeW * .5f);
+      const auto p = tf.calcProperties(line);
+      offset = (h_align == Align::right) ? p.width : (p.width * .5f);
     }
 
     float len = 0;
