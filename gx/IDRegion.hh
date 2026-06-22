@@ -46,8 +46,8 @@ class gx::IDRegionList
 
   void add(int64_t id, Vec2 a, Vec2 b) {
     _data.push_back(
-      {id, std::min(a.x, b.x), std::min(a.y, b.y),
-       abs(a.x - b.x), abs(a.y - b.y)});
+      {id, {std::min(a.x, b.x), std::min(a.y, b.y),
+         abs(a.x - b.x), abs(a.y - b.y)}});
   }
 
   [[nodiscard]] int64_t selected(Vec2 pt) const {
