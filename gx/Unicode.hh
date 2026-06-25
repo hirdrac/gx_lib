@@ -57,10 +57,10 @@ namespace gx
 class gx::UTF8Iterator
 {
  public:
-  // constructors
   UTF8Iterator(std::string_view sv)
-    : _begin{sv.data()}, _itr{sv.data()}, _end{sv.data() + sv.size()} {
-    GX_ASSERT(_begin != nullptr); }
+    : _begin{reinterpret_cast<const char8_t*>(sv.data())},
+      _end{reinterpret_cast<const char8_t*>(sv.data() + sv.size())},
+      _itr{_begin} { GX_ASSERT(_begin != nullptr); }
 
 
   // member functions
@@ -87,15 +87,15 @@ class gx::UTF8Iterator
     // reset internal byte position
     // (if p is NPOS or past the end, position will be set to the end)
 
-  // helper operators
+  // operators
   [[nodiscard]] explicit operator bool() const { return _itr != _end; }
   UTF8Iterator& operator++() { _itr = nextItr(); return *this; }
   [[nodiscard]] int32_t operator*() const { return get(); }
 
  private:
-  const char* _begin;
-  const char* _itr;
-  const char* _end;
+  const char8_t* _begin;
+  const char8_t* _end;
+  const char8_t* _itr;
 
-  const char* nextItr() const;
+  const char8_t* nextItr() const;
 };

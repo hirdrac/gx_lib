@@ -158,7 +158,7 @@ int32_t gx::UTF8Iterator::get() const
 {
   if (done()) { return 0; }
 
-  const int ch = uint8_t(*_itr);
+  const int ch = *_itr;
   if (ch < 0x80) {
     return ch;  // 1 byte ascii value
   }
@@ -180,12 +180,12 @@ int32_t gx::UTF8Iterator::get() const
     return -1;
   }
 
-  const char* ptr = _itr;
-  const char* ptrEnd = _itr + bytes;
+  const char8_t* ptr = _itr;
+  const char8_t* ptrEnd = _itr + bytes;
   if (ptrEnd > _end) { return -1; }
 
   while (++ptr != ptrEnd) {
-    const int c = uint8_t(*ptr);
+    const int c = *ptr;
     if (!isMultiChar(c)) { return -1; }
     val = (val << 6) | (c & 0b111111);
   }
@@ -208,20 +208,20 @@ void gx::UTF8Iterator::setPos(std::size_t p)
   }
 }
 
-const char* gx::UTF8Iterator::nextItr() const
+const char8_t* gx::UTF8Iterator::nextItr() const
 {
   if (done()) { return _end; }
 
   int bytes = 1;
-  const uint32_t ch = uint8_t(*_itr);
+  const uint32_t ch = *_itr;
   if (ch > 0x7f) {
     if ((ch & 0b11100000) == 0b11000000) { bytes = 2; }
     else if ((ch & 0b11110000) == 0b11100000) { bytes = 3; }
     else if ((ch & 0b11111000) == 0b11110000) { bytes = 4; }
   }
 
-  const char* ptr = _itr;
-  const char* ptrEnd = std::min(_itr + bytes, _end);
-  do { ++ptr; } while (ptr != ptrEnd && isMultiChar(uint8_t(*ptr)));
+  const char8_t* ptr = _itr;
+  const char8_t* ptrEnd = std::min(_itr + bytes, _end);
+  do { ++ptr; } while (ptr != ptrEnd && isMultiChar(*ptr));
   return ptr;
 }
