@@ -9,7 +9,6 @@
 #include "Assert.hh"
 #include "3rd/stb_image.h"
 #include <limits>
-#include <cstring>
 using namespace gx;
 
 
@@ -45,7 +44,7 @@ Image& Image::operator=(const Image& im)
 
 void Image::init(int width, int height, int channels)
 {
-  GX_ASSERT(width > 0 && height > 0 && channels > 0);
+  GX_ASSERT(width > 0 && height > 0 && channels > 0 && channels <= 4);
 
   _width = width;
   _height = height;
@@ -57,7 +56,7 @@ void Image::init(int width, int height, int channels)
 void Image::init(int width, int height, int channels,
                  const uint8_t* src_data, bool copy)
 {
-  GX_ASSERT(width > 0 && height > 0 && channels > 0);
+  GX_ASSERT(width > 0 && height > 0 && channels > 0 && channels <= 4);
   GX_ASSERT(src_data != nullptr);
 
   _width = width;
@@ -114,29 +113,106 @@ void Image::clear()
   std::memset(_storage.get(), 0, size());
 }
 
-void Image::plot(int x, int y, const uint8_t* channel_vals)
+void Image::clear(const uint8_t* channelVals)
 {
   GX_ASSERT(canEdit());
-  const int offset = ((y * _width) + x) * _channels;
-  GX_ASSERT((offset >= 0) && (offset + _channels) <= int(size()));
-
-  std::memcpy(_storage.get() + offset, channel_vals, std::size_t(_channels));
+  switch (_channels) {
+    default:
+      std::memset(_storage.get(), channelVals[0], size());
+      break;
+    case 2:
+      std::fill_n(reinterpret_cast<uint16_t*>(_storage.get()), pixels(),
+                  *reinterpret_cast<const uint16_t*>(channelVals));
+      break;
+    case 3: {
+      const uint8_t v0 = channelVals[0];
+      const uint8_t v1 = channelVals[1];
+      const uint8_t v2 = channelVals[2];
+      uint8_t* dst = _storage.get();
+      uint8_t* end = dst + size();
+      while (dst != end) { *dst++ = v0; *dst++ = v1; *dst++ = v2; }
+      break;
+    }
+    case 4:
+      std::fill_n(reinterpret_cast<uint32_t*>(_storage.get()), pixels(),
+                  *reinterpret_cast<const uint32_t*>(channelVals));
+      break;
+  }
 }
 
-void Image::stamp(int x, int y, const Image& sub_image)
+void Image::plot(int x, int y, const uint8_t* channelVals)
 {
   GX_ASSERT(canEdit());
-  GX_ASSERT(_channels == sub_image.channels());
+  if (_valid(x, y)) { _plot(x, y, channelVals); }
+}
 
-  GX_ASSERT(x >= 0 && sub_image.width() <= (_width - x));
-  GX_ASSERT(y >= 0 && sub_image.height() <= (_height - y));
+void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
+{
+  GX_ASSERT(canEdit());
+  if ((x >= _width) || (y >= _height)
+      || ((x+_width) <= 0) || ((y+_height) <= 0)) { return; }
+
+  // clip rectangle to image boundries
+  const int x0 = std::max(x, 0);
+  const int y0 = std::max(y, 0);
+  const int x1 = std::min(x + w - 1, _width - 1);
+  const int y1 = std::min(y + h - 1, _height - 1);
+  const int ww = x1 - x0 + 1;
+  const int hh = y1 - y0 + 1;
+
+  switch (_channels) {
+    default: {
+      const uint8_t val = channelVals[0];
+      uint8_t* dst = _ptr(x, y);
+      uint8_t* end = dst + (_width * hh);
+      for (; dst != end; dst += _width) { std::fill_n(dst, ww, val); }
+      break;
+    }
+    case 2: {
+      const uint16_t val = *reinterpret_cast<const uint16_t*>(channelVals);
+      uint16_t* dst = reinterpret_cast<uint16_t*>(_ptr(x,y));
+      uint16_t* end = dst + (_width * hh);
+      for (; dst != end; dst += _width) { std::fill_n(dst, ww, val); }
+      break;
+    }
+    case 3: {
+      const uint8_t v0 = channelVals[0];
+      const uint8_t v1 = channelVals[1];
+      const uint8_t v2 = channelVals[2];
+      const int next = _width * 3;
+      uint8_t* row = _ptr(x,y);
+      uint8_t* rowEnd = row + (next * hh);
+      for (; row != rowEnd; row += next) {
+        uint8_t* dst = row;
+        uint8_t* end = row + (ww * 3);
+        while (dst != end) { *dst++ = v0; *dst++ = v1; *dst++ = v2; }
+      }
+      break;
+    }
+    case 4: {
+      const uint32_t val = *reinterpret_cast<const uint32_t*>(channelVals);
+      uint32_t* dst = reinterpret_cast<uint32_t*>(_ptr(x,y));
+      uint32_t* end = dst + (_width * hh);
+      for (; dst != end; dst += _width) { std::fill_n(dst, ww, val); }
+      break;
+    }
+  }
+}
+
+void Image::stamp(int x, int y, const Image& subImage)
+{
+  GX_ASSERT(canEdit());
+  GX_ASSERT(_channels == subImage.channels());
+
+  GX_ASSERT(x >= 0 && subImage.width() <= (_width - x));
+  GX_ASSERT(y >= 0 && subImage.height() <= (_height - y));
   // TODO: clip source image against destination image
 
-  uint8_t* dst = &_storage[std::size_t(((y * _width) + x) * _channels)];
-  const uint8_t* src = sub_image.data();
+  uint8_t* dst = _ptr(x,y);
+  const uint8_t* src = subImage.data();
   const int dw = _width * _channels;
-  const std::size_t sw = std::size_t(sub_image.width() * sub_image.channels());
-  for (int sy = 0; sy < sub_image.height(); ++sy) {
+  const std::size_t sw = std::size_t(subImage.width() * subImage.channels());
+  for (int sy = 0; sy < subImage.height(); ++sy) {
     std::memcpy(dst, src, sw);
     dst += dw;
     src += sw;
@@ -152,7 +228,7 @@ void Image::stamp(int x, int y, const Glyph& g)
   GX_ASSERT(y >= 0 && g.height <= (_height - y));
   // TODO: clip source image against destination image
 
-  uint8_t* dst = &_storage[std::size_t((y * _width) + x)];
+  uint8_t* dst = _ptr(x,y);
   const uint8_t* src = g.bitmap;
   for (int sy = 0; sy < g.height; ++sy) {
     std::memcpy(dst, src, g.width);

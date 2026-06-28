@@ -8,6 +8,7 @@
 #pragma once
 #include <memory>
 #include <cstdint>
+#include <cstring>
 
 
 namespace gx {
@@ -49,19 +50,47 @@ class gx::Image
   [[nodiscard]] int width() const { return _width; }
   [[nodiscard]] int height() const { return _height; }
   [[nodiscard]] int channels() const { return _channels; }
+  [[nodiscard]] std::size_t pixels() const {
+    return std::size_t(_width * _height); }
   [[nodiscard]] std::size_t size() const {
-    return std::size_t(_width * _height * _channels); }
+    return pixels() * std::size_t(_channels); }
   [[nodiscard]] const uint8_t* data() const { return _data; }
 
   // image editing methods
   [[nodiscard]] bool canEdit() const { return _storage.get(); }
   void clear();
-  void plot(int x, int y, const uint8_t* channels_vals);
-  void stamp(int x, int y, const Image& sub_image);
+  void clear(const uint8_t* channelVals);
+  void plot(int x, int y, const uint8_t* channelVals);
+  void rectangle(int x, int y, int w, int h, const uint8_t* channelVals);
+  void stamp(int x, int y, const Image& subImage);
   void stamp(int x, int y, const Glyph& g);
 
  private:
   std::unique_ptr<uint8_t[]> _storage;
   const uint8_t* _data = nullptr;
   int _width = 0, _height = 0, _channels = 0;
+
+  [[nodiscard]] bool _valid(int x, int y) const {
+    return (x >= 0) && (x < _width) && (y >= 0) && (y < _height);
+  }
+
+  [[nodiscard]] uint8_t* _ptr(int x, int y) {
+    return _storage.get() + (((y * _width) + x) * _channels);
+  }
+
+  void _plot(int x, int y, const uint8_t* channelVals) {
+    std::memcpy(_ptr(x,y), channelVals, std::size_t(_channels));
+  }
+
+  void _plot1(int x, int y, uint8_t val) {
+    *(_storage.get() + (_width * y) + x) = val;
+  }
+
+  void _plot2(int x, int y, uint16_t val) {
+    *(reinterpret_cast<uint16_t*>(_storage.get()) + (_width * y) + x) = val;
+  }
+
+  void _plot4(int x, int y, uint32_t val) {
+    *(reinterpret_cast<uint32_t*>(_storage.get()) + (_width * y) + x) = val;
+  }
 };
