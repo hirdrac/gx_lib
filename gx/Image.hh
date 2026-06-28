@@ -1,6 +1,6 @@
 //
 // gx/Image.hh
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // 8-bits per channel variable channel image
 //
@@ -19,10 +19,22 @@ class gx::Image
 {
  public:
   Image() = default;
+  Image(int width, int height, int channels) {
+    init(width, height, channels); }
+  Image(int width, int height, int channels, const uint8_t* data, bool copy) {
+    init(width, height, channels, data, copy); }
+
+  // allow copy/assign
+  Image(const Image& im);
+  Image& operator=(const Image& im);
+
+  // enable move/move-assign
+  Image(Image&&) noexcept = default;
+  Image& operator=(Image&&) noexcept = default;
 
   // init methods
-  bool init(int width, int height, int channels);
-  bool init(int width, int height, int channels,
+  void init(int width, int height, int channels);
+  void init(int width, int height, int channels,
 	    const uint8_t* data, bool copy);
 
   bool load(const char* fileName);
@@ -49,7 +61,7 @@ class gx::Image
   void stamp(int x, int y, const Glyph& g);
 
  private:
-  const uint8_t* _data = nullptr;
   std::unique_ptr<uint8_t[]> _storage;
+  const uint8_t* _data = nullptr;
   int _width = 0, _height = 0, _channels = 0;
 };

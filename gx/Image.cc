@@ -1,6 +1,6 @@
 //
 // gx/Image.cc
-// Copyright (C) 2024 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #include "Image.hh"
@@ -13,7 +13,37 @@
 using namespace gx;
 
 
-bool Image::init(int width, int height, int channels)
+Image::Image(const Image& im)
+  : _width{im._width}, _height{im._height}, _channels{im._channels}
+{
+  const std::size_t s = im.size();
+  if (s > 0) {
+    _storage = std::make_unique_for_overwrite<uint8_t[]>(s);
+    _data = _storage.get();
+    std::memcpy(_storage.get(), im.data(), s);
+  }
+}
+
+Image& Image::operator=(const Image& im)
+{
+  const std::size_t s = im.size();
+  if (s > 0) {
+    if (!_storage.get() || size() != s) {
+      _storage = std::make_unique_for_overwrite<uint8_t[]>(s);
+      _data = _storage.get();
+    }
+    std::memcpy(_storage.get(), im.data(), s);
+  } else {
+    _storage = {};
+    _data = nullptr;
+  }
+  _width = im._width;
+  _height = im._height;
+  _channels = im._channels;
+  return *this;
+}
+
+void Image::init(int width, int height, int channels)
 {
   GX_ASSERT(width > 0 && height > 0 && channels > 0);
 
@@ -22,10 +52,9 @@ bool Image::init(int width, int height, int channels)
   _channels = channels;
   _storage = std::make_unique<uint8_t[]>(size());
   _data = _storage.get();
-  return true;
 }
 
-bool Image::init(int width, int height, int channels,
+void Image::init(int width, int height, int channels,
                  const uint8_t* src_data, bool copy)
 {
   GX_ASSERT(width > 0 && height > 0 && channels > 0);
@@ -36,13 +65,13 @@ bool Image::init(int width, int height, int channels,
   _channels = channels;
   if (copy) {
     const std::size_t s = size();
-    _storage.reset(new uint8_t[s]);
-    std::memcpy(_storage.get(), src_data, s);
+    _storage = std::make_unique_for_overwrite<uint8_t[]>(s);
     _data = _storage.get();
+    std::memcpy(_storage.get(), src_data, s);
   } else {
+    _storage = {};
     _data = src_data;
   }
-  return true;
 }
 
 bool Image::load(const char* filename)
