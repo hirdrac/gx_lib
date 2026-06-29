@@ -1,6 +1,6 @@
 //
 // gx/Font.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 // Create texture atlas for font glyph rendering
 //
@@ -82,7 +82,7 @@ class gx::Font
 
   [[nodiscard]] float glyphWidth(int code) const {
     const Glyph* g = findGlyph(code);
-    return g ? std::max(g->advX, g->width + g->left) : 0;
+    return g ? std::max(g->advX, float(g->bitmap.width()) + g->left) : 0;
   }
 
   void addGlyph(int code, int width, int height, float left, float top,

@@ -4,7 +4,6 @@
 //
 
 #include "Image.hh"
-#include "Glyph.hh"
 #include "Logger.hh"
 #include "Assert.hh"
 #include "3rd/stb_image.h"
@@ -218,23 +217,5 @@ void Image::stamp(int x, int y, const Image& subImage)
     std::memcpy(dst, src, sw);
     dst += dw;
     src += sw;
-  }
-}
-
-void Image::stamp(int x, int y, const Glyph& g)
-{
-  GX_ASSERT(canEdit());
-  GX_ASSERT(_channels == 1);
-
-  GX_ASSERT(x >= 0 && g.width <= (_width - x));
-  GX_ASSERT(y >= 0 && g.height <= (_height - y));
-  // TODO: clip source image against destination image
-
-  uint8_t* dst = _ptr(x,y);
-  const uint8_t* src = g.bitmap;
-  for (int sy = 0; sy < g.height; ++sy) {
-    std::memcpy(dst, src, g.width);
-    dst += _width;
-    src += g.width;
   }
 }

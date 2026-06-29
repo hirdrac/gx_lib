@@ -506,8 +506,9 @@ void DrawContext2D::text(
 void DrawContext2D::_glyph(
   const Glyph& g, const TextFormat& tf, Vec2 baseline, float altWidth)
 {
-  const Vec2 gx = tf.glyphX * (altWidth > 0 ? altWidth : float(g.width));
-  const Vec2 gy = tf.glyphY * float(g.height);
+  const Vec2 gx =
+    tf.glyphX * (altWidth > 0 ? altWidth : float(g.bitmap.width()));
+  const Vec2 gy = tf.glyphY * float(g.bitmap.height());
 
   // quad: A-B
   //       |/|

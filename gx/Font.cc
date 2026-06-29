@@ -147,10 +147,10 @@ bool Font::makeAtlas(Renderer& ren)
   // get font dimensions for texture creation
   int maxW = 0, maxH = 0, totalW = 0;
   for (const auto& itr : _glyphs) {
-    const Glyph& g = itr.second;
-    if (g.width > maxW) { maxW = g.width; }
-    if (g.height > maxH) { maxH = g.height; }
-    totalW += g.width + 1;
+    const Image& img = itr.second.bitmap;
+    maxW = std::max(maxW, img.width());
+    maxH = std::max(maxH, img.height());
+    totalW += img.width() + 1;
   }
 
   // calculate texture size
@@ -172,21 +172,22 @@ bool Font::makeAtlas(Renderer& ren)
   int x = 1, y = 1;
   for (auto& itr : _glyphs) {
     Glyph& g = itr.second;
-    if (g.width == 0 || g.height == 0) {
+    const int bw = g.bitmap.width();
+    if (bw == 0) {
       g.t0 = {};
       g.t1 = {};
       continue;
     }
 
-    if ((x+g.width) >= texW) { x = 1; y += maxH + 1; }
+    if ((x + bw) >= texW) { x = 1; y += maxH + 1; }
 
     g.t0.x = float(x) / float(texW);
     g.t0.y = float(y) / float(texH);
-    g.t1.x = float(x + g.width) / float(texW);
-    g.t1.y = float(y + g.height) / float(texH);
+    g.t1.x = float(x + bw) / float(texW);
+    g.t1.y = float(y + g.bitmap.height()) / float(texH);
 
-    img.stamp(x, y, g);
-    x += g.width + 1;
+    img.stamp(x, y, g.bitmap);
+    x += bw + 1;
   }
 
   TextureParams params;
@@ -209,29 +210,18 @@ void Font::addGlyph(
   int code, int width, int height, float left, float top,
   float advX, float advY, const uint8_t* bitmap, bool copy)
 {
-  using width_t = decltype(Glyph::width);
-  using height_t = decltype(Glyph::height);
-
-  GX_ASSERT(width >= 0 && width < std::numeric_limits<width_t>::max());
-  GX_ASSERT(height >= 0 && height < std::numeric_limits<height_t>::max());
+  GX_ASSERT(width >= 0 && width < 65536);
+  GX_ASSERT(height >= 0 && height < 65536);
 
   Glyph& g = _glyphs[code];
   g.fontSize = _size;
-  g.width = static_cast<width_t>(width);
-  g.height = static_cast<height_t>(height);
   g.left = left;
   g.top = top;
   g.advX = advX;
   g.advY = advY;
 
-  const std::size_t size = g.width * g.height;
-  if (copy && bitmap && size > 0) {
-    g.bitmapCopy.reset(new uint8_t[size]);
-    std::memcpy(g.bitmapCopy.get(), bitmap, size);
-    g.bitmap = g.bitmapCopy.get();
-  } else {
-    g.bitmapCopy.reset(nullptr);
-    g.bitmap = bitmap;
+  if (bitmap && (width > 0) && (height > 0)) {
+    g.bitmap.init(width, height, 1, bitmap, copy);
   }
 }
 
@@ -245,12 +235,12 @@ void Font::calcAttributes()
     if ((code > 47 && code < 94) || (code > 96 && code < 127)) {
       // ymin/ymax adjust for a limited range of characters
       _ymax = std::max(_ymax, g.top);
-      _ymin = std::min(_ymin, g.top - float(g.height));
+      _ymin = std::min(_ymin, g.top - float(g.bitmap.height()));
     }
 
     if (std::isdigit(code) || code == '.' || code == '-') {
       _digitWidth = std::max(
-        _digitWidth, std::max(float(g.width + g.left), g.advX));
+        _digitWidth, std::max(float(g.bitmap.width()) + g.left, g.advX));
     }
   }
 }

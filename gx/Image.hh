@@ -14,7 +14,6 @@
 
 namespace gx {
   class Image;
-  struct Glyph;
 }
 
 class gx::Image
@@ -75,7 +74,6 @@ class gx::Image
     rectangle(x, y, w, h, channelVals.begin()); }
 
   void stamp(int x, int y, const Image& subImage);
-  void stamp(int x, int y, const Glyph& g);
 
  private:
   std::unique_ptr<uint8_t[]> _storage;
