@@ -6,6 +6,7 @@
 //
 
 #pragma once
+#include <initializer_list>
 #include <memory>
 #include <cstdint>
 #include <cstring>
@@ -58,10 +59,21 @@ class gx::Image
 
   // image editing methods
   [[nodiscard]] bool canEdit() const { return _storage.get(); }
+
   void clear();
   void clear(const uint8_t* channelVals);
+  void clear(std::initializer_list<uint8_t> channelVals) {
+    clear(channelVals.begin()); }
+
   void plot(int x, int y, const uint8_t* channelVals);
+  void plot(int x, int y, std::initializer_list<uint8_t> channelVals) {
+    plot(x, y, channelVals.begin()); }
+
   void rectangle(int x, int y, int w, int h, const uint8_t* channelVals);
+  void rectangle(int x, int y, int w, int h,
+                 std::initializer_list<uint8_t> channelVals) {
+    rectangle(x, y, w, h, channelVals.begin()); }
+
   void stamp(int x, int y, const Image& subImage);
   void stamp(int x, int y, const Glyph& g);
 
@@ -71,7 +83,8 @@ class gx::Image
   int _width = 0, _height = 0, _channels = 0;
 
   [[nodiscard]] bool _valid(int x, int y) const {
-    return (x >= 0) && (x < _width) && (y >= 0) && (y < _height);
+    return (uint32_t(x) < uint32_t(_width))
+      && (uint32_t(y) < uint32_t(_height));
   }
 
   [[nodiscard]] uint8_t* _ptr(int x, int y) {

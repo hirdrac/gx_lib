@@ -25,6 +25,8 @@ Image::Image(const Image& im)
 
 Image& Image::operator=(const Image& im)
 {
+  GX_ASSERT(this != &im);
+
   const std::size_t s = im.size();
   if (s > 0) {
     if (!_storage.get() || size() != s) {

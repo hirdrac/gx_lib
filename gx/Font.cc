@@ -167,8 +167,7 @@ bool Font::makeAtlas(Renderer& ren)
   if (texW & 15) { texW = (texW & ~15) + 16; }
   if (texH & 15) { texH = (texH & ~15) + 16; }
 
-  Image img;
-  img.init(texW, texH, 1);
+  Image img(texW, texH, 1);
 
   int x = 1, y = 1;
   for (auto& itr : _glyphs) {
