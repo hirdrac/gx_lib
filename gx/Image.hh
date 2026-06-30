@@ -57,7 +57,7 @@ class gx::Image
   [[nodiscard]] const uint8_t* data() const { return _data; }
 
   // image editing methods
-  [[nodiscard]] bool canEdit() const { return _storage.get(); }
+  [[nodiscard]] bool owner() const { return _storage.get() != nullptr; }
 
   void clear();
   void clear(const uint8_t* channelVals);
@@ -79,6 +79,13 @@ class gx::Image
   std::unique_ptr<uint8_t[]> _storage;
   const uint8_t* _data = nullptr;
   int _width = 0, _height = 0, _channels = 0;
+
+  void _makeStorage() {
+    const std::size_t s = size();
+    _storage = std::make_unique_for_overwrite<uint8_t[]>(s);
+    std::memcpy(_storage.get(), _data, s);
+    _data = _storage.get();
+  }
 
   [[nodiscard]] bool _valid(int x, int y) const {
     return (uint32_t(x) < uint32_t(_width))

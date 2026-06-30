@@ -12,30 +12,31 @@ using namespace gx;
 
 
 Image::Image(const Image& im)
-  : _width{im._width}, _height{im._height}, _channels{im._channels}
+  : _data{im._data}, _width{im._width}, _height{im._height},
+    _channels{im._channels}
 {
-  const std::size_t s = im.size();
-  if (s > 0) {
-    _storage = std::make_unique_for_overwrite<uint8_t[]>(s);
-    _data = _storage.get();
-    std::memcpy(_storage.get(), im.data(), s);
-  }
+  if (im.owner()) { _makeStorage(); }
 }
 
 Image& Image::operator=(const Image& im)
 {
   GX_ASSERT(this != &im);
 
-  const std::size_t s = im.size();
-  if (s > 0) {
-    if (!_storage.get() || size() != s) {
-      _storage = std::make_unique_for_overwrite<uint8_t[]>(s);
+  if (im.owner()) {
+    const std::size_t s = im.size();
+    if (owner() && size() == s) {
+      // reuse existing buffer
+      std::memcpy(_storage.get(), im.data(), s);
+    } else {
+      // copy other buffer (strong exception safety)
+      auto buf = std::make_unique_for_overwrite<uint8_t[]>(s);
+      std::memcpy(buf.get(), im._data, s);
+      _storage = std::move(buf);
       _data = _storage.get();
     }
-    std::memcpy(_storage.get(), im.data(), s);
   } else {
     _storage = {};
-    _data = nullptr;
+    _data = im._data;
   }
   _width = im._width;
   _height = im._height;
@@ -47,31 +48,38 @@ void Image::init(int width, int height, int channels)
 {
   GX_ASSERT(width > 0 && height > 0 && channels > 0 && channels <= 4);
 
+  // strong exception safety
+  auto buf = std::make_unique<uint8_t[]>(
+    std::size_t(width * height * channels));
+
+  _storage = std::move(buf);
+  _data = _storage.get();
   _width = width;
   _height = height;
   _channels = channels;
-  _storage = std::make_unique<uint8_t[]>(size());
-  _data = _storage.get();
 }
 
 void Image::init(int width, int height, int channels,
-                 const uint8_t* src_data, bool copy)
+                 const uint8_t* data, bool copy)
 {
   GX_ASSERT(width > 0 && height > 0 && channels > 0 && channels <= 4);
-  GX_ASSERT(src_data != nullptr);
+  GX_ASSERT(data != nullptr);
 
+  if (copy) {
+    // strong exception safety
+    const auto s = std::size_t(width * height * channels);
+    auto buf = std::make_unique_for_overwrite<uint8_t[]>(s);
+    std::memcpy(buf.get(), data, s);
+
+    _storage = std::move(buf);
+    _data = _storage.get();
+  } else {
+    _storage = {};
+    _data = data;
+  }
   _width = width;
   _height = height;
   _channels = channels;
-  if (copy) {
-    const std::size_t s = size();
-    _storage = std::make_unique_for_overwrite<uint8_t[]>(s);
-    _data = _storage.get();
-    std::memcpy(_storage.get(), src_data, s);
-  } else {
-    _storage = {};
-    _data = src_data;
-  }
 }
 
 bool Image::load(const char* filename)
@@ -110,13 +118,13 @@ bool Image::loadFromMemory(const void* mem, std::size_t memSize)
 
 void Image::clear()
 {
-  GX_ASSERT(canEdit());
+  if (!owner()) { _makeStorage(); }
   std::memset(_storage.get(), 0, size());
 }
 
 void Image::clear(const uint8_t* channelVals)
 {
-  GX_ASSERT(canEdit());
+  if (!owner()) { _makeStorage(); }
   switch (_channels) {
     default:
       std::memset(_storage.get(), channelVals[0], size());
@@ -143,13 +151,13 @@ void Image::clear(const uint8_t* channelVals)
 
 void Image::plot(int x, int y, const uint8_t* channelVals)
 {
-  GX_ASSERT(canEdit());
+  if (!owner()) { _makeStorage(); }
   if (_valid(x, y)) { _plot(x, y, channelVals); }
 }
 
 void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
 {
-  GX_ASSERT(canEdit());
+  if (!owner()) { _makeStorage(); }
   if ((x >= _width) || (y >= _height)
       || ((x+_width) <= 0) || ((y+_height) <= 0)) { return; }
 
@@ -202,17 +210,16 @@ void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
 
 void Image::stamp(int x, int y, const Image& subImage)
 {
-  GX_ASSERT(canEdit());
   GX_ASSERT(_channels == subImage.channels());
-
   GX_ASSERT(x >= 0 && subImage.width() <= (_width - x));
   GX_ASSERT(y >= 0 && subImage.height() <= (_height - y));
   // TODO: clip source image against destination image
 
+  if (!owner()) { _makeStorage(); }
   uint8_t* dst = _ptr(x,y);
   const uint8_t* src = subImage.data();
   const int dw = _width * _channels;
-  const std::size_t sw = std::size_t(subImage.width() * subImage.channels());
+  const auto sw = std::size_t(subImage.width() * subImage.channels());
   for (int sy = 0; sy < subImage.height(); ++sy) {
     std::memcpy(dst, src, sw);
     dst += dw;
