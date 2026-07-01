@@ -1,6 +1,6 @@
 //
 // gx/GLFramebuffer.hh
-// Copyright(C) 2024 by Richard Bradley
+// Copyright (C) 2024 Richard Bradley
 //
 // wrapper for OpenGL framebuffer object
 //

@@ -12,15 +12,13 @@
 #include "Image.hh"
 #include "Logger.hh"
 #include "Assert.hh"
-#include <limits>
 #include <cstdlib>
-#include <cstring>
 #include <ft2build.h>
 #include <freetype/freetype.h>
 using namespace gx;
 
 
-static FT_Library ftLib = nullptr;
+static FT_Library ftLib;
 
 static void cleanupFreeType()
 {
@@ -167,7 +165,7 @@ bool Font::makeAtlas(Renderer& ren)
   if (texW & 15) { texW = (texW & ~15) + 16; }
   if (texH & 15) { texH = (texH & ~15) + 16; }
 
-  Image img(texW, texH, 1);
+  Image img{texW, texH, 1};
 
   int x = 1, y = 1;
   for (auto& itr : _glyphs) {
@@ -190,14 +188,15 @@ bool Font::makeAtlas(Renderer& ren)
     x += bw + 1;
   }
 
-  TextureParams params;
-  params.width = img.width();
-  params.height = img.height();
-  params.channels = img.channels();
-  params.minFilter = FilterType::linear;
-  params.magFilter = FilterType::linear;
-  params.wrapS = WrapType::clampToEdge;
-  params.wrapT = WrapType::clampToEdge;
+  const TextureParams params{
+    .width = img.width(),
+    .height = img.height(),
+    .channels = img.channels(),
+    .minFilter = FilterType::linear,
+    .magFilter = FilterType::linear,
+    .wrapS = WrapType::clampToEdge,
+    .wrapT = WrapType::clampToEdge
+  };
 
   _atlas = ren.newTexture(params);
   ren.setSubImage(_atlas.id(), 0, 0, img);
