@@ -211,18 +211,39 @@ void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
 void Image::stamp(int x, int y, const Image& subImage)
 {
   GX_ASSERT(_channels == subImage.channels());
-  GX_ASSERT(x >= 0 && subImage.width() <= (_width - x));
-  GX_ASSERT(y >= 0 && subImage.height() <= (_height - y));
-  // TODO: clip source image against destination image
+
+  if (x >= _width || y >= _height) { return; }
+
+  int subX = 0, subWidth = subImage.width();
+  if (x < 0) {
+    subX = -x;
+    if (subX >= subImage.width()) { return; }
+    x = 0;
+    subWidth -= subX;
+  }
+
+  int subY = 0, subHeight = subImage.height();
+  if (y < 0) {
+    subY = -y;
+    if (subY >= subImage.height()) { return; }
+    y = 0;
+    subHeight -= subY;
+  }
+
+  subWidth = std::min(subWidth, _width - x);
+  subHeight = std::min(subHeight, _height - y);
 
   if (!owner()) { _makeStorage(); }
+  const int dstRow = _width * _channels;
   uint8_t* dst = _ptr(x,y);
-  const uint8_t* src = subImage.data();
-  const int dw = _width * _channels;
-  const auto sw = std::size_t(subImage.width() * subImage.channels());
-  for (int sy = 0; sy < subImage.height(); ++sy) {
+
+  const auto sw = std::size_t(subWidth * subImage.channels());
+  const int srcRow = subImage.width() * subImage.channels();
+  const uint8_t* src = subImage._ptr(subX, subY);
+  const uint8_t* srcEnd = src + (srcRow * subHeight);
+
+  for (; src != srcEnd; src += srcRow) {
     std::memcpy(dst, src, sw);
-    dst += dw;
-    src += sw;
+    dst += dstRow;
   }
 }

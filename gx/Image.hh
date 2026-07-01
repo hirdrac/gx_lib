@@ -92,7 +92,7 @@ class gx::Image
       && (uint32_t(y) < uint32_t(_height));
   }
 
-  [[nodiscard]] uint8_t* _ptr(int x, int y) {
+  [[nodiscard]] uint8_t* _ptr(int x, int y) const {
     return _storage.get() + (((y * _width) + x) * _channels);
   }
 
