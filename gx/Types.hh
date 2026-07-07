@@ -25,6 +25,7 @@ namespace gx {
   struct Glyph;
   class IDRegionList;
   class Image;
+  class RandomSequence;
   struct Rect;
   class Renderer;
   struct Style;
