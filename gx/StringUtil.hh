@@ -4,6 +4,7 @@
 //
 
 #pragma once
+#include "Print.hh"
 #include <string>
 #include <string_view>
 #include <sstream>
@@ -24,7 +25,7 @@ namespace gx
       return {};
     } else {
       std::ostringstream os;
-      ((os << args),...);
+      print_os(os, args...);
       return os.str();
     }
   }
