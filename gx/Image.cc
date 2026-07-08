@@ -159,7 +159,7 @@ void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
 {
   if (!owner()) { _makeStorage(); }
   if ((x >= _width) || (y >= _height)
-      || ((x+_width) <= 0) || ((y+_height) <= 0)) { return; }
+      || ((x + w) <= 0) || ((y + h) <= 0)) { return; }
 
   // clip rectangle to image boundries
   const int x0 = std::max(x, 0);
@@ -168,18 +168,19 @@ void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
   const int y1 = std::min(y + h - 1, _height - 1);
   const int ww = x1 - x0 + 1;
   const int hh = y1 - y0 + 1;
+  uint8_t* ptr = _ptr(x0, y0);
 
   switch (_channels) {
     default: {
       const uint8_t val = channelVals[0];
-      uint8_t* dst = _ptr(x, y);
+      uint8_t* dst = ptr;
       uint8_t* end = dst + (_width * hh);
       for (; dst != end; dst += _width) { std::fill_n(dst, ww, val); }
       break;
     }
     case 2: {
       const uint16_t val = *reinterpret_cast<const uint16_t*>(channelVals);
-      uint16_t* dst = reinterpret_cast<uint16_t*>(_ptr(x,y));
+      uint16_t* dst = reinterpret_cast<uint16_t*>(ptr);
       uint16_t* end = dst + (_width * hh);
       for (; dst != end; dst += _width) { std::fill_n(dst, ww, val); }
       break;
@@ -189,7 +190,7 @@ void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
       const uint8_t v1 = channelVals[1];
       const uint8_t v2 = channelVals[2];
       const int next = _width * 3;
-      uint8_t* row = _ptr(x,y);
+      uint8_t* row = ptr;
       uint8_t* rowEnd = row + (next * hh);
       for (; row != rowEnd; row += next) {
         uint8_t* dst = row;
@@ -200,7 +201,7 @@ void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
     }
     case 4: {
       const uint32_t val = *reinterpret_cast<const uint32_t*>(channelVals);
-      uint32_t* dst = reinterpret_cast<uint32_t*>(_ptr(x,y));
+      uint32_t* dst = reinterpret_cast<uint32_t*>(ptr);
       uint32_t* end = dst + (_width * hh);
       for (; dst != end; dst += _width) { std::fill_n(dst, ww, val); }
       break;
