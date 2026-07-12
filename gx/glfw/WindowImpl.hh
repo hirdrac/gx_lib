@@ -19,6 +19,12 @@ class gx::WindowImpl
   WindowImpl();
   ~WindowImpl();
 
+  // disable copy/move
+  WindowImpl(const WindowImpl&) = delete;
+  WindowImpl& operator=(const WindowImpl&) = delete;
+  WindowImpl(WindowImpl&&) noexcept = delete;
+  WindowImpl& operator=(WindowImpl&&) noexcept = delete;
+
   void setTitle(std::string_view title);
   void setSize(int width, int height, bool fullScreen);
   void setSizeLimits(int minWidth, int minHeight, int maxWidth, int maxHeight);
