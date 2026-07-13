@@ -19,8 +19,6 @@ namespace gx {
     float left, top, advX, advY;
     const uint8_t* bitmap;
   };
-
-  class Font;
 }
 
 class gx::Font

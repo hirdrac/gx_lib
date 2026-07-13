@@ -25,11 +25,14 @@ namespace gx {
   struct Glyph;
   class IDRegionList;
   class Image;
+  class Logger;
   class RandomSequence;
   struct Rect;
   class Renderer;
   struct Style;
   struct TextFormat;
   class TextMetaState;
+  class TextureHandle;
+  struct TextureParams;
   class Window;
 }

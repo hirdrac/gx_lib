@@ -11,8 +11,6 @@
 #include <string_view>
 
 namespace gx {
-  struct TextFormat;
-
   struct TextProperties {
     float width;
     float height;

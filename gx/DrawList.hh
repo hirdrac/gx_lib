@@ -12,8 +12,6 @@
 
 
 namespace gx {
-  class DrawList;
-
   struct Vertex2C { float x, y; uint32_t c; };
   struct Vertex2T { float x, y, s, t; };
   struct Vertex2TC { float x, y, s, t; uint32_t c; };

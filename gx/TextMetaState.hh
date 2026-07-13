@@ -22,8 +22,6 @@ namespace gx {
     TAG_underline = 2,
     TAG_id = 3,
   };
-
-  class TextMetaState;
 }
 
 

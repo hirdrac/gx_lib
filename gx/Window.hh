@@ -30,8 +30,6 @@ namespace gx {
     vresize,
   };
 
-
-  class Window;
   class WindowImpl;
 }
 

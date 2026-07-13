@@ -11,10 +11,6 @@
 #include "Types.hh"
 
 
-namespace gx {
-  struct Style;
-}
-
 struct gx::Style
 {
   enum EdgeType {

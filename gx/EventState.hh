@@ -104,8 +104,6 @@ namespace gx {
     }
   };
   static_assert(sizeof(InputState) == 8);
-
-  struct EventState;
 }
 
 struct gx::EventState
