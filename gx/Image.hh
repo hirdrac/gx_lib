@@ -6,15 +6,11 @@
 //
 
 #pragma once
+#include "Types.hh"
 #include <initializer_list>
 #include <memory>
-#include <cstdint>
 #include <cstring>
 
-
-namespace gx {
-  class Image;
-}
 
 class gx::Image
 {
@@ -74,6 +70,13 @@ class gx::Image
     rectangle(x, y, w, h, channelVals.begin()); }
 
   void stamp(int x, int y, const Image& subImage);
+
+  [[nodiscard]] float texCoordX(int x) const {
+    return float(x) / float(_width); }
+  [[nodiscard]] float texCoordY(int y) const {
+    return float(y) / float(_height); }
+  [[nodiscard]] Vec2 texCoord(int x, int y) const {
+    return {texCoordX(x), texCoordY(y)}; }
 
  private:
   std::unique_ptr<uint8_t[]> _storage;

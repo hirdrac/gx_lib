@@ -179,10 +179,8 @@ bool Font::makeAtlas(Renderer& ren)
 
     if ((x + bw) >= texW) { x = 1; y += maxH + 1; }
 
-    g.t0.x = float(x) / float(texW);
-    g.t0.y = float(y) / float(texH);
-    g.t1.x = float(x + bw) / float(texW);
-    g.t1.y = float(y + g.bitmap.height()) / float(texH);
+    g.t0 = img.texCoord(x, y);
+    g.t1 = img.texCoord(x + bw, y + g.bitmap.height());
 
     img.stamp(x, y, g.bitmap);
     x += bw + 1;
