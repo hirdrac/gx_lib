@@ -209,39 +209,36 @@ void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
   }
 }
 
-void Image::stamp(int x, int y, const Image& subImage)
+void Image::stampSubImage(int x, int y, const Image& img,
+                          int ix, int iy, int iw, int ih)
 {
-  GX_ASSERT(_channels == subImage.channels());
+  GX_ASSERT(_channels == img.channels());
 
-  if (x >= _width || y >= _height) { return; }
+  if (ix < 0) { iw += ix; x -= ix; ix = 0; }
+  if (x >= _width) { return; }
 
-  int subX = 0, subWidth = subImage.width();
-  if (x < 0) {
-    subX = -x;
-    if (subX >= subImage.width()) { return; }
-    x = 0;
-    subWidth -= subX;
-  }
+  if (iy < 0) { ih += iy; y -= iy; iy = 0; }
+  if (y >= _height) { return; }
 
-  int subY = 0, subHeight = subImage.height();
-  if (y < 0) {
-    subY = -y;
-    if (subY >= subImage.height()) { return; }
-    y = 0;
-    subHeight -= subY;
-  }
+  if (x < 0) { iw += x; ix -= x; x = 0; }
+  if (ix >= img.width() || iw <= 0) { return; }
 
-  subWidth = std::min(subWidth, _width - x);
-  subHeight = std::min(subHeight, _height - y);
+  if (y < 0) { ih += y; iy -= y; y = 0; }
+  if (iy >= img.height() || ih <= 0) { return; }
+
+  if ((ix + iw) > img.width()) { iw = img.width() - ix; }
+  if ((iy + ih) > img.height()) { ih = img.height() - iy; }
+  if ((x + iw) > _width) { iw = _width - x; }
+  if ((y + ih) > _height) { ih = _height - y; }
 
   if (!owner()) { _makeStorage(); }
   const int dstRow = _width * _channels;
   uint8_t* dst = _ptr(x,y);
 
-  const auto sw = std::size_t(subWidth * subImage.channels());
-  const int srcRow = subImage.width() * subImage.channels();
-  const uint8_t* src = subImage._ptr(subX, subY);
-  const uint8_t* srcEnd = src + (srcRow * subHeight);
+  const auto sw = std::size_t(iw * img.channels());
+  const int srcRow = img.width() * img.channels();
+  const uint8_t* src = img._ptr(ix, iy);
+  const uint8_t* srcEnd = src + (srcRow * ih);
 
   for (; src != srcEnd; src += srcRow) {
     std::memcpy(dst, src, sw);

@@ -69,7 +69,10 @@ class gx::Image
                  std::initializer_list<uint8_t> channelVals) {
     rectangle(x, y, w, h, channelVals.begin()); }
 
-  void stamp(int x, int y, const Image& subImage);
+  void stamp(int x, int y, const Image& img) {
+    stampSubImage(x, y, img, 0, 0, img.width(), img.height()); }
+  void stampSubImage(int x, int y, const Image& img,
+                     int ix, int iy, int iw, int ih);
 
   [[nodiscard]] float texCoordX(int x) const {
     return float(x) / float(_width); }
