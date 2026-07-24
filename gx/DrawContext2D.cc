@@ -817,9 +817,10 @@ void DrawContext2D::arcShaded(
   }
 }
 
-void DrawContext2D::roundedRectangle(
-  const Rect& r, float curveRadius, int curveSegments)
+void DrawContext2D::shapedRectangle(
+  const Rect& r, Style::ShapeType shape, float curveRadius, int curveSegments)
 {
+  if (shape == Style::square || !isPos(curveRadius)) { return rectangle(r); }
   if (!r || !checkColor()) { return; }
 
   const auto [x,y,w,h] = r;
@@ -833,10 +834,29 @@ void DrawContext2D::roundedRectangle(
     constexpr float a180 = degToRad(180.0f);
     constexpr float a270 = degToRad(270.0f);
     constexpr float a360 = degToRad(360.0f);
-    _circleSector({x+cr,y+cr}, cr, a270, a360, curveSegments);    // top/left
-    _circleSector({x+w-cr,y+cr}, cr, 0, a90, curveSegments);      // top/right
-    _circleSector({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments); // bottom/right
-    _circleSector({x+cr,y+h-cr}, cr, a180, a270, curveSegments);  // bottom/left
+    if (shape & Style::roundedTopLeftCorner) {
+      _circleSector({x+cr,y+cr}, cr, a270, a360, curveSegments);
+    } else {
+      _rectangle(x, y, cr, cr); // TODO: optimize
+    }
+
+    if (shape & Style::roundedTopRightCorner) {
+      _circleSector({x+w-cr,y+cr}, cr, 0, a90, curveSegments);
+    } else {
+      _rectangle(x+w-cr, y, cr, cr); // TODO: optimize
+    }
+
+    if (shape & Style::roundedBottomRightCorner) {
+      _circleSector({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments);
+    } else {
+      _rectangle(x+w-cr, y+h-cr, cr, cr); // TODO: optimize
+    }
+
+    if (shape & Style::roundedBottomLeftCorner) {
+      _circleSector({x+cr,y+h-cr}, cr, a180, a270, curveSegments);
+    } else {
+      _rectangle(x, y+h-cr, cr, cr); // TODO: optimize
+    }
   }
 
   // borders/center
@@ -930,9 +950,12 @@ void DrawContext2D::borderShaded(
   }
 }
 
-void DrawContext2D::roundedBorder(
-  const Rect& r, float curveRadius, int curveSegments, float borderWidth)
+void DrawContext2D::shapedBorder(
+  const Rect& r, Style::ShapeType shape, float curveRadius,
+  int curveSegments, float borderWidth)
 {
+  if (shape == Style::square || !isPos(curveRadius)) {
+    return border(r, borderWidth); }
   if (!r || !checkColor()) { return; }
 
   const auto [x,y,w,h] = r;
@@ -946,14 +969,37 @@ void DrawContext2D::roundedBorder(
     constexpr float a180 = degToRad(180.0f);
     constexpr float a270 = degToRad(270.0f);
     constexpr float a360 = degToRad(360.0f);
-    // top/left
-    _arc({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth);
-    // top/right
-    _arc({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth);
-    // bottom/right
-    _arc({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth);
-    // bottom/left
-    _arc({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth);
+    if (shape & Style::roundedTopLeftCorner) {
+      _arc({x+cr,y+cr}, cr, a270, a360, curveSegments, borderWidth);
+    } else if (gx::isLTE(cr, borderWidth)) {
+      _rectangle(x, y, cr, cr);
+    } else {
+      // TODO: square top left corner border
+    }
+
+    if (shape & Style::roundedTopRightCorner) {
+      _arc({x+w-cr,y+cr}, cr, 0, a90, curveSegments, borderWidth);
+    } else if (gx::isLTE(cr, borderWidth)) {
+      _rectangle(x+w-cr, y, cr, cr);
+    } else {
+      // TODO: square top right corner border
+    }
+
+    if (shape & Style::roundedBottomRightCorner) {
+      _arc({x+w-cr,y+h-cr}, cr, a90, a180, curveSegments, borderWidth);
+    } else if (gx::isLTE(cr, borderWidth)) {
+      _rectangle(x+w-cr, y+h-cr, cr, cr);
+    } else {
+      // TODO: square bottom right corner border
+    }
+
+    if (shape & Style::roundedBottomLeftCorner) {
+      _arc({x+cr,y+h-cr}, cr, a180, a270, curveSegments, borderWidth);
+    } else if (gx::isLTE(cr, borderWidth)) {
+      _rectangle(x, y+h-cr, cr, cr);
+    } else {
+      // TODO: square bottom left corner border
+    }
   }
 
   // borders/center
@@ -1075,61 +1121,36 @@ void DrawContext2D::shape(const Rect& r, const Style& style)
         break;
     }
 
-    if (isLTE(style.cornerRadius, 0.0f)) {
-      rectangle(r);
-    } else {
-      roundedRectangle(r, style.cornerRadius, style.cornerSegments);
-    }
+    shapedRectangle(r, style.shape, style.cornerRadius, style.cornerSegments);
   }
 
   if (style.edge != Style::no_edge && style.edgeColor != 0) {
     color(style.edgeColor);
-    if (isLTE(style.cornerRadius, 0.0f)) {
-      switch (style.edge) {
-        default: // Style::border_1px
-          border(r, 1);
-          break;
-        case Style::border_2px:
-          border(r, 2);
-          break;
-        case Style::underline_1px:
-          rectangle({r.x, r.y+r.h-1, r.w, 1});
-          break;
-        case Style::underline_2px:
-          rectangle({r.x, r.y+r.h-2, r.w, 2});
-          break;
-        case Style::overline_1px:
-          rectangle({r.x, r.y, r.w, 1});
-          break;
-        case Style::overline_2px:
-          rectangle({r.x, r.y, r.w, 2});
-          break;
-      }
-    } else {
-      switch (style.edge) {
-        default: // Style::border_1px
-          roundedBorder(r, style.cornerRadius, style.cornerSegments, 1);
-          break;
-        case Style::border_2px:
-          roundedBorder(r, style.cornerRadius, style.cornerSegments, 2);
-          break;
-        case Style::underline_1px:
-          rectangle(
-            {r.x+style.cornerRadius, r.y+r.h-1, r.w-(style.cornerRadius*2), 1});
-          break;
-        case Style::underline_2px:
-          rectangle(
+    switch (style.edge) {
+      default: // Style::border_1px
+        shapedBorder(
+          r, style.shape, style.cornerRadius, style.cornerSegments, 1);
+        break;
+      case Style::border_2px:
+        shapedBorder(
+          r, style.shape, style.cornerRadius, style.cornerSegments, 2);
+        break;
+      case Style::underline_1px:
+        rectangle(
+          {r.x+style.cornerRadius, r.y+r.h-1, r.w-(style.cornerRadius*2), 1});
+        break;
+      case Style::underline_2px:
+        rectangle(
             {r.x+style.cornerRadius, r.y+r.h-2, r.w-(style.cornerRadius*2), 2});
-          break;
-        case Style::overline_1px:
-          rectangle(
-            {r.x+style.cornerRadius, r.y, r.w-(style.cornerRadius*2), 1});
-          break;
-        case Style::overline_2px:
-          rectangle(
-            {r.x+style.cornerRadius, r.y, r.w-(style.cornerRadius*2), 2});
-          break;
-      }
+        break;
+      case Style::overline_1px:
+        rectangle(
+          {r.x+style.cornerRadius, r.y, r.w-(style.cornerRadius*2), 1});
+        break;
+      case Style::overline_2px:
+        rectangle(
+          {r.x+style.cornerRadius, r.y, r.w-(style.cornerRadius*2), 2});
+        break;
     }
   }
 }

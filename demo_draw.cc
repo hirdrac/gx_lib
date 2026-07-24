@@ -108,6 +108,34 @@ void draw_rrect6(gx::DrawContext2D& dc, const gx::Rect& r)
   dc.roundedRectangle({r.x+150, r.y+130, 100, 100}, 60, 4);
 }
 
+void draw_srect1(gx::DrawContext2D& dc, const gx::Rect& r)
+{
+  dc.color(GRAY50);
+  dc.shapedRectangle(
+    {r.x+20, r.y+30, 360, 300}, gx::Style::roundedTopCorners, 60, 6);
+}
+
+void draw_srect2(gx::DrawContext2D& dc, const gx::Rect& r)
+{
+  dc.color(GRAY50);
+  dc.shapedRectangle(
+    {r.x+20, r.y+30, 360, 300}, gx::Style::roundedBottomCorners, 60, 6);
+}
+
+void draw_srect3(gx::DrawContext2D& dc, const gx::Rect& r)
+{
+  dc.color(GRAY50);
+  dc.shapedRectangle(
+    {r.x+20, r.y+30, 360, 300}, gx::Style::roundedLeftCorners, 60, 6);
+}
+
+void draw_srect4(gx::DrawContext2D& dc, const gx::Rect& r)
+{
+  dc.color(GRAY50);
+  dc.shapedRectangle(
+    {r.x+20, r.y+30, 360, 300}, gx::Style::roundedRightCorners, 60, 6);
+}
+
 void draw_arc1(gx::DrawContext2D& dc, const gx::Rect& r)
 {
   dc.color(WHITE);
@@ -319,6 +347,10 @@ struct { const char* desc; void(*fn)(gx::DrawContext2D&,const gx::Rect&); }
   {"Narrow Width Rounded Rect", draw_rrect4},
   {"Narrow Height Rounded Rect", draw_rrect5},
   {"Narrow Width/Height Rounded Rect", draw_rrect6},
+  {"Rounded Top Corners", draw_srect1},
+  {"Rounded Bottom Corners", draw_srect2},
+  {"Rounded Left Corners", draw_srect3},
+  {"Rounded Right Corners", draw_srect4},
   {"Full Arc", draw_arc1},
   {"Partial Arc", draw_arc2},
   {"Gradient Arc", draw_arc3},

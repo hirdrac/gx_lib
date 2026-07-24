@@ -160,15 +160,24 @@ class gx::DrawContext2D
     return circleSectorShaded(
       center, radius, 0, 0, segments, innerColor, outerColor); }
 
-  void roundedRectangle(const Rect& r, float curveRadius, int curveSegments);
+  void shapedRectangle(const Rect& r, Style::ShapeType shape,
+                       float curveRadius, int curveSegments);
+  void roundedRectangle(const Rect& r, float curveRadius, int curveSegments) {
+    shapedRectangle(r, Style::roundedCorners, curveRadius, curveSegments); }
 
   void border(const Rect& r, float borderWidth);
   void borderShaded(
     const Rect& r, float borderWidth,
     RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
 
+  void shapedBorder(
+    const Rect& r, Style::ShapeType shape, float curveRadius,
+    int curveSegments, float borderWidth);
   void roundedBorder(
-    const Rect& r, float curveRadius, int curveSegments, float borderWidth);
+    const Rect& r, float curveRadius, int curveSegments, float borderWidth) {
+    shapedBorder(r, Style::roundedCorners, curveRadius,
+                 curveSegments, borderWidth); }
+
   void roundedBorderShaded(
     const Rect& r, float curveRadius, int curveSegments, float borderWidth,
     RGBA8 innerColor, RGBA8 outerColor, RGBA8 fillColor);
