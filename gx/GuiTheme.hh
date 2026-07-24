@@ -1,6 +1,6 @@
 //
 // gx/GuiTheme.hh
-// Copyright (C) 2025 Richard Bradley
+// Copyright (C) 2026 Richard Bradley
 //
 
 #pragma once
@@ -35,19 +35,19 @@ struct gx::GuiTheme
 
   Style checkbox = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f),
-    0,0, Style::no_edge, Style::solid, 8.0f};
+    0,0, Style::no_edge, Style::solid, Style::roundedCorners, 8.0f};
   Style checkboxHover = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.4f,.4f,1.0f),
-    0,0, Style::no_edge, Style::solid, 8.0f};
+    0,0, Style::no_edge, Style::solid, Style::roundedCorners, 8.0f};
   Style checkboxPress = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.8f,.8f,.8f,1.0f),
-    0,0, Style::no_edge, Style::solid, 8.0f};
+    0,0, Style::no_edge, Style::solid, Style::roundedCorners, 8.0f};
   Style checkboxHold = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), packRGBA8(.6f,.6f,.6f,1.0f),
-    0,0, Style::no_edge, Style::solid, 8.0f};
+    0,0, Style::no_edge, Style::solid, Style::roundedCorners, 8.0f};
   Style checkboxDisable = {
     packRGBA8(.5f,.5f,.5f,1.0f), packRGBA8(.4f,.4f,.4f,1.0f),
-    0,0, Style::no_edge, Style::solid, 8.0f};
+    0,0, Style::no_edge, Style::solid, Style::roundedCorners, 8.0f};
 
   Style menuButton = {
     packRGBA8(1.0f,1.0f,1.0f,1.0f), 0};

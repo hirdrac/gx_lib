@@ -30,12 +30,26 @@ struct gx::Style
     vgradient = 3, // fillColor(top), fillColor2(bottom)
   };
 
+  enum ShapeType {
+    square = 0,
+    roundedTopLeftCorner = 1,
+    roundedTopRightCorner = 2,
+    roundedBottomLeftCorner = 4,
+    roundedBottomRightCorner = 8,
+    roundedTopCorners = roundedTopLeftCorner | roundedTopRightCorner,
+    roundedBottomCorners = roundedBottomLeftCorner | roundedBottomRightCorner,
+    roundedLeftCorners = roundedTopLeftCorner | roundedBottomLeftCorner,
+    roundedRightCorners = roundedTopRightCorner | roundedBottomRightCorner,
+    roundedCorners = roundedTopCorners | roundedBottomCorners,
+  };
+
   RGBA8 textColor;
   RGBA8 fillColor;
   RGBA8 fillColor2 = 0;
   RGBA8 edgeColor = 0;
   EdgeType edge = border_1px;
   FillType fill = solid;
+  ShapeType shape = roundedCorners;
   float cornerRadius = 0.0f;  // default to unrounded
   uint16_t cornerSegments = 3;
 };
