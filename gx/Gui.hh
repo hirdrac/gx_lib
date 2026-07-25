@@ -70,10 +70,12 @@ class gx::Gui
   [[nodiscard]] bool needRedraw() const { return _needRedraw; }
     // render data & flag if data was changed last update
 
-  void setBGColor(float r, float g, float b) {
-    _bgColor = packRGBA8(r,g,b,1.0f); }
-  void setBGColor(const Color& c) {
+  void setBGColor(float r, float g, float b, float a = 1.0f) {
+    _bgColor = packRGBA8(r,g,b,a); }
+  void setBGColor(const Vec4& c) {
     _bgColor = packRGBA8(c); }
+  void setBGColor(const Vec3& c, float a = 1.0f) {
+    _bgColor = packRGBA8(c, a); }
   void setBGColor(RGBA8 c) {
     _bgColor = c; }
 

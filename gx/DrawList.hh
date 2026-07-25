@@ -97,8 +97,8 @@ class gx::DrawList
         diffuse.r, diffuse.g, diffuse.b); }
 
   void clearView(uint32_t c) { add(CMD_clearView, c); }
-  void clearView(float r, float g, float b) {
-    clearView(packRGBA8(r,g,b)); }
+  void clearView(float r, float g, float b, float a = 1.0f) {
+    clearView(packRGBA8(r,g,b,a)); }
   void clearView(const Vec3& c, float a = 1.0f) { clearView(packRGBA8(c, a)); }
   void clearView(const Vec4& c) { clearView(packRGBA8(c)); }
 
