@@ -67,19 +67,28 @@ void test_lineCount()
   assert(lineCount("\n\n") == 2);
   assert(lineCount("line 1\n\n") == 2);
   assert(lineCount("line 1\n\nline 3") == 3);
-
-  //int lines = 0;
-  //for (LineIterator itr{"\n\n"}; itr; ++itr) { ++lines; }
-  //assert(lines == 2);
 }
 
 void test_LineIterator()
 {
-  LineIterator itr{"line 1\n\nline 3"};
-  assert(itr && *itr == "line 1"); ++itr;
-  assert(itr && *itr == ""); ++itr;
-  assert(itr && *itr == "line 3"); ++itr;
-  assert(!itr);
+  {
+    LineIterator itr{""};
+    assert(!itr);
+  }
+
+  {
+    LineIterator itr{"\n"};
+    assert(itr && *itr == ""); ++itr;
+    assert(!itr);
+  }
+
+  {
+    LineIterator itr{"line 1\n\nline 3"};
+    assert(itr && *itr == "line 1"); ++itr;
+    assert(itr && *itr == ""); ++itr;
+    assert(itr && *itr == "line 3"); ++itr;
+    assert(!itr);
+  }
 }
 
 int main(int argc, char** argv)

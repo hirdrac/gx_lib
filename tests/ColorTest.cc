@@ -27,7 +27,7 @@ void test_unpack_pack()
   // red
   for (uint32_t r = 0; r < 256; ++r) {
     RGBA8 c0 = r;
-    Color c1 = unpackRGBA8(c0);
+    Vec4  c1 = unpackRGBA8(c0);
     RGBA8 c2 = packRGBA8(c1);
 
     check(c2,r,0,0,0);
@@ -36,7 +36,7 @@ void test_unpack_pack()
   // green
   for (uint32_t g = 0; g < 256; ++g) {
     RGBA8 c0 = g << 8;
-    Color c1 = unpackRGBA8(c0);
+    Vec4  c1 = unpackRGBA8(c0);
     RGBA8 c2 = packRGBA8(c1);
 
     check(c2,0,g,0,0);
@@ -45,7 +45,7 @@ void test_unpack_pack()
   // blue
   for (uint32_t b = 0; b < 256; ++b) {
     RGBA8 c0 = b << 16;
-    Color c1 = unpackRGBA8(c0);
+    Vec4  c1 = unpackRGBA8(c0);
     RGBA8 c2 = packRGBA8(c1);
 
     check(c2,0,0,b,0);
@@ -54,7 +54,7 @@ void test_unpack_pack()
   // alpha
   for (uint32_t a = 0; a < 256; ++a) {
     RGBA8 c0 = a << 24;
-    Color c1 = unpackRGBA8(c0);
+    Vec4  c1 = unpackRGBA8(c0);
     RGBA8 c2 = packRGBA8(c1);
 
     check(c2,0,0,0,a);
