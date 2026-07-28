@@ -39,9 +39,9 @@ class gx::DrawContext2D
     _colorMode = ColorMode::solid; _color0 = c; _color1 = 0; }
 
   void hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1);
-  void hgradient(float x0, const Color& c0, float x1, const Color& c1);
+  void hgradient(float x0, const Vec4& c0, float x1, const Vec4& c1);
   void vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1);
-  void vgradient(float y0, const Color& c0, float y1, const Color& c1);
+  void vgradient(float y0, const Vec4& c0, float y1, const Vec4& c1);
 
   void changeAlpha(float a);
     // change alpha value of current solid/gradient color
@@ -194,11 +194,11 @@ class gx::DrawContext2D
   TextureID _lastTexID;
 
   // color/gradient properties
-  float _g0, _g1;                 // x or y gradient coords
-  Color _fullcolor0{INIT_NONE};   // full float colors for gradient calc
-  Color _fullcolor1{INIT_NONE};
-  RGBA8 _color0, _color1;         // current colors
-  RGBA8 _dataColor;               // last color set in data
+  float _g0, _g1;               // x or y gradient coords
+  Vec4 _fullcolor0{INIT_NONE};  // full float colors for gradient calc
+  Vec4 _fullcolor1{INIT_NONE};
+  RGBA8 _color0, _color1;       // current colors
+  RGBA8 _dataColor;             // last color set in data
   enum class ColorMode { solid, hgradient, vgradient };
   ColorMode _colorMode;
 

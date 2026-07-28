@@ -76,7 +76,7 @@ void DrawContext2D::hgradient(float x0, RGBA8 c0, float x1, RGBA8 c1)
 }
 
 void DrawContext2D::hgradient(
-  float x0, const Color& c0, float x1, const Color& c1)
+  float x0, const Vec4& c0, float x1, const Vec4& c1)
 {
   _colorMode = ColorMode::hgradient;
   _g0 = x0;
@@ -99,7 +99,7 @@ void DrawContext2D::vgradient(float y0, RGBA8 c0, float y1, RGBA8 c1)
 }
 
 void DrawContext2D::vgradient(
-  float y0, const Color& c0, float y1, const Color& c1)
+  float y0, const Vec4& c0, float y1, const Vec4& c1)
 {
   _colorMode = ColorMode::vgradient;
   _g0 = y0;
@@ -790,8 +790,8 @@ void DrawContext2D::arcShaded(
   Vertex2C v0{center.x + (radius * sa0), center.y - (radius * ca0), startColor};
   Vertex2C v1{center.x + (innerR * sa0), center.y - (innerR * ca0), startColor};
 
-  const Color full0 = unpackRGBA8(startColor);
-  const Color full1 = unpackRGBA8(endColor);
+  const Vec4 full0 = unpackRGBA8(startColor);
+  const Vec4 full1 = unpackRGBA8(endColor);
 
   float a = angle0;
   for (int i = 0; i < segments; ++i) {

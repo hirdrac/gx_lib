@@ -17,7 +17,6 @@ static_assert(__BYTE_ORDER == __LITTLE_ENDIAN);
 
 namespace gx {
   // types
-  using Color = Vec4;
   using RGBA8 = uint32_t;  // red/green/blue/alpha 8 bits per channel
 
   // color constants
@@ -49,10 +48,10 @@ namespace gx {
       uint8_t(std::clamp(a, 0.0f, 1.0f) * 255.0f + .5f));
   }
 
-  [[nodiscard]] constexpr RGBA8 packRGBA8(const Vec3& c, float a = 1.0f) {
-    return packRGBA8(c[0], c[1], c[2], a); }
   [[nodiscard]] constexpr RGBA8 packRGBA8(const Vec4& c) {
     return packRGBA8(c[0], c[1], c[2], c[3]); }
+  [[nodiscard]] constexpr RGBA8 packRGBA8(const Vec3& c, float a = 1.0f) {
+    return packRGBA8(c[0], c[1], c[2], a); }
 
   [[nodiscard]] constexpr float unpackRGBA8Red(RGBA8 c) {
     return float(c & 255) / 255.0f; }
