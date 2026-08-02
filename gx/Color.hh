@@ -8,12 +8,9 @@
 #pragma once
 #include "Types.hh"
 #include <algorithm>
+#include <bit>
 
-#if __has_include(<endian.h>)
-#include <endian.h>
-// pack/unpack functions assume Intel byte order
-static_assert(__BYTE_ORDER == __LITTLE_ENDIAN);
-#endif
+static_assert(std::endian::native == std::endian::little);
 
 namespace gx {
   // types
@@ -35,7 +32,7 @@ namespace gx {
 
   // RGBA8 functions
   [[nodiscard]] constexpr RGBA8 packRGBA8i(
-    uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) {
     return RGBA8(r) | (RGBA8(g) << 8) | (RGBA8(b) << 16) | (RGBA8(a) << 24);
   }
 

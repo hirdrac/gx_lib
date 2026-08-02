@@ -10,7 +10,9 @@
 #include <initializer_list>
 #include <memory>
 #include <cstring>
+#include <bit>
 
+static_assert(std::endian::native == std::endian::little);
 
 class gx::Image
 {
@@ -59,15 +61,21 @@ class gx::Image
   void clear(const uint8_t* channelVals);
   void clear(std::initializer_list<uint8_t> channelVals) {
     clear(channelVals.begin()); }
+  void clear(uint32_t rgba) {
+    clear(reinterpret_cast<const uint8_t*>(&rgba)); }
 
   void plot(int x, int y, const uint8_t* channelVals);
   void plot(int x, int y, std::initializer_list<uint8_t> channelVals) {
     plot(x, y, channelVals.begin()); }
+  void plot(int x, int y, uint32_t rgba) {
+    plot(x, y, reinterpret_cast<uint8_t*>(&rgba)); }
 
   void rectangle(int x, int y, int w, int h, const uint8_t* channelVals);
   void rectangle(int x, int y, int w, int h,
                  std::initializer_list<uint8_t> channelVals) {
     rectangle(x, y, w, h, channelVals.begin()); }
+  void rectangle(int x, int y, int w, int h, uint32_t rgba) {
+    rectangle(x, y, w, h, reinterpret_cast<uint8_t*>(&rgba)); }
 
   void stamp(int x, int y, const Image& img) {
     stampSubImage(x, y, img, 0, 0, img.width(), img.height()); }
