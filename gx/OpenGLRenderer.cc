@@ -666,8 +666,8 @@ bool OpenGLRenderer<VER>::setSubImage(
   _impl->setCurrentGLContext();
 
   TextureEntry& te = itr->second;
-  te.tex.setSubImage(
-    0, offsetX, offsetY, img.width(), img.height(), imgformat, img.data());
+  te.tex.setSubImage(0, offsetX, offsetY, img.width(), img.height(),
+                     imgformat, GL_UNSIGNED_BYTE, img.data());
   te.mipmap = false;
   return true;
 }

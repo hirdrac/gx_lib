@@ -228,37 +228,6 @@ void setGLUnpackAlignment(GLsizei width, GLenum format, GLenum type);
   }
 }
 
-
-// **** Types ****
-template<class T> struct GLType { };
-
-template<> struct GLType<GLfloat> {
-  static constexpr GLenum value = GL_FLOAT; };
-
-template<> struct GLType<GLdouble> {
-  static constexpr GLenum value = GL_DOUBLE; };
-
-template<> struct GLType<GLbyte> {
-  static constexpr GLenum value = GL_BYTE; };
-
-template<> struct GLType<GLubyte> {
-  static constexpr GLenum value = GL_UNSIGNED_BYTE; };
-
-template<> struct GLType<GLshort> {
-  static constexpr GLenum value = GL_SHORT; };
-
-template<> struct GLType<GLushort> {
-  static constexpr GLenum value = GL_UNSIGNED_SHORT; };
-
-template<> struct GLType<GLint> {
-  static constexpr GLenum value = GL_INT; };
-
-template<> struct GLType<GLuint> {
-  static constexpr GLenum value = GL_UNSIGNED_INT; };
-
-template<class T>
-constexpr GLenum GLType_v = GLType<T>::value;
-
 } // end gx namespace
 
 

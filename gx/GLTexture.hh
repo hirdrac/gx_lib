@@ -108,11 +108,6 @@ class gx::GLTexture1D
     GLint level, GLint xoffset, GLsizei width,
     GLenum format, GLenum type, const void* pixels);
 
-  template<class PixelT>
-  void setSubImage(GLint level, GLint xoffset, GLsizei width,
-                   GLenum format, const PixelT* pixels) {
-    setSubImage(level, xoffset, width, format, GLType_v<PixelT>, pixels); }
-
   void getImage(
     GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels) {
     _tex.getImage(level, format, type, bufSize, pixels); }
@@ -187,12 +182,6 @@ class gx::GLTexture2DT
   inline void setSubImage(
     GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
     GLenum format, GLenum type, const void* pixels);
-
-  template<class PixelT>
-  void setSubImage(GLint level, GLint xoffset, GLint yoffset, GLsizei width,
-                   GLsizei height, GLenum format, const PixelT* pixels) {
-    setSubImage(level, xoffset, yoffset, width, height, format,
-                GLType_v<PixelT>, pixels); }
 
   void getImage(
     GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels) {
@@ -274,13 +263,6 @@ class gx::GLTexture3DT
     GLsizei width, GLsizei height, GLsizei depth,
     GLenum format, GLenum type, const void* pixels);
 
-  template<class PixelT>
-  void setSubImage(GLint level, GLint xoffset, GLint yoffset, GLint zoffset,
-                   GLsizei width, GLsizei height, GLsizei depth,
-                   GLenum format, const PixelT* pixels) {
-    setSubImage(level, xoffset, yoffset, zoffset, width, height, depth,
-                format, GLType_v<PixelT>, pixels); }
-
   void getImage(
     GLint level, GLenum format, GLenum type, GLsizei bufSize, void* pixels) {
     _tex.getImage(level, format, type, bufSize, pixels); }
@@ -357,13 +339,6 @@ class gx::GLTextureCubeMap
     GLint level, GLint xoffset, GLint yoffset, GLuint face,
     GLsizei width, GLsizei height,
     GLenum format, GLenum type, const void* pixels);
-
-  template<class PixelT>
-  void setSubImage(
-    GLint level, GLint xoffset, GLint yoffset, GLuint face,
-    GLsizei width, GLsizei height, GLenum format, const PixelT* pixels) {
-    setSubImage(level, xoffset, yoffset, face, width, height, format,
-                GLType_v<PixelT>, pixels); }
 
   inline void getImage(GLint level, GLuint face, GLenum format, GLenum type,
                        GLsizei bufSize, void* pixels);
@@ -494,7 +469,7 @@ void gx::GLTexture1D<VER>::clear(GLint level)
   if constexpr (VER < 44) {
     const int pixel_size = getGLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(_width * pixel_size);
-    setSubImage(level, 0, _width, format, empty.get());
+    setSubImage(level, 0, _width, format, GL_UNSIGNED_BYTE, empty.get());
   } else {
     GX_GLCALL(glClearTexImage, _tex.id(), level, format, type, nullptr);
   }
@@ -568,7 +543,8 @@ void gx::GLTexture2DT<VER,TARGET>::clear(GLint level)
     const int pixel_size = getGLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(
       std::size_t(_width * _height * pixel_size));
-    setSubImage(level, 0, 0, _width, _height, format, empty.get());
+    setSubImage(level, 0, 0, _width, _height,
+                format, GL_UNSIGNED_BYTE, empty.get());
   } else {
     GX_GLCALL(glClearTexImage, _tex.id(), level, format, type, nullptr);
   }
@@ -648,7 +624,8 @@ void gx::GLTexture3DT<VER,TARGET>::clear(GLint level)
     const int pixel_size = getGLPixelSize(format, type);
     const auto empty = std::make_unique<GLubyte[]>(
       _width * _height * _depth * pixel_size);
-    setSubImage(level, 0, 0, 0, _width, _height, _depth, format, empty.get());
+    setSubImage(level, 0, 0, 0, _width, _height, _depth,
+                format, GL_UNSIGNED_BYTE, empty.get());
   } else {
     GX_GLCALL(glClearTexImage, _tex.id(), level, format, type, nullptr);
   }
@@ -714,16 +691,11 @@ void gx::GLTextureCubeMap<VER>::getImage(
   // single face reading
   if constexpr (VER < 45) {
     _tex.bindCheck();
-  } else {
-    GX_GLCALL(glBindTexture, target(), _tex.id());
-  }
-
-  if constexpr (VER < 45) {
-    GLLastTextureBind = 0;
     GX_GLCALL(glGetTexImage, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level,
               format, type, pixels);
     // FIXME: bufSize not used
   } else {
+    GX_GLCALL(glBindTexture, target(), _tex.id());
     GX_GLCALL(glGetnTexImage, GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, level,
               format, type, bufSize, pixels);
   }
@@ -744,7 +716,8 @@ void gx::GLTextureCubeMap<VER>::clear(GLint level)
     const auto empty = std::make_unique<GLubyte[]>(
       _size * _size * pixel_size);
     for (unsigned int f = 0; f < 6; ++f) {
-      setSubImage(level, 0, 0, f, _size, _size, format, empty.get());
+      setSubImage(level, 0, 0, f, _size, _size,
+                  format, GL_UNSIGNED_BYTE, empty.get());
     }
   } else {
     GX_GLCALL(glClearTexImage, _tex.id(), level, format, type, nullptr);
