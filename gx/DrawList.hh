@@ -20,56 +20,56 @@ namespace gx {
     LIGHTING = 16,    // use light for shading
   };
 
-  enum DrawCmd : uint32_t {
-    CMD_noop = 0,     // <cmd> (1)
+  enum class DrawCmd : uint32_t {
+    noop = 0,     // <cmd> (1)
 
     // state / control commands
-    CMD_framebuffer,  // <cmd id> (2)
-    CMD_viewport,     // <cmd x y w h> (5)
-    CMD_viewportFull, // <cmd> (1)
-    CMD_color,        // <cmd c> (2)
-    CMD_texture,      // <cmd id> (2)
-    CMD_normal,       // <cmd n> (2)
-    CMD_lineWidth,    // <cmd w> (2)
-    CMD_modColor,     // <cmd c> (2)
-    CMD_capabilities, // <cmd c> (2)
-    CMD_camera,       // <cmd val*32> <33>
-    CMD_light,        // <cmd x y z ar ag ab dr dg db> (10)
-    CMD_clearView,    // <cmd c> (2)
+    framebuffer,  // <cmd id> (2)
+    viewport,     // <cmd x y w h> (5)
+    viewportFull, // <cmd> (1)
+    color,        // <cmd c> (2)
+    texture,      // <cmd id> (2)
+    normal,       // <cmd n> (2)
+    lineWidth,    // <cmd w> (2)
+    modColor,     // <cmd c> (2)
+    capabilities, // <cmd c> (2)
+    camera,       // <cmd val*32> <33>
+    light,        // <cmd x y z ar ag ab dr dg db> (10)
+    clearView,    // <cmd c> (2)
 
     // 2D drawing
-    CMD_line2,        // <cmd (x y)x2> (5)
-    CMD_line2C,       // <cmd (x y c)x2> (7)
-    CMD_lineStart2,   // <cmd x y> (3)
-    CMD_lineTo2,      // <cmd x y> (3)
-    CMD_lineStart2C,  // <cmd x y c> (4)
-    CMD_lineTo2C,     // <cmd x y c> (4)
-    CMD_triangle2,    // <cmd (x y)x3> (7)
-    CMD_triangle2T,   // <cmd (x y s t)x3> (13)
-    CMD_triangle2C,   // <cmd (x y c)x3> (10)
-    CMD_triangle2TC,  // <cmd (x y s t c)x3> (16)
-    CMD_quad2,        // <cmd (x y)x4> (9)
-    CMD_quad2T,       // <cmd (x y s t)x4> (17)
-    CMD_quad2C,       // <cmd (x y c)x4> (13)
-    CMD_quad2TC,      // <cmd (x y s t c)x4> (21)
-    CMD_rectangle,    // <cmd (x y)x2> (5)
-    CMD_rectangleT,   // <cmd (x y s t)x2> (9)
+    line2,        // <cmd (x y)x2> (5)
+    line2C,       // <cmd (x y c)x2> (7)
+    lineStart2,   // <cmd x y> (3)
+    lineTo2,      // <cmd x y> (3)
+    lineStart2C,  // <cmd x y c> (4)
+    lineTo2C,     // <cmd x y c> (4)
+    triangle2,    // <cmd (x y)x3> (7)
+    triangle2T,   // <cmd (x y s t)x3> (13)
+    triangle2C,   // <cmd (x y c)x3> (10)
+    triangle2TC,  // <cmd (x y s t c)x3> (16)
+    quad2,        // <cmd (x y)x4> (9)
+    quad2T,       // <cmd (x y s t)x4> (17)
+    quad2C,       // <cmd (x y c)x4> (13)
+    quad2TC,      // <cmd (x y s t c)x4> (21)
+    rectangle,    // <cmd (x y)x2> (5)
+    rectangleT,   // <cmd (x y s t)x2> (9)
 
     // 3D drawing
-    CMD_line3,        // <cmd (x y z)x2> (7)
-    CMD_line3C,       // <cmd (x y z c)x2> (9)
-    CMD_lineStart3,   // <cmd x y z> (4)
-    CMD_lineTo3,      // <cmd x y z> (4)
-    CMD_lineStart3C,  // <cmd x y z c> (5)
-    CMD_lineTo3C,     // <cmd x y z c> (5)
-    CMD_triangle3,    // <cmd (x y z)x3> (10)
-    CMD_triangle3T,   // <cmd (x y z s t)x3> (16)
-    CMD_triangle3C,   // <cmd (x y z c)x3> (13)
-    CMD_triangle3TC,  // <cmd (x y z s t c)x3> (19)
-    CMD_quad3,        // <cmd (x y z)x4> (13)
-    CMD_quad3T,       // <cmd (x y z s t)x4> (21)
-    CMD_quad3C,       // <cmd (x y z c)x4> (17)
-    CMD_quad3TC,      // <cmd (x y z s t c)x4> (25)
+    line3,        // <cmd (x y z)x2> (7)
+    line3C,       // <cmd (x y z c)x2> (9)
+    lineStart3,   // <cmd x y z> (4)
+    lineTo3,      // <cmd x y z> (4)
+    lineStart3C,  // <cmd x y z c> (5)
+    lineTo3C,     // <cmd x y z c> (5)
+    triangle3,    // <cmd (x y z)x3> (10)
+    triangle3T,   // <cmd (x y z s t)x3> (16)
+    triangle3C,   // <cmd (x y z c)x3> (13)
+    triangle3TC,  // <cmd (x y z s t c)x3> (19)
+    quad3,        // <cmd (x y z)x4> (13)
+    quad3T,       // <cmd (x y z s t)x4> (21)
+    quad3C,       // <cmd (x y z c)x4> (17)
+    quad3TC,      // <cmd (x y z s t c)x4> (25)
   };
 
   struct Vertex2C { float x, y; uint32_t c; };
@@ -120,132 +120,135 @@ class gx::DrawList
     _data.insert(_data.end(), dl.begin(), dl.end()); }
 
   // raw draw commands
-  void framebuffer(int32_t id) { add(CMD_framebuffer, id); }
+  void framebuffer(int32_t id) { add(DrawCmd::framebuffer, id); }
   void viewport(int32_t x, int32_t y, int32_t w, int32_t h) {
-    add(CMD_viewport, x, y, w, h); }
+    add(DrawCmd::viewport, x, y, w, h); }
   void viewportFull() {
-    add(CMD_viewportFull); }
+    add(DrawCmd::viewportFull); }
 
-  void color(uint32_t c) { add(CMD_color, c); }
+  void color(uint32_t c) { add(DrawCmd::color, c); }
   void color(float r, float g, float b, float a = 1.0f) {
     color(packRGBA8(r, g, b, a)); }
   void color(const Vec3& c, float a = 1.0f) { color(packRGBA8(c, a)); }
   void color(const Vec4& c) { color(packRGBA8(c)); }
 
   void texture(uint32_t t) {
-    add(CMD_texture, t); }
+    add(DrawCmd::texture, t); }
 
-  void normal(uint32_t n) { add(CMD_normal, n); }
+  void normal(uint32_t n) { add(DrawCmd::normal, n); }
   void normal(float x, float y, float z) { normal(packNormal(x,y,z)); }
   void normal(const Vec3& n) { normal(packNormal(n)); }
 
   void lineWidth(float w) {
-    add(CMD_lineWidth, w); }
+    add(DrawCmd::lineWidth, w); }
 
-  void modColor(uint32_t c) { add(CMD_modColor, c); }
+  void modColor(uint32_t c) { add(DrawCmd::modColor, c); }
   void modColor(float r, float g, float b, float a = 1.0f) {
     modColor(packRGBA8(r, g, b, a)); }
   void modColor(const Vec3& c, float a = 1.0f) { modColor(packRGBA8(c, a)); }
   void modColor(const Vec4& c) { modColor(packRGBA8(c)); }
 
   void capabilities(int32_t c) {
-    add(CMD_capabilities, c); }
+    add(DrawCmd::capabilities, c); }
   void camera(const Mat4& m1, const Mat4& m2) {
-    add(CMD_camera, m1, m2); }
+    add(DrawCmd::camera, m1, m2); }
   void light(const Vec3& pt, const Vec3& ambient, const Vec3& diffuse) {
-    add(CMD_light, pt.x, pt.y, pt.z, ambient.r, ambient.g, ambient.b,
+    add(DrawCmd::light, pt.x, pt.y, pt.z, ambient.r, ambient.g, ambient.b,
         diffuse.r, diffuse.g, diffuse.b); }
 
-  void clearView(uint32_t c) { add(CMD_clearView, c); }
+  void clearView(uint32_t c) { add(DrawCmd::clearView, c); }
   void clearView(float r, float g, float b, float a = 1.0f) {
     clearView(packRGBA8(r,g,b,a)); }
   void clearView(const Vec3& c, float a = 1.0f) { clearView(packRGBA8(c, a)); }
   void clearView(const Vec4& c) { clearView(packRGBA8(c)); }
 
   void line2(Vec2 a, Vec2 b) {
-    add(CMD_line2, a.x, a.y, b.x, b.y); }
+    add(DrawCmd::line2, a.x, a.y, b.x, b.y); }
   void line2C(const Vertex2C& a, const Vertex2C& b) {
-    add(CMD_line2C, a.x, a.y, a.c, b.x, b.y, b.c); }
+    add(DrawCmd::line2C, a.x, a.y, a.c, b.x, b.y, b.c); }
   void lineStart2(Vec2 a) {
-    add(CMD_lineStart2, a.x, a.y); }
+    add(DrawCmd::lineStart2, a.x, a.y); }
   void lineTo2(Vec2 a) {
-    add(CMD_lineTo2, a.x, a.y); }
+    add(DrawCmd::lineTo2, a.x, a.y); }
   void lineStart2C(const Vertex2C& a) {
-    add(CMD_lineStart2C, a.x, a.y, a.c); }
+    add(DrawCmd::lineStart2C, a.x, a.y, a.c); }
   void lineTo2C(const Vertex2C& a) {
-    add(CMD_lineTo2C, a.x, a.y, a.c); }
+    add(DrawCmd::lineTo2C, a.x, a.y, a.c); }
   void triangle2(Vec2 a, Vec2 b, Vec2 c) {
-    add(CMD_triangle2, a.x, a.y, b.x, b.y, c.x, c.y); }
+    add(DrawCmd::triangle2, a.x, a.y, b.x, b.y, c.x, c.y); }
   void triangle2T(const Vertex2T& a, const Vertex2T& b, const Vertex2T& c) {
-    add(CMD_triangle2T, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t,
+    add(DrawCmd::triangle2T, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t,
         c.x, c.y, c.s, c.t); }
   void triangle2C(const Vertex2C& a, const Vertex2C& b, const Vertex2C& c) {
-    add(CMD_triangle2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c); }
+    add(DrawCmd::triangle2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c); }
   void triangle2TC(const Vertex2TC& a, const Vertex2TC& b, const Vertex2TC& c) {
-    add(CMD_triangle2TC, a.x, a.y, a.s, a.t, a.c, b.x, b.y, b.s, b.t, b.c,
-        c.x, c.y, c.s, c.t, c.c); }
+    add(DrawCmd::triangle2TC, a.x, a.y, a.s, a.t, a.c,
+        b.x, b.y, b.s, b.t, b.c, c.x, c.y, c.s, c.t, c.c); }
   void quad2(Vec2 a, Vec2 b, Vec2 c, Vec2 d) {
-    add(CMD_quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
+    add(DrawCmd::quad2, a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y); }
   void quad2T(const Vertex2T& a, const Vertex2T& b, const Vertex2T& c,
               const Vertex2T& d) {
-    add(CMD_quad2T, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t,
+    add(DrawCmd::quad2T, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t,
         c.x, c.y, c.s, c.t, d.x, d.y, d.s, d.t); }
   void quad2C(const Vertex2C& a, const Vertex2C& b, const Vertex2C& c,
               const Vertex2C& d) {
-    add(CMD_quad2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c,
+    add(DrawCmd::quad2C, a.x, a.y, a.c, b.x, b.y, b.c, c.x, c.y, c.c,
         d.x, d.y, d.c); }
   void quad2TC(const Vertex2TC& a, const Vertex2TC& b, const Vertex2TC& c,
                const Vertex2TC& d) {
-    add(CMD_quad2TC, a.x, a.y, a.s, a.t, a.c, b.x, b.y, b.s, b.t, b.c,
+    add(DrawCmd::quad2TC, a.x, a.y, a.s, a.t, a.c, b.x, b.y, b.s, b.t, b.c,
         c.x, c.y, c.s, c.t, c.c, d.x, d.y, d.s, d.t, d.c); }
   void rectangle(Vec2 a, Vec2 b) {
-    add(CMD_rectangle, a.x, a.y, b.x, b.y); }
+    add(DrawCmd::rectangle, a.x, a.y, b.x, b.y); }
   void rectangleT(const Vertex2T& a, const Vertex2T& b) {
-    add(CMD_rectangleT, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t); }
+    add(DrawCmd::rectangleT, a.x, a.y, a.s, a.t, b.x, b.y, b.s, b.t); }
 
   void line3(const Vec3& a, const Vec3& b) {
-    add(CMD_line3, a.x, a.y, a.z, b.x, b.y, b.z); }
+    add(DrawCmd::line3, a.x, a.y, a.z, b.x, b.y, b.z); }
   void line3C(const Vertex3C& a, const Vertex3C& b) {
-    add(CMD_line3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c); }
+    add(DrawCmd::line3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c); }
   void lineStart3(const Vec3& a) {
-    add(CMD_lineStart3, a.x, a.y, a.z); }
+    add(DrawCmd::lineStart3, a.x, a.y, a.z); }
   void lineTo3(const Vec3& a) {
-    add(CMD_lineTo3, a.x, a.y, a.z); }
+    add(DrawCmd::lineTo3, a.x, a.y, a.z); }
   void lineStart3C(const Vertex3C& a) {
-    add(CMD_lineStart3C, a.x, a.y, a.z, a.c); }
+    add(DrawCmd::lineStart3C, a.x, a.y, a.z, a.c); }
   void lineTo3C(const Vertex3C& a) {
-    add(CMD_lineTo3C, a.x, a.y, a.z, a.c); }
+    add(DrawCmd::lineTo3C, a.x, a.y, a.z, a.c); }
   void triangle3(const Vec3& a, const Vec3& b, const Vec3& c) {
-    add(CMD_triangle3, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z); }
+    add(DrawCmd::triangle3, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z); }
   void triangle3T(const Vertex3T& a, const Vertex3T& b, const Vertex3T& c) {
-    add(CMD_triangle2T, a.x, a.y, a.z, a.s, a.t, b.x, b.y, b.z, b.s, b.t,
+    add(DrawCmd::triangle2T, a.x, a.y, a.z, a.s, a.t, b.x, b.y, b.z, b.s, b.t,
         c.x, c.y, c.z, c.s, c.t); }
   void triangle3C(const Vertex3C& a, const Vertex3C& b, const Vertex3C& c) {
-    add(CMD_triangle3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
+    add(DrawCmd::triangle3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
         c.x, c.y, c.z, c.c); }
   void triangle3TC(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c) {
-    add(CMD_triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
+    add(DrawCmd::triangle3TC, a.x, a.y, a.z, a.s, a.t, a.c,
         b.x, b.y, b.z, b.s, b.t, b.c, c.x, c.y, c.z, c.s, c.t, c.c); }
   void quad3(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3& d) {
-    add(CMD_quad3, a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, d.x, d.y, d.z); }
+    add(DrawCmd::quad3,
+        a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z, d.x, d.y, d.z); }
   void quad3T(const Vertex3T& a, const Vertex3T& b, const Vertex3T& c,
               const Vertex3T& d) {
-    add(CMD_quad3T, a.x, a.y, a.z, a.s, a.t, b.x, b.y, b.z, b.s, b.t,
+    add(DrawCmd::quad3T, a.x, a.y, a.z, a.s, a.t, b.x, b.y, b.z, b.s, b.t,
         c.x, c.y, c.z, c.s, c.t, d.x, d.y, d.z, d.s, d.t); }
   void quad3C(const Vertex3C& a, const Vertex3C& b, const Vertex3C& c,
               const Vertex3C& d) {
-    add(CMD_quad3C, a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c, c.x, c.y, c.z, c.c,
-        d.x, d.y, d.z, d.c); }
+    add(DrawCmd::quad3C,
+        a.x, a.y, a.z, a.c, b.x, b.y, b.z, b.c,
+        c.x, c.y, c.z, c.c, d.x, d.y, d.z, d.c); }
   void quad3TC(const Vertex3TC& a, const Vertex3TC& b, const Vertex3TC& c,
                const Vertex3TC& d) {
-    add(CMD_quad3TC, a.x, a.y, a.z, a.s, a.t, a.c, b.x, b.y, b.z, b.s, b.t, b.c,
+    add(DrawCmd::quad3TC,
+        a.x, a.y, a.z, a.s, a.t, a.c, b.x, b.y, b.z, b.s, b.t, b.c,
         c.x, c.y, c.z, c.s, c.t, c.c, d.x, d.y, d.z, d.s, d.t, d.c); }
 
  private:
   storage_type _data;
 
   void add(DrawCmd cmd, const Mat4& m1, const Mat4& m2) {
-    _data.push_back(cmd);
+    _data.push_back(uint32_t(cmd));
     _data.insert(_data.end(), m1.begin(), m1.end());
     _data.insert(_data.end(), m2.begin(), m2.end());
   }
@@ -253,9 +256,9 @@ class gx::DrawList
   template<class... Args>
   void add(DrawCmd cmd, const Args&... args) {
     if constexpr (sizeof...(args) == 0) {
-      _data.push_back(cmd);
+      _data.push_back(uint32_t(cmd));
     } else {
-      _data.insert(_data.end(), {cmd, args...});
+      _data.insert(_data.end(), {uint32_t(cmd), args...});
     }
   }
 };

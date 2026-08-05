@@ -9,7 +9,7 @@
 //     glfwSwapInterval(), glfwSwapBuffers() calls
 // TODO: init param to determine which shaders to create
 // TODO: SDF glyph shader
-// TODO: combine viewT & projT for CMD_camera?
+// TODO: combine viewT & projT for DrawCmd::camera?
 // TODO: support glPolygonOffset() ?
 
 #include "OpenGLRenderer.hh"
@@ -103,51 +103,51 @@ namespace {
     const Value* dEnd = d + dl.size();
 
     while (d < dEnd) {
-      const uint32_t cmd = d->uval;
+      const DrawCmd cmd{d->uval};
       switch (cmd) {
-        case CMD_noop:         d += 1; break;
-        case CMD_framebuffer:  d += 2; break;
-        case CMD_viewport:     d += 5; break;
-        case CMD_viewportFull: d += 1; break;
-        case CMD_color:        d += 2; break;
-        case CMD_texture:      d += 2; break;
-        case CMD_normal:       d += 2; break;
-        case CMD_lineWidth:    d += 2; break;
-        case CMD_modColor:     d += 2; break;
-        case CMD_capabilities: d += 2; break;
-        case CMD_camera:       d += 33; break;
-        case CMD_light:        d += 10; break;
-        case CMD_clearView:    d += 2; break;
-        case CMD_line2:        d += 5;  vsize += 2; break;
-        case CMD_line2C:       d += 7;  vsize += 2; break;
-        case CMD_lineStart2:   d += 3;  break;
-        case CMD_lineTo2:      d += 3;  vsize += 2; break;
-        case CMD_lineStart2C:  d += 4;  break;
-        case CMD_lineTo2C:     d += 4;  vsize += 2; break;
-        case CMD_triangle2:    d += 7;  vsize += 3; break;
-        case CMD_triangle2T:   d += 13; vsize += 3; break;
-        case CMD_triangle2C:   d += 10; vsize += 3; break;
-        case CMD_triangle2TC:  d += 16; vsize += 3; break;
-        case CMD_quad2:        d += 9;  vsize += 6; break;
-        case CMD_quad2T:       d += 17; vsize += 6; break;
-        case CMD_quad2C:       d += 13; vsize += 6; break;
-        case CMD_quad2TC:      d += 21; vsize += 6; break;
-        case CMD_rectangle:    d += 5;  vsize += 6; break;
-        case CMD_rectangleT:   d += 9;  vsize += 6; break;
-        case CMD_line3:        d += 7;  vsize += 2; break;
-        case CMD_line3C:       d += 9;  vsize += 2; break;
-        case CMD_lineStart3:   d += 4;  break;
-        case CMD_lineTo3:      d += 4;  vsize += 2; break;
-        case CMD_lineStart3C:  d += 5;  break;
-        case CMD_lineTo3C:     d += 5;  vsize += 2; break;
-        case CMD_triangle3:    d += 10; vsize += 3; break;
-        case CMD_triangle3T:   d += 16; vsize += 3; break;
-        case CMD_triangle3C:   d += 13; vsize += 3; break;
-        case CMD_triangle3TC:  d += 19; vsize += 3; break;
-        case CMD_quad3:        d += 13; vsize += 6; break;
-        case CMD_quad3T:       d += 21; vsize += 6; break;
-        case CMD_quad3C:       d += 17; vsize += 6; break;
-        case CMD_quad3TC:      d += 25; vsize += 6; break;
+        case DrawCmd::noop:         d += 1; break;
+        case DrawCmd::framebuffer:  d += 2; break;
+        case DrawCmd::viewport:     d += 5; break;
+        case DrawCmd::viewportFull: d += 1; break;
+        case DrawCmd::color:        d += 2; break;
+        case DrawCmd::texture:      d += 2; break;
+        case DrawCmd::normal:       d += 2; break;
+        case DrawCmd::lineWidth:    d += 2; break;
+        case DrawCmd::modColor:     d += 2; break;
+        case DrawCmd::capabilities: d += 2; break;
+        case DrawCmd::camera:       d += 33; break;
+        case DrawCmd::light:        d += 10; break;
+        case DrawCmd::clearView:    d += 2; break;
+        case DrawCmd::line2:        d += 5;  vsize += 2; break;
+        case DrawCmd::line2C:       d += 7;  vsize += 2; break;
+        case DrawCmd::lineStart2:   d += 3;  break;
+        case DrawCmd::lineTo2:      d += 3;  vsize += 2; break;
+        case DrawCmd::lineStart2C:  d += 4;  break;
+        case DrawCmd::lineTo2C:     d += 4;  vsize += 2; break;
+        case DrawCmd::triangle2:    d += 7;  vsize += 3; break;
+        case DrawCmd::triangle2T:   d += 13; vsize += 3; break;
+        case DrawCmd::triangle2C:   d += 10; vsize += 3; break;
+        case DrawCmd::triangle2TC:  d += 16; vsize += 3; break;
+        case DrawCmd::quad2:        d += 9;  vsize += 6; break;
+        case DrawCmd::quad2T:       d += 17; vsize += 6; break;
+        case DrawCmd::quad2C:       d += 13; vsize += 6; break;
+        case DrawCmd::quad2TC:      d += 21; vsize += 6; break;
+        case DrawCmd::rectangle:    d += 5;  vsize += 6; break;
+        case DrawCmd::rectangleT:   d += 9;  vsize += 6; break;
+        case DrawCmd::line3:        d += 7;  vsize += 2; break;
+        case DrawCmd::line3C:       d += 9;  vsize += 2; break;
+        case DrawCmd::lineStart3:   d += 4;  break;
+        case DrawCmd::lineTo3:      d += 4;  vsize += 2; break;
+        case DrawCmd::lineStart3C:  d += 5;  break;
+        case DrawCmd::lineTo3C:     d += 5;  vsize += 2; break;
+        case DrawCmd::triangle3:    d += 10; vsize += 3; break;
+        case DrawCmd::triangle3T:   d += 16; vsize += 3; break;
+        case DrawCmd::triangle3C:   d += 13; vsize += 3; break;
+        case DrawCmd::triangle3TC:  d += 19; vsize += 3; break;
+        case DrawCmd::quad3:        d += 13; vsize += 6; break;
+        case DrawCmd::quad3T:       d += 21; vsize += 6; break;
+        case DrawCmd::quad3C:       d += 17; vsize += 6; break;
+        case DrawCmd::quad3TC:      d += 25; vsize += 6; break;
 
         default:
           d = dEnd; // stop reading at first invalid cmd
@@ -729,33 +729,33 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
     const Value* data     = dl.data();
     const Value* data_end = data + dl.size();
     for (const Value* d = data; d != data_end; ) {
-      const uint32_t cmd = (d++)->uval;
+      const DrawCmd cmd{(d++)->uval};
       switch (cmd) {
-        case CMD_noop:
+        case DrawCmd::noop:
           break;
 
-        case CMD_framebuffer:
+        case DrawCmd::framebuffer:
           addOp(OP_framebuffer, *d++);
           // TODO: reset state with framebuffer change?
           break;
 
-        case CMD_viewport: {
+        case DrawCmd::viewport: {
           const Value* d0 = d; d += 4;
           addOpData(OP_viewport, d0, d);
           break;
         }
-        case CMD_viewportFull:
+        case DrawCmd::viewportFull:
           addOp(OP_viewportFull);
           break;
 
-        case CMD_color:   color  = uval(d); break;
-        case CMD_texture: tid    = uval(d); break;
-        case CMD_normal:  normal = uval(d); break;
+        case DrawCmd::color:   color  = uval(d); break;
+        case DrawCmd::texture: tid    = uval(d); break;
+        case DrawCmd::normal:  normal = uval(d); break;
 
-        case CMD_lineWidth: addOp(OP_lineWidth, *d++); break;
-        case CMD_modColor:  addOp(OP_modColor, *d++); break;
+        case DrawCmd::lineWidth: addOp(OP_lineWidth, *d++); break;
+        case DrawCmd::modColor:  addOp(OP_modColor, *d++); break;
 
-        case CMD_capabilities: {
+        case DrawCmd::capabilities: {
           const int32_t newCap = ival(d);
           if (cap != newCap) {
             cap = newCap;
@@ -764,32 +764,32 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           break;
         }
 
-        case CMD_camera: {
+        case DrawCmd::camera: {
           Mat4 viewT{INIT_NONE}, projT{INIT_NONE};
           std::memcpy(viewT.data(), d, sizeof(float)*16); d += 16;
           std::memcpy(projT.data(), d, sizeof(float)*16); d += 16;
           addOpMatrix(OP_cameraT, viewT * projT);
           break;
         }
-        case CMD_light: {
+        case DrawCmd::light: {
           const Value* d0 = d; d += 9;
           addOpData(OP_light, d0, d); // pos(3), ambient(3), diffuse(3)
           break;
         }
 
-        case CMD_clearView:
+        case DrawCmd::clearView:
           addOp(OP_clearColor, *d++);
           addOp(OP_clear, uint32_t(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
           break;
 
         // 2D drawing
-        case CMD_line2: {
+        case DrawCmd::line2: {
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
           addLine2D(first);
           break;
         }
-        case CMD_line2C: {
+        case DrawCmd::line2C: {
           const Vec2 p0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
           vertex2d(ptr, p0, c0);
@@ -797,32 +797,32 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addLine2D(first);
           break;
         }
-        case CMD_lineStart2:
+        case DrawCmd::lineStart2:
           linePt.set(fval2(d), 0); lineColor = color; break;
-        case CMD_lineTo2: {
+        case DrawCmd::lineTo2: {
           vertex3d(ptr, linePt, lineColor);
           linePt.set(fval2(d), 0); lineColor = color;
           vertex3d(ptr, linePt, lineColor);
           addLine2D(first);
           break;
         }
-        case CMD_lineStart2C:
+        case DrawCmd::lineStart2C:
           linePt.set(fval2(d), 0); lineColor = uval(d); break;
-        case CMD_lineTo2C: {
+        case DrawCmd::lineTo2C: {
           vertex3d(ptr, linePt, lineColor);
           linePt.set(fval2(d), 0); lineColor = uval(d);
           vertex3d(ptr, linePt, lineColor);
           addLine2D(first);
           break;
         }
-        case CMD_triangle2: {
+        case DrawCmd::triangle2: {
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
           vertex2d(ptr, fval2(d), color);
           addTriangles2D(first, 3, 0);
           break;
         }
-        case CMD_triangle2T: {
+        case DrawCmd::triangle2T: {
           const Vec2 p0 = fval2(d), t0 = fval2(d);
           const Vec2 p1 = fval2(d), t1 = fval2(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d);
@@ -832,7 +832,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles2D(first, 3, tid);
           break;
         }
-        case CMD_triangle2C: {
+        case DrawCmd::triangle2C: {
           const Vec2 p0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d); const uint32_t c2 = uval(d);
@@ -842,7 +842,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles2D(first, 3, 0);
           break;
         }
-        case CMD_triangle2TC: {
+        case DrawCmd::triangle2TC: {
           const Vec2 p0 = fval2(d), t0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d), t1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d); const uint32_t c2 = uval(d);
@@ -852,7 +852,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles2D(first, 3, tid);
           break;
         }
-        case CMD_quad2: {
+        case DrawCmd::quad2: {
           const Vec2 p0 = fval2(d), p1 = fval2(d);
           const Vec2 p2 = fval2(d), p3 = fval2(d);
           vertex2d(ptr, p0, color);
@@ -864,7 +864,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles2D(first, 6, 0);
           break;
         }
-        case CMD_quad2T: {
+        case DrawCmd::quad2T: {
           const Vec2 p0 = fval2(d), t0 = fval2(d);
           const Vec2 p1 = fval2(d), t1 = fval2(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d);
@@ -878,7 +878,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles2D(first, 6, tid);
           break;
         }
-        case CMD_quad2C: {
+        case DrawCmd::quad2C: {
           const Vec2 p0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d); const uint32_t c2 = uval(d);
@@ -892,7 +892,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles2D(first, 6, 0);
           break;
         }
-        case CMD_quad2TC: {
+        case DrawCmd::quad2TC: {
           const Vec2 p0 = fval2(d), t0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d), t1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d); const uint32_t c2 = uval(d);
@@ -906,7 +906,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles2D(first, 6, tid);
           break;
         }
-        case CMD_rectangle: {
+        case DrawCmd::rectangle: {
           const Vec2 p0 = fval2(d), p3 = fval2(d);
           const Vec2 p1{p3.x,p0.y}, p2{p0.x,p3.y};
           vertex2d(ptr, p0, color);
@@ -918,7 +918,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles2D(first, 6, 0);
           break;
         }
-        case CMD_rectangleT: {
+        case DrawCmd::rectangleT: {
           const Vec2 p0 = fval2(d), t0 = fval2(d);
           const Vec2 p3 = fval2(d), t3 = fval2(d);
           const Vec2 p1{p3.x,p0.y}, t1{t3.x,t0.y};
@@ -934,13 +934,13 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
         }
 
         // 3D drawing
-        case CMD_line3: {
+        case DrawCmd::line3: {
           vertex3d(ptr, fval3(d), color);
           vertex3d(ptr, fval3(d), color);
           addLine3D(first);
           break;
         }
-        case CMD_line3C: {
+        case DrawCmd::line3C: {
           const Vec3 p0 = fval3(d); const uint32_t c0 = uval(d);
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
           vertex3d(ptr, p0, c0);
@@ -948,32 +948,32 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addLine3D(first);
           break;
         }
-        case CMD_lineStart3:
+        case DrawCmd::lineStart3:
           linePt = fval3(d); lineColor = color; break;
-        case CMD_lineTo3: {
+        case DrawCmd::lineTo3: {
           vertex3d(ptr, linePt, lineColor);
           linePt = fval3(d); lineColor = color;
           vertex3d(ptr, linePt, lineColor);
           addLine3D(first);
           break;
         }
-        case CMD_lineStart3C:
+        case DrawCmd::lineStart3C:
           linePt = fval3(d); lineColor = uval(d); break;
-        case CMD_lineTo3C: {
+        case DrawCmd::lineTo3C: {
           vertex3d(ptr, linePt, lineColor);
           linePt = fval3(d); lineColor = uval(d);
           vertex3d(ptr, linePt, lineColor);
           addLine3D(first);
           break;
         }
-        case CMD_triangle3: {
+        case DrawCmd::triangle3: {
           vertex3d(ptr, fval3(d), color, normal);
           vertex3d(ptr, fval3(d), color, normal);
           vertex3d(ptr, fval3(d), color, normal);
           addTriangles3D(first, 3, 0);
           break;
         }
-        case CMD_triangle3T: {
+        case DrawCmd::triangle3T: {
           const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
           const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
           const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
@@ -983,7 +983,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles3D(first, 3, tid);
           break;
         }
-        case CMD_triangle3C: {
+        case DrawCmd::triangle3C: {
           const Vec3 p0 = fval3(d); const uint32_t c0 = uval(d);
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
           const Vec3 p2 = fval3(d); const uint32_t c2 = uval(d);
@@ -993,7 +993,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles3D(first, 3, 0);
           break;
         }
-        case CMD_triangle3TC: {
+        case DrawCmd::triangle3TC: {
           const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
           const uint32_t c0 = uval(d);
           const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
@@ -1006,7 +1006,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles3D(first, 3, tid);
           break;
         }
-        case CMD_quad3: {
+        case DrawCmd::quad3: {
           const Vec3 p0 = fval3(d), p1 = fval3(d);
           const Vec3 p2 = fval3(d), p3 = fval3(d);
           vertex3d(ptr, p0, color, normal);
@@ -1018,7 +1018,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles3D(first, 6, 0);
           break;
         }
-        case CMD_quad3T: {
+        case DrawCmd::quad3T: {
           const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
           const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
           const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
@@ -1032,7 +1032,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles3D(first, 6, tid);
           break;
         }
-        case CMD_quad3C: {
+        case DrawCmd::quad3C: {
           const Vec3 p0 = fval3(d); const uint32_t c0 = uval(d);
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
           const Vec3 p2 = fval3(d); const uint32_t c2 = uval(d);
@@ -1046,7 +1046,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           addTriangles3D(first, 6, 0);
           break;
         }
-        case CMD_quad3TC: {
+        case DrawCmd::quad3TC: {
           const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
           const uint32_t c0 = uval(d);
           const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
