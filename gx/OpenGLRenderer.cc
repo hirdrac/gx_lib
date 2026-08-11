@@ -185,6 +185,11 @@ namespace {
     return {fval(ptr), fval(ptr)}; }
   [[nodiscard]] Vec3 fval3(const Value*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
+  [[nodiscard]] Mat4 fval16(const Value*& ptr) {
+    Mat4 m{INIT_NONE};
+    std::memcpy(m.data(), ptr, sizeof(float)*16); ptr += 16;
+    return m;
+  }
 
   struct Vertex {
     float x, y, z;  // pos
@@ -354,15 +359,10 @@ class gx::OpenGLRenderer final : public gx::Renderer
     _lastOp = op;
   }
 
-  template<class Iter>
-  void addOpData(GLOperation op, Iter begin, Iter end) {
-    _opData.push_back(op);
-    _opData.insert(_opData.end(), begin, end);
-    _lastOp = op;
-  }
-
   void addOpMatrix(GLOperation op, const Mat4& m) {
-    addOpData(op, m.begin(), m.end());
+    _opData.push_back(op);
+    _opData.insert(_opData.end(), m.begin(), m.end());
+    _lastOp = op;
   }
 
   void addLine2D(int32_t& first) {
@@ -735,13 +735,16 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           break;
 
         case DrawCmd::framebuffer:
-          addOp(OP_framebuffer, *d++);
+          addOp(OP_framebuffer, ival(d));
           // TODO: reset state with framebuffer change?
           break;
 
         case DrawCmd::viewport: {
-          const Value* d0 = d; d += 4;
-          addOpData(OP_viewport, d0, d);
+          const int32_t x = ival(d);
+          const int32_t y = ival(d);
+          const int32_t w = ival(d);
+          const int32_t h = ival(d);
+          addOp(OP_viewport, x, y, w, h);
           break;
         }
         case DrawCmd::viewportFull:
@@ -752,8 +755,8 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
         case DrawCmd::texture: tid    = uval(d); break;
         case DrawCmd::normal:  normal = uval(d); break;
 
-        case DrawCmd::lineWidth: addOp(OP_lineWidth, *d++); break;
-        case DrawCmd::modColor:  addOp(OP_modColor, *d++); break;
+        case DrawCmd::lineWidth: addOp(OP_lineWidth, fval(d)); break;
+        case DrawCmd::modColor:  addOp(OP_modColor, uval(d)); break;
 
         case DrawCmd::capabilities: {
           const int32_t newCap = ival(d);
@@ -765,20 +768,25 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
         }
 
         case DrawCmd::camera: {
-          Mat4 viewT{INIT_NONE}, projT{INIT_NONE};
-          std::memcpy(viewT.data(), d, sizeof(float)*16); d += 16;
-          std::memcpy(projT.data(), d, sizeof(float)*16); d += 16;
-          addOpMatrix(OP_cameraT, viewT * projT);
+          const Mat4 viewT = fval16(d);
+          const Mat4 projT = fval16(d);
+          const Mat4 cameraT = viewT * projT;
+          addOpMatrix(OP_cameraT, cameraT);
           break;
         }
+
         case DrawCmd::light: {
-          const Value* d0 = d; d += 9;
-          addOpData(OP_light, d0, d); // pos(3), ambient(3), diffuse(3)
+          const Vec3 pos = fval3(d);
+          const Vec3 ambient = fval3(d);
+          const Vec3 diffuse = fval3(d);
+          addOp(OP_light, pos.x, pos.y, pos.z,
+                ambient.r, ambient.g, ambient.b,
+                diffuse.r, diffuse.g, diffuse.b);
           break;
         }
 
         case DrawCmd::clearView:
-          addOp(OP_clearColor, *d++);
+          addOp(OP_clearColor, uval(d));
           addOp(OP_clear, uint32_t(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
           break;
 
