@@ -1210,7 +1210,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
       case OP_drawLines2D: {
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
-        const int32_t glCap = newCap & ~LIGHTING;
+        const int32_t glCap = newCap & BLEND; // only BLEND is allowed for 2D
         if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (!orthoMode) {
           ud.cameraT = _orthoT;
@@ -1233,7 +1233,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
-        const int32_t glCap = newCap & ~LIGHTING;
+        const int32_t glCap = newCap & BLEND; // only BLEND is allowed for 2D
         if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (!orthoMode) {
           ud.cameraT = _orthoT;
