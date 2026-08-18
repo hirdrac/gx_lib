@@ -13,11 +13,13 @@
 namespace gx {
   enum CapabilityEnum : int32_t {
     // values for capabilities bitfield
-    BLEND = 1,        // use alpha channel for blending
-    DEPTH_TEST = 2,   // do depth buffer check for rendering
-    CULL_CW = 4,      // cull front face (clockwise)
-    CULL_CCW = 8,     // cull back back (counter-clockwise)
-    LIGHTING = 16,    // use light for shading
+    BLEND = 1,         // use alpha channel for blending
+    DEPTH_COMPARE = 2, // do depth buffer check for rendering
+    DEPTH_UPDATE = 4,  // update depth buffer when drawing
+    DEPTH_TEST = DEPTH_COMPARE | DEPTH_UPDATE,
+    CULL_CW = 8,       // cull front face (clockwise)
+    CULL_CCW = 16,     // cull back back (counter-clockwise)
+    LIGHTING = 32,     // use light for shading
   };
 
   enum class DrawCmd : uint32_t {

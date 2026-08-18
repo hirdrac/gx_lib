@@ -1121,7 +1121,6 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   // set default GL state
   GX_GLCALL(glViewport, 0, 0, _fbWidth, _fbHeight);
   GX_GLCALL(glClearDepth, 1.0);
-  GX_GLCALL(glDepthMask, GL_TRUE);
   GX_GLCALL(glDepthFunc, GL_LEQUAL);
   GX_GLCALL(glBlendFunc, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GX_GLCALL(glLineWidth, 1.0f);
@@ -1200,13 +1199,18 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         newCap = (d++)->ival;
         break;
       }
-      case OP_clear:
-        GX_GLCALL(glClear, (d++)->uval);
+      case OP_clear: {
+        const uint32_t mask = (d++)->uval;
+        int32_t glCap = newCap & ~LIGHTING;
+        if (mask & GL_DEPTH_BUFFER_BIT) { glCap |= DEPTH_UPDATE; }
+        if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
+        GX_GLCALL(glClear, mask);
         break;
+      }
       case OP_drawLines2D: {
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
-        const int32_t glCap = newCap & BLEND;
+        const int32_t glCap = newCap & ~LIGHTING;
         if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (!orthoMode) {
           ud.cameraT = _orthoT;
@@ -1229,7 +1233,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
-        const int32_t glCap = newCap & BLEND;
+        const int32_t glCap = newCap & ~LIGHTING;
         if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (!orthoMode) {
           ud.cameraT = _orthoT;
@@ -1373,8 +1377,10 @@ void OpenGLRenderer<VER>::setGLCapabilities(int32_t cap)
   if (_currentGLCap < 0)
   {
     // don't assume current state - enable/disable all values
-    GX_GLCALL((cap & BLEND)      ? glEnable : glDisable, GL_BLEND);
-    GX_GLCALL((cap & DEPTH_TEST) ? glEnable : glDisable, GL_DEPTH_TEST);
+    GX_GLCALL((cap & BLEND) ? glEnable : glDisable, GL_BLEND);
+    GX_GLCALL((cap & DEPTH_COMPARE) ? glEnable : glDisable, GL_DEPTH_TEST);
+    GX_GLCALL(glDepthMask, (cap & DEPTH_UPDATE) ? GL_TRUE : GL_FALSE);
+
     if (cap & CULL) {
       GX_GLCALL(glEnable, GL_CULL_FACE);
       setCullFace(cap);
@@ -1391,10 +1397,16 @@ void OpenGLRenderer<VER>::setGLCapabilities(int32_t cap)
       GX_GLCALL(glDisable, GL_BLEND);
     }
 
-    if (!(_currentGLCap & DEPTH_TEST) && (cap & DEPTH_TEST)) {
+    if (!(_currentGLCap & DEPTH_COMPARE) && (cap & DEPTH_COMPARE)) {
       GX_GLCALL(glEnable, GL_DEPTH_TEST);
-    } else if ((_currentGLCap & DEPTH_TEST) && !(cap & DEPTH_TEST)) {
+    } else if ((_currentGLCap & DEPTH_COMPARE) && !(cap & DEPTH_COMPARE)) {
       GX_GLCALL(glDisable, GL_DEPTH_TEST);
+    }
+
+    if (!(_currentGLCap & DEPTH_UPDATE) && (cap & DEPTH_UPDATE)) {
+      GX_GLCALL(glDepthMask, GL_TRUE);
+    } else if ((_currentGLCap & DEPTH_UPDATE) && !(cap & DEPTH_UPDATE)) {
+      GX_GLCALL(glDepthMask, GL_FALSE);
     }
 
     if (!(_currentGLCap & CULL) && (cap & CULL)) {
