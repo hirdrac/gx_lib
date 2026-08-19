@@ -48,8 +48,7 @@ namespace {
   [[nodiscard]] constexpr const char* shaderHeader()
   {
     if constexpr (VER < 42) {
-      return "#version 330 core\n"
-        "#extension GL_ARB_shading_language_packing : require\n";
+      return "#version 330 core\n";
     } else if constexpr (VER < 43) {
       return "#version 420 core\n";
     } else if constexpr (VER < 45) {
@@ -446,6 +445,15 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "  vec3 lightD;"\
     "};"
 
+  #define UNPACK_COLOR_SRC\
+    "vec4 unpackColor(uint c) {"\
+    "  float r = float(c & 255U) / 255.0;"\
+    "  float g = float((c >> 8) & 255U) / 255.0;"\
+    "  float b = float((c >> 16) & 255U) / 255.0;"\
+    "  float a = float(c >> 24) / 255.0;"\
+    "  return vec4(r, g, b, a);"\
+    "}"
+
   // basic vertex shader
   const GLShader vshader = makeVertexShader<VER>(
     "layout(location = 0) in vec3 in_pos;" // x,y,z
@@ -454,8 +462,9 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     UNIFORM_BLOCK_SRC
     "out vec4 v_color;"
     "out vec2 v_texCoord;"
+    UNPACK_COLOR_SRC
     "void main() {"
-    "  v_color = unpackUnorm4x8(in_color) * modColor;"
+    "  v_color = unpackColor(in_color) * modColor;"
     "  v_texCoord = in_tc;"
     "  gl_Position = cameraT * vec4(in_pos, 1);"
     "}");
@@ -482,10 +491,12 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "  return vec3(x, y, z);"
     "}"
 
+    UNPACK_COLOR_SRC
+
     "void main() {"
     "  v_pos = in_pos;"
     "  v_norm = unpackNormal(in_norm);"
-    "  v_color = unpackUnorm4x8(in_color) * modColor;"
+    "  v_color = unpackColor(in_color) * modColor;"
     "  v_texCoord = in_tc;"
     "  v_lightPos = lightPos;"
     "  v_lightA = lightA;"
@@ -552,6 +563,7 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "}"));
 
   #undef UNIFORM_BLOCK_SRC
+  #undef UNPACK_COLOR_SRC
 
   // uniform location cache
   bool status = true;
@@ -1458,11 +1470,6 @@ std::unique_ptr<Renderer> gx::makeOpenGLRenderer(WindowImpl* impl)
     ren = std::make_unique<OpenGLRenderer<42>>();
   } else {
     GX_LOG_INFO("OpenGL 3.3 GX_LIB Renderer");
-    if (GLAD_GL_ARB_shading_language_packing == 0) {
-      GX_LOG_ERROR("GL_ARB_shading_language_packing required");
-      return {};
-    }
-
     ren = std::make_unique<OpenGLRenderer<33>>();
   }
 
