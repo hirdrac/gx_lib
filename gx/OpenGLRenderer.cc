@@ -82,7 +82,7 @@ namespace {
     return fshader;
   }
 
-  template<int VER, class... Shader>
+  template<class... Shader>
   [[nodiscard]] GLProgram makeProgram(const Shader&... shaders)
   {
     if (!(shaders && ...)) { return {}; }
@@ -505,13 +505,13 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "}");
 
   // solid color shader
-  _sp[0] = makeProgram<VER>(vshader, makeFragmentShader<VER>(
+  _sp[0] = makeProgram(vshader, makeFragmentShader<VER>(
     "in vec4 v_color;"
     "out vec4 fragColor;"
     "void main() { fragColor = v_color; }"));
 
   // mono color texture shader (fonts)
-  _sp[1] = makeProgram<VER>(vshader, makeFragmentShader<VER>(
+  _sp[1] = makeProgram(vshader, makeFragmentShader<VER>(
     "in vec2 v_texCoord;"
     "in vec4 v_color;"
     "uniform sampler2D texUnit;"
@@ -523,7 +523,7 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "}"));
 
   // full color texture shader (images)
-  _sp[2] = makeProgram<VER>(vshader, makeFragmentShader<VER>(
+  _sp[2] = makeProgram(vshader, makeFragmentShader<VER>(
     "in vec2 v_texCoord;"
     "in vec4 v_color;"
     "uniform sampler2D texUnit;"
@@ -531,7 +531,7 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }"));
 
   // 3d shader w/ lighting
-  _sp[3] = makeProgram<VER>(vshader2, makeFragmentShader<VER>(
+  _sp[3] = makeProgram(vshader2, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
@@ -546,7 +546,7 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "}"));
 
   // textured 3d shader w/ lighting
-  _sp[4] = makeProgram<VER>(vshader2, makeFragmentShader<VER>(
+  _sp[4] = makeProgram(vshader2, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
@@ -1458,6 +1458,10 @@ std::unique_ptr<Renderer> gx::makeOpenGLRenderer(WindowImpl* impl)
     return {};
   }
 
+#ifdef __APPLE__
+  GX_LOG_INFO("OpenGL 3.3 GX_LIB Renderer");
+  auto ren = std::make_unique<OpenGLRenderer<33>>();
+#else
   std::unique_ptr<Renderer> ren;
   if (ver >= 45) {
     GX_LOG_INFO("OpenGL 4.5 GX_LIB Renderer");
@@ -1472,6 +1476,7 @@ std::unique_ptr<Renderer> gx::makeOpenGLRenderer(WindowImpl* impl)
     GX_LOG_INFO("OpenGL 3.3 GX_LIB Renderer");
     ren = std::make_unique<OpenGLRenderer<33>>();
   }
+#endif
 
   if (!ren->init(impl)) {
     GX_LOG_ERROR("OpenGLRenderer::init() failed");
