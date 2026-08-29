@@ -1,5 +1,5 @@
 #
-# Makefile.mk - revision 61 (2026/4/7)
+# Makefile.mk - revision 62 (2026/8/23)
 # Copyright (C) 2026 Richard Bradley
 #
 # Additional contributions from:
@@ -132,7 +132,7 @@
 #  LINK_FLAGS      additional linking flags not otherwise specified
 #  *_EXTRA         available for most settings to provide additional values
 #
-#  <OS>.<VAR>      set WINDOWS/LINUX specific value for any setting
+#  <OS>.<VAR>      set WINDOWS/LINUX/MACOS specific value for any setting
 #                  (overrides non-OS specified value)
 #
 #  BUILD_DIR       directory for generated object/prerequisite files
@@ -212,7 +212,8 @@ endif
 #### OS Specific Values ####
 override _uname := $(shell uname -s | tr A-Z a-z)
 override _windows := $(filter cygwin% mingw% msys%,$(_uname))
-override _linux := $(filter linux%,$(_uname))
+override _linux := $(filter linux,$(_uname))
+override _macos := $(filter darwin,$(_uname))
 override _pic_flag := $(if $(_windows),,-fPIC)
 override _libprefix := $(if $(filter cygwin%,$(_uname)),cyg,$(if $(filter msys%,$(_uname)),msys-,lib))
 override _libext := .$(if $(_windows),dll,so)
@@ -223,6 +224,9 @@ ifneq ($(_windows),)
 else ifneq ($(_linux),)
   $(foreach x,$(filter LINUX.%,$(.VARIABLES)),\
     $(eval override $(patsubst LINUX.%,%,$x) = $(value $x)))
+else ifneq ($(_macos),)
+  $(foreach x,$(filter MACOS.%,$(.VARIABLES)),\
+    $(eval override $(patsubst MACOS.%,%,$x) = $(value $x)))
 endif
 
 
@@ -311,7 +315,11 @@ override _profile_opt = -pg $(if $(_opt_lvl),-O$(_opt_lvl))
 
 
 #### Compiler Details ####
-override _compiler_names := gcc clang
+ifneq ($(_macos),)
+  override _compiler_names := clang gcc
+else
+  override _compiler_names := gcc clang
+endif
 override _modern_flags := -Wzero-as-null-pointer-constant -Wregister -Wold-style-cast
 
 override _gcc_cxx := g++
@@ -324,8 +332,10 @@ override _gcc_modern := $(_modern_flags) -Wsuggest-override
 override _clang_cxx := clang++
 override _clang_cc := clang
 override _clang_as := clang -x assembler-with-cpp
-override _clang_ar := llvm-ar
-override _clang_ld := lld
+ifeq ($(_macos),)
+  override _clang_ar := llvm-ar
+  override _clang_ld := lld
+endif
 override _clang_warn := shadow
 override _clang_modern := $(_modern_flags) -Winconsistent-missing-override
 
@@ -341,7 +351,7 @@ override _src_filter := $(if $(_windows),,$(_rc_ptrn))\
 
 # compiler allowed standards
 override _c_stds := c90 gnu90 c99 gnu99 c11 gnu11 c17 gnu17 c18 gnu18 c2x gnu2x c23 gnu23 c2y gnu2y
-override _cxx_stds := c++98 gnu++98 c++03 gnu++03 c++11 gnu++11 c++14 gnu++14 c++17 gnu++17 c++2a gnu++2a c++20 gnu++20 c++2b gnu++2b c++23 gnu++23 c++2c gnu++2c c++26 gnu++26
+override _cxx_stds := c++98 gnu++98 c++03 gnu++03 c++11 gnu++11 c++14 gnu++14 c++17 gnu++17 c++2a gnu++2a c++20 gnu++20 c++2b gnu++2b c++23 gnu++23 c++2c gnu++2c c++26 gnu++26 c++2d gnu++2d c++29 gnu++29
 
 # compiler functions
 override define _check_compiler # <1:compiler name var>
@@ -741,7 +751,7 @@ else ifneq ($(_build_env),)
 
   # compiler command setup
   $(eval $(call _check_compiler,COMPILER))
-  override _compiler := $(or $(strip $(COMPILER)),$(firstword $(_compiler_names)))
+  override _compiler := $(firstword $(COMPILER) $(_compiler_names))
 
   override _cross_compile := $(strip $(CROSS_COMPILE))
   override _cxx := $(_cross_compile)$(or $(_$(_compiler)_cxx),c++)
@@ -1009,7 +1019,7 @@ else ifneq ($(_build_env),)
   # determine LDFLAGS value for each entry
   $(foreach x,$(_shared_lib_labels) $(_bin_labels) $(_test_labels),\
     $(eval override _$x_ldflags :=\
-      -Wl$(_comma)--as-needed$(_comma)--gc-sections\
+      $(if $(_linux)$(_windows),-Wl$(_comma)--as-needed$(_comma)--gc-sections)\
       $(if $(if $(_windows),$(_$(ENV)_bdir),$(_$(ENV)_ldir)),,-L../..)\
       $(if $(_$x_soname),-Wl$(_comma)-h$(_comma)'$(_$x_soname)')\
       $(if $(_$x_implib),-Wl$(_comma)--out-implib$(_comma)'../../$(_$x_implib)')\
