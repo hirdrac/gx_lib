@@ -524,11 +524,12 @@ void DrawContext2D::_glyph(
   Vec2 Ct{g.t0.x, g.t1.y};
   Vec2 Dt{g.t1.x, g.t1.y};
 
-  if (_useClip) {
-    const float cx0 = _clip.x;
-    const float cy0 = _clip.y;
-    const float cx1 = cx0 + _clip.w;
-    const float cy1 = cy0 + _clip.h;
+  if (_clip) {
+    const Rect& clip = *_clip;
+    const float cx0 = clip.x;
+    const float cy0 = clip.y;
+    const float cx1 = cx0 + clip.w;
+    const float cy1 = cy0 + clip.h;
 
     // discard check
     if (max4(A.x, B.x, C.x, D.x) <= cx0

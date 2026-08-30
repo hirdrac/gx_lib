@@ -19,6 +19,7 @@
 #include "Rect.hh"
 #include "Types.hh"
 #include <string_view>
+#include <optional>
 
 
 class gx::DrawContext2D
@@ -125,8 +126,8 @@ class gx::DrawContext2D
 
   // Text drawing
   //   textFixedColor() functions ignore meta tag color changes
-  void textClip(const Rect& clip) { _clip = clip; _useClip = true; }
-  void clearTextClip() { _useClip = false; }
+  void textClip(const Rect& clip) { _clip = clip; }
+  void clearTextClip() { _clip = std::nullopt; }
 
   void selectedID(int64_t id) { _selectedID = id; }
   void selectedColor(RGBA8 c) { _selectedColor = c; }
@@ -203,10 +204,10 @@ class gx::DrawContext2D
   ColorMode _colorMode;
 
   // text properties
+  std::optional<Rect> _clip;
   int64_t _selectedID;
   RGBA8 _selectedColor;
-  Rect _clip;
-  bool _selectedUL, _useClip;
+  bool _selectedUL;
 
   void init() {
     _lastTexID = 0;
@@ -214,10 +215,10 @@ class gx::DrawContext2D
     _color1 = 0;
     _dataColor = 0;
     _colorMode = ColorMode::solid;
+    _clip = std::nullopt;
     _selectedID = 0;
     _selectedColor = 0;
     _selectedUL = false;
-    _useClip = false;
   }
 
   void _rectangle(float x, float y, float w, float h);
