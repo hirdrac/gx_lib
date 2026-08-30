@@ -87,8 +87,9 @@ bool Camera::calcView(Mat4& result) const
 bool Camera::calcProjection(Mat4& result) const
 {
   float width, height;
-  if (_vpSet) {
-    width = _viewport.w; height = _viewport.h;
+  if (_viewport) {
+    const Rect& vp = *_viewport;
+    width = vp.w; height = vp.h;
   } else {
     width = _screenWidth; height = _screenHeight;
   }
@@ -102,11 +103,12 @@ bool Camera::calcProjection(Mat4& result) const
   }
 
   float offsetX = 0, offsetY = 0;
-  if (_vpSet) {
-    offsetX = (_viewport.x / _screenWidth) * 2.0f;
-    offsetY = (_viewport.y / _screenHeight) * 2.0f;
-    vsideL *= ((_screenWidth - _viewport.w) / _screenWidth);
-    vtopL *= ((_screenHeight - _viewport.h) / _screenHeight);
+  if (_viewport) {
+    const Rect& vp = *_viewport;
+    offsetX = (vp.x / _screenWidth) * 2.0f;
+    offsetY = (vp.y / _screenHeight) * 2.0f;
+    vsideL *= ((_screenWidth - vp.w) / _screenWidth);
+    vtopL *= ((_screenHeight - vp.h) / _screenHeight);
   }
 
   const float clipLen = _farClip - _nearClip;
@@ -128,11 +130,12 @@ bool Camera::calcProjection(Mat4& result) const
   return true;
 }
 
-Vec3 Camera::dirToScreenPt(Vec2 mousePt) const
+Vec3 Camera::screenPtDir(Vec2 mousePt) const
 {
   float width, height;
-  if (_vpSet) {
-    width = _viewport.w; height = _viewport.h;
+  if (_viewport) {
+    const Rect& vp = *_viewport;
+    width = vp.w; height = vp.h;
   } else {
     width = _screenWidth; height = _screenHeight;
   }
@@ -148,9 +151,10 @@ Vec3 Camera::dirToScreenPt(Vec2 mousePt) const
   const float cx = width * .5f;
   const float cy = height * .5f;
   float mx, my;
-  if (_vpSet) {
-    mx = (mousePt.x - _viewport.x - cx) / cx;
-    my = (mousePt.y - _viewport.y - cy) / cy;
+  if (_viewport) {
+    const Rect& vp = *_viewport;
+    mx = (mousePt.x - vp.x - cx) / cx;
+    my = (mousePt.y - vp.y - cy) / cy;
   } else {
     mx = (mousePt.x - cx) / cx;
     my = (mousePt.y - cy) / cy;

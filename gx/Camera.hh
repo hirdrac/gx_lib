@@ -6,6 +6,7 @@
 #pragma once
 #include "Rect.hh"
 #include "Types.hh"
+#include <optional>
 
 
 namespace gx {
@@ -58,8 +59,8 @@ class gx::Camera
   void setClip(float near, float far) { _nearClip = near; _farClip = far; }
   void setScreen(float width, float height) {
     _screenWidth = width; _screenHeight = height; }
-  void setViewport(const Rect& vp) { _vpSet = true; _viewport = vp; }
-  void clearViewport() { _vpSet = false; }
+  void setViewport(const Rect& vp) { _viewport = vp; }
+  void clearViewport() { _viewport = std::nullopt; }
 
   template<class T>
   void setScreen(const T& x) { setScreen(float(x.width()), float(x.height())); }
@@ -67,8 +68,8 @@ class gx::Camera
   bool calcProjection(Mat4& result) const;
 
   // other methods
-  [[nodiscard]] Vec3 dirToScreenPt(Vec2 mousePt) const;
-    // eye to screen point direction calc
+  [[nodiscard]] Vec3 screenPtDir(Vec2 mousePt) const;
+    // calculates direction from eye to screen point on view plane
     // use {eye, result} ray intersection for mouse selection calcs
 
  private:
@@ -81,9 +82,8 @@ class gx::Camera
   float _zoom = 1.0f, _fov = 90.0f, _vlen = 1.0f;
   float _nearClip = 1.0f, _farClip = 1000.0f;
   float _screenWidth = 1.0f, _screenHeight = 1.0f;
-  Rect _viewport{};
+  std::optional<Rect> _viewport;
   ProjectionType _projection = PERSPECTIVE;
-  bool _vpSet = false;
 
   bool setView(const Vec3& p, const Vec3& vn, const Vec3& vu);
 
