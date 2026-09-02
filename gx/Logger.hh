@@ -45,7 +45,7 @@ class gx::Logger
     // write log to a file
   bool rotate();
     // end current log file & start a new one
-    // returns false if log isn't being writen a file
+    // returns false if log isn't being written a file
 
   [[nodiscard]] LogLevel level() const { return _level; }
   void setLevel(LogLevel lvl) { _level = lvl; }

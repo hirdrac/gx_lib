@@ -161,7 +161,7 @@ void Image::rectangle(int x, int y, int w, int h, const uint8_t* channelVals)
   if ((x >= _width) || (y >= _height)
       || ((x + w) <= 0) || ((y + h) <= 0)) { return; }
 
-  // clip rectangle to image boundries
+  // clip rectangle to image boundaries
   const int x0 = std::max(x, 0);
   const int y0 = std::max(y, 0);
   const int x1 = std::min(x + w - 1, _width - 1);

@@ -41,7 +41,7 @@ namespace gx
 
   [[nodiscard]] std::size_t findUTF8(
     std::string_view sv, int32_t code, std::size_t start = 0);
-    // returns index of first occurence of character in UTF-8 encoded string
+    // returns index of first occurrence of character in UTF-8 encoded string
     // (search begins at 'start' byte position)
 
   [[nodiscard]] bool isSpace(int32_t code);
