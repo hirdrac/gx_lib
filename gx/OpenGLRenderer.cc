@@ -95,9 +95,9 @@ namespace {
     return prog;
   }
 
-  [[nodiscard]] std::size_t calcVSize(const DrawList& dl)
+  [[nodiscard]] std::pair<uint32_t,uint32_t> calcVSize(const DrawList& dl)
   {
-    std::size_t vsize = 0;
+    uint32_t vsize2 = 0, vsize3 = 0;
     const Value* d    = dl.data();
     const Value* dEnd = d + dl.size();
 
@@ -117,36 +117,40 @@ namespace {
         case DrawCmd::camera:       d += 33; break;
         case DrawCmd::light:        d += 10; break;
         case DrawCmd::clearView:    d += 2; break;
-        case DrawCmd::line2:        d += 5;  vsize += 2; break;
-        case DrawCmd::line2C:       d += 7;  vsize += 2; break;
+
+        // 2D
+        case DrawCmd::line2:        d += 5;  vsize2 += 2; break;
+        case DrawCmd::line2C:       d += 7;  vsize2 += 2; break;
         case DrawCmd::lineStart2:   d += 3;  break;
-        case DrawCmd::lineTo2:      d += 3;  vsize += 2; break;
+        case DrawCmd::lineTo2:      d += 3;  vsize2 += 2; break;
         case DrawCmd::lineStart2C:  d += 4;  break;
-        case DrawCmd::lineTo2C:     d += 4;  vsize += 2; break;
-        case DrawCmd::triangle2:    d += 7;  vsize += 3; break;
-        case DrawCmd::triangle2T:   d += 13; vsize += 3; break;
-        case DrawCmd::triangle2C:   d += 10; vsize += 3; break;
-        case DrawCmd::triangle2TC:  d += 16; vsize += 3; break;
-        case DrawCmd::quad2:        d += 9;  vsize += 6; break;
-        case DrawCmd::quad2T:       d += 17; vsize += 6; break;
-        case DrawCmd::quad2C:       d += 13; vsize += 6; break;
-        case DrawCmd::quad2TC:      d += 21; vsize += 6; break;
-        case DrawCmd::rectangle:    d += 5;  vsize += 6; break;
-        case DrawCmd::rectangleT:   d += 9;  vsize += 6; break;
-        case DrawCmd::line3:        d += 7;  vsize += 2; break;
-        case DrawCmd::line3C:       d += 9;  vsize += 2; break;
+        case DrawCmd::lineTo2C:     d += 4;  vsize2 += 2; break;
+        case DrawCmd::triangle2:    d += 7;  vsize2 += 3; break;
+        case DrawCmd::triangle2T:   d += 13; vsize2 += 3; break;
+        case DrawCmd::triangle2C:   d += 10; vsize2 += 3; break;
+        case DrawCmd::triangle2TC:  d += 16; vsize2 += 3; break;
+        case DrawCmd::quad2:        d += 9;  vsize2 += 6; break;
+        case DrawCmd::quad2T:       d += 17; vsize2 += 6; break;
+        case DrawCmd::quad2C:       d += 13; vsize2 += 6; break;
+        case DrawCmd::quad2TC:      d += 21; vsize2 += 6; break;
+        case DrawCmd::rectangle:    d += 5;  vsize2 += 6; break;
+        case DrawCmd::rectangleT:   d += 9;  vsize2 += 6; break;
+
+        // 3D
+        case DrawCmd::line3:        d += 7;  vsize3 += 2; break;
+        case DrawCmd::line3C:       d += 9;  vsize3 += 2; break;
         case DrawCmd::lineStart3:   d += 4;  break;
-        case DrawCmd::lineTo3:      d += 4;  vsize += 2; break;
+        case DrawCmd::lineTo3:      d += 4;  vsize3 += 2; break;
         case DrawCmd::lineStart3C:  d += 5;  break;
-        case DrawCmd::lineTo3C:     d += 5;  vsize += 2; break;
-        case DrawCmd::triangle3:    d += 10; vsize += 3; break;
-        case DrawCmd::triangle3T:   d += 16; vsize += 3; break;
-        case DrawCmd::triangle3C:   d += 13; vsize += 3; break;
-        case DrawCmd::triangle3TC:  d += 19; vsize += 3; break;
-        case DrawCmd::quad3:        d += 13; vsize += 6; break;
-        case DrawCmd::quad3T:       d += 21; vsize += 6; break;
-        case DrawCmd::quad3C:       d += 17; vsize += 6; break;
-        case DrawCmd::quad3TC:      d += 25; vsize += 6; break;
+        case DrawCmd::lineTo3C:     d += 5;  vsize3 += 2; break;
+        case DrawCmd::triangle3:    d += 10; vsize3 += 3; break;
+        case DrawCmd::triangle3T:   d += 16; vsize3 += 3; break;
+        case DrawCmd::triangle3C:   d += 13; vsize3 += 3; break;
+        case DrawCmd::triangle3TC:  d += 19; vsize3 += 3; break;
+        case DrawCmd::quad3:        d += 13; vsize3 += 6; break;
+        case DrawCmd::quad3T:       d += 21; vsize3 += 6; break;
+        case DrawCmd::quad3C:       d += 17; vsize3 += 6; break;
+        case DrawCmd::quad3TC:      d += 25; vsize3 += 6; break;
 
         default:
           d = dEnd; // stop reading at first invalid cmd
@@ -156,7 +160,7 @@ namespace {
     }
 
     GX_ASSERT(d == dEnd);
-    return vsize;
+    return {vsize2, vsize3};
   }
 
   void setCullFace(int cap)
@@ -189,32 +193,6 @@ namespace {
     std::memcpy(m.data(), ptr, sizeof(float)*16); ptr += 16;
     return m;
   }
-
-  struct Vertex {
-    float x, y, z;  // pos
-    uint32_t c;     // color (packed 8-bit RGBA)
-    float s, t;     // tex coords
-    uint32_t n;     // normal (packed 10-bit XYZ, 2 bits unused)
-    uint32_t m;     // mode (currently unused)
-      // TODO: possible mode values:
-      // 16 bits  Z texture coord for texture arrays/3d textures
-      //  8 bits  transform function ID
-  };
-
-  // vertex output functions
-  void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,0.0f, c, 0.0f,0.0f, 0, 0}; }
-  void vertex2d(Vertex*& ptr, Vec2 pt, uint32_t c, Vec2 tx) {
-    *ptr++ = {pt.x,pt.y,0.0f, c, tx.x,tx.y, 0, 0}; }
-
-  void vertex3d(Vertex*& ptr, const Vec3& pt, uint32_t c) {
-    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, 0, 0}; }
-  void vertex3d(
-    Vertex*& ptr, const Vec3& pt, uint32_t c, uint32_t n) {
-    *ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, n, 0}; }
-  void vertex3d(
-    Vertex*& ptr, const Vec3& pt, uint32_t c, Vec2 tx, uint32_t n) {
-    *ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, n, 0}; }
 
   [[nodiscard]] constexpr Mat4 orthoProjection(int width, int height)
   {
@@ -291,7 +269,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   void renderFrame(int64_t usecTime) override;
 
  private:
-  static constexpr int SHADER_COUNT = 5;
+  static constexpr int SHADER_COUNT = 8;
   GLProgram _sp[SHADER_COUNT];
   GLUniform1i _sp_texUnit[SHADER_COUNT];
 
@@ -307,7 +285,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     Vec3 lightD;
   };
 
-  GLVertexArray<VER> _vao;
+  GLVertexArray<VER> _vao2, _vao3;
   GLBuffer<VER> _vbo;
 
   struct TextureEntry {
@@ -345,9 +323,43 @@ class gx::OpenGLRenderer final : public gx::Renderer
   Mat4 _orthoT;
   std::vector<Value> _opData;
   GLOperation _lastOp = OP_null;
+  int32_t _first2 = 0, _first3 = 0;
   int _currentGLCap = -1; // current GL capability state
   std::mutex _glMutex;
 
+  // 2D vertex type & functions
+  struct Vertex2D {
+    float x, y, s, t;  // pos, tex coords
+    uint32_t c;        // color
+  };
+  static_assert(sizeof(Vertex2D) == 20);
+  static_assert(alignof(Vertex2D) == 4);
+  Vertex2D* _v2ptr = nullptr;
+
+  void addVertex2D(Vec2 pt, uint32_t c) {
+    *_v2ptr++ = {pt.x,pt.y, 0.0f,0.0f, c}; }
+  void addVertex2D(Vec2 pt, Vec2 tx, uint32_t c) {
+    *_v2ptr++ = {pt.x,pt.y, tx.x,tx.y, c}; }
+
+  // 3D vertex type & functions
+  struct Vertex3D {
+    float x, y, z;  // pos
+    uint32_t c;     // color (packed 8-bit RGBA)
+    float s, t;     // tex coords
+    uint32_t n;     // normal (packed 10-bit XYZ, 2 bits unused)
+  };
+  static_assert(sizeof(Vertex3D) == 28);
+  static_assert(alignof(Vertex3D) == 4);
+  Vertex3D* _v3ptr = nullptr;
+
+  void addVertex3D(const Vec3& pt, uint32_t c) {
+    *_v3ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, 0}; }
+  void addVertex3D(const Vec3& pt, uint32_t c, uint32_t n) {
+    *_v3ptr++ = {pt.x,pt.y,pt.z, c, 0.0f,0.0f, n}; }
+  void addVertex3D(const Vec3& pt, uint32_t c, Vec2 tx, uint32_t n) {
+    *_v3ptr++ = {pt.x,pt.y,pt.z, c, tx.x,tx.y, n}; }
+
+  // OP functions
   template<class... Args>
   void addOp(GLOperation op, const Args&... args) {
     if constexpr (sizeof...(args) == 0) {
@@ -364,50 +376,50 @@ class gx::OpenGLRenderer final : public gx::Renderer
     _lastOp = op;
   }
 
-  void addLine2D(int32_t& first) {
+  void addLine2D() {
     if (_lastOp == OP_drawLines2D) {
       _opData[_opData.size() - 1].ival += 2;
     } else {
-      addOp(OP_drawLines2D, first, 2);
+      addOp(OP_drawLines2D, _first2, 2);
     }
-    first += 2;
+    _first2 += 2;
   }
 
-  void addTriangles2D(int32_t& first, int32_t vertices, TextureID tid) {
+  void addTriangles2D(int32_t vertices, TextureID tid) {
     if (_lastOp == OP_drawTriangles2D) {
       const std::size_t s = _opData.size();
       const TextureID last_tid = _opData[s - 1].uval;
       if (last_tid == tid) {
         _opData[s - 2].ival += vertices;
-        first += vertices;
+        _first2 += vertices;
         return;
       }
     }
-    addOp(OP_drawTriangles2D, first, vertices, tid);
-    first += vertices;
+    addOp(OP_drawTriangles2D, _first2, vertices, tid);
+    _first2 += vertices;
   }
 
-  void addLine3D(int32_t& first) {
+  void addLine3D() {
     if (_lastOp == OP_drawLines3D) {
       _opData[_opData.size() - 1].ival += 2;
     } else {
-      addOp(OP_drawLines3D, first, 2);
+      addOp(OP_drawLines3D, _first3, 2);
     }
-    first += 2;
+    _first3 += 2;
   }
 
-  void addTriangles3D(int32_t& first, int32_t vertices, TextureID tid) {
+  void addTriangles3D(int32_t vertices, TextureID tid) {
     if (_lastOp == OP_drawTriangles3D) {
       const std::size_t s = _opData.size();
       const TextureID last_tid = _opData[s - 1].uval;
       if (last_tid == tid) {
         _opData[s - 2].ival += vertices;
-        first += vertices;
+        _first3 += vertices;
         return;
       }
     }
-    addOp(OP_drawTriangles3D, first, vertices, tid);
-    first += vertices;
+    addOp(OP_drawTriangles3D, _first3, vertices, tid);
+    _first3 += vertices;
   }
 
   void setGLCapabilities(int32_t cap);
@@ -455,7 +467,20 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "}"
 
   // basic vertex shader
-  const GLShader vshader = makeVertexShader<VER>(
+  const GLShader vshader2d = makeVertexShader<VER>(
+    "layout(location = 0) in vec4 in_coord;" // x,y,s,t
+    "layout(location = 1) in uint in_color;"
+    UNIFORM_BLOCK_SRC
+    "out vec4 v_color;"
+    "out vec2 v_texCoord;"
+    UNPACK_COLOR_SRC
+    "void main() {"
+    "  v_color = unpackColor(in_color) * modColor;"
+    "  v_texCoord = in_coord.zw;"
+    "  gl_Position = cameraT * vec4(in_coord.xy, 0, 1);"
+    "}");
+
+  const GLShader vshader3d = makeVertexShader<VER>(
     "layout(location = 0) in vec3 in_pos;" // x,y,z
     "layout(location = 1) in uint in_color;"
     "layout(location = 2) in vec2 in_tc;"  // s,t
@@ -470,7 +495,7 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "}");
 
   // vertex shader w/ lighting support
-  const GLShader vshader2 = makeVertexShader<VER>(
+  const GLShader vshader3dlit = makeVertexShader<VER>(
     "layout(location = 0) in vec3 in_pos;"   // x,y,z
     "layout(location = 1) in uint in_color;"
     "layout(location = 2) in vec2 in_tc;"    // s,t
@@ -504,14 +529,19 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "  gl_Position = cameraT * vec4(in_pos, 1);"
     "}");
 
-  // solid color shader
-  _sp[0] = makeProgram(vshader, makeFragmentShader<VER>(
+  const GLShader fshader = makeFragmentShader<VER>(
     "in vec4 v_color;"
     "out vec4 fragColor;"
-    "void main() { fragColor = v_color; }"));
+    "void main() { fragColor = v_color; }");
 
-  // mono color texture shader (fonts)
-  _sp[1] = makeProgram(vshader, makeFragmentShader<VER>(
+  const GLShader fshaderT = makeFragmentShader<VER>(
+    "in vec2 v_texCoord;"
+    "in vec4 v_color;"
+    "uniform sampler2D texUnit;"
+    "out vec4 fragColor;"
+    "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }");
+
+  const GLShader fshaderTmono = makeFragmentShader<VER>(
     "in vec2 v_texCoord;"
     "in vec4 v_color;"
     "uniform sampler2D texUnit;"
@@ -520,18 +550,28 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "  float a = texture(texUnit, v_texCoord).r;"
     "  if (a == 0.0) discard;"
     "  fragColor = vec4(v_color.rgb, v_color.a * a);"
-    "}"));
+    "}");
 
-  // full color texture shader (images)
-  _sp[2] = makeProgram(vshader, makeFragmentShader<VER>(
-    "in vec2 v_texCoord;"
-    "in vec4 v_color;"
-    "uniform sampler2D texUnit;"
-    "out vec4 fragColor;"
-    "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }"));
+  // solid color 2D shader
+  _sp[0] = makeProgram(vshader2d, fshader);
 
-  // 3d shader w/ lighting
-  _sp[3] = makeProgram(vshader2, makeFragmentShader<VER>(
+  // mono color texture 2D shader (fonts)
+  _sp[1] = makeProgram(vshader2d, fshaderTmono);
+
+  // full color texture 2D shader (images)
+  _sp[2] = makeProgram(vshader2d, fshaderT);
+
+  // solid color 3D shader
+  _sp[3] = makeProgram(vshader3d, fshader);
+
+  // mono color texture 3D shader (fonts)
+  _sp[4] = makeProgram(vshader3d, fshaderTmono);
+
+  // full color texture 3D shader (images)
+  _sp[5] = makeProgram(vshader3d, fshaderT);
+
+  // 3D shader w/ lighting
+  _sp[6] = makeProgram(vshader3dlit, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
@@ -545,8 +585,8 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "  fragColor = v_color * vec4((v_lightD * lt) + v_lightA, 1.0);"
     "}"));
 
-  // textured 3d shader w/ lighting
-  _sp[4] = makeProgram(vshader2, makeFragmentShader<VER>(
+  // textured 3D shader w/ lighting
+  _sp[7] = makeProgram(vshader3dlit, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
@@ -698,10 +738,12 @@ void OpenGLRenderer<VER>::freeTexture(TextureID id)
 template<int VER>
 void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
 {
-  std::size_t vsize = 0; // vertices needed for all layers
+  std::size_t vsize2 = 0, vsize3 = 0; // vertices needed for all lists
   for (const DrawList* dlPtr : lists) {
     GX_ASSERT(dlPtr != nullptr);
-    vsize += calcVSize(*dlPtr);
+    const auto [v2,v3] = calcVSize(*dlPtr);
+    vsize2 += v2;
+    vsize3 += v3;
   }
 
   const std::lock_guard lg{_glMutex};
@@ -709,16 +751,21 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
 
   _opData.clear();
   _lastOp = OP_null;
+  _first2 = _first3 = 0;
 
-  Vertex* ptr = nullptr;
-  if (vsize == 0) {
+  if (vsize2 == 0 && vsize3 == 0) {
     _vbo = {};
-    _vao = {};
+    _v2ptr = nullptr;
+    _v3ptr = nullptr;
   } else {
     if (!_vbo) { _vbo.init(); }
-    _vbo.setData(GLsizei(vsize * sizeof(Vertex)), nullptr, GL_STREAM_DRAW);
-    ptr = static_cast<Vertex*>(_vbo.map(GL_WRITE_ONLY));
-    GX_ASSERT(ptr != nullptr);
+    const std::size_t bsize =
+      (vsize2 * sizeof(Vertex2D)) + (vsize3 * sizeof(Vertex3D));
+    _vbo.setData(GLsizei(bsize), nullptr, GL_STREAM_DRAW);
+    void* data = _vbo.map(GL_WRITE_ONLY);
+    GX_ASSERT(data != nullptr);
+    _v2ptr = reinterpret_cast<Vertex2D*>(data);
+    _v3ptr = reinterpret_cast<Vertex3D*>(_v2ptr + vsize2);
   }
 
   // general triangle layout
@@ -727,7 +774,6 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
   //  |/ |
   //  2--3
 
-  int32_t first = 0;
   int32_t cap = -1;
 
   for (const DrawList* dlPtr : lists) {
@@ -804,84 +850,84 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
 
         // 2D drawing
         case DrawCmd::line2: {
-          vertex2d(ptr, fval2(d), color);
-          vertex2d(ptr, fval2(d), color);
-          addLine2D(first);
+          addVertex2D(fval2(d), color);
+          addVertex2D(fval2(d), color);
+          addLine2D();
           break;
         }
         case DrawCmd::line2C: {
           const Vec2 p0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
-          vertex2d(ptr, p0, c0);
-          vertex2d(ptr, p1, c1);
-          addLine2D(first);
+          addVertex2D(p0, c0);
+          addVertex2D(p1, c1);
+          addLine2D();
           break;
         }
         case DrawCmd::lineStart2:
           linePt.set(fval2(d), 0); lineColor = color; break;
         case DrawCmd::lineTo2: {
-          vertex3d(ptr, linePt, lineColor);
+          addVertex2D(linePt.xy(), lineColor);
           linePt.set(fval2(d), 0); lineColor = color;
-          vertex3d(ptr, linePt, lineColor);
-          addLine2D(first);
+          addVertex2D(linePt.xy(), lineColor);
+          addLine2D();
           break;
         }
         case DrawCmd::lineStart2C:
           linePt.set(fval2(d), 0); lineColor = uval(d); break;
         case DrawCmd::lineTo2C: {
-          vertex3d(ptr, linePt, lineColor);
+          addVertex2D(linePt.xy(), lineColor);
           linePt.set(fval2(d), 0); lineColor = uval(d);
-          vertex3d(ptr, linePt, lineColor);
-          addLine2D(first);
+          addVertex2D(linePt.xy(), lineColor);
+          addLine2D();
           break;
         }
         case DrawCmd::triangle2: {
-          vertex2d(ptr, fval2(d), color);
-          vertex2d(ptr, fval2(d), color);
-          vertex2d(ptr, fval2(d), color);
-          addTriangles2D(first, 3, 0);
+          addVertex2D(fval2(d), color);
+          addVertex2D(fval2(d), color);
+          addVertex2D(fval2(d), color);
+          addTriangles2D(3, 0);
           break;
         }
         case DrawCmd::triangle2T: {
           const Vec2 p0 = fval2(d), t0 = fval2(d);
           const Vec2 p1 = fval2(d), t1 = fval2(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d);
-          vertex2d(ptr, p0, color, t0);
-          vertex2d(ptr, p1, color, t1);
-          vertex2d(ptr, p2, color, t2);
-          addTriangles2D(first, 3, tid);
+          addVertex2D(p0, t0, color);
+          addVertex2D(p1, t1, color);
+          addVertex2D(p2, t2, color);
+          addTriangles2D(3, tid);
           break;
         }
         case DrawCmd::triangle2C: {
           const Vec2 p0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d); const uint32_t c2 = uval(d);
-          vertex2d(ptr, p0, c0);
-          vertex2d(ptr, p1, c1);
-          vertex2d(ptr, p2, c2);
-          addTriangles2D(first, 3, 0);
+          addVertex2D(p0, c0);
+          addVertex2D(p1, c1);
+          addVertex2D(p2, c2);
+          addTriangles2D(3, 0);
           break;
         }
         case DrawCmd::triangle2TC: {
           const Vec2 p0 = fval2(d), t0 = fval2(d); const uint32_t c0 = uval(d);
           const Vec2 p1 = fval2(d), t1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d); const uint32_t c2 = uval(d);
-          vertex2d(ptr, p0, c0, t0);
-          vertex2d(ptr, p1, c1, t1);
-          vertex2d(ptr, p2, c2, t2);
-          addTriangles2D(first, 3, tid);
+          addVertex2D(p0, t0, c0);
+          addVertex2D(p1, t1, c1);
+          addVertex2D(p2, t2, c2);
+          addTriangles2D(3, tid);
           break;
         }
         case DrawCmd::quad2: {
           const Vec2 p0 = fval2(d), p1 = fval2(d);
           const Vec2 p2 = fval2(d), p3 = fval2(d);
-          vertex2d(ptr, p0, color);
-          vertex2d(ptr, p1, color);
-          vertex2d(ptr, p2, color);
-          vertex2d(ptr, p1, color);
-          vertex2d(ptr, p3, color);
-          vertex2d(ptr, p2, color);
-          addTriangles2D(first, 6, 0);
+          addVertex2D(p0, color);
+          addVertex2D(p1, color);
+          addVertex2D(p2, color);
+          addVertex2D(p1, color);
+          addVertex2D(p3, color);
+          addVertex2D(p2, color);
+          addTriangles2D(6, 0);
           break;
         }
         case DrawCmd::quad2T: {
@@ -889,13 +935,13 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           const Vec2 p1 = fval2(d), t1 = fval2(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d);
           const Vec2 p3 = fval2(d), t3 = fval2(d);
-          vertex2d(ptr, p0, color, t0);
-          vertex2d(ptr, p1, color, t1);
-          vertex2d(ptr, p2, color, t2);
-          vertex2d(ptr, p1, color, t1);
-          vertex2d(ptr, p3, color, t3);
-          vertex2d(ptr, p2, color, t2);
-          addTriangles2D(first, 6, tid);
+          addVertex2D(p0, t0, color);
+          addVertex2D(p1, t1, color);
+          addVertex2D(p2, t2, color);
+          addVertex2D(p1, t1, color);
+          addVertex2D(p3, t3, color);
+          addVertex2D(p2, t2, color);
+          addTriangles2D(6, tid);
           break;
         }
         case DrawCmd::quad2C: {
@@ -903,13 +949,13 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           const Vec2 p1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d); const uint32_t c2 = uval(d);
           const Vec2 p3 = fval2(d); const uint32_t c3 = uval(d);
-          vertex2d(ptr, p0, c0);
-          vertex2d(ptr, p1, c1);
-          vertex2d(ptr, p2, c2);
-          vertex2d(ptr, p1, c1);
-          vertex2d(ptr, p3, c3);
-          vertex2d(ptr, p2, c2);
-          addTriangles2D(first, 6, 0);
+          addVertex2D(p0, c0);
+          addVertex2D(p1, c1);
+          addVertex2D(p2, c2);
+          addVertex2D(p1, c1);
+          addVertex2D(p3, c3);
+          addVertex2D(p2, c2);
+          addTriangles2D(6, 0);
           break;
         }
         case DrawCmd::quad2TC: {
@@ -917,25 +963,25 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           const Vec2 p1 = fval2(d), t1 = fval2(d); const uint32_t c1 = uval(d);
           const Vec2 p2 = fval2(d), t2 = fval2(d); const uint32_t c2 = uval(d);
           const Vec2 p3 = fval2(d), t3 = fval2(d); const uint32_t c3 = uval(d);
-          vertex2d(ptr, p0, c0, t0);
-          vertex2d(ptr, p1, c1, t1);
-          vertex2d(ptr, p2, c2, t2);
-          vertex2d(ptr, p1, c1, t1);
-          vertex2d(ptr, p3, c3, t3);
-          vertex2d(ptr, p2, c2, t2);
-          addTriangles2D(first, 6, tid);
+          addVertex2D(p0, t0, c0);
+          addVertex2D(p1, t1, c1);
+          addVertex2D(p2, t2, c2);
+          addVertex2D(p1, t1, c1);
+          addVertex2D(p3, t3, c3);
+          addVertex2D(p2, t3, c2);
+          addTriangles2D(6, tid);
           break;
         }
         case DrawCmd::rectangle: {
           const Vec2 p0 = fval2(d), p3 = fval2(d);
           const Vec2 p1{p3.x,p0.y}, p2{p0.x,p3.y};
-          vertex2d(ptr, p0, color);
-          vertex2d(ptr, p1, color);
-          vertex2d(ptr, p2, color);
-          vertex2d(ptr, p1, color);
-          vertex2d(ptr, p3, color);
-          vertex2d(ptr, p2, color);
-          addTriangles2D(first, 6, 0);
+          addVertex2D(p0, color);
+          addVertex2D(p1, color);
+          addVertex2D(p2, color);
+          addVertex2D(p1, color);
+          addVertex2D(p3, color);
+          addVertex2D(p2, color);
+          addTriangles2D(6, 0);
           break;
         }
         case DrawCmd::rectangleT: {
@@ -943,74 +989,74 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           const Vec2 p3 = fval2(d), t3 = fval2(d);
           const Vec2 p1{p3.x,p0.y}, t1{t3.x,t0.y};
           const Vec2 p2{p0.x,p3.y}, t2{t0.x,t3.y};
-          vertex2d(ptr, p0, color, t0);
-          vertex2d(ptr, p1, color, t1);
-          vertex2d(ptr, p2, color, t2);
-          vertex2d(ptr, p1, color, t1);
-          vertex2d(ptr, p3, color, t3);
-          vertex2d(ptr, p2, color, t2);
-          addTriangles2D(first, 6, tid);
+          addVertex2D(p0, t0, color);
+          addVertex2D(p1, t1, color);
+          addVertex2D(p2, t2, color);
+          addVertex2D(p1, t1, color);
+          addVertex2D(p3, t3, color);
+          addVertex2D(p2, t2, color);
+          addTriangles2D(6, tid);
           break;
         }
 
         // 3D drawing
         case DrawCmd::line3: {
-          vertex3d(ptr, fval3(d), color);
-          vertex3d(ptr, fval3(d), color);
-          addLine3D(first);
+          addVertex3D(fval3(d), color);
+          addVertex3D(fval3(d), color);
+          addLine3D();
           break;
         }
         case DrawCmd::line3C: {
           const Vec3 p0 = fval3(d); const uint32_t c0 = uval(d);
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
-          vertex3d(ptr, p0, c0);
-          vertex3d(ptr, p1, c1);
-          addLine3D(first);
+          addVertex3D(p0, c0);
+          addVertex3D(p1, c1);
+          addLine3D();
           break;
         }
         case DrawCmd::lineStart3:
           linePt = fval3(d); lineColor = color; break;
         case DrawCmd::lineTo3: {
-          vertex3d(ptr, linePt, lineColor);
+          addVertex3D(linePt, lineColor);
           linePt = fval3(d); lineColor = color;
-          vertex3d(ptr, linePt, lineColor);
-          addLine3D(first);
+          addVertex3D(linePt, lineColor);
+          addLine3D();
           break;
         }
         case DrawCmd::lineStart3C:
           linePt = fval3(d); lineColor = uval(d); break;
         case DrawCmd::lineTo3C: {
-          vertex3d(ptr, linePt, lineColor);
+          addVertex3D(linePt, lineColor);
           linePt = fval3(d); lineColor = uval(d);
-          vertex3d(ptr, linePt, lineColor);
-          addLine3D(first);
+          addVertex3D(linePt, lineColor);
+          addLine3D();
           break;
         }
         case DrawCmd::triangle3: {
-          vertex3d(ptr, fval3(d), color, normal);
-          vertex3d(ptr, fval3(d), color, normal);
-          vertex3d(ptr, fval3(d), color, normal);
-          addTriangles3D(first, 3, 0);
+          addVertex3D(fval3(d), color, normal);
+          addVertex3D(fval3(d), color, normal);
+          addVertex3D(fval3(d), color, normal);
+          addTriangles3D(3, 0);
           break;
         }
         case DrawCmd::triangle3T: {
           const Vec3 p0 = fval3(d); const Vec2 t0 = fval2(d);
           const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
           const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
-          vertex3d(ptr, p0, color, t0, normal);
-          vertex3d(ptr, p1, color, t1, normal);
-          vertex3d(ptr, p2, color, t2, normal);
-          addTriangles3D(first, 3, tid);
+          addVertex3D(p0, color, t0, normal);
+          addVertex3D(p1, color, t1, normal);
+          addVertex3D(p2, color, t2, normal);
+          addTriangles3D(3, tid);
           break;
         }
         case DrawCmd::triangle3C: {
           const Vec3 p0 = fval3(d); const uint32_t c0 = uval(d);
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
           const Vec3 p2 = fval3(d); const uint32_t c2 = uval(d);
-          vertex3d(ptr, p0, c0, normal);
-          vertex3d(ptr, p1, c1, normal);
-          vertex3d(ptr, p2, c2, normal);
-          addTriangles3D(first, 3, 0);
+          addVertex3D(p0, c0, normal);
+          addVertex3D(p1, c1, normal);
+          addVertex3D(p2, c2, normal);
+          addTriangles3D(3, 0);
           break;
         }
         case DrawCmd::triangle3TC: {
@@ -1020,22 +1066,22 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           const uint32_t c1 = uval(d);
           const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
           const uint32_t c2 = uval(d);
-          vertex3d(ptr, p0, c0, t0, normal);
-          vertex3d(ptr, p1, c1, t1, normal);
-          vertex3d(ptr, p2, c2, t2, normal);
-          addTriangles3D(first, 3, tid);
+          addVertex3D(p0, c0, t0, normal);
+          addVertex3D(p1, c1, t1, normal);
+          addVertex3D(p2, c2, t2, normal);
+          addTriangles3D(3, tid);
           break;
         }
         case DrawCmd::quad3: {
           const Vec3 p0 = fval3(d), p1 = fval3(d);
           const Vec3 p2 = fval3(d), p3 = fval3(d);
-          vertex3d(ptr, p0, color, normal);
-          vertex3d(ptr, p1, color, normal);
-          vertex3d(ptr, p2, color, normal);
-          vertex3d(ptr, p1, color, normal);
-          vertex3d(ptr, p3, color, normal);
-          vertex3d(ptr, p2, color, normal);
-          addTriangles3D(first, 6, 0);
+          addVertex3D(p0, color, normal);
+          addVertex3D(p1, color, normal);
+          addVertex3D(p2, color, normal);
+          addVertex3D(p1, color, normal);
+          addVertex3D(p3, color, normal);
+          addVertex3D(p2, color, normal);
+          addTriangles3D(6, 0);
           break;
         }
         case DrawCmd::quad3T: {
@@ -1043,13 +1089,13 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           const Vec3 p1 = fval3(d); const Vec2 t1 = fval2(d);
           const Vec3 p2 = fval3(d); const Vec2 t2 = fval2(d);
           const Vec3 p3 = fval3(d); const Vec2 t3 = fval2(d);
-          vertex3d(ptr, p0, color, t0, normal);
-          vertex3d(ptr, p1, color, t1, normal);
-          vertex3d(ptr, p2, color, t2, normal);
-          vertex3d(ptr, p1, color, t1, normal);
-          vertex3d(ptr, p3, color, t3, normal);
-          vertex3d(ptr, p2, color, t2, normal);
-          addTriangles3D(first, 6, tid);
+          addVertex3D(p0, color, t0, normal);
+          addVertex3D(p1, color, t1, normal);
+          addVertex3D(p2, color, t2, normal);
+          addVertex3D(p1, color, t1, normal);
+          addVertex3D(p3, color, t3, normal);
+          addVertex3D(p2, color, t2, normal);
+          addTriangles3D(6, tid);
           break;
         }
         case DrawCmd::quad3C: {
@@ -1057,13 +1103,13 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           const Vec3 p1 = fval3(d); const uint32_t c1 = uval(d);
           const Vec3 p2 = fval3(d); const uint32_t c2 = uval(d);
           const Vec3 p3 = fval3(d); const uint32_t c3 = uval(d);
-          vertex3d(ptr, p0, c0, normal);
-          vertex3d(ptr, p1, c1, normal);
-          vertex3d(ptr, p2, c2, normal);
-          vertex3d(ptr, p1, c1, normal);
-          vertex3d(ptr, p3, c3, normal);
-          vertex3d(ptr, p2, c2, normal);
-          addTriangles3D(first, 6, 0);
+          addVertex3D(p0, c0, normal);
+          addVertex3D(p1, c1, normal);
+          addVertex3D(p2, c2, normal);
+          addVertex3D(p1, c1, normal);
+          addVertex3D(p3, c3, normal);
+          addVertex3D(p2, c2, normal);
+          addTriangles3D(6, 0);
           break;
         }
         case DrawCmd::quad3TC: {
@@ -1075,13 +1121,13 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           const uint32_t c2 = uval(d);
           const Vec3 p3 = fval3(d); const Vec2 t3 = fval2(d);
           const uint32_t c3 = uval(d);
-          vertex3d(ptr, p0, c0, t0, normal);
-          vertex3d(ptr, p1, c1, t1, normal);
-          vertex3d(ptr, p2, c2, t2, normal);
-          vertex3d(ptr, p1, c1, t1, normal);
-          vertex3d(ptr, p3, c3, t3, normal);
-          vertex3d(ptr, p2, c2, t2, normal);
-          addTriangles3D(first, 6, tid);
+          addVertex3D(p0, c0, t0, normal);
+          addVertex3D(p1, c1, t1, normal);
+          addVertex3D(p2, c2, t2, normal);
+          addVertex3D(p1, c1, t1, normal);
+          addVertex3D(p3, c3, t3, normal);
+          addVertex3D(p2, c2, t2, normal);
+          addTriangles3D(6, tid);
           break;
         }
         default:
@@ -1093,32 +1139,39 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
 
   if (_vbo) {
     _vbo.unmap();
-    if (!_vao) {
-      _vao.init();
-      static_assert(sizeof(Vertex) == 32);
+    if (vsize2 > 0) {
+      if (!_vao2) {
+        _vao2.init();
+        _vao2.enableAttrib(0); // vec4 (x,y,s,t)
+        _vao2.enableAttrib(1); // uint (r,g,b,a 8:8:8:8 packed int)
+      }
 
-      _vao.enableAttrib(0); // vec3 (x,y,z)
-      _vao.setAttrib(0, _vbo, 0, sizeof(Vertex), 3, GL_FLOAT, GL_FALSE);
+      _vao2.setAttrib(0, _vbo, 0, sizeof(Vertex2D), 4, GL_FLOAT, GL_FALSE);
+      _vao2.setAttribI(1, _vbo, 16, sizeof(Vertex2D), 1, GL_UNSIGNED_INT);
+    }
 
-      _vao.enableAttrib(1); // uint (r,g,b,a 8:8:8:8 packed int)
-      _vao.setAttribI(1, _vbo, 12, sizeof(Vertex), 1, GL_UNSIGNED_INT);
+    if (vsize3 > 0) {
+      if (!_vao3) {
+        _vao3.init();
+        _vao3.enableAttrib(0); // vec3 (x,y,z)
+        _vao3.enableAttrib(1); // uint (r,g,b,a 8:8:8:8 packed int)
+        _vao3.enableAttrib(2); // vec2 (s,t)
+        _vao3.enableAttrib(3); // uint (x,y,z 10:10:10 packed int)
+      }
 
-      _vao.enableAttrib(2); // vec2 (s,t)
-      _vao.setAttrib(2, _vbo, 16, sizeof(Vertex), 2, GL_FLOAT, GL_FALSE);
-
-      _vao.enableAttrib(3); // uint (x,y,z 10:10:10 packed int)
-      _vao.setAttribI(3, _vbo, 24, sizeof(Vertex), 1, GL_UNSIGNED_INT);
-
-      _vao.enableAttrib(4); // uint
-      _vao.setAttribI(4, _vbo, 28, sizeof(Vertex), 1, GL_UNSIGNED_INT);
+      const std::size_t i = vsize2 * sizeof(Vertex2D);
+      _vao3.setAttrib(0, _vbo, i+0, sizeof(Vertex3D), 3, GL_FLOAT, GL_FALSE);
+      _vao3.setAttribI(1, _vbo, i+12, sizeof(Vertex3D), 1, GL_UNSIGNED_INT);
+      _vao3.setAttrib(2, _vbo, i+16, sizeof(Vertex3D), 2, GL_FLOAT, GL_FALSE);
+      _vao3.setAttribI(3, _vbo, i+24, sizeof(Vertex3D), 1, GL_UNSIGNED_INT);
     }
   }
 
 #if 0
-  std::size_t dsize = 0;
-  for (const DrawList* dlPtr : lists) { dsize += dlPtr->size(); }
-  println_err("entries:", dsize, "  vertices:", vsize,
-              "  opData:", _opData.size());
+  std::size_t dlsize = 0;
+  for (const DrawList* dlPtr : lists) { dlsize += dlPtr->size(); }
+  println_err("dlsize:", dlsize, "  vertices2D:", vsize2,
+              "  vertices3D:", vsize3, "  opData:", _opData.size());
 #endif
 }
 
@@ -1157,11 +1210,11 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   bool orthoMode = false;
 
   // draw
-  _vao.bind();
   int lastShader = -1;
   int nextTexUnit = 0;
   int texUnit = -1;
   int32_t newCap = BLEND; // default GL capabilities
+  int lastVAO = 0;
 
   const Value* data     = _opData.data();
   const Value* data_end = data + _opData.size();
@@ -1220,6 +1273,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         break;
       }
       case OP_drawLines2D: {
+        if (lastVAO != 2) { _vao2.bind(); lastVAO = 2; }
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const int32_t glCap = newCap & BLEND; // only BLEND is allowed for 2D
@@ -1242,6 +1296,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         break;
       }
       case OP_drawTriangles2D: {
+        if (lastVAO != 2) { _vao2.bind(); lastVAO = 2; }
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
@@ -1290,6 +1345,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         break;
       }
       case OP_drawLines3D: {
+        if (lastVAO != 3) { _vao3.bind(); lastVAO = 3; }
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const int32_t glCap = newCap & ~LIGHTING;
@@ -1299,15 +1355,16 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
           udChanged = false;
         }
 
-        if (lastShader != 0) {
-          lastShader = 0;
-          _sp[0].use();
+        if (lastShader != 3) {
+          lastShader = 3;
+          _sp[3].use();
         }
 
         GX_GLCALL(glDrawArrays, GL_LINES, first, count);
         break;
       }
       case OP_drawTriangles3D: {
+        if (lastVAO != 3) { _vao3.bind(); lastVAO = 3; }
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
@@ -1320,12 +1377,12 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         }
 
         // shader values
-        //  0 - flat shader
-        //  1 - mono texture shader
-        //  2 - color texture shader
-        //  3 - lit flat shader
-        //  4 - lit texture shader
-        int shader = useLight ? 3 : 0;
+        //  3 - flat shader
+        //  4 - mono texture shader
+        //  5 - color texture shader
+        //  6 - lit flat shader
+        //  7 - lit texture shader
+        int shader = useLight ? 6 : 3;
         bool setUnit = false;
         if (tid != 0) {
           // shader uses texture - determine texture unit & bind if necessary
@@ -1340,9 +1397,9 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
             setUnit = (entry.unit != texUnit);
             texUnit = entry.unit;
             if (useLight) {
-              shader = 4;
+              shader = 7;
             } else {
-              shader = (entry.channels == 1) ? 1 : 2;
+              shader = (entry.channels == 1) ? 4 : 5;
             }
           }
         }
