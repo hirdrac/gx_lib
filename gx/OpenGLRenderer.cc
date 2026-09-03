@@ -1159,7 +1159,7 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
         _vao3.enableAttrib(3); // uint (x,y,z 10:10:10 packed int)
       }
 
-      const std::size_t i = vsize2 * sizeof(Vertex2D);
+      const auto i = GLintptr(vsize2 * sizeof(Vertex2D));
       _vao3.setAttrib(0, _vbo, i+0, sizeof(Vertex3D), 3, GL_FLOAT, GL_FALSE);
       _vao3.setAttribI(1, _vbo, i+12, sizeof(Vertex3D), 1, GL_UNSIGNED_INT);
       _vao3.setAttrib(2, _vbo, i+16, sizeof(Vertex3D), 2, GL_FLOAT, GL_FALSE);
