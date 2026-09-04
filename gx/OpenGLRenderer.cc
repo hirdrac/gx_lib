@@ -58,25 +58,25 @@ namespace {
     }
   }
 
-  template<int VER>
-  [[nodiscard]] GLShader makeVertexShader(const char* src)
+  template<int VER, class... SrcArgs>
+  [[nodiscard]] GLShader makeVertexShader(SrcArgs... src)
   {
     GLShader vshader;
-    if (!vshader.init(GL_VERTEX_SHADER, shaderHeader<VER>(), src)) {
+    if (!vshader.init(GL_VERTEX_SHADER, shaderHeader<VER>(), src...)) {
       GX_LOG_ERROR("vertex shader error: ", vshader.infoLog());
-      GX_LOG_ERROR("shader src: ", src);
+      GX_LOG_ERROR("shader src: ", src...);
       return {};
     }
     return vshader;
   }
 
-  template<int VER>
-  [[nodiscard]] GLShader makeFragmentShader(const char* src)
+  template<int VER, class... SrcArgs>
+  [[nodiscard]] GLShader makeFragmentShader(SrcArgs... src)
   {
     GLShader fshader;
-    if (!fshader.init(GL_FRAGMENT_SHADER, shaderHeader<VER>(), src)) {
+    if (!fshader.init(GL_FRAGMENT_SHADER, shaderHeader<VER>(), src...)) {
       GX_LOG_ERROR("fragment shader error: ", fshader.infoLog());
-      GX_LOG_ERROR("shader src: ", src);
+      GX_LOG_ERROR("shader src: ", src...);
       return {};
     }
     return fshader;
@@ -270,8 +270,20 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
  private:
   static constexpr int SHADER_COUNT = 8;
-  GLProgram _sp[SHADER_COUNT];
-  GLUniform1i _sp_texUnit[SHADER_COUNT];
+  struct Shader {
+    GLProgram prog;
+    GLUniform1i texUnit;
+
+    template<class... Shader>
+    void init(const Shader&... shaders) {
+      prog = makeProgram(shaders...);
+      prog.setUniformBlockBinding(prog.getUniformBlockIndex("ub0"), 0);
+      texUnit = prog.getUniformLocation("texUnit");
+    }
+
+    void use() { prog.use(); }
+  };
+  Shader _sp[SHADER_COUNT];
 
   GLBuffer<VER> _uniformBuf;
   struct UniformData {
@@ -553,25 +565,25 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "}");
 
   // solid color 2D shader
-  _sp[0] = makeProgram(vshader2d, fshader);
+  _sp[0].init(vshader2d, fshader);
 
   // mono color texture 2D shader (fonts)
-  _sp[1] = makeProgram(vshader2d, fshaderTmono);
+  _sp[1].init(vshader2d, fshaderTmono);
 
   // full color texture 2D shader (images)
-  _sp[2] = makeProgram(vshader2d, fshaderT);
+  _sp[2].init(vshader2d, fshaderT);
 
   // solid color 3D shader
-  _sp[3] = makeProgram(vshader3d, fshader);
+  _sp[3].init(vshader3d, fshader);
 
   // mono color texture 3D shader (fonts)
-  _sp[4] = makeProgram(vshader3d, fshaderTmono);
+  _sp[4].init(vshader3d, fshaderTmono);
 
   // full color texture 3D shader (images)
-  _sp[5] = makeProgram(vshader3d, fshaderT);
+  _sp[5].init(vshader3d, fshaderT);
 
   // 3D shader w/ lighting
-  _sp[6] = makeProgram(vshader3dlit, makeFragmentShader<VER>(
+  _sp[6].init(vshader3dlit, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
@@ -586,7 +598,7 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "}"));
 
   // textured 3D shader w/ lighting
-  _sp[7] = makeProgram(vshader3dlit, makeFragmentShader<VER>(
+  _sp[7].init(vshader3dlit, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
@@ -605,14 +617,8 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
   #undef UNIFORM_BLOCK_SRC
   #undef UNPACK_COLOR_SRC
 
-  // uniform location cache
   bool status = true;
-  for (int i = 0; i < SHADER_COUNT; ++i) {
-    GLProgram& p = _sp[i];
-    status = status && p;
-    p.setUniformBlockBinding(p.getUniformBlockIndex("ub0"), 0);
-    _sp_texUnit[i] = p.getUniformLocation("texUnit");
-  }
+  for (Shader& sh : _sp) { status = status && sh.prog; }
 
 #if 0
   // debug output
@@ -1337,9 +1343,9 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         if (shader != lastShader) {
           lastShader = shader;
           _sp[shader].use();
-          setUnit = bool(_sp_texUnit[shader]);
+          setUnit = bool(_sp[shader].texUnit);
         }
-        if (setUnit) { _sp_texUnit[shader].set(texUnit); }
+        if (setUnit) { _sp[shader].texUnit.set(texUnit); }
 
         GX_GLCALL(glDrawArrays, GL_TRIANGLES, first, count);
         break;
@@ -1408,9 +1414,9 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         if (shader != lastShader) {
           lastShader = shader;
           _sp[shader].use();
-          setUnit = bool(_sp_texUnit[shader]);
+          setUnit = bool(_sp[shader].texUnit);
         }
-        if (setUnit) { _sp_texUnit[shader].set(texUnit); }
+        if (setUnit) { _sp[shader].texUnit.set(texUnit); }
 
         GX_GLCALL(glDrawArrays, GL_TRIANGLES, first, count);
         break;
