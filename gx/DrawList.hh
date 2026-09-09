@@ -19,7 +19,6 @@ namespace gx {
     DEPTH_TEST = DEPTH_COMPARE | DEPTH_UPDATE,
     CULL_CW = 8,       // cull front face (clockwise)
     CULL_CCW = 16,     // cull back back (counter-clockwise)
-    LIGHTING = 32,     // use light for shading
   };
 
   enum class DrawCmd : uint32_t {
@@ -31,12 +30,9 @@ namespace gx {
     viewportFull, // <cmd> (1)
     color,        // <cmd c> (2)
     texture,      // <cmd id> (2)
-    normal,       // <cmd n> (2)
     lineWidth,    // <cmd w> (2)
     modColor,     // <cmd c> (2)
     capabilities, // <cmd c> (2)
-    camera,       // <cmd val*32> <33>
-    light,        // <cmd x y z ar ag ab dr dg db> (10)
     clearView,    // <cmd c> (2)
 
     // 2D drawing
@@ -56,6 +52,12 @@ namespace gx {
     quad2TC,      // <cmd (x y s t c)x4> (21)
     rectangle,    // <cmd (x y)x2> (5)
     rectangleT,   // <cmd (x y s t)x2> (9)
+
+    // 3D state / control
+    normal,       // <cmd n> (2)
+    camera,       // <cmd val*32> <33>
+    light,        // <cmd x y z ar ag ab dr dg db> (10)
+    clearLights,  // <cmd> (1)
 
     // 3D drawing
     line3,        // <cmd (x y z)x2> (7)
@@ -155,8 +157,9 @@ class gx::DrawList
   void camera(const Mat4& m1, const Mat4& m2) {
     add(DrawCmd::camera, m1, m2); }
   void light(const Vec3& pt, const Vec3& ambient, const Vec3& diffuse) {
-    add(DrawCmd::light, pt.x, pt.y, pt.z, ambient.r, ambient.g, ambient.b,
-        diffuse.r, diffuse.g, diffuse.b); }
+    add(DrawCmd::light, pt.x, pt.y, pt.z,
+        ambient.r, ambient.g, ambient.b, diffuse.r, diffuse.g, diffuse.b); }
+  void clearLights() { add(DrawCmd::clearLights); }
 
   void clearView(uint32_t c) { add(DrawCmd::clearView, c); }
   void clearView(float r, float g, float b, float a = 1.0f) {

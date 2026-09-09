@@ -110,12 +110,9 @@ namespace {
         case DrawCmd::viewportFull: d += 1; break;
         case DrawCmd::color:        d += 2; break;
         case DrawCmd::texture:      d += 2; break;
-        case DrawCmd::normal:       d += 2; break;
         case DrawCmd::lineWidth:    d += 2; break;
         case DrawCmd::modColor:     d += 2; break;
         case DrawCmd::capabilities: d += 2; break;
-        case DrawCmd::camera:       d += 33; break;
-        case DrawCmd::light:        d += 10; break;
         case DrawCmd::clearView:    d += 2; break;
 
         // 2D
@@ -137,6 +134,11 @@ namespace {
         case DrawCmd::rectangleT:   d += 9;  vsize2 += 6; break;
 
         // 3D
+        case DrawCmd::normal:       d += 2; break;
+        case DrawCmd::camera:       d += 33; break;
+        case DrawCmd::light:        d += 10; break;
+        case DrawCmd::clearLights:  d += 1; break;
+
         case DrawCmd::line3:        d += 7;  vsize3 += 2; break;
         case DrawCmd::line3C:       d += 9;  vsize3 += 2; break;
         case DrawCmd::lineStart3:   d += 4;  break;
@@ -315,6 +317,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_cameraT,         // <OP val*16> (17)
     OP_modColor,        // <OP rgba8> (2)
     OP_light,           // <OP pos(x y z) ambient(r g b) diffuse(r g b)> (10)
+    OP_clearLights,     // <OP> (1)
 
     // set GL state
     OP_framebuffer,     // <OP id> (2)
@@ -817,7 +820,6 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
 
         case DrawCmd::color:   color  = uval(d); break;
         case DrawCmd::texture: tid    = uval(d); break;
-        case DrawCmd::normal:  normal = uval(d); break;
 
         case DrawCmd::lineWidth: addOp(OP_lineWidth, fval(d)); break;
         case DrawCmd::modColor:  addOp(OP_modColor, uval(d)); break;
@@ -828,24 +830,6 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
             cap = newCap;
             addOp(OP_capabilities, cap);
           }
-          break;
-        }
-
-        case DrawCmd::camera: {
-          const Mat4 viewT = fval16(d);
-          const Mat4 projT = fval16(d);
-          const Mat4 cameraT = viewT * projT;
-          addOpMatrix(OP_cameraT, cameraT);
-          break;
-        }
-
-        case DrawCmd::light: {
-          const Vec3 pos = fval3(d);
-          const Vec3 ambient = fval3(d);
-          const Vec3 diffuse = fval3(d);
-          addOp(OP_light, pos.x, pos.y, pos.z,
-                ambient.r, ambient.g, ambient.b,
-                diffuse.r, diffuse.g, diffuse.b);
           break;
         }
 
@@ -1006,6 +990,31 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
         }
 
         // 3D drawing
+        case DrawCmd::normal:  normal = uval(d); break;
+
+        case DrawCmd::camera: {
+          const Mat4 viewT = fval16(d);
+          const Mat4 projT = fval16(d);
+          const Mat4 cameraT = viewT * projT;
+          addOpMatrix(OP_cameraT, cameraT);
+          break;
+        }
+
+        case DrawCmd::light: {
+          // TODO: support multiple lights
+          const Vec3 pos = fval3(d);
+          const Vec3 ltA = fval3(d); // ambient
+          const Vec3 ltD = fval3(d); // diffuse
+          addOp(OP_light, pos.x, pos.y, pos.z,
+                ltA.r, ltA.g, ltA.b, ltD.r, ltD.g, ltD.b);
+          break;
+        }
+
+        case DrawCmd::clearLights: {
+          addOp(OP_clearLights);
+          break;
+        }
+
         case DrawCmd::line3: {
           addVertex3D(fval3(d), color);
           addVertex3D(fval3(d), color);
@@ -1221,6 +1230,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   int texUnit = -1;
   int32_t newCap = BLEND; // default GL capabilities
   int lastVAO = 0;
+  bool useLight = false;
 
   const Value* data     = _opData.data();
   const Value* data_end = data + _opData.size();
@@ -1237,10 +1247,14 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         udChanged = true;
         break;
       case OP_light:
+        // TODO: support multiple lights
         std::memcpy(ud.lightPos.data(), d, sizeof(float)*3); d += 3;
         std::memcpy(ud.lightA.data(), d, sizeof(float)*3); d += 3;
         std::memcpy(ud.lightD.data(), d, sizeof(float)*3); d += 3;
-        udChanged = true;
+        useLight = udChanged = true;
+        break;
+      case OP_clearLights:
+        useLight = false;
         break;
       case OP_lineWidth:
         GX_GLCALL(glLineWidth, (d++)->fval);
@@ -1272,7 +1286,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
       }
       case OP_clear: {
         const uint32_t mask = (d++)->uval;
-        int32_t glCap = newCap & ~LIGHTING;
+        int32_t glCap = newCap;
         if (mask & GL_DEPTH_BUFFER_BIT) { glCap |= DEPTH_UPDATE; }
         if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         GX_GLCALL(glClear, mask);
@@ -1354,7 +1368,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         if (lastVAO != 3) { _vao3.bind(); lastVAO = 3; }
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
-        const int32_t glCap = newCap & ~LIGHTING;
+        const int32_t glCap = newCap;
         if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (udChanged) {
           _uniformBuf.setSubData(0, sizeof(ud), &ud);
@@ -1374,8 +1388,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
-        const int32_t glCap = newCap & ~LIGHTING;
-        const bool useLight = newCap & LIGHTING;
+        const int32_t glCap = newCap;
         if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (udChanged) {
           _uniformBuf.setSubData(0, sizeof(ud), &ud);

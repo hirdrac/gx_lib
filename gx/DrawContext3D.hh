@@ -57,6 +57,7 @@ class gx::DrawContext3D
   // Lighting
   void light(const Vec3& pos, const Vec3& ambient, const Vec3& diffuse) {
     _dl->light(pos, ambient, diffuse); }
+  void clearLights() { _dl->clearLights(); }
 
   // View
   void viewport(int x, int y, int w, int h) {
