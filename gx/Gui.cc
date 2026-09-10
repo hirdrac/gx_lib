@@ -624,7 +624,7 @@ bool Gui::update(Window& win, EventState& es)
     _data.clear();
     DrawList tmp;
     DrawContext2D dc{_data}, dc2{tmp};
-    if (_bgColor != 0) { dc.clearView(_bgColor); }
+    dc.clearView(_bgColor);
     _needRender = false;
 
     for (auto it = _panels.rbegin(), end = _panels.rend(); it != end; ++it) {

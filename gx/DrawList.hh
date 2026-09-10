@@ -31,9 +31,9 @@ namespace gx {
     color,        // <cmd c> (2)
     texture,      // <cmd id> (2)
     lineWidth,    // <cmd w> (2)
-    modColor,     // <cmd c> (2)
+    modColor,     // <cmd r g b a> (5)
     capabilities, // <cmd c> (2)
-    clearView,    // <cmd c> (2)
+    clearView,    // <cmd r g b a> (5)
 
     // 2D drawing
     line2,        // <cmd (x y)x2> (5)
@@ -146,11 +146,12 @@ class gx::DrawList
   void lineWidth(float w) {
     add(DrawCmd::lineWidth, w); }
 
-  void modColor(uint32_t c) { add(DrawCmd::modColor, c); }
   void modColor(float r, float g, float b, float a = 1.0f) {
-    modColor(packRGBA8(r, g, b, a)); }
-  void modColor(const Vec3& c, float a = 1.0f) { modColor(packRGBA8(c, a)); }
-  void modColor(const Vec4& c) { modColor(packRGBA8(c)); }
+    add(DrawCmd::modColor, r, g, b, a); }
+  void modColor(const Vec3& c, float a = 1.0f) {
+    modColor(c.r, c.g, c.b, a); }
+  void modColor(const Vec4& c) {
+    modColor(c.r, c.g, c.b, c.a); }
 
   void capabilities(int32_t c) {
     add(DrawCmd::capabilities, c); }
@@ -161,11 +162,12 @@ class gx::DrawList
         ambient.r, ambient.g, ambient.b, diffuse.r, diffuse.g, diffuse.b); }
   void clearLights() { add(DrawCmd::clearLights); }
 
-  void clearView(uint32_t c) { add(DrawCmd::clearView, c); }
   void clearView(float r, float g, float b, float a = 1.0f) {
-    clearView(packRGBA8(r,g,b,a)); }
-  void clearView(const Vec3& c, float a = 1.0f) { clearView(packRGBA8(c, a)); }
-  void clearView(const Vec4& c) { clearView(packRGBA8(c)); }
+    add(DrawCmd::clearView, r, g, b, a); }
+  void clearView(const Vec3& c, float a = 1.0f) {
+    clearView(c.r, c.g, c.b, a); }
+  void clearView(const Vec4& c) {
+    clearView(c.r, c.g, c.b, c.a); }
 
   void line2(Vec2 a, Vec2 b) {
     add(DrawCmd::line2, a.x, a.y, b.x, b.y); }

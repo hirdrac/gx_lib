@@ -111,9 +111,9 @@ namespace {
         case DrawCmd::color:        d += 2; break;
         case DrawCmd::texture:      d += 2; break;
         case DrawCmd::lineWidth:    d += 2; break;
-        case DrawCmd::modColor:     d += 2; break;
+        case DrawCmd::modColor:     d += 5; break;
         case DrawCmd::capabilities: d += 2; break;
-        case DrawCmd::clearView:    d += 2; break;
+        case DrawCmd::clearView:    d += 5; break;
 
         // 2D
         case DrawCmd::line2:        d += 5;  vsize2 += 2; break;
@@ -190,6 +190,8 @@ namespace {
     return {fval(ptr), fval(ptr)}; }
   [[nodiscard]] Vec3 fval3(const Value*& ptr) {
     return {fval(ptr), fval(ptr), fval(ptr)}; }
+  [[nodiscard]] Vec4 fval4(const Value*& ptr) {
+    return {fval(ptr), fval(ptr), fval(ptr), fval(ptr)}; }
   [[nodiscard]] Mat4 fval16(const Value*& ptr) {
     Mat4 m{INIT_NONE};
     std::memcpy(m.data(), ptr, sizeof(float)*16); ptr += 16;
@@ -315,7 +317,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
     // set uniform data
     OP_cameraT,         // <OP val*16> (17)
-    OP_modColor,        // <OP rgba8> (2)
+    OP_modColor,        // <OP r g b a> (5)
     OP_light,           // <OP pos(x y z) ambient(r g b) diffuse(r g b)> (10)
     OP_clearLights,     // <OP> (1)
 
@@ -325,7 +327,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
     OP_viewportFull,    // <OP> (1)
     OP_capabilities,    // <OP cap> (2)
     OP_lineWidth,       // <OP width> (2)
-    OP_clearColor,      // <OP rgba8> (2)
+    OP_clearColor,      // <OP r g b a> (5)
 
     // draw
     OP_clear,           // <OP mask> (2)
@@ -822,7 +824,12 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
         case DrawCmd::texture: tid    = uval(d); break;
 
         case DrawCmd::lineWidth: addOp(OP_lineWidth, fval(d)); break;
-        case DrawCmd::modColor:  addOp(OP_modColor, uval(d)); break;
+
+        case DrawCmd::modColor: {
+          const Vec4 c = fval4(d);
+          addOp(OP_modColor, c.r, c.g, c.b, c.a);
+          break;
+        }
 
         case DrawCmd::capabilities: {
           const int32_t newCap = ival(d);
@@ -833,10 +840,12 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           break;
         }
 
-        case DrawCmd::clearView:
-          addOp(OP_clearColor, uval(d));
+        case DrawCmd::clearView: {
+          const Vec4 c = fval4(d);
+          addOp(OP_clearColor, c.r, c.g, c.b, c.a);
           addOp(OP_clear, uint32_t(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
           break;
+        }
 
         // 2D drawing
         case DrawCmd::line2: {
@@ -1242,10 +1251,15 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         udChanged = true;
         orthoMode = false;
         break;
-      case OP_modColor:
-        ud.modColor = unpackRGBA8((d++)->uval);
+      case OP_modColor: {
+        const float r = (d++)->fval;
+        const float g = (d++)->fval;
+        const float b = (d++)->fval;
+        const float a = (d++)->fval;
+        ud.modColor.set(r, g, b, a);
         udChanged = true;
         break;
+      }
       case OP_light:
         // TODO: support multiple lights
         std::memcpy(ud.lightPos.data(), d, sizeof(float)*3); d += 3;
@@ -1260,8 +1274,11 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         GX_GLCALL(glLineWidth, (d++)->fval);
         break;
       case OP_clearColor: {
-        const Vec4 c = unpackRGBA8((d++)->uval);
-        GX_GLCALL(glClearColor, c.r, c.g, c.b, c.a);
+        const float r = (d++)->fval;
+        const float g = (d++)->fval;
+        const float b = (d++)->fval;
+        const float a = (d++)->fval;
+        GX_GLCALL(glClearColor, r, g, b, a);
         break;
       }
       case OP_framebuffer:

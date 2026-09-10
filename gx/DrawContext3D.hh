@@ -43,10 +43,11 @@ class gx::DrawContext3D
   void lineWidth(float w) { _dl->lineWidth(w); }
 
   void modColor(float r, float g, float b, float a = 1.0f) {
-    modColor(packRGBA8(r, g, b, a)); }
-  void modColor(const Vec3& c, float a = 1.0f) { modColor(packRGBA8(c, a)); }
-  void modColor(const Vec4& c) { modColor(packRGBA8(c)); }
-  void modColor(RGBA8 c) { _dl->modColor(c); }
+    _dl->modColor(r, g, b, a); }
+  void modColor(const Vec3& c, float a = 1.0f) {
+    modColor(c.r, c.g, c.b, a); }
+  void modColor(const Vec4& c) {
+    modColor(c.r, c.g, c.b, c.a); }
 
   void capabilities(int32_t c) { _dl->capabilities(c); }
 
@@ -64,11 +65,12 @@ class gx::DrawContext3D
     _dl->viewport(x, y, w, h); }
   void viewportFull() {
     _dl->viewportFull(); }
-  void clearView(float r, float g, float b) {
-    clearView(packRGBA8(r,g,b,1.0f)); }
-  void clearView(const Vec3& c, float a = 1.0f) { clearView(packRGBA8(c, a)); }
-  void clearView(const Vec4& c) { clearView(packRGBA8(c)); }
-  void clearView(RGBA8 c) { _dl->clearView(c); }
+  void clearView(float r, float g, float b, float a = 1.0f) {
+    if (gx::isPos(a)) { _dl->clearView(r, g, b, a); } }
+  void clearView(const Vec3& c, float a = 1.0f) {
+    clearView(c.r, c.g, c.b, a); }
+  void clearView(const Vec4& c) {
+    clearView(c.r, c.g, c.b, c.a); }
 
   // Line drawing
   void line(const Vec3& a, const Vec3& b);
