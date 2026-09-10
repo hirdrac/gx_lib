@@ -273,7 +273,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   void renderFrame(int64_t usecTime) override;
 
  private:
-  static constexpr int SHADER_COUNT = 8;
+  static constexpr int SHADER_COUNT = 7;
   struct Shader {
     GLProgram prog;
     GLUniform1i texUnit;
@@ -575,27 +575,25 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
   // solid color 3D shader
   _sp[3].init(vshader3d, fshader);
 
-  // mono color texture 3D shader (fonts)
-  _sp[4].init(vshader3d, fshaderTmono);
-
   // full color texture 3D shader (images)
-  _sp[5].init(vshader3d, fshaderT);
+  _sp[4].init(vshader3d, fshaderT);
 
   // 3D shader w/ lighting
-  _sp[6].init(vshader3dlit, makeFragmentShader<VER>(
+  _sp[5].init(vshader3dlit, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
     UNIFORM_BLOCK_SRC
     "out vec4 fragColor;"
     "void main() {"
-    "  vec3 lightDir = normalize(lightPos - v_pos);"
-    "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
-    "  fragColor = v_color * vec4((lightD * lt) + lightA, 1.0);"
+    "  vec3 norm = normalize(v_norm);"
+    "  vec3 ltDir = normalize(lightPos - v_pos);"
+    "  vec3 ltVal = lightA + (lightD * max(dot(norm, ltDir), 0.0));"
+    "  fragColor = v_color * vec4(ltVal, 1.0);"
     "}"));
 
   // textured 3D shader w/ lighting
-  _sp[7].init(vshader3dlit, makeFragmentShader<VER>(
+  _sp[6].init(vshader3dlit, makeFragmentShader<VER>(
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
@@ -604,9 +602,10 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "uniform sampler2D texUnit;"
     "out vec4 fragColor;"
     "void main() {"
-    "  vec3 lightDir = normalize(lightPos - v_pos);"
-    "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
-    "  fragColor = texture(texUnit, v_texCoord) * v_color * vec4((lightD * lt) + lightA, 1.0);"
+    "  vec3 norm = normalize(v_norm);"
+    "  vec3 ltDir = normalize(lightPos - v_pos);"
+    "  vec3 ltVal = lightA + (lightD * max(dot(norm, ltDir), 0.0));"
+    "  fragColor = texture(texUnit, v_texCoord) * v_color * vec4(ltVal, 1.0);"
     "}"));
 
   #undef UNIFORM_BLOCK_SRC
@@ -1404,11 +1403,10 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
 
         // shader values
         //  3 - flat shader
-        //  4 - mono texture shader
-        //  5 - color texture shader
-        //  6 - lit flat shader
-        //  7 - lit texture shader
-        int shader = useLight ? 6 : 3;
+        //  4 - texture shader
+        //  5 - lit flat shader
+        //  6 - lit texture shader
+        int shader = useLight ? 5 : 3;
         bool setUnit = false;
         if (tid != 0) {
           // shader uses texture - determine texture unit & bind if necessary
@@ -1422,11 +1420,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
             }
             setUnit = (entry.unit != texUnit);
             texUnit = entry.unit;
-            if (useLight) {
-              shader = 7;
-            } else {
-              shader = (entry.channels == 1) ? 4 : 5;
-            }
+            shader = useLight ? 6 : 4;
           }
         }
 
