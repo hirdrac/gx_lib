@@ -522,9 +522,6 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "out vec3 v_norm;"
     "out vec4 v_color;"
     "out vec2 v_texCoord;"
-    "out vec3 v_lightPos;"
-    "out vec3 v_lightA;"
-    "out vec3 v_lightD;"
 
     "vec3 unpackNormal(uint n) {"
     "  float x = float(n & 1023U) / 511.0 - 1.0;"
@@ -540,9 +537,6 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "  v_norm = unpackNormal(in_norm);"
     "  v_color = unpackColor(in_color) * modColor;"
     "  v_texCoord = in_tc;"
-    "  v_lightPos = lightPos;"
-    "  v_lightA = lightA;"
-    "  v_lightD = lightD;"
     "  gl_Position = cameraT * vec4(in_pos, 1);"
     "}");
 
@@ -592,14 +586,12 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "in vec3 v_pos;"
     "in vec3 v_norm;"
     "in vec4 v_color;"
-    "in vec3 v_lightPos;"
-    "in vec3 v_lightA;"
-    "in vec3 v_lightD;"
+    UNIFORM_BLOCK_SRC
     "out vec4 fragColor;"
     "void main() {"
-    "  vec3 lightDir = normalize(v_lightPos - v_pos);"
+    "  vec3 lightDir = normalize(lightPos - v_pos);"
     "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
-    "  fragColor = v_color * vec4((v_lightD * lt) + v_lightA, 1.0);"
+    "  fragColor = v_color * vec4((lightD * lt) + lightA, 1.0);"
     "}"));
 
   // textured 3D shader w/ lighting
@@ -608,15 +600,13 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "in vec3 v_norm;"
     "in vec4 v_color;"
     "in vec2 v_texCoord;"
-    "in vec3 v_lightPos;"
-    "in vec3 v_lightA;"
-    "in vec3 v_lightD;"
+    UNIFORM_BLOCK_SRC
     "uniform sampler2D texUnit;"
     "out vec4 fragColor;"
     "void main() {"
-    "  vec3 lightDir = normalize(v_lightPos - v_pos);"
+    "  vec3 lightDir = normalize(lightPos - v_pos);"
     "  float lt = max(dot(normalize(v_norm), lightDir), 0.0);"
-    "  fragColor = texture(texUnit, v_texCoord) * v_color * vec4((v_lightD * lt) + v_lightA, 1.0);"
+    "  fragColor = texture(texUnit, v_texCoord) * v_color * vec4((lightD * lt) + lightA, 1.0);"
     "}"));
 
   #undef UNIFORM_BLOCK_SRC
