@@ -136,7 +136,8 @@ namespace {
         // 3D
         case DrawCmd::normal:       d += 2; break;
         case DrawCmd::camera:       d += 33; break;
-        case DrawCmd::light:        d += 10; break;
+        case DrawCmd::ambient:      d += 4; break;
+        case DrawCmd::light:        d += 7; break;
         case DrawCmd::clearLights:  d += 1; break;
 
         case DrawCmd::line3:        d += 7;  vsize3 += 2; break;
@@ -290,15 +291,16 @@ class gx::OpenGLRenderer final : public gx::Renderer
   Shader _sp[SHADER_COUNT];
 
   GLBuffer<VER> _uniformBuf;
+  struct LightData { Vec4 pos, color; };
   struct UniformData {
     // NOTE: for std140 layout, alignment of array types must be 16 bytes
     Mat4 cameraT{INIT_IDENTITY}; // viewT * projT
     Vec4 modColor{1.0f, 1.0f, 1.0f, 1.0f};
-    Vec3 lightPos;
-    uint32_t pad0 = 0;
-    Vec3 lightA{1.0f, 1.0f, 1.0f};
-    uint32_t pad1 = 0;
-    Vec3 lightD;
+    Vec3 ambient{1.0f, 1.0f, 1.0f};
+    uint32_t lightCount = 0;
+
+    constexpr static std::size_t MAX_LIGHTS = 4;
+    LightData lights[MAX_LIGHTS];
   };
 
   GLVertexArray<VER> _vao2, _vao3;
@@ -318,7 +320,8 @@ class gx::OpenGLRenderer final : public gx::Renderer
     // set uniform data
     OP_cameraT,         // <OP val*16> (17)
     OP_modColor,        // <OP r g b a> (5)
-    OP_light,           // <OP pos(x y z) ambient(r g b) diffuse(r g b)> (10)
+    OP_ambient,         // <OP r g b> (4)
+    OP_light,           // <OP pos(x y z) color(r g b)> (7)
     OP_clearLights,     // <OP> (1)
 
     // set GL state
@@ -466,12 +469,16 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
 
   _uniformBuf.init(sizeof(UniformData), nullptr);
   #define UNIFORM_BLOCK_SRC\
+    "struct Light {"\
+    "  vec3 pos;"\
+    "  vec3 color;"\
+    "};"\
     "layout(std140) uniform ub0 {"\
     "  mat4 cameraT;"\
     "  vec4 modColor;"\
-    "  vec3 lightPos;"\
-    "  vec3 lightA;"\
-    "  vec3 lightD;"\
+    "  vec3 ambient;"\
+    "  uint lightCount;"\
+    "  Light lights[4];"\
     "};"
 
   #define UNPACK_COLOR_SRC\
@@ -540,19 +547,14 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "  gl_Position = cameraT * vec4(in_pos, 1);"
     "}");
 
-  const GLShader fshader = makeFragmentShader<VER>(
+  // solid color 2D shader
+  _sp[0].init(vshader2d, makeFragmentShader<VER>(
     "in vec4 v_color;"
     "out vec4 fragColor;"
-    "void main() { fragColor = v_color; }");
+    "void main() { fragColor = v_color; }"));
 
-  const GLShader fshaderT = makeFragmentShader<VER>(
-    "in vec2 v_texCoord;"
-    "in vec4 v_color;"
-    "uniform sampler2D texUnit;"
-    "out vec4 fragColor;"
-    "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }");
-
-  const GLShader fshaderTmono = makeFragmentShader<VER>(
+  // mono color texture 2D shader (fonts)
+  _sp[1].init(vshader2d, makeFragmentShader<VER>(
     "in vec2 v_texCoord;"
     "in vec4 v_color;"
     "uniform sampler2D texUnit;"
@@ -561,22 +563,31 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "  float a = texture(texUnit, v_texCoord).r;"
     "  if (a == 0.0) discard;"
     "  fragColor = vec4(v_color.rgb, v_color.a * a);"
-    "}");
-
-  // solid color 2D shader
-  _sp[0].init(vshader2d, fshader);
-
-  // mono color texture 2D shader (fonts)
-  _sp[1].init(vshader2d, fshaderTmono);
+    "}"));
 
   // full color texture 2D shader (images)
-  _sp[2].init(vshader2d, fshaderT);
+  _sp[2].init(vshader2d, makeFragmentShader<VER>(
+    "in vec2 v_texCoord;"
+    "in vec4 v_color;"
+    "uniform sampler2D texUnit;"
+    "out vec4 fragColor;"
+    "void main() { fragColor = texture(texUnit, v_texCoord) * v_color; }"));
 
   // solid color 3D shader
-  _sp[3].init(vshader3d, fshader);
+  _sp[3].init(vshader3d, makeFragmentShader<VER>(
+    "in vec4 v_color;"
+    UNIFORM_BLOCK_SRC
+    "out vec4 fragColor;"
+    "void main() { fragColor = v_color * vec4(ambient, 1.0); }"));
 
   // full color texture 3D shader (images)
-  _sp[4].init(vshader3d, fshaderT);
+  _sp[4].init(vshader3d, makeFragmentShader<VER>(
+    "in vec2 v_texCoord;"
+    "in vec4 v_color;"
+    UNIFORM_BLOCK_SRC
+    "uniform sampler2D texUnit;"
+    "out vec4 fragColor;"
+    "void main() { fragColor = texture(texUnit, v_texCoord) * v_color * vec4(ambient, 1.0); }"));
 
   // 3D shader w/ lighting
   _sp[5].init(vshader3dlit, makeFragmentShader<VER>(
@@ -587,8 +598,11 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "out vec4 fragColor;"
     "void main() {"
     "  vec3 norm = normalize(v_norm);"
-    "  vec3 ltDir = normalize(lightPos - v_pos);"
-    "  vec3 ltVal = lightA + (lightD * max(dot(norm, ltDir), 0.0));"
+    "  vec3 ltVal = ambient;"
+    "  for (int i = 0; i < lightCount; ++i) {"
+    "    vec3 ltDir = normalize(lights[i].pos - v_pos);"
+    "    ltVal += lights[i].color * max(dot(norm, ltDir), 0.0);"
+    "  }"
     "  fragColor = v_color * vec4(ltVal, 1.0);"
     "}"));
 
@@ -603,8 +617,11 @@ bool OpenGLRenderer<VER>::init(WindowImpl* impl)
     "out vec4 fragColor;"
     "void main() {"
     "  vec3 norm = normalize(v_norm);"
-    "  vec3 ltDir = normalize(lightPos - v_pos);"
-    "  vec3 ltVal = lightA + (lightD * max(dot(norm, ltDir), 0.0));"
+    "  vec3 ltVal = ambient;"
+    "  for (int i = 0; i < lightCount; ++i) {"
+    "    vec3 ltDir = normalize(lights[i].pos - v_pos);"
+    "    ltVal += lights[i].color * max(dot(norm, ltDir), 0.0);"
+    "  }"
     "  fragColor = texture(texUnit, v_texCoord) * v_color * vec4(ltVal, 1.0);"
     "}"));
 
@@ -998,13 +1015,17 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           break;
         }
 
+        case DrawCmd::ambient: {
+          const Vec3 c = fval3(d);
+          addOp(OP_ambient, c.r, c.g, c.b);
+          break;
+        }
+
         case DrawCmd::light: {
           // TODO: support multiple lights
           const Vec3 pos = fval3(d);
-          const Vec3 ltA = fval3(d); // ambient
-          const Vec3 ltD = fval3(d); // diffuse
-          addOp(OP_light, pos.x, pos.y, pos.z,
-                ltA.r, ltA.g, ltA.b, ltD.r, ltD.g, ltD.b);
+          const Vec3 ltC = fval3(d); // diffuse
+          addOp(OP_light, pos.x, pos.y, pos.z, ltC.r, ltC.g, ltC.b);
           break;
         }
 
@@ -1228,7 +1249,6 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   int texUnit = -1;
   int32_t newCap = BLEND; // default GL capabilities
   int lastVAO = 0;
-  bool useLight = false;
 
   const Value* data     = _opData.data();
   const Value* data_end = data + _opData.size();
@@ -1249,15 +1269,23 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         udChanged = true;
         break;
       }
+      case OP_ambient:
+        std::memcpy(ud.ambient.data(), d, sizeof(float)*3); d += 3;
+        udChanged = true;
+        break;
       case OP_light:
-        // TODO: support multiple lights
-        std::memcpy(ud.lightPos.data(), d, sizeof(float)*3); d += 3;
-        std::memcpy(ud.lightA.data(), d, sizeof(float)*3); d += 3;
-        std::memcpy(ud.lightD.data(), d, sizeof(float)*3); d += 3;
-        useLight = udChanged = true;
+        if (ud.lightCount < UniformData::MAX_LIGHTS) {
+          LightData& ld = ud.lights[ud.lightCount++];
+          std::memcpy(ld.pos.data(), d, sizeof(float)*3); d += 3;
+          std::memcpy(ld.color.data(), d, sizeof(float)*3); d += 3;
+          udChanged = true;
+        } else {
+          d += 6;
+        }
         break;
       case OP_clearLights:
-        useLight = false;
+        ud.lightCount = 0;
+        udChanged = true;
         break;
       case OP_lineWidth:
         GX_GLCALL(glLineWidth, (d++)->fval);
@@ -1406,7 +1434,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         //  4 - texture shader
         //  5 - lit flat shader
         //  6 - lit texture shader
-        int shader = useLight ? 5 : 3;
+        int shader = (ud.lightCount > 0) ? 5 : 3;
         bool setUnit = false;
         if (tid != 0) {
           // shader uses texture - determine texture unit & bind if necessary
@@ -1420,7 +1448,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
             }
             setUnit = (entry.unit != texUnit);
             texUnit = entry.unit;
-            shader = useLight ? 6 : 4;
+            shader = (ud.lightCount > 0) ? 6 : 4;
           }
         }
 

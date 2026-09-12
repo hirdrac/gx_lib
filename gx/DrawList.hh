@@ -56,7 +56,8 @@ namespace gx {
     // 3D state / control
     normal,       // <cmd n> (2)
     camera,       // <cmd val*32> <33>
-    light,        // <cmd x y z ar ag ab dr dg db> (10)
+    ambient,      // <cmd r, g, b> (4)
+    light,        // <cmd x y z r g b> (7)
     clearLights,  // <cmd> (1)
 
     // 3D drawing
@@ -157,9 +158,12 @@ class gx::DrawList
     add(DrawCmd::capabilities, c); }
   void camera(const Mat4& m1, const Mat4& m2) {
     add(DrawCmd::camera, m1, m2); }
-  void light(const Vec3& pt, const Vec3& ambient, const Vec3& diffuse) {
-    add(DrawCmd::light, pt.x, pt.y, pt.z,
-        ambient.r, ambient.g, ambient.b, diffuse.r, diffuse.g, diffuse.b); }
+  void ambient(float r, float g, float b) {
+    add(DrawCmd::ambient, r, g, b); }
+  void ambient(const Vec3& c) {
+    ambient(c.r, c.g, c.b); }
+  void light(const Vec3& pt, const Vec3& c) {
+    add(DrawCmd::light, pt.x, pt.y, pt.z, c.r, c.g, c.b); }
   void clearLights() { add(DrawCmd::clearLights); }
 
   void clearView(float r, float g, float b, float a = 1.0f) {

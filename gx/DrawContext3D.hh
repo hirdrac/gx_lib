@@ -56,8 +56,12 @@ class gx::DrawContext3D
     _dl->camera(viewT, projT); }
 
   // Lighting
-  void light(const Vec3& pos, const Vec3& ambient, const Vec3& diffuse) {
-    _dl->light(pos, ambient, diffuse); }
+  void ambient(float r, float g, float b) {
+    _dl->ambient(r, g, b); }
+  void ambient(const Vec3& c) {
+    ambient(c.r, c.g, c.b); }
+  void light(const Vec3& pos, const Vec3& c) {
+    _dl->light(pos, c); }
   void clearLights() { _dl->clearLights(); }
 
   // View
