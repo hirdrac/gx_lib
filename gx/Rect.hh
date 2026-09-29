@@ -31,7 +31,7 @@ struct gx::Rect
   [[nodiscard]] constexpr Vec2 centerPt() const {
     return {centerX(), centerY()}; }
 
-  [[nodiscard]] float alignX(Align align) const {
+  [[nodiscard]] constexpr float alignX(Align align) const {
     switch (hAlign(align)) {
       case Align::left:      return x;
       case Align::right:     return x + w;
@@ -39,7 +39,7 @@ struct gx::Rect
     }
   }
 
-  [[nodiscard]] float alignX(Align align, float width) const {
+  [[nodiscard]] constexpr float alignX(Align align, float width) const {
     switch (hAlign(align)) {
       case Align::left:      return x;
       case Align::right:     return x + w - width;
@@ -47,7 +47,7 @@ struct gx::Rect
     }
   }
 
-  [[nodiscard]] float alignY(Align align) const {
+  [[nodiscard]] constexpr float alignY(Align align) const {
     switch (vAlign(align)) {
       case Align::top:       return y;
       case Align::bottom:    return y + h;
@@ -55,7 +55,7 @@ struct gx::Rect
     }
   }
 
-  [[nodiscard]] float alignY(Align align, float height) const {
+  [[nodiscard]] constexpr float alignY(Align align, float height) const {
     switch (vAlign(align)) {
       case Align::top:       return y;
       case Align::bottom:    return y + h - height;
@@ -63,10 +63,10 @@ struct gx::Rect
     }
   }
 
-  [[nodiscard]] Vec2 alignPt(Align align) const {
+  [[nodiscard]] constexpr Vec2 alignPt(Align align) const {
     return {alignX(align), alignY(align)}; }
 
-  [[nodiscard]] Rect alignRect(Align align, float rw, float rh) const {
+  [[nodiscard]] constexpr Rect alignRect(Align align, float rw, float rh) const {
     return {alignX(align, rw), alignY(align, rh), rw, rh}; }
 
   [[nodiscard]] constexpr Rect clip(const Rect& r) const {
