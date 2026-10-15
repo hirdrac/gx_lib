@@ -127,9 +127,9 @@ namespace gx {
   template<std::floating_point T>
   [[nodiscard]] constexpr T lerp(T a, T b, T x)
   {
-    if (x <= 0) {
+    if (x <= 0) [[unlikely]] {
       return a;
-    } else if (x >= T{1}) {
+    } else if (x >= T{1}) [[unlikely]] {
       return b;
     } else {
       return a + ((b - a) * x);
@@ -142,7 +142,7 @@ namespace gx {
   template<NumType T>
   [[nodiscard]] constexpr T ipow(T x, int y)
   {
-    if (y < 0) { return 0; }
+    if (y < 0) [[unlikely]] { return 0; }
 
     T val = 1;
     while (y) {
