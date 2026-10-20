@@ -59,6 +59,11 @@ template<class T>
     case hashStr("cyan"):    return packRGBA8(CYAN);
     case hashStr("yellow"):  return packRGBA8(YELLOW);
     case hashStr("magenta"): return packRGBA8(MAGENTA);
+    case hashStr("orange"):  return packRGBA8(ORANGE);
+    case hashStr("pink"):    return packRGBA8(PINK);
+    case hashStr("maroon"):  return packRGBA8(MAROON);
+    case hashStr("purple"):  return packRGBA8(PURPLE);
+    case hashStr("brown"):   return packRGBA8(BROWN);
     default:                 return std::nullopt;
   }
 }

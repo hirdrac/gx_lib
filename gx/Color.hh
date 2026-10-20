@@ -30,6 +30,12 @@ namespace gx {
   constexpr Vec3 YELLOW  {1.0f, 1.0f, 0.0f};
   constexpr Vec3 MAGENTA {1.0f, 0.0f, 1.0f};
 
+  constexpr Vec3 ORANGE  {1.0f, .65f, 0.0f};
+  constexpr Vec3 PINK    {1.0f, .75f, .8f};
+  constexpr Vec3 MAROON  {.69f, .19f, .38f};
+  constexpr Vec3 PURPLE  {.63f, .13f, .94f};
+  constexpr Vec3 BROWN   {.65f, .16f, .16f};
+
   // RGBA8 functions
   [[nodiscard]] constexpr RGBA8 packRGBA8i(
     uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) {
