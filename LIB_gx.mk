@@ -11,9 +11,10 @@
 
 LIB_gx = libgx
 LIB_gx.SRC =\
-  Camera.cc DrawContext2D.cc DrawContext3D.cc Font.cc Gui.cc Image.cc\
-  Logger.cc OpenGL.cc OpenGLRenderer.cc Random.cc Renderer.cc\
-  TextFormat.cc TextMetaState.cc ThreadID.cc Unicode.cc Window.cc\
+  Camera.cc Color.cc DrawContext2D.cc DrawContext3D.cc Font.cc Gui.cc\
+  Image.cc Logger.cc Model.cc OpenGL.cc OpenGLRenderer.cc Random.cc\
+  Renderer.cc TextFormat.cc TextMetaState.cc ThreadID.cc Unicode.cc\
+  Window.cc\
   glfw/Clipboard.cc glfw/GLFW.cc glfw/WindowImpl.cc\
   3rd/glad_gl.c 3rd/stb_image.c
 

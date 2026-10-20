@@ -7,7 +7,9 @@
 
 #pragma once
 #include "Types.hh"
+#include <string_view>
 #include <algorithm>
+#include <optional>
 #include <bit>
 
 static_assert(std::endian::native == std::endian::little);
@@ -74,4 +76,8 @@ namespace gx {
     return (c & ~0xff000000)
       | (RGBA8(std::clamp(a, 0.0f, 1.0f) * 255.0f + .5f) << 24);
   }
+
+  [[nodiscard]] std::optional<RGBA8> parseColorStr(std::string_view str);
+    // returns color if string is valid hex code ('#xxxxxx' or '#xxxxxxxx')
+    // - OR - is the name of one of the color constants defined above
 }
