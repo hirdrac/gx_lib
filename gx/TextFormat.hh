@@ -16,6 +16,8 @@ namespace gx {
     float height;
     int idCount;
   };
+
+  [[nodiscard]] int parseCharEntityRef(std::string_view ref);
 }
 
 

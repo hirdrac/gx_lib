@@ -15,6 +15,26 @@
 using namespace gx;
 
 
+int gx::parseCharEntityRef(std::string_view ref)
+{
+  // see https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references
+  // for values
+
+  switch (hashStr(ref)) {
+    case hashStr("Tab"):  return '\t';
+    case hashStr("quot"): return '\"';
+    case hashStr("amp"):  return '&';
+    case hashStr("apos"): return '\'';
+    case hashStr("lpar"): return '(';
+    case hashStr("rpar"): return ')';
+    case hashStr("semi"): return ';';
+    case hashStr("lt"):   return '<';
+    case hashStr("gt"):   return '>';
+    case hashStr("copy"): return 169;
+    default:              return 0;
+  }
+}
+
 gx::TextProperties TextFormat::calcProperties(std::string_view text) const
 {
   if (text.empty()) { return {}; }
@@ -43,7 +63,20 @@ gx::TextProperties TextFormat::calcProperties(std::string_view text) const
             continue;
           }
         }
-      } else if (ch == '\t') {
+      } else if (ch == '&') {
+        const std::size_t refStart = itr.nextPos();
+        const std::size_t refEnd = findUTF8(line, ';', refStart);
+        if (refEnd != std::string_view::npos) {
+          const int ref =
+            parseCharEntityRef(line.substr(refStart, refEnd - refStart));
+          if (ref != 0) {
+            itr.setPos(refEnd);
+            ch = ref;
+          }
+        }
+      }
+
+      if (ch == '\t') {
         if (tabWidth <= 0) {
           ch = ' ';
         } else {
@@ -134,7 +167,20 @@ int TextFormat::calcRegions(
             continue;
           }
         }
-      } else if (ch == '\t') {
+      } else if (ch == '&') {
+        const std::size_t refStart = itr.nextPos();
+        const std::size_t refEnd = findUTF8(line, ';', refStart);
+        if (refEnd != std::string_view::npos) {
+          const int ref =
+            parseCharEntityRef(line.substr(refStart, refEnd - refStart));
+          if (ref != 0) {
+            itr.setPos(refEnd);
+            ch = ref;
+          }
+        }
+      }
+
+      if (ch == '\t') {
         if (tabWidth <= 0) {
           ch = ' ';
         } else {
