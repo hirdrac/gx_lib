@@ -34,6 +34,7 @@ struct gx::TextFormat
 
   int32_t startTag = '<';   // meta-tag start char (set to '\0' to disable tags)
   int32_t endTag = '>';     // meta-tag end char
+  bool supportEntityRefs = true;  // parse character entity refs
   bool ignoreColor = false; // ignore color meta-tags for drawing
 
   // transforms

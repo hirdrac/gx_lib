@@ -63,7 +63,7 @@ gx::TextProperties TextFormat::calcProperties(std::string_view text) const
             continue;
           }
         }
-      } else if (ch == '&') {
+      } else if (supportEntityRefs && ch == '&') {
         const std::size_t refStart = itr.nextPos();
         const std::size_t refEnd = findUTF8(line, ';', refStart);
         if (refEnd != std::string_view::npos) {
@@ -167,7 +167,7 @@ int TextFormat::calcRegions(
             continue;
           }
         }
-      } else if (ch == '&') {
+      } else if (supportEntityRefs && ch == '&') {
         const std::size_t refStart = itr.nextPos();
         const std::size_t refEnd = findUTF8(line, ';', refStart);
         if (refEnd != std::string_view::npos) {
@@ -234,7 +234,7 @@ std::string_view TextFormat::fitText(
           continue;
         }
       }
-    } else if (ch == '&') {
+    } else if (supportEntityRefs && ch == '&') {
       const std::size_t refStart = itr.nextPos();
       const std::size_t refEnd = findUTF8(line, ';', refStart);
       if (refEnd != std::string_view::npos) {

@@ -463,7 +463,7 @@ void DrawContext2D::text(
             continue;
           }
         }
-      } else if (ch == '&') {
+      } else if (tf.supportEntityRefs && ch == '&') {
         const std::size_t refStart = itr.nextPos();
         const std::size_t refEnd = findUTF8(line, ';', refStart);
         if (refEnd != std::string_view::npos) {
