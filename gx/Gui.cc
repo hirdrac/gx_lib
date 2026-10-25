@@ -759,7 +759,8 @@ void Gui::processMouseEvent(Window& win, EventState& es)
     shape = MouseShape::ibeam;
     const GuiTheme& thm = *(pPtr->theme);
     const TextFormat tf{
-      .font = thm.font, .lineSpacing = float(thm.textSpacing)};
+      .font = thm.font, .lineSpacing = float(thm.textSpacing),
+      .startTag = 0, .supportEntityRefs = false };
     if (lpressEvent) {
       // update focus
       setFocus(ePtr, now);
@@ -1431,7 +1432,8 @@ bool Gui::drawElem(
       break;
     case GUI_ENTRY: {
       const TextFormat tf{
-        .font = thm.font, .lineSpacing = float(thm.textSpacing)};
+        .font = thm.font, .lineSpacing = float(thm.textSpacing),
+        .startTag = 0, .supportEntityRefs = false };
       dc.shape({ex, ey, ew, eh}, *style);
       auto& entry = def.entry();
       const std::string txt = (entry.type == ENTRY_PASSWORD)
