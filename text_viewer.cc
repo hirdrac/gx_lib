@@ -217,7 +217,7 @@ int main(int argc, char** argv)
     .font = &fnt,
     .glyphSpacing = float(args.glyphSpacing),
     .tabWidth = fnt.glyphWidth('A') * float(args.tabSize),
-    .startTag = 0  // disable color tag parsing
+    .supportMetaTags = false, .supportEntityRefs = false
   };
 
   // main loop
