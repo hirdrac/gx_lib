@@ -32,10 +32,12 @@ struct gx::TextFormat
   Vec2 glyphX{1,0};         // glyph quad sides
   Vec2 glyphY{0,1};
 
-  int32_t startTag = '<';   // meta-tag start char (set to '\0' to disable tags)
-  int32_t endTag = '>';     // meta-tag end char
-  bool supportEntityRefs = true;  // parse character entity refs
-  bool ignoreColor = false; // ignore color meta-tags for drawing
+  bool supportMetaTags = true;
+  // parse meta tags
+  bool supportEntityRefs = true;
+  // parse character entity refs
+  bool ignoreColor = false;
+    // ignore color meta-tags for drawing
 
   // transforms
   void scaleX(float s) { advX *= s; glyphX *= s; }

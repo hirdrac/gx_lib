@@ -51,9 +51,9 @@ gx::TextProperties TextFormat::calcProperties(std::string_view text) const
     float len = 0;
     for (UTF8Iterator itr{line}; itr; ++itr) {
       int32_t ch = *itr;
-      if (ch == startTag && startTag != 0) {
+      if (supportMetaTags && ch == '<') {
         const std::size_t tagStart = itr.nextPos();
-        const std::size_t tagEnd = findUTF8(line, endTag, tagStart);
+        const std::size_t tagEnd = findUTF8(line, '>', tagStart);
         if (tagEnd != std::string_view::npos) {
           const auto tag = line.substr(tagStart, tagEnd - tagStart);
           const auto tagType = ts.parseTag(tag);
@@ -140,9 +140,9 @@ int TextFormat::calcRegions(
     float regionStart = 0, len = 0;
     for (UTF8Iterator itr{line}; itr; ++itr) {
       int ch = *itr;
-      if (ch == startTag && startTag != 0) {
+      if (supportMetaTags && ch == '<') {
         const std::size_t startPos = itr.nextPos();
-        const std::size_t endPos = findUTF8(line, endTag, startPos);
+        const std::size_t endPos = findUTF8(line, '>', startPos);
         if (endPos != std::string_view::npos) {
           const auto tag = line.substr(startPos, endPos - startPos);
           const auto tagType = ts.parseTag(tag);
@@ -224,9 +224,9 @@ std::string_view TextFormat::fitText(
 
   for (UTF8Iterator itr{line}; itr; ++itr) {
     int32_t ch = *itr;
-    if (ch == startTag && startTag != 0) {
+    if (supportMetaTags && ch == '<') {
       const std::size_t tagStart = itr.nextPos();
-      const std::size_t tagEnd = findUTF8(line, endTag, tagStart);
+      const std::size_t tagEnd = findUTF8(line, '>', tagStart);
       if (tagEnd != std::string_view::npos) {
         const auto tag = line.substr(tagStart, tagEnd - tagStart);
         if (ts.parseTag(tag) != TAG_unknown) {
