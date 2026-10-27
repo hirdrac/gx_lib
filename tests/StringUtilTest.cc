@@ -74,6 +74,7 @@ void test_LineIterator()
   {
     LineIterator itr{""};
     assert(!itr);
+    assert(*itr == "");
   }
 
   {
@@ -87,7 +88,7 @@ void test_LineIterator()
     assert(itr && *itr == "line 1"); ++itr;
     assert(itr && *itr == ""); ++itr;
     assert(itr && *itr == "line 3"); ++itr;
-    assert(!itr);
+    assert(!itr && *itr == "");
   }
 }
 
