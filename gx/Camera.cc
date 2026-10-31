@@ -102,21 +102,12 @@ bool Camera::calcProjection(Mat4& result) const
     vtopL *= height / width;
   }
 
-  float offsetX = 0, offsetY = 0;
-  if (_viewport) {
-    const Rect& vp = *_viewport;
-    offsetX = (vp.x / _screenWidth) * 2.0f;
-    offsetY = (vp.y / _screenHeight) * 2.0f;
-    vsideL *= ((_screenWidth - vp.w) / _screenWidth);
-    vtopL *= ((_screenHeight - vp.h) / _screenHeight);
-  }
-
   const float clipLen = _farClip - _nearClip;
   if (_projection == PERSPECTIVE) {
     result = {
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,
-      -offsetX, -offsetY, -(_farClip + _nearClip) / clipLen, -1.0f,
+      0, 0, -(_farClip + _nearClip) / clipLen, -1.0f,
       0, 0, -(2.0f * _farClip * _nearClip) / clipLen, 0
     };
   } else {
@@ -124,7 +115,7 @@ bool Camera::calcProjection(Mat4& result) const
       1.0f / vsideL, 0, 0, 0,
       0, 1.0f / vtopL, 0, 0,
       0, 0, -(_farClip + _nearClip) / clipLen, 0,
-      offsetX, offsetY, -(2.0f * _farClip * _nearClip) / clipLen, 1.0f
+      0, 0, -(2.0f * _farClip * _nearClip) / clipLen, 1.0f
     };
   }
   return true;
@@ -136,6 +127,7 @@ Vec3 Camera::screenPtDir(Vec2 mousePt) const
   if (_viewport) {
     const Rect& vp = *_viewport;
     width = vp.w; height = vp.h;
+    mousePt.x -= vp.x; mousePt.y -= vp.y;
   } else {
     width = _screenWidth; height = _screenHeight;
   }
@@ -150,15 +142,8 @@ Vec3 Camera::screenPtDir(Vec2 mousePt) const
 
   const float cx = width * .5f;
   const float cy = height * .5f;
-  float mx, my;
-  if (_viewport) {
-    const Rect& vp = *_viewport;
-    mx = (mousePt.x - vp.x - cx) / cx;
-    my = (mousePt.y - vp.y - cy) / cy;
-  } else {
-    mx = (mousePt.x - cx) / cx;
-    my = (mousePt.y - cy) / cy;
-  }
+  const float mx = (mousePt.x - cx) / cx;
+  const float my = (mousePt.y - cy) / cy;
 
   // since we are calculating a direction, just assume eye is at origin
   // and view plane center is just 1 away from eye (in direction of vnormal)
