@@ -305,6 +305,26 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   GLVertexArray<VER> _vao2, _vao3;
   GLBuffer<VER> _vbo;
+  int _currentVAO = 0;
+
+  void set2DMode(int32_t cap) {
+    if (_currentVAO != 2) {
+      _vao2.bind();
+      _currentVAO = 2;
+    }
+
+    cap &= BLEND; // only BLEND is allowed for 2D
+    if (_currentGLCap != cap) { setGLCapabilities(cap); }
+  }
+
+  void set3DMode(int32_t cap) {
+    if (_currentVAO != 3) {
+      _vao3.bind();
+      _currentVAO = 3;
+    }
+
+    if (_currentGLCap != cap) { setGLCapabilities(cap); }
+  }
 
   struct TextureEntry {
     GLTexture2D<VER> tex;
@@ -1236,6 +1256,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
     }
   }
 
+  _currentVAO = 0;
   _currentGLCap = -1; // force all capabilities to be set initially
   _uniformBuf.bindBase(GL_UNIFORM_BUFFER, 0);
 
@@ -1248,7 +1269,6 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
   int nextTexUnit = 0;
   int texUnit = -1;
   int32_t newCap = BLEND; // default GL capabilities
-  int lastVAO = 0;
 
   const Value* data     = _opData.data();
   const Value* data_end = data + _opData.size();
@@ -1327,11 +1347,9 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         break;
       }
       case OP_drawLines2D: {
-        if (lastVAO != 2) { _vao2.bind(); lastVAO = 2; }
+        set2DMode(newCap);
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
-        const int32_t glCap = newCap & BLEND; // only BLEND is allowed for 2D
-        if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (!orthoMode) {
           ud.cameraT = _orthoT;
           udChanged = orthoMode = true;
@@ -1350,12 +1368,10 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         break;
       }
       case OP_drawTriangles2D: {
-        if (lastVAO != 2) { _vao2.bind(); lastVAO = 2; }
+        set2DMode(newCap);
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
-        const int32_t glCap = newCap & BLEND; // only BLEND is allowed for 2D
-        if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (!orthoMode) {
           ud.cameraT = _orthoT;
           udChanged = orthoMode = true;
@@ -1399,11 +1415,9 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         break;
       }
       case OP_drawLines3D: {
-        if (lastVAO != 3) { _vao3.bind(); lastVAO = 3; }
+        set3DMode(newCap);
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
-        const int32_t glCap = newCap;
-        if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (udChanged) {
           _uniformBuf.setSubData(0, sizeof(ud), &ud);
           udChanged = false;
@@ -1418,12 +1432,10 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         break;
       }
       case OP_drawTriangles3D: {
-        if (lastVAO != 3) { _vao3.bind(); lastVAO = 3; }
+        set3DMode(newCap);
         const GLint first = (d++)->ival;
         const GLsizei count = (d++)->ival;
         const TextureID tid = (d++)->uval;
-        const int32_t glCap = newCap;
-        if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
         if (udChanged) {
           _uniformBuf.setSubData(0, sizeof(ud), &ud);
           udChanged = false;
