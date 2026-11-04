@@ -305,25 +305,25 @@ class gx::OpenGLRenderer final : public gx::Renderer
 
   GLVertexArray<VER> _vao2, _vao3;
   GLBuffer<VER> _vbo;
-  int _currentVAO = 0;
+  int _lastVAO = 0;
 
   void set2DMode(int32_t cap) {
-    if (_currentVAO != 2) {
+    if (_lastVAO != 2) {
       _vao2.bind();
-      _currentVAO = 2;
+      _lastVAO = 2;
     }
 
     cap &= BLEND; // only BLEND is allowed for 2D
-    if (_currentGLCap != cap) { setGLCapabilities(cap); }
+    if (_lastGLCap != cap) { setGLCapabilities(cap); }
   }
 
   void set3DMode(int32_t cap) {
-    if (_currentVAO != 3) {
+    if (_lastVAO != 3) {
       _vao3.bind();
-      _currentVAO = 3;
+      _lastVAO = 3;
     }
 
-    if (_currentGLCap != cap) { setGLCapabilities(cap); }
+    if (_lastGLCap != cap) { setGLCapabilities(cap); }
   }
 
   struct TextureEntry {
@@ -364,7 +364,7 @@ class gx::OpenGLRenderer final : public gx::Renderer
   std::vector<Value> _opData;
   GLOperation _lastOp = OP_null;
   int32_t _first2 = 0, _first3 = 0;
-  int _currentGLCap = -1; // current GL capability state
+  int _lastGLCap = -1; // current GL capability state
   std::mutex _glMutex;
 
   // 2D vertex type & functions
@@ -1256,13 +1256,12 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
     }
   }
 
-  _currentVAO = 0;
-  _currentGLCap = -1; // force all capabilities to be set initially
+  _lastVAO = 0;
+  _lastGLCap = -1; // force all capabilities to be set initially
   _uniformBuf.bindBase(GL_UNIFORM_BUFFER, 0);
 
-  bool udChanged = true;
   UniformData ud{};
-  bool orthoMode = false;
+  bool udChanged = true, orthoMode = false;
 
   // draw
   int lastShader = -1;
@@ -1342,7 +1341,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         const uint32_t mask = (d++)->uval;
         int32_t glCap = newCap;
         if (mask & GL_DEPTH_BUFFER_BIT) { glCap |= DEPTH_UPDATE; }
-        if (_currentGLCap != glCap) { setGLCapabilities(glCap); }
+        if (_lastGLCap != glCap) { setGLCapabilities(glCap); }
         GX_GLCALL(glClear, mask);
         break;
       }
@@ -1503,7 +1502,7 @@ void OpenGLRenderer<VER>::setGLCapabilities(int32_t cap)
   constexpr int CULL = CULL_CW | CULL_CCW;
   GX_ASSERT(cap >= 0);
 
-  if (_currentGLCap < 0)
+  if (_lastGLCap < 0)
   {
     // don't assume current state - enable/disable all values
     GX_GLCALL((cap & BLEND) ? glEnable : glDisable, GL_BLEND);
@@ -1520,36 +1519,36 @@ void OpenGLRenderer<VER>::setGLCapabilities(int32_t cap)
   else
   {
     // enable/disable only for changes
-    if (!(_currentGLCap & BLEND) && (cap & BLEND)) {
+    if (!(_lastGLCap & BLEND) && (cap & BLEND)) {
       GX_GLCALL(glEnable, GL_BLEND);
-    } else if ((_currentGLCap & BLEND) && !(cap & BLEND)) {
+    } else if ((_lastGLCap & BLEND) && !(cap & BLEND)) {
       GX_GLCALL(glDisable, GL_BLEND);
     }
 
-    if (!(_currentGLCap & DEPTH_COMPARE) && (cap & DEPTH_COMPARE)) {
+    if (!(_lastGLCap & DEPTH_COMPARE) && (cap & DEPTH_COMPARE)) {
       GX_GLCALL(glEnable, GL_DEPTH_TEST);
-    } else if ((_currentGLCap & DEPTH_COMPARE) && !(cap & DEPTH_COMPARE)) {
+    } else if ((_lastGLCap & DEPTH_COMPARE) && !(cap & DEPTH_COMPARE)) {
       GX_GLCALL(glDisable, GL_DEPTH_TEST);
     }
 
-    if (!(_currentGLCap & DEPTH_UPDATE) && (cap & DEPTH_UPDATE)) {
+    if (!(_lastGLCap & DEPTH_UPDATE) && (cap & DEPTH_UPDATE)) {
       GX_GLCALL(glDepthMask, GL_TRUE);
-    } else if ((_currentGLCap & DEPTH_UPDATE) && !(cap & DEPTH_UPDATE)) {
+    } else if ((_lastGLCap & DEPTH_UPDATE) && !(cap & DEPTH_UPDATE)) {
       GX_GLCALL(glDepthMask, GL_FALSE);
     }
 
-    if (!(_currentGLCap & CULL) && (cap & CULL)) {
+    if (!(_lastGLCap & CULL) && (cap & CULL)) {
       GX_GLCALL(glEnable, GL_CULL_FACE);
-    } else if ((_currentGLCap & CULL) && !(cap & CULL)) {
+    } else if ((_lastGLCap & CULL) && !(cap & CULL)) {
       GX_GLCALL(glDisable, GL_CULL_FACE);
     }
 
-    if ((cap & CULL) && ((_currentGLCap & CULL) != (cap & CULL))) {
+    if ((cap & CULL) && ((_lastGLCap & CULL) != (cap & CULL))) {
       setCullFace(cap);
     }
   }
 
-  _currentGLCap = cap;
+  _lastGLCap = cap;
 }
 
 
