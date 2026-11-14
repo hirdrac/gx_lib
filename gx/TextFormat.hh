@@ -33,9 +33,9 @@ struct gx::TextFormat
   Vec2 glyphY{0,1};
 
   bool supportMetaTags = true;
-  // parse meta tags
+    // parse meta tags
   bool supportEntityRefs = true;
-  // parse character entity refs
+    // parse character entity refs
   bool ignoreColor = false;
     // ignore color meta-tags for drawing
 

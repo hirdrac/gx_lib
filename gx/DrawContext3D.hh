@@ -65,7 +65,7 @@ class gx::DrawContext3D
   void clearLights() { _dl->clearLights(); }
 
   // View
-  void viewport(int x, int y, int w, int h) {
+  void viewport(int32_t x, int32_t y, int32_t w, int32_t h) {
     _dl->viewport(x, y, w, h); }
   void viewportFull() {
     _dl->viewportFull(); }
