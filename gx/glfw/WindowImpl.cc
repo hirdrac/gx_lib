@@ -670,7 +670,7 @@ void WindowImpl::cursorPosCB(GLFWwindow* win, double xpos, double ypos)
   //println("cursor pos event: ", xpos, ' ', ypos);
   EventState& es = static_cast<WindowImpl*>(uPtr)->_eventState;
   es.events |= EVENT_MOUSE_MOVE;
-  es.mousePt.set(float(xpos), float(ypos));
+  es.mousePt = {float(xpos), float(ypos)};
 }
 
 void WindowImpl::mouseButtonCB(

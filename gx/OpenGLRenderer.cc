@@ -889,19 +889,19 @@ void OpenGLRenderer<VER>::draw(std::span<const DrawList*> lists)
           break;
         }
         case DrawCmd::lineStart2:
-          linePt.set(fval2(d), 0); lineColor = color; break;
+          linePt = {fval2(d), 0}; lineColor = color; break;
         case DrawCmd::lineTo2: {
           addVertex2D(linePt.xy(), lineColor);
-          linePt.set(fval2(d), 0); lineColor = color;
+          linePt = {fval2(d), 0}; lineColor = color;
           addVertex2D(linePt.xy(), lineColor);
           addLine2D();
           break;
         }
         case DrawCmd::lineStart2C:
-          linePt.set(fval2(d), 0); lineColor = uval(d); break;
+          linePt = {fval2(d), 0}; lineColor = uval(d); break;
         case DrawCmd::lineTo2C: {
           addVertex2D(linePt.xy(), lineColor);
-          linePt.set(fval2(d), 0); lineColor = uval(d);
+          linePt = {fval2(d), 0}; lineColor = uval(d);
           addVertex2D(linePt.xy(), lineColor);
           addLine2D();
           break;
@@ -1284,7 +1284,7 @@ void OpenGLRenderer<VER>::renderFrame(int64_t usecTime)
         const float g = (d++)->fval;
         const float b = (d++)->fval;
         const float a = (d++)->fval;
-        ud.modColor.set(r, g, b, a);
+        ud.modColor = {r, g, b, a};
         udChanged = true;
         break;
       }

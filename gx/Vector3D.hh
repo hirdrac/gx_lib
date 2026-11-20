@@ -84,9 +84,6 @@ class gx::Vector2
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
   [[nodiscard]] constexpr bool isUnit() const { return isOne(lengthSqr()); }
 
-  constexpr void set(T vx, T vy) { _val[0] = vx; _val[1] = vy; }
-  constexpr void set(const T* v) { set(v[0], v[1]); }
-
   // Vector2 swizzle
   [[nodiscard]] constexpr Vector2<T> yx() const { return {_val[1], _val[0]}; }
 };
@@ -157,11 +154,6 @@ class gx::Vector3
     return sqr(_val[0]) + sqr(_val[1]) + sqr(_val[2]); }
   [[nodiscard]] T length() const { return std::sqrt(lengthSqr()); }
   [[nodiscard]] constexpr bool isUnit() const { return isOne(lengthSqr()); }
-
-  constexpr void set(T vx, T vy, T vz) {
-    _val[0] = vx; _val[1] = vy; _val[2] = vz; }
-  constexpr void set(const T* v) { set(v[0], v[1], v[2]); }
-  constexpr void set(const Vector2<T>& v, T vz) { set(v[0], v[1], vz); }
 
   // Vector2 swizzle
   [[nodiscard]] constexpr Vector2<T> xy() const { return {_val[0], _val[1]}; }
@@ -239,11 +231,6 @@ class gx::Vector4
   [[nodiscard]] static constexpr size_type size() { return 4; }
   [[nodiscard]] constexpr T* data() { return _val; }
   [[nodiscard]] constexpr const T* data() const { return _val; }
-
-  constexpr void set(T vx, T vy, T vz, T vw) {
-    _val[0] = vx; _val[1] = vy; _val[2] = vz; _val[3] = vw; }
-  constexpr void set(const T* v) { set(v[0], v[1], v[2], v[3]); }
-  constexpr void set(const Vector3<T>& v, T vw) { set(v[0], v[1], v[2], vw); }
 
   // Vector2 swizzle
   [[nodiscard]] constexpr Vector2<T> xy() const { return {_val[0], _val[1]}; }

@@ -71,11 +71,11 @@ class gx::Gui
     // render data & flag if data was changed last update
 
   void setBGColor(float r, float g, float b, float a = 1.0f) {
-    _bgColor.set(r, g, b, a); }
+    _bgColor = {r, g, b, a}; }
   void setBGColor(const Vec4& c) {
     _bgColor = c; }
   void setBGColor(const Vec3& c, float a = 1.0f) {
-    _bgColor.set(c, a); }
+    _bgColor = {c, a}; }
 
   void setElemState(PanelID pid, EventID eid, bool enable);
   void enableElem(PanelID pid, EventID eid) { setElemState(pid, eid, true); }

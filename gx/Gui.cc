@@ -752,7 +752,7 @@ void Gui::processMouseEvent(Window& win, EventState& es)
       const float my = std::clamp(es.mousePt.y, 0.0f, float(height));
       pPtr->layout.x += mx - _heldPt.x;
       pPtr->layout.y += my - _heldPt.y;
-      _heldPt.set(mx, my);
+      _heldPt = {mx, my};
       _needRender = true;
     }
   } else if (type == GUI_ENTRY) {

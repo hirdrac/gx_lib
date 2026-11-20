@@ -230,7 +230,7 @@ struct gx::EventState
 
   void reset() {
     events = 0;
-    scrollPt.set(0,0);
+    scrollPt = {0,0};
     text.clear();
 
     for (auto i = inputStates.begin(); i != inputStates.end(); ) {
